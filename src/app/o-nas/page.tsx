@@ -342,9 +342,9 @@ export default function ONasPage() {
           indent={2}
         />
         <div className="flex justify-end mt-11">
-          <span className="font-[var(--font-mono)] text-[14px] tracking-[1.12px] pointer-events-none cursor-default">
-            <span className="text-white">[</span> <span className="text-accent">Rozpocznij współpracę</span> <span className="text-white">]</span>
-          </span>
+          <ScrambleLink href="/wspolpraca" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
+            [ Rozpocznij współpracę ]
+          </ScrambleLink>
         </div>
       </section>
 
@@ -388,9 +388,9 @@ export default function ONasPage() {
             indent={2}
           />
           <div className="flex justify-end mt-11">
-            <span className="font-[var(--font-mono)] text-[14px] text-accent tracking-[1.12px] pointer-events-none cursor-default">
+            <ScrambleLink href="/wspolpraca" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
               [ Rozpocznij współpracę ]
-            </span>
+            </ScrambleLink>
           </div>
         </div>
 
@@ -416,9 +416,9 @@ export default function ONasPage() {
                     {card.desc}
                   </p>
                 </div>
-                <span className="font-[var(--font-mono)] text-[14px] tracking-[1.12px] pointer-events-none cursor-default mt-auto">
-                  <span className="text-white">[</span> <span className="text-accent">Więcej</span> <span className="text-white">]</span>
-                </span>
+                <ScrambleLink href="/kontakt" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px] mt-auto">
+                  [ Więcej ]
+                </ScrambleLink>
               </div>
             </AnimateIn>
           ))}
@@ -447,9 +447,9 @@ export default function ONasPage() {
               </p>
             </AnimateIn>
             <div className="flex justify-end mt-auto pt-6">
-              <span className="font-[var(--font-mono)] text-[20px] tracking-[0.2px] pointer-events-none cursor-default">
-                <span className="text-white">[</span> <span className="text-accent">Rozpocznij współpracę</span> <span className="text-white">]</span>
-              </span>
+              <ScrambleLink href="/wspolpraca" className="font-[var(--font-mono)] text-[20px] tracking-[0.2px]">
+                [ Rozpocznij współpracę ]
+              </ScrambleLink>
             </div>
           </div>
 
