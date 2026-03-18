@@ -4,43 +4,56 @@ import { useRef, useEffect } from "react";
 
 export default function AsciiHelicopter() {
   const sectionRef = useRef<HTMLDivElement>(null);
-  const preRef = useRef<HTMLPreElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const el = sectionRef.current;
-    const pre = preRef.current;
-    if (!el || !pre) return;
+    const canvas = canvasRef.current;
+    if (!el || !canvas) return;
 
-    const probe = document.createElement("span");
-    probe.style.cssText =
-      "font-family:var(--font-jetbrains-mono),monospace;font-size:7px;line-height:1.15;position:absolute;visibility:hidden;white-space:pre";
-    probe.textContent = "0";
-    el.appendChild(probe);
-    const cw = probe.offsetWidth || 4;
-    const ch = probe.offsetHeight || 8;
-    el.removeChild(probe);
+    const dpr = window.devicePixelRatio || 1;
+    const W = el.clientWidth;
+    const H = el.clientHeight;
 
-    const cols = Math.floor(el.clientWidth / cw);
-    const rows = Math.floor(el.clientHeight / ch);
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width = `${W}px`;
+    canvas.style.height = `${H}px`;
+
+    const ctx = canvas.getContext("2d")!;
+    ctx.scale(dpr, dpr);
+
+    const FONT_SIZE = 7;
+    const LINE_HEIGHT = FONT_SIZE * 1.15;
+    const FONT = `${FONT_SIZE}px var(--font-jetbrains-mono), monospace`;
+    ctx.font = FONT;
+    ctx.textBaseline = "top";
+
+    const cw = ctx.measureText("0").width || 4;
+    const ch = LINE_HEIGHT;
+
+    const cols = Math.floor(W / cw);
+    const rows = Math.floor(H / ch);
     if (cols < 10 || rows < 10) return;
 
     const img = new Image();
     img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = cols;
-      canvas.height = rows;
-      const ctx = canvas.getContext("2d")!;
+      // Sample the source image onto a tiny grid
+      const sampleCvs = document.createElement("canvas");
+      sampleCvs.width = cols;
+      sampleCvs.height = rows;
+      const sCtx = sampleCvs.getContext("2d")!;
 
-      ctx.clearRect(0, 0, cols, rows);
+      sCtx.clearRect(0, 0, cols, rows);
 
       const imgAspect = img.width / img.height;
       const dw = cols;
       const dh = (cols / imgAspect) * (cw / ch);
       const dx = -Math.floor(cols * 0.02);
       const dy = Math.floor((rows - dh) / 2);
-      ctx.drawImage(img, 0, 0, img.width, img.height, dx, dy, dw, dh);
+      sCtx.drawImage(img, 0, 0, img.width, img.height, dx, dy, dw, dh);
 
-      const { data } = ctx.getImageData(0, 0, cols, rows);
+      const { data } = sCtx.getImageData(0, 0, cols, rows);
       const total = rows * cols;
 
       const mask = new Uint8Array(total);
@@ -64,47 +77,36 @@ export default function AsciiHelicopter() {
       const rangeB = maxB - minB || 1;
 
       const LEVELS = 10;
-      const COL_BG = "color:#505050;opacity:0.25";
 
-      const lines: string[] = [];
+      // Pre-build all characters in a single pass
+      ctx.font = FONT;
+      ctx.textBaseline = "top";
+
       for (let r = 0; r < rows; r++) {
-        let line = "";
-        let c = 0;
-        while (c < cols) {
+        const y = r * ch;
+        for (let c = 0; c < cols; c++) {
           const idx = r * cols + c;
+          const x = c * cw;
+          const char = Math.random() > 0.5 ? "0" : "1";
 
           if (!mask[idx]) {
-            let end = c + 1;
-            while (end < cols && !mask[r * cols + end]) end++;
-            line += `<span style="${COL_BG}">${"1".repeat(end - c)}</span>`;
-            c = end;
+            ctx.globalAlpha = 0.25;
+            ctx.fillStyle = "#505050";
           } else {
             const norm = (bright[idx] - minB) / rangeB;
             const contrast = Math.pow(norm, 0.7);
             const level = Math.floor(Math.max(0, Math.min(1, contrast)) * (LEVELS - 0.01));
-
-            let run = Math.random() > 0.5 ? "0" : "1";
-            let end = c + 1;
-            while (end < cols && mask[r * cols + end]) {
-              const e = r * cols + end;
-              const en = Math.pow((bright[e] - minB) / rangeB, 0.7);
-              const el2 = Math.floor(Math.max(0, Math.min(1, en)) * (LEVELS - 0.01));
-              if (el2 !== level) break;
-              run += Math.random() > 0.5 ? "0" : "1";
-              end++;
-            }
-
             const t = level / (LEVELS - 1);
             const gray = Math.round(45 + t * 155);
-            const op = (0.28 + t * 0.52).toFixed(2);
             const hex = gray.toString(16).padStart(2, "0");
-            line += `<span style="color:#${hex}${hex}${hex};opacity:${op}">${run}</span>`;
-            c = end;
+            ctx.fillStyle = `#${hex}${hex}${hex}`;
+            ctx.globalAlpha = 0.28 + t * 0.52;
           }
+
+          ctx.fillText(char, x, y);
         }
-        lines.push(line);
       }
-      pre.innerHTML = lines.join("\n");
+      ctx.globalAlpha = 1;
     };
     img.src = "/plane.png";
   }, []);
@@ -112,9 +114,9 @@ export default function AsciiHelicopter() {
   return (
     <section ref={sectionRef} className="relative h-screen bg-bg overflow-hidden mt-16 border-t border-white/10">
       <div className="ls-scanlines" />
-      <pre
-        ref={preRef}
-        className="absolute inset-0 font-(--font-mono) text-[7px] leading-[1.15] select-none whitespace-pre overflow-hidden"
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 select-none"
       />
       <div className="absolute top-0 left-0 right-0 h-px bg-white/10" />
       <div className="absolute top-0 left-0 right-0 h-[20%] pointer-events-none bg-linear-to-b from-bg via-bg/60 to-transparent" />
