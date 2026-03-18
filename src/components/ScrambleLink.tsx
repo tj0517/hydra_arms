@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useRef, useState, useCallback } from "react";
 
 const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*!?";
 
@@ -16,16 +16,8 @@ export default function ScrambleLink({
   className = "",
 }: ScrambleLinkProps) {
   const [display, setDisplay] = useState(children);
-  const [hasEntered, setHasEntered] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const linkRef = useRef<HTMLAnchorElement>(null);
-  const widthRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    if (linkRef.current) {
-      widthRef.current = linkRef.current.offsetWidth;
-    }
-  }, [children]);
 
   const scramble = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
@@ -59,26 +51,6 @@ export default function ScrambleLink({
     setDisplay(children);
   }, [children]);
 
-  // Scramble entrance on scroll into view
-  useEffect(() => {
-    const el = linkRef.current;
-    if (!el || hasEntered) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setHasEntered(true);
-          scramble();
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.5 }
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [hasEntered, scramble]);
-
   // Split display into bracket and inner parts for separate styling
   const renderStyled = () => {
     const match = display.match(/^(\[)\s*(.*?)\s*(\])$/);
@@ -99,7 +71,6 @@ export default function ScrambleLink({
       className={className}
       onMouseEnter={scramble}
       onMouseLeave={reset}
-      style={widthRef.current ? { minWidth: widthRef.current } : undefined}
     >
       {renderStyled()}
     </a>

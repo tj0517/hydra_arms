@@ -7,7 +7,6 @@ import AnimateIn from "@/components/AnimateIn";
 import SplitText from "@/components/SplitText";
 import ScrollRevealText from "@/components/ScrollRevealText";
 import ScrambleLink from "@/components/ScrambleLink";
-import HeroCursor from "@/components/HeroCursor";
 import MilitaryMap from "@/components/MilitaryMap";
 import TypewriterTitle from "@/components/TypewriterTitle";
 import Image from "next/image";
@@ -92,13 +91,11 @@ export default function HomePage() {
   return (
     <main>
       {/* ─── HERO ─── */}
-      <section ref={heroRef} className="relative h-screen overflow-hidden bg-bg" style={{ cursor: "none" }}>
+      <section ref={heroRef} className="relative h-screen overflow-hidden bg-bg">
         <div
           ref={overlayRef}
           className="absolute inset-0 bg-bg z-[15] pointer-events-none"
         />
-
-        <HeroCursor containerRef={heroRef} />
 
         {/* Video background — full cover */}
         <video
@@ -162,19 +159,19 @@ export default function HomePage() {
               Zaawansowana inżynieria obronna Obrót nowoczesnym uzbrojeniem
             </SplitText>
 
-            <div className="flex gap-9 mt-8 items-center">
-              <a
+            <div className="flex gap-12 mt-8 items-center">
+              <ScrambleLink
                 href="/uslugi"
-                className="btn-entrance btn-entrance-d1 font-[var(--font-mono)] text-[20px] bg-white/5 border border-accent/50 px-9 py-4 tracking-[0.2px] hover:bg-accent/10 transition-all duration-300"
+                className="font-[var(--font-mono)] text-[28px] tracking-[0.3px] hover:text-white transition-colors duration-300"
               >
-                <span className="text-text-dim text-2xl">[</span> <span className="underline text-accent">Nasze usługi</span> <span className="text-text-dim text-2xl">]</span>
-              </a>
-              <a
+                [ Nasze usługi ]
+              </ScrambleLink>
+              <ScrambleLink
                 href="/sklep"
-                className="btn-entrance btn-entrance-d2 font-[var(--font-mono)] text-[20px] bg-white/5 border border-accent/50 px-9 py-4 tracking-[0.2px] hover:bg-accent/10 transition-all duration-300"
+                className="font-[var(--font-mono)] text-[28px] tracking-[0.3px] hover:text-white transition-colors duration-300"
               >
-                <span className="text-text-dim text-2xl">[</span> <span className="underline text-accent">Sklep</span> <span className="text-text-dim text-2xl">]</span>
-              </a>
+                [ Sklep ]
+              </ScrambleLink>
             </div>
           </div>
         </div>
@@ -289,8 +286,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── VIDEO SECTION ─── */}
-      <div ref={videoSectionRef} className="h-[549px] bg-bg relative overflow-hidden" style={{ cursor: "none" }}>
-        <HeroCursor containerRef={videoSectionRef} />
+      <div ref={videoSectionRef} className="h-[549px] bg-bg relative overflow-hidden">
         <video
           autoPlay
           muted

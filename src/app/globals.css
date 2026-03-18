@@ -6,7 +6,7 @@
   --color-bg-card: #0F0F0F;
   --color-text: #E0F2F1;
   --color-text-dim: #c0c8c7;
-  --color-accent: #8eee00;
+  --color-accent: #a3c545;
   --color-white: #ffffff;
   --font-main: var(--font-outfit);
   --font-mono: var(--font-jetbrains-mono);
@@ -22,11 +22,27 @@ body {
   color: var(--color-text);
   font-family: var(--font-main);
   overflow-x: hidden;
-  cursor: url('/cursor.svg') 16 16, crosshair;
+  cursor: none;
 }
 
 a, button, [role="button"], input[type="submit"] {
-  cursor: url('/cursor-hover.svg') 16 16, crosshair;
+  cursor: none;
+}
+
+/* Global small circle cursor */
+.global-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  margin-left: -4px;
+  margin-top: -4px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  pointer-events: none;
+  z-index: 99999;
+  mix-blend-mode: difference;
 }
 
 ::selection {
@@ -143,6 +159,71 @@ a, button, [role="button"], input[type="submit"] {
 
 .draw-reveal-border.active::after {
   animation: drawLine 0.6s ease-out forwards;
+}
+
+/* Draw-card: borders draw first, then content fades in */
+.draw-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.draw-card .draw-card-border {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.draw-card .draw-card-border span {
+  position: absolute;
+  background: var(--color-accent);
+}
+
+/* Top line */
+.draw-card .draw-card-border span:nth-child(1) {
+  top: 0; left: 0; height: 1px; width: 0;
+}
+/* Right line */
+.draw-card .draw-card-border span:nth-child(2) {
+  top: 0; right: 0; width: 1px; height: 0;
+}
+/* Bottom line */
+.draw-card .draw-card-border span:nth-child(3) {
+  bottom: 0; right: 0; height: 1px; width: 0;
+}
+/* Left line */
+.draw-card .draw-card-border span:nth-child(4) {
+  bottom: 0; left: 0; width: 1px; height: 0;
+}
+
+.draw-card.active .draw-card-border span:nth-child(1) {
+  animation: drawH 0.3s ease-out forwards;
+}
+.draw-card.active .draw-card-border span:nth-child(2) {
+  animation: drawV 0.3s ease-out 0.3s forwards;
+}
+.draw-card.active .draw-card-border span:nth-child(3) {
+  animation: drawH 0.3s ease-out 0.6s forwards;
+}
+.draw-card.active .draw-card-border span:nth-child(4) {
+  animation: drawV 0.3s ease-out 0.9s forwards;
+}
+
+@keyframes drawH {
+  from { width: 0; }
+  to { width: 100%; }
+}
+@keyframes drawV {
+  from { height: 0; }
+  to { height: 100%; }
+}
+
+.draw-card .draw-card-content {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.draw-card.active .draw-card-content {
+  animation: fadeIn 0.5s ease-out 1s forwards;
 }
 
 /* Helicopter float animation */
@@ -284,4 +365,34 @@ html.loading-active body > *:not(.ls) {
   38%  { background: transparent; }
   52%  { background: rgba(19, 255, 21, 0.15); }
   55%  { background: transparent; }
+}
+
+/* ── Hero video glitch — shifts on pixelated canvas ── */
+.hero-video-glitch {
+  animation: videoDrift 8s ease-in-out infinite;
+}
+
+.hero-video-glitch.glitch-once {
+  animation: videoGlitch 0.6s steps(1) forwards, videoDrift 8s ease-in-out infinite;
+}
+
+/* Slow continuous drift */
+@keyframes videoDrift {
+  0%   { translate: 0 0; }
+  25%  { translate: 3px -2px; }
+  50%  { translate: -2px 3px; }
+  75%  { translate: 4px 1px; }
+  100% { translate: 0 0; }
+}
+
+/* Glitch bursts */
+@keyframes videoGlitch {
+  0%   { filter: grayscale(1); transform: translate(0); }
+  /* Burst — quick color flash + shift */
+  15%  { filter: grayscale(1); }
+  18%  { filter: grayscale(0) brightness(1.2) contrast(1.3); transform: translate(8px, -2px); }
+  22%  { filter: grayscale(0) brightness(0.8) contrast(1.4); transform: translate(-12px, 2px); }
+  26%  { filter: grayscale(0) brightness(1.1) contrast(1.2); transform: translate(5px, 3px); }
+  30%  { filter: grayscale(1); transform: translate(0); }
+  100% { filter: grayscale(1); transform: translate(0); }
 }

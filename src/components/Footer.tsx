@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 
 const navLinks = [
@@ -11,11 +13,28 @@ const navLinks = [
 
 export default function Footer() {
   return (
-    <footer className="border-t border-white/5">
-      <div className="max-w-[1400px] mx-auto px-[clamp(24px,4vw,80px)] py-16 md:py-24">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8">
+    <footer className="relative border-t border-white/5 overflow-hidden">
+      {/* Rain video background */}
+      <video
+        autoPlay
+        muted
+        loop
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover grayscale brightness-[0.25] contrast-[1.3]"
+      >
+        <source src="/rain.mp4" type="video/mp4" />
+      </video>
+
+      {/* Overlays */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="moving-grain !opacity-[0.06]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-bg/80 via-bg/40 to-bg/80" />
+      </div>
+
+      <div className="relative max-w-[1400px] mx-auto px-[clamp(24px,4vw,80px)] py-16 md:py-24">
+        <div className="flex flex-col md:flex-row md:justify-between gap-12 md:gap-8">
           {/* Company info */}
-          <div>
+          <div className="md:mr-auto">
             <div className="font-[var(--font-mono)] text-xl font-bold text-white tracking-[0.15em] mb-6">
               HYDRA<span className="text-accent">.</span>ARMS
             </div>
@@ -27,34 +46,32 @@ export default function Footer() {
             </div>
           </div>
 
+          <div className="flex flex-col md:flex-row gap-12 md:gap-16">
           {/* Navigation */}
-          <div>
+          <div className="md:text-right">
             <h4 className="font-[var(--font-mono)] text-sm text-white uppercase tracking-[0.2em] mb-6">
               Nawigacja
             </h4>
             <ul className="space-y-3">
               {navLinks.map((link) => (
                 <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="font-[var(--font-mono)] text-xs text-text-dim hover:text-white transition-colors duration-300"
-                  >
+                  <span className="font-[var(--font-mono)] text-xs text-text-dim">
                     {link.label}
-                  </Link>
+                  </span>
                 </li>
               ))}
             </ul>
           </div>
 
           {/* Contact */}
-          <div>
+          <div className="md:text-right">
             <h4 className="font-[var(--font-mono)] text-sm text-white uppercase tracking-[0.2em] mb-6">
               Kontakt
             </h4>
-            <div className="flex gap-4 mb-6">
+            <div className="flex gap-4 mb-6 md:justify-end">
               {/* Social icons */}
               <a
-                href="#"
+                href="#!"
                 className="w-10 h-10 border border-white/10 flex items-center justify-center text-text-dim hover:text-accent hover:border-accent/30 transition-all duration-300"
                 aria-label="Facebook"
               >
@@ -63,7 +80,7 @@ export default function Footer() {
                 </svg>
               </a>
               <a
-                href="#"
+                href="#!"
                 className="w-10 h-10 border border-white/10 flex items-center justify-center text-text-dim hover:text-accent hover:border-accent/30 transition-all duration-300"
                 aria-label="Instagram"
               >
@@ -72,7 +89,7 @@ export default function Footer() {
                 </svg>
               </a>
               <a
-                href="#"
+                href="#!"
                 className="w-10 h-10 border border-white/10 flex items-center justify-center text-text-dim hover:text-accent hover:border-accent/30 transition-all duration-300"
                 aria-label="Email"
               >
@@ -83,24 +100,19 @@ export default function Footer() {
               </a>
             </div>
           </div>
+          </div>
         </div>
       </div>
 
       {/* Bottom bar */}
-      <div className="border-t border-white/5">
+      <div className="relative border-t border-white/5">
         <div className="max-w-[1400px] mx-auto px-[clamp(24px,4vw,80px)] py-5 flex flex-col md:flex-row justify-between items-center gap-4">
-          <Link
-            href="/polityka-prywatnosci"
-            className="font-[var(--font-mono)] text-[10px] text-text-dim uppercase tracking-[0.15em] hover:text-white transition-colors"
-          >
+          <span className="font-[var(--font-mono)] text-[10px] text-text-dim uppercase tracking-[0.15em]">
             [ Polityka prywatności ]
-          </Link>
-          <Link
-            href="/regulamin"
-            className="font-[var(--font-mono)] text-[10px] text-text-dim uppercase tracking-[0.15em] hover:text-white transition-colors"
-          >
+          </span>
+          <span className="font-[var(--font-mono)] text-[10px] text-text-dim uppercase tracking-[0.15em]">
             [ Regulamin ]
-          </Link>
+          </span>
           <span className="font-[var(--font-mono)] text-[10px] text-text-dim uppercase tracking-[0.15em]">
             [ MADE BY ... ]
           </span>

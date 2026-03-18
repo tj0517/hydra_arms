@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+
+const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*!?";
 
 const links = [
   { href: "/", label: "Home" },
@@ -12,6 +14,69 @@ const links = [
   { href: "/wspolpraca", label: "Współpraca" },
   { href: "/kontakt", label: "Kontakt" },
 ];
+
+function useScramble(text: string) {
+  const [display, setDisplay] = useState(text);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const scramble = useCallback(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    let iteration = 0;
+    intervalRef.current = setInterval(() => {
+      setDisplay(
+        text
+          .split("")
+          .map((char, i) => {
+            if (char === " ") return char;
+            if (i < iteration) return text[i];
+            return CHARS[Math.floor(Math.random() * CHARS.length)];
+          })
+          .join("")
+      );
+      iteration += 1;
+      if (iteration >= text.length) {
+        clearInterval(intervalRef.current!);
+        setDisplay(text);
+      }
+    }, 75);
+  }, [text]);
+
+  const reset = useCallback(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    setDisplay(text);
+  }, [text]);
+
+  return { display, scramble, reset };
+}
+
+function ScrambleNavLink({ href, label, active }: { href: string; label: string; active: boolean }) {
+  const { display, scramble, reset } = useScramble(label);
+  return (
+    <li>
+      <span
+        className={`font-[var(--font-mono)] text-xs uppercase tracking-[0.15em] relative ${
+          active ? "text-accent" : "text-text-dim"
+        } pointer-events-none cursor-default`}
+      >
+        {label}
+      </span>
+    </li>
+  );
+}
+
+function ScrambleButton({ href, label }: { href: string; label: string }) {
+  const { display, scramble, reset } = useScramble(label);
+  return (
+    <Link
+      href={href}
+      className="font-[var(--font-mono)] text-xs uppercase tracking-[0.15em] transition-colors duration-300 hover:text-white"
+      onMouseEnter={scramble}
+      onMouseLeave={reset}
+    >
+      <span className="text-text-dim">[</span> <span className="text-accent underline">{display}</span> <span className="text-text-dim">]</span>
+    </Link>
+  );
+}
 
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
@@ -32,41 +97,20 @@ export default function Nav() {
     <nav
       className={`fixed top-0 left-0 right-0 z-[1000] transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] ${
         scrolled
-          ? "bg-[rgba(5,5,5,0.9)] backdrop-blur-[20px] py-4 border-b border-accent/10"
+          ? "py-4"
           : "py-6"
       }`}
     >
       <div className="max-w-[1400px] mx-auto px-[clamp(24px,4vw,80px)] flex justify-between items-center">
-        <Link
-          href="/"
-          className="font-[var(--font-mono)] text-xl font-bold text-white tracking-[0.15em] z-[101]"
-        >
+        <span className="font-[var(--font-mono)] text-xl font-bold text-white tracking-[0.15em] z-[101]">
           HYDRA<span className="text-accent">.</span>ARMS
-        </Link>
+        </span>
 
         {/* Desktop links */}
         <ul className="hidden md:flex gap-9 list-none items-center">
           {links.map((link) => (
-            <li key={link.href}>
-              <Link
-                href={link.href}
-                className={`font-[var(--font-mono)] text-xs uppercase tracking-[0.15em] transition-colors duration-300 relative group ${
-                  pathname === link.href ? "text-accent" : "text-text-dim hover:text-white"
-                }`}
-              >
-                {link.label}
-                <span className="absolute -bottom-1 left-0 w-0 h-px bg-accent transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:w-full" />
-              </Link>
-            </li>
+            <ScrambleNavLink key={link.href} href={link.href} label={link.label} active={pathname === link.href} />
           ))}
-          <li>
-            <Link
-              href="/kontakt"
-              className="font-[var(--font-mono)] text-[11px] px-6 py-2.5 border border-accent text-accent uppercase tracking-[0.15em] transition-all duration-300 hover:bg-accent hover:text-bg"
-            >
-              Kontakt
-            </Link>
-          </li>
         </ul>
 
         {/* Mobile burger */}
@@ -96,15 +140,14 @@ export default function Nav() {
           }`}
         >
           {links.map((link) => (
-            <Link
+            <span
               key={link.href}
-              href={link.href}
-              className={`font-[var(--font-mono)] text-2xl uppercase tracking-[0.2em] transition-colors duration-300 ${
+              className={`font-[var(--font-mono)] text-2xl uppercase tracking-[0.2em] ${
                 pathname === link.href ? "text-accent" : "text-text-dim"
               }`}
             >
               {link.label}
-            </Link>
+            </span>
           ))}
         </div>
       </div>

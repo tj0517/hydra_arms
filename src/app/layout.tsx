@@ -5,6 +5,7 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import SmoothScroll from "@/components/SmoothScroll";
 import LoadingScreen from "@/components/LoadingScreen";
+import GlobalCursor from "@/components/GlobalCursor";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -38,6 +39,7 @@ export default function RootLayout({
         <SmoothScroll />
         <div className="grain" />
         <div className="lines-grid" />
+        <GlobalCursor />
         <Nav />
         {children}
         <Footer />

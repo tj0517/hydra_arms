@@ -5,35 +5,7 @@ import { useRef, useEffect } from "react";
 export default function AsciiHelicopter() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const preRef = useRef<HTMLPreElement>(null);
-  const glowRef = useRef<HTMLDivElement>(null);
 
-  /* ── Cursor brightness glow ── */
-  useEffect(() => {
-    const el = sectionRef.current;
-    const glow = glowRef.current;
-    if (!el || !glow) return;
-
-    const onMove = (e: MouseEvent) => {
-      const rect = el.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      glow.style.transform = `translate(${x}px, ${y}px)`;
-      glow.style.opacity = "1";
-    };
-
-    const onLeave = () => {
-      glow.style.opacity = "0";
-    };
-
-    el.addEventListener("mousemove", onMove);
-    el.addEventListener("mouseleave", onLeave);
-    return () => {
-      el.removeEventListener("mousemove", onMove);
-      el.removeEventListener("mouseleave", onLeave);
-    };
-  }, []);
-
-  /* ── ASCII rendering ── */
   useEffect(() => {
     const el = sectionRef.current;
     const pre = preRef.current;
@@ -61,7 +33,6 @@ export default function AsciiHelicopter() {
 
       ctx.clearRect(0, 0, cols, rows);
 
-      // Always fit full width, center vertically
       const imgAspect = img.width / img.height;
       const dw = cols;
       const dh = (cols / imgAspect) * (cw / ch);
@@ -143,31 +114,12 @@ export default function AsciiHelicopter() {
       <div className="ls-scanlines" />
       <pre
         ref={preRef}
-        className="absolute inset-0 font-[var(--font-mono)] text-[7px] leading-[1.15] select-none whitespace-pre overflow-hidden"
+        className="absolute inset-0 font-(--font-mono) text-[7px] leading-[1.15] select-none whitespace-pre overflow-hidden"
       />
-      {/* Top line */}
       <div className="absolute top-0 left-0 right-0 h-px bg-white/10" />
-      {/* Top fade */}
       <div className="absolute top-0 left-0 right-0 h-[20%] pointer-events-none bg-linear-to-b from-bg via-bg/60 to-transparent" />
-      {/* Bottom fade */}
       <div className="absolute bottom-0 left-0 right-0 h-[20%] pointer-events-none bg-linear-to-t from-bg via-bg/60 to-transparent" />
-      {/* Bottom line */}
       <div className="absolute bottom-0 left-0 right-0 h-px bg-white/10" />
-      {/* Cursor brightness glow */}
-      <div
-        ref={glowRef}
-        className="absolute top-0 left-0 z-[1] pointer-events-none opacity-0 transition-opacity duration-300"
-        style={{
-          width: 400,
-          height: 400,
-          marginLeft: -200,
-          marginTop: -200,
-          backdropFilter: "brightness(2.2)",
-          WebkitBackdropFilter: "brightness(2.2)",
-          maskImage: "radial-gradient(circle, black 0%, transparent 65%)",
-          WebkitMaskImage: "radial-gradient(circle, black 0%, transparent 65%)",
-        }}
-      />
     </section>
   );
 }

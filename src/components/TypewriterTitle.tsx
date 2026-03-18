@@ -26,10 +26,20 @@ export default function TypewriterTitle({
     const el = ref.current;
     if (!el) return;
 
+    const waitForLoading = () =>
+      document.documentElement.classList.contains("loading-active");
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setTimeout(() => setStarted(true), delay);
+          const check = () => {
+            if (waitForLoading()) {
+              requestAnimationFrame(check);
+            } else {
+              setTimeout(() => setStarted(true), delay);
+            }
+          };
+          check();
           observer.disconnect();
         }
       },

@@ -94,7 +94,7 @@ export default function WspolpracaPage() {
   return (
     <main>
       {/* ─── HERO ─── */}
-      <section className="relative h-[70vh] overflow-hidden bg-bg border-b border-white/10">
+      <section className="relative h-[450px] overflow-hidden bg-bg border-b border-white/10">
         {/* Black flash overlay for entrance */}
         <div
           ref={overlayRef}
