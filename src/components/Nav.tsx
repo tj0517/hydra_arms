@@ -49,26 +49,49 @@ function useScramble(text: string) {
   return { display, scramble, reset };
 }
 
-function ScrambleNavLink({ href, label, active }: { href: string; label: string; active: boolean }) {
+function ScrambleNavLink({ href, label, active, disabled }: { href: string; label: string; active: boolean; disabled?: boolean }) {
   const { display, scramble, reset } = useScramble(label);
   return (
     <li>
-      <Link
-        href={href}
-        className={`draw-line-hover font-[var(--font-mono)] text-xs uppercase tracking-[0.15em] relative transition-colors duration-300 ${
-          active ? "text-accent" : "text-text-dim hover:text-white"
-        }`}
-        onMouseEnter={scramble}
-        onMouseLeave={reset}
-      >
-        {display}
-      </Link>
+      {disabled ? (
+        <span
+          className={`draw-line-hover font-[var(--font-mono)] text-xs uppercase tracking-[0.15em] relative transition-colors duration-300 cursor-default ${
+            active ? "text-accent" : "text-text-dim hover:text-white"
+          }`}
+          onMouseEnter={scramble}
+          onMouseLeave={reset}
+        >
+          {display}
+        </span>
+      ) : (
+        <Link
+          href={href}
+          className={`draw-line-hover font-[var(--font-mono)] text-xs uppercase tracking-[0.15em] relative transition-colors duration-300 ${
+            active ? "text-accent" : "text-text-dim hover:text-white"
+          }`}
+          onMouseEnter={scramble}
+          onMouseLeave={reset}
+        >
+          {display}
+        </Link>
+      )}
     </li>
   );
 }
 
-function ScrambleButton({ href, label }: { href: string; label: string }) {
+function ScrambleButton({ href, label, disabled }: { href: string; label: string; disabled?: boolean }) {
   const { display, scramble, reset } = useScramble(label);
+  if (disabled) {
+    return (
+      <span
+        className="draw-line-hover font-[var(--font-mono)] text-xs uppercase tracking-[0.15em] transition-colors duration-300 hover:text-white cursor-default"
+        onMouseEnter={scramble}
+        onMouseLeave={reset}
+      >
+        <span className="text-text-dim">[</span> <span className="text-accent">{display}</span> <span className="text-text-dim">]</span>
+      </span>
+    );
+  }
   return (
     <Link
       href={href}
@@ -85,6 +108,7 @@ export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
+  const navDisabled = pathname === "/o-nas";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
@@ -112,7 +136,7 @@ export default function Nav() {
         {/* Desktop links */}
         <ul className="hidden md:flex gap-9 list-none items-center">
           {links.map((link) => (
-            <ScrambleNavLink key={link.href} href={link.href} label={link.label} active={pathname === link.href} />
+            <ScrambleNavLink key={link.href} href={link.href} label={link.label} active={pathname === link.href} disabled={navDisabled} />
           ))}
         </ul>
 
@@ -142,17 +166,28 @@ export default function Nav() {
               : "opacity-0 pointer-events-none"
           }`}
         >
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`font-[var(--font-mono)] text-2xl uppercase tracking-[0.2em] transition-colors duration-300 ${
-                pathname === link.href ? "text-accent" : "text-text-dim hover:text-white"
-              }`}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {links.map((link) =>
+            navDisabled ? (
+              <span
+                key={link.href}
+                className={`font-[var(--font-mono)] text-2xl uppercase tracking-[0.2em] transition-colors duration-300 cursor-default ${
+                  pathname === link.href ? "text-accent" : "text-text-dim hover:text-white"
+                }`}
+              >
+                {link.label}
+              </span>
+            ) : (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`font-[var(--font-mono)] text-2xl uppercase tracking-[0.2em] transition-colors duration-300 ${
+                  pathname === link.href ? "text-accent" : "text-text-dim hover:text-white"
+                }`}
+              >
+                {link.label}
+              </Link>
+            )
+          )}
         </div>
       </div>
     </nav>
