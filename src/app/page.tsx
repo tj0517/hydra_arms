@@ -9,6 +9,7 @@ import ScrollRevealText from "@/components/ScrollRevealText";
 import ScrambleLink from "@/components/ScrambleLink";
 import MilitaryMap from "@/components/MilitaryMap";
 import TypewriterTitle from "@/components/TypewriterTitle";
+import DrawCard from "@/components/DrawCard";
 import Image from "next/image";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -53,18 +54,38 @@ const services = [
 const filary = [
   {
     tag: "B2G",
-    title: "Rynek cywilny",
-    desc: "Dystrybucja profesjonalnych systemów broni strzeleckiej i amunicji dla uprawnionych odbiorców indywidualnych.",
+    title: "Sektor rządowy",
+    desc: "Zamówienia dla jednostek wojskowych, służb mundurowych i instytucji państwowych realizowane w ramach ścisłych procedur bezpieczeństwa.",
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" className="w-10 h-10">
+        <path d="M24 4 L44 18 L44 38 L24 44 L4 38 L4 18 Z" stroke="#b8d95a" strokeWidth="1.2" opacity="0.6" className="draw-icon" />
+        <path d="M24 4 L24 44 M4 18 L44 18" stroke="#b8d95a" strokeWidth="0.6" opacity="0.3" className="draw-icon" />
+      </svg>
+    ),
   },
   {
-    tag: "B2G",
-    title: "Rynek cywilny",
-    desc: "Dystrybucja profesjonalnych systemów broni strzeleckiej i amunicji dla uprawnionych odbiorców indywidualnych.",
+    tag: "B2B",
+    title: "Kooperacja przemysłowa",
+    desc: "Współpraca z partnerami przemysłowymi w zakresie prototypowania, produkcji seryjnej i integracji systemów obronnych.",
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" className="w-10 h-10">
+        <rect x="6" y="14" width="36" height="28" stroke="#b8d95a" strokeWidth="1.2" opacity="0.6" className="draw-icon" />
+        <path d="M16 14 L16 8 L32 8 L32 14" stroke="#b8d95a" strokeWidth="1" opacity="0.5" className="draw-icon" />
+        <line x1="6" y1="28" x2="42" y2="28" stroke="#b8d95a" strokeWidth="0.6" opacity="0.3" className="draw-icon" />
+      </svg>
+    ),
   },
   {
-    tag: "B2G",
+    tag: "B2C",
     title: "Rynek cywilny",
     desc: "Dystrybucja profesjonalnych systemów broni strzeleckiej i amunicji dla uprawnionych odbiorców indywidualnych.",
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" className="w-10 h-10">
+        <circle cx="24" cy="16" r="10" stroke="#b8d95a" strokeWidth="1.2" opacity="0.6" className="draw-icon" />
+        <path d="M8 44 Q8 30 24 30 Q40 30 40 44" stroke="#b8d95a" strokeWidth="1.2" opacity="0.6" className="draw-icon" />
+        <line x1="24" y1="6" x2="24" y2="26" stroke="#b8d95a" strokeWidth="0.5" opacity="0.2" className="draw-icon" />
+      </svg>
+    ),
   },
 ];
 
@@ -73,6 +94,8 @@ const filary = [
 export default function HomePage() {
   const overlayRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLElement>(null);
+  const scopeOverlayRef = useRef<HTMLDivElement>(null);
+  const scopeReticleRef = useRef<HTMLDivElement>(null);
   const videoSectionRef = useRef<HTMLDivElement>(null);
   const servicesWrapRef = useRef<HTMLDivElement>(null);
   const serviceRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -86,7 +109,59 @@ export default function HomePage() {
     );
   }, []);
 
-  /* No GSAP needed — pure CSS sticky stacking */
+  /* ── Nightvision scope — circular brightened area follows cursor ── */
+  useEffect(() => {
+    const hero = heroRef.current;
+    const scopeOv = scopeOverlayRef.current;
+    const reticle = scopeReticleRef.current;
+    if (!hero || !scopeOv || !reticle) return;
+
+    let targetX = 0, targetY = 0, curX = 0, curY = 0;
+    let active = false;
+    let raf = 0;
+    const RADIUS = 90;
+
+    const tick = () => {
+      curX += (targetX - curX) * 0.08;
+      curY += (targetY - curY) * 0.08;
+      scopeOv.style.setProperty("--sx", `${curX}px`);
+      scopeOv.style.setProperty("--sy", `${curY}px`);
+      reticle.style.transform = `translate(${curX - RADIUS}px, ${curY - RADIUS}px)`;
+      raf = requestAnimationFrame(tick);
+    };
+
+    const onMove = (e: MouseEvent) => {
+      const rect = hero.getBoundingClientRect();
+      targetX = e.clientX - rect.left;
+      targetY = e.clientY - rect.top;
+      if (!active) {
+        active = true;
+        curX = targetX;
+        curY = targetY;
+        scopeOv.style.setProperty("--sx", `${curX}px`);
+        scopeOv.style.setProperty("--sy", `${curY}px`);
+        reticle.style.transform = `translate(${curX - RADIUS}px, ${curY - RADIUS}px)`;
+        reticle.style.opacity = "1";
+        raf = requestAnimationFrame(tick);
+      }
+    };
+
+    const onLeave = () => {
+      active = false;
+      cancelAnimationFrame(raf);
+      scopeOv.style.setProperty("--sx", "-9999px");
+      scopeOv.style.setProperty("--sy", "-9999px");
+      reticle.style.opacity = "0";
+    };
+
+    hero.addEventListener("mousemove", onMove);
+    hero.addEventListener("mouseleave", onLeave);
+    return () => {
+      hero.removeEventListener("mousemove", onMove);
+      hero.removeEventListener("mouseleave", onLeave);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
 
   return (
     <main>
@@ -112,7 +187,7 @@ export default function HomePage() {
         <div className="absolute inset-0 z-[3] bg-black mix-blend-multiply flex flex-col justify-center px-[clamp(24px,4vw,80px)]">
           <TypewriterTitle
             as="h1"
-            className="text-[clamp(5rem,12vw,12rem)] font-bold text-accent leading-[0.9] tracking-[-0.04em] uppercase"
+            className="text-[clamp(6rem,14vw,14rem)] font-bold text-accent leading-[0.9] tracking-[-0.04em] uppercase"
             speed={70}
             delay={800}
           >
@@ -120,12 +195,61 @@ export default function HomePage() {
           </TypewriterTitle>
           <TypewriterTitle
             as="span"
-            className="text-[clamp(5rem,12vw,12rem)] font-bold text-accent leading-[0.9] tracking-[-0.04em] uppercase block"
+            className="text-[clamp(6rem,14vw,14rem)] font-bold text-accent leading-[0.9] tracking-[-0.04em] uppercase block"
             speed={70}
             delay={1400}
           >
             PRZEWAGA.
           </TypewriterTitle>
+        </div>
+
+        {/* Dark overlay with circular scope cutout — reveals bright video underneath */}
+        <div
+          ref={scopeOverlayRef}
+          className="absolute inset-0 z-[2] pointer-events-none hidden md:block"
+          style={{
+            background: "rgba(10,10,11,0.55)",
+            maskImage: "radial-gradient(circle 90px at var(--sx, -9999px) var(--sy, -9999px), transparent 70%, black 100%)",
+            WebkitMaskImage: "radial-gradient(circle 90px at var(--sx, -9999px) var(--sy, -9999px), transparent 70%, black 100%)",
+          } as React.CSSProperties}
+        />
+
+        {/* Nightvision reticle overlay */}
+        <div
+          ref={scopeReticleRef}
+          className="absolute top-0 left-0 z-[4] pointer-events-none opacity-0 transition-opacity duration-300 hidden md:block"
+        >
+          <svg width="180" height="180" viewBox="0 0 180 180" fill="none">
+            {/* Outer circle */}
+            <circle cx="90" cy="90" r="85" stroke="#b8d95a" strokeWidth="0.5" opacity="0.25" />
+            {/* Inner circle */}
+            <circle cx="90" cy="90" r="45" stroke="#b8d95a" strokeWidth="0.4" opacity="0.15" strokeDasharray="4 3" />
+            {/* Crosshair lines */}
+            <line x1="90" y1="5" x2="90" y2="40" stroke="#b8d95a" strokeWidth="0.5" opacity="0.2" />
+            <line x1="90" y1="140" x2="90" y2="175" stroke="#b8d95a" strokeWidth="0.5" opacity="0.2" />
+            <line x1="5" y1="90" x2="40" y2="90" stroke="#b8d95a" strokeWidth="0.5" opacity="0.2" />
+            <line x1="140" y1="90" x2="175" y2="90" stroke="#b8d95a" strokeWidth="0.5" opacity="0.2" />
+            {/* Center dot */}
+            <circle cx="90" cy="90" r="2" fill="#b8d95a" opacity="0.4" />
+            {/* Tick marks */}
+            {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => {
+              const rad = (deg * Math.PI) / 180;
+              const r1 = 82;
+              const r2 = 88;
+              return (
+                <line
+                  key={deg}
+                  x1={90 + Math.cos(rad) * r1}
+                  y1={90 + Math.sin(rad) * r1}
+                  x2={90 + Math.cos(rad) * r2}
+                  y2={90 + Math.sin(rad) * r2}
+                  stroke="#b8d95a"
+                  strokeWidth="0.5"
+                  opacity="0.2"
+                />
+              );
+            })}
+          </svg>
         </div>
 
         {/* Subtle dark overlay on top */}
@@ -162,13 +286,13 @@ export default function HomePage() {
             <div className="flex gap-12 mt-8 items-center">
               <ScrambleLink
                 href="/uslugi"
-                className="font-[var(--font-mono)] text-[28px] tracking-[0.3px] hover:text-white transition-colors duration-300"
+                className="font-[var(--font-mono)] text-[14px] tracking-[1.12px] hover:text-white transition-colors duration-300"
               >
                 [ Nasze usługi ]
               </ScrambleLink>
               <ScrambleLink
                 href="/sklep"
-                className="font-[var(--font-mono)] text-[28px] tracking-[0.3px] hover:text-white transition-colors duration-300"
+                className="font-[var(--font-mono)] text-[14px] tracking-[1.12px] hover:text-white transition-colors duration-300"
               >
                 [ Sklep ]
               </ScrambleLink>
@@ -249,9 +373,9 @@ export default function HomePage() {
 
                     <a
                       href="/uslugi"
-                      className="font-[var(--font-mono)] text-[20px] bg-text-dim px-6 py-2 tracking-[0.2px] hover:bg-accent transition-colors duration-300 inline-block"
+                      className="draw-line-hover font-[var(--font-mono)] text-[14px] tracking-[1.12px] border border-accent/40 px-6 py-2.5 hover:bg-accent hover:text-bg transition-all duration-300 inline-block"
                     >
-                      <span className="underline text-accent">Szczegóły</span> <span className="text-bg text-2xl">[</span><span className="text-bg">→</span><span className="text-bg text-2xl">]</span>
+                      <span className="text-text-dim text-2xl">[</span> <span className="text-accent">Szczegóły →</span> <span className="text-text-dim text-2xl">]</span>
                     </a>
                   </div>
                 </div>
@@ -371,13 +495,12 @@ export default function HomePage() {
         </div>
 
         {/* Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 px-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-16">
           {filary.map((item, i) => (
-            <AnimateIn key={i} delay={i * 0.1} y={20}>
-              <div className={`p-9 flex flex-col gap-2.5 ${
-                i > 0 ? "md:border-l md:border-white/5" : ""
-              }`}>
-                <div className="border border-white/15 px-2 py-1 self-start mb-2">
+            <DrawCard key={i} delay={i * 0.2}>
+              <div className="p-8 flex flex-col gap-5 h-full">
+                <div className="mb-2">{item.icon}</div>
+                <div className="border border-white/15 px-2 py-1 self-start">
                   <span className="font-[var(--font-mono)] text-[14px] text-accent tracking-[0.28px]">
                     {item.tag}
                   </span>
@@ -388,13 +511,11 @@ export default function HomePage() {
                 <p className="text-text-dim text-[14px] font-normal leading-[21px]">
                   {item.desc}
                 </p>
-                <span className="font-[var(--font-mono)] text-[14px] tracking-[1.12px] mt-2">
-                  <span className="text-text-dim text-2xl">[</span>
-                  <span className="text-accent underline"> Więcej </span>
-                  <span className="text-text-dim text-2xl">]</span>
-                </span>
+                <ScrambleLink href="/wspolpraca" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px] mt-auto">
+                  [ Więcej ]
+                </ScrambleLink>
               </div>
-            </AnimateIn>
+            </DrawCard>
           ))}
         </div>
       </section>
@@ -406,22 +527,22 @@ export default function HomePage() {
             //05 SECTION
           </span>
         </div>
-        <div className="h-[542px] bg-[#080808] relative overflow-hidden">
+        <div className="h-[542px] bg-[#080808] relative overflow-hidden -mt-px">
           <MilitaryMap />
-          {/* Info overlay */}
-          <div className="absolute left-16 top-8 z-10 font-[var(--font-mono)] text-[14px] text-accent/70 leading-[28px] tracking-[0.2px]">
-            <p className="text-accent text-[16px] font-bold mb-2">HYDRA ARMS SP. Z O.O.</p>
-            <p>[→] Kraków, Polska</p>
-            <p>[→] 50°03&apos;N 019°56&apos;E</p>
+          {/* Info overlay — dark backdrop so text doesn't blend with map */}
+          <div className="absolute left-16 top-6 z-10 font-[var(--font-mono)] text-[14px] leading-[28px] tracking-[0.2px] bg-bg/70 backdrop-blur-sm px-4 py-3 border border-white/5">
+            <p className="text-text text-[16px] font-bold mb-2">HYDRA ARMS SP. Z O.O.</p>
+            <p className="text-text-dim">[→] Kraków, Polska</p>
+            <p className="text-text-dim">[→] 50°03&apos;N 019°56&apos;E</p>
           </div>
           <div className="absolute right-16 bottom-8 z-10">
             <a
               href="https://maps.google.com/?q=50.06,19.94"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-[var(--font-mono)] text-[14px] tracking-[1.12px] border border-accent/40 px-6 py-2 hover:bg-accent hover:text-bg transition-all duration-300"
+              className="draw-line-hover font-[var(--font-mono)] text-[14px] tracking-[1.12px] border border-accent/40 px-6 py-2 hover:bg-accent hover:text-bg transition-all duration-300"
             >
-              <span className="text-text-dim text-2xl">[</span> <span className="text-accent underline">Wyznacz Trasę →</span> <span className="text-text-dim text-2xl">]</span>
+              <span className="text-text-dim text-2xl">[</span> <span className="text-accent">Wyznacz Trasę →</span> <span className="text-text-dim text-2xl">]</span>
             </a>
           </div>
         </div>
@@ -507,9 +628,9 @@ export default function HomePage() {
                 <div className="flex justify-end">
                   <button
                     type="submit"
-                    className="font-[var(--font-mono)] text-[14px] bg-accent px-8 py-2 tracking-[1px] hover:bg-white transition-colors duration-300"
+                    className="draw-line-hover font-[var(--font-mono)] text-[14px] bg-accent px-8 py-2 tracking-[1px] hover:bg-white transition-colors duration-300"
                   >
-                    <span className="text-bg text-2xl">[</span> <span className="text-bg underline">Wyślij</span> <span className="text-bg text-2xl">]</span>
+                    <span className="text-bg text-2xl">[</span> <span className="text-bg">Wyślij</span> <span className="text-bg text-2xl">]</span>
                   </button>
                 </div>
               </form>

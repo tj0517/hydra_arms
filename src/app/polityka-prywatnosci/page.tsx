@@ -1,15 +1,22 @@
+"use client";
+
+import SubpageHero from "@/components/SubpageHero";
+
 export default function PolitykaPrywatnosciPage() {
   return (
-    <main className="min-h-screen bg-bg pt-32 pb-24">
-      <div className="max-w-[1400px] mx-auto px-[clamp(24px,4vw,80px)]">
-        <h1 className="font-[var(--font-mono)] text-4xl md:text-5xl font-bold text-white tracking-[0.1em] uppercase">
-          Polityka Prywatności
-        </h1>
-        <div className="mt-4 h-px bg-accent/30 w-24" />
-        <p className="font-[var(--font-mono)] text-sm text-text-dim mt-8 tracking-wide">
+    <main>
+      <SubpageHero
+        subtitle="HYDRA ARMS / Polityka prywatności"
+        title="Polityka prywatności"
+        video="/Looping_Video_Ready.mp4"
+        titleClass="text-[clamp(3rem,9vw,100px)] font-semibold text-text leading-none tracking-[-3px] relative z-[6] ml-[-4px]"
+      />
+
+      <section className="min-h-[50vh] flex items-center justify-center">
+        <p className="font-[var(--font-mono)] text-sm text-text-dim tracking-wide">
           [ W PRZYGOTOWANIU ]
         </p>
-      </div>
+      </section>
     </main>
   );
 }

@@ -115,6 +115,34 @@ a, button, [role="button"], input[type="submit"] {
   100% { transform: translate(0, 0); }
 }
 
+/* Draw-line hover — underline draws left→right on hover */
+.draw-line-hover {
+  position: relative;
+  display: inline;
+  width: fit-content;
+}
+
+.draw-line-hover::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: var(--color-accent);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+.draw-line-hover:hover::after {
+  animation: drawLineHover 0.4s ease-out forwards;
+}
+
+@keyframes drawLineHover {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
 /* Button entrance animation */
 @keyframes btnEntrance {
   from {
@@ -368,6 +396,22 @@ html.loading-active body > *:not(.ls) {
 }
 
 /* ── Hero video glitch — shifts on pixelated canvas ── */
+/* SVG stroke draw animation */
+@keyframes svgDraw {
+  from { stroke-dashoffset: var(--dash-length); }
+  to { stroke-dashoffset: 0; }
+}
+
+/* Draw-icon: animate SVG strokes inside DrawCards */
+.draw-card .draw-icon {
+  stroke-dasharray: 200;
+  stroke-dashoffset: 200;
+}
+.draw-card.active .draw-icon {
+  animation: svgDraw 1.2s ease-out 0.8s forwards;
+  --dash-length: 200;
+}
+
 .hero-video-glitch {
   animation: videoDrift 8s ease-in-out infinite;
 }

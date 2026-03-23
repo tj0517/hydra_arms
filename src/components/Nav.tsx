@@ -53,13 +53,16 @@ function ScrambleNavLink({ href, label, active }: { href: string; label: string;
   const { display, scramble, reset } = useScramble(label);
   return (
     <li>
-      <span
-        className={`font-[var(--font-mono)] text-xs uppercase tracking-[0.15em] relative ${
-          active ? "text-accent" : "text-text-dim"
-        } pointer-events-none cursor-default`}
+      <Link
+        href={href}
+        className={`draw-line-hover font-[var(--font-mono)] text-xs uppercase tracking-[0.15em] relative transition-colors duration-300 ${
+          active ? "text-accent" : "text-text-dim hover:text-white"
+        }`}
+        onMouseEnter={scramble}
+        onMouseLeave={reset}
       >
-        {label}
-      </span>
+        {display}
+      </Link>
     </li>
   );
 }
@@ -69,11 +72,11 @@ function ScrambleButton({ href, label }: { href: string; label: string }) {
   return (
     <Link
       href={href}
-      className="font-[var(--font-mono)] text-xs uppercase tracking-[0.15em] transition-colors duration-300 hover:text-white"
+      className="draw-line-hover font-[var(--font-mono)] text-xs uppercase tracking-[0.15em] transition-colors duration-300 hover:text-white"
       onMouseEnter={scramble}
       onMouseLeave={reset}
     >
-      <span className="text-text-dim">[</span> <span className="text-accent underline">{display}</span> <span className="text-text-dim">]</span>
+      <span className="text-text-dim">[</span> <span className="text-accent">{display}</span> <span className="text-text-dim">]</span>
     </Link>
   );
 }
@@ -140,14 +143,15 @@ export default function Nav() {
           }`}
         >
           {links.map((link) => (
-            <span
+            <Link
               key={link.href}
-              className={`font-[var(--font-mono)] text-2xl uppercase tracking-[0.2em] ${
-                pathname === link.href ? "text-accent" : "text-text-dim"
+              href={link.href}
+              className={`font-[var(--font-mono)] text-2xl uppercase tracking-[0.2em] transition-colors duration-300 ${
+                pathname === link.href ? "text-accent" : "text-text-dim hover:text-white"
               }`}
             >
               {link.label}
-            </span>
+            </Link>
           ))}
         </div>
       </div>

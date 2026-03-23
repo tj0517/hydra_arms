@@ -5,6 +5,26 @@ import { useRef, useEffect } from "react";
 export default function AsciiHelicopter() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const revealStartRef = useRef(0);
+
+  // IntersectionObserver to trigger reveal
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && revealStartRef.current === 0) {
+          revealStartRef.current = performance.now();
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.25 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const el = sectionRef.current;
@@ -77,42 +97,90 @@ export default function AsciiHelicopter() {
       const rangeB = maxB - minB || 1;
 
       const LEVELS = 10;
+      const REVEAL_DURATION = 2500;
 
-      // Pre-build all characters in a single pass
-      ctx.font = FONT;
-      ctx.textBaseline = "top";
-
-      for (let r = 0; r < rows; r++) {
-        const y = r * ch;
-        for (let c = 0; c < cols; c++) {
-          const idx = r * cols + c;
-          const x = c * cw;
-          const char = Math.random() > 0.5 ? "0" : "1";
-
-          if (!mask[idx]) {
-            ctx.globalAlpha = 0.25;
-            ctx.fillStyle = "#505050";
-          } else {
-            const norm = (bright[idx] - minB) / rangeB;
-            const contrast = Math.pow(norm, 0.7);
-            const level = Math.floor(Math.max(0, Math.min(1, contrast)) * (LEVELS - 0.01));
-            const t = level / (LEVELS - 1);
-            const gray = Math.round(45 + t * 155);
-            const hex = gray.toString(16).padStart(2, "0");
-            ctx.fillStyle = `#${hex}${hex}${hex}`;
-            ctx.globalAlpha = 0.28 + t * 0.52;
-          }
-
-          ctx.fillText(char, x, y);
-        }
+      // Pre-generate final chars
+      const chars = new Uint8Array(total);
+      for (let i = 0; i < total; i++) {
+        chars[i] = Math.random() > 0.5 ? 1 : 0;
       }
-      ctx.globalAlpha = 1;
+
+      const colLocked = new Uint8Array(cols);
+      let raf = 0;
+      let done = false;
+
+      function renderFrame(now: number) {
+        ctx.clearRect(0, 0, W, H);
+        ctx.font = FONT;
+        ctx.textBaseline = "top";
+
+        const revealStart = revealStartRef.current;
+        let revealCol = 0;
+        if (revealStart > 0) {
+          const elapsed = now - revealStart;
+          revealCol = Math.floor((elapsed / REVEAL_DURATION) * cols);
+          for (let c = 0; c < Math.min(revealCol, cols); c++) {
+            colLocked[c] = 1;
+          }
+        }
+
+        for (let r = 0; r < rows; r++) {
+          const y = r * ch;
+          for (let c = 0; c < cols; c++) {
+            const idx = r * cols + c;
+            const x = c * cw;
+
+            let char: string;
+            if (colLocked[c]) {
+              char = chars[idx] ? "1" : "0";
+            } else {
+              char = Math.random() > 0.5 ? "1" : "0";
+            }
+
+            if (!colLocked[c] || !mask[idx]) {
+              ctx.globalAlpha = colLocked[c] ? 0.25 : 0.15;
+              ctx.fillStyle = "#505050";
+            } else {
+              const norm = (bright[idx] - minB) / rangeB;
+              const contrast = Math.pow(norm, 0.7);
+              const level = Math.floor(Math.max(0, Math.min(1, contrast)) * (LEVELS - 0.01));
+              const t = level / (LEVELS - 1);
+              const gray = Math.round(45 + t * 155);
+              const hex = gray.toString(16).padStart(2, "0");
+              ctx.fillStyle = `#${hex}${hex}${hex}`;
+              ctx.globalAlpha = 0.28 + t * 0.52;
+            }
+
+            ctx.fillText(char, x, y);
+          }
+        }
+        ctx.globalAlpha = 1;
+
+        if (revealStart > 0 && revealCol >= cols) {
+          done = true;
+          return;
+        }
+
+        raf = requestAnimationFrame(renderFrame);
+      }
+
+      raf = requestAnimationFrame(renderFrame);
+
+      // Cleanup stored in closure
+      const cleanup = () => {
+        if (!done) cancelAnimationFrame(raf);
+      };
+      (canvas as any).__cleanup = cleanup;
     };
     img.src = "/plane.png";
+
+    return () => {
+      if ((canvas as any).__cleanup) (canvas as any).__cleanup();
+    };
   }, []);
 
   return (
-    <section ref={sectionRef} className="relative h-screen bg-bg overflow-hidden mt-16 border-t border-white/10">
+    <section ref={sectionRef} className="relative h-screen bg-bg overflow-hidden mt-[clamp(2px,12px,64px)] border-t border-white/10">
       <div className="ls-scanlines" />
       <canvas
         ref={canvasRef}

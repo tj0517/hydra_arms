@@ -8,12 +8,14 @@ interface ScrambleLinkProps {
   href: string;
   children: string;
   className?: string;
+  disabled?: boolean;
 }
 
 export default function ScrambleLink({
   href,
   children,
   className = "",
+  disabled = false,
 }: ScrambleLinkProps) {
   const [display, setDisplay] = useState(children);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -54,11 +56,11 @@ export default function ScrambleLink({
   // Split display into bracket and inner parts for separate styling
   const renderStyled = () => {
     const match = display.match(/^(\[)\s*(.*?)\s*(\])$/);
-    if (!match) return <span className="underline text-accent">{display}</span>;
+    if (!match) return <span className="text-accent">{display}</span>;
     return (
       <>
         <span className="text-text-dim text-2xl">{match[1]}</span>
-        <span className="underline text-accent"> {match[2]} </span>
+        <span className="text-accent"> {match[2]} </span>
         <span className="text-text-dim text-2xl">{match[3]}</span>
       </>
     );
@@ -67,10 +69,12 @@ export default function ScrambleLink({
   return (
     <a
       ref={linkRef}
-      href={href}
-      className={className}
+      href={disabled ? undefined : href}
+      className={`draw-line-hover ${className}`}
       onMouseEnter={scramble}
       onMouseLeave={reset}
+      onClick={disabled ? (e) => e.preventDefault() : undefined}
+      style={disabled ? { cursor: "default" } : undefined}
     >
       {renderStyled()}
     </a>

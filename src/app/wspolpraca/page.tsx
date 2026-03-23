@@ -2,14 +2,11 @@
 
 import { useRef, useEffect, useState } from "react";
 import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import AnimateIn from "@/components/AnimateIn";
-import SplitText from "@/components/SplitText";
 import ScrollRevealText from "@/components/ScrollRevealText";
 import ScrambleLink from "@/components/ScrambleLink";
 import TypewriterTitle from "@/components/TypewriterTitle";
-
-gsap.registerPlugin(ScrollTrigger);
+import SubpageHero from "@/components/SubpageHero";
 
 /* ──────────── DATA ──────────── */
 
@@ -78,60 +75,24 @@ export default function WspolpracaPage() {
   const [activeTab, setActiveTab] = useState("suwer");
   const activeIndex = korzysciTabs.findIndex((t) => t.id === activeTab);
 
-  const overlayRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const tl = gsap.timeline({ delay: 0.2 });
-
-    tl.fromTo(
-      overlayRef.current,
-      { opacity: 1 },
-      { opacity: 0, duration: 1.2, ease: "power2.out" }
+    if (!contentRef.current) return;
+    gsap.fromTo(
+      contentRef.current,
+      { opacity: 0, y: 15 },
+      { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }
     );
-
-  }, []);
+  }, [activeTab]);
 
   return (
     <main>
       {/* ─── HERO ─── */}
-      <section className="relative h-[450px] overflow-hidden bg-bg border-b border-white/10">
-        {/* Black flash overlay for entrance */}
-        <div
-          ref={overlayRef}
-          className="absolute inset-0 bg-bg z-[15] pointer-events-none"
-        />
-
-        {/* Video background — scaled up and repositioned so center action sits at bottom-left */}
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          className="absolute w-[200%] h-[200%] object-cover z-[1]"
-          style={{ bottom: "-60%", left: "-20%", right: "auto", top: "auto" }}
-        >
-          <source src="/hero-video.mp4" type="video/mp4" />
-        </video>
-
-        {/* Text cutout effect */}
-        <div className="absolute inset-0 z-[2] bg-black mix-blend-multiply flex flex-col justify-end px-16 pb-6">
-          <span className="font-[var(--font-mono)] text-[14px] text-accent tracking-[1.12px] uppercase mb-2.5">
-            HYDRA ARMS / WSPÓŁPRACA
-          </span>
-          <TypewriterTitle
-            as="h1"
-            className="text-[clamp(4rem,12vw,200px)] font-bold text-white leading-none tracking-[-3px] uppercase"
-            speed={70}
-            delay={800}
-          >
-            WSPÓŁPRACA
-          </TypewriterTitle>
-        </div>
-
-      </section>
+      <SubpageHero subtitle="HYDRA ARMS / Współpraca" title="Współpraca" video="/hero-wspolpraca.mp4" />
 
       {/* ─── INTRO SECTION ─── */}
-      <section className="py-32 px-16">
+      <section className="py-32 px-[clamp(24px,4vw,64px)]">
         <ScrollRevealText
           text="Jesteśmy interdyscyplinarnym ośrodkiem inżynieryjnym specjalizującym się w projektowaniu, wytwarzaniu oraz obrocie zaawansowanymi rozwiązaniami dla sektora obronnego i służb porządku publicznego."
           className="text-[1.75rem] md:text-[3.2vw] font-medium leading-[1.1] tracking-[-0.48px] text-left"
@@ -149,7 +110,7 @@ export default function WspolpracaPage() {
 
       {/* ─── FUNDAMENTY SECTION ─── */}
       <section>
-        <div className="px-16 border-t border-white/5">
+        <div className="px-[clamp(24px,4vw,64px)] border-t border-white/5">
           <div className="flex items-end justify-between pt-4 pb-8">
             <TypewriterTitle
               as="h2"
@@ -159,12 +120,12 @@ export default function WspolpracaPage() {
               Fundamenty naszej działalności
             </TypewriterTitle>
             <AnimateIn delay={0.2} className="hidden md:flex gap-9 items-center">
-              <button className="text-text-dim hover:text-accent transition-colors" aria-label="Previous">
+              <button className="draw-line-hover text-text-dim hover:text-accent transition-colors" aria-label="Previous">
                 <svg width="18" height="36" viewBox="0 0 18 36" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path d="M14 6L4 18L14 30" />
                 </svg>
               </button>
-              <button className="text-text-dim hover:text-accent transition-colors" aria-label="Next">
+              <button className="draw-line-hover text-text-dim hover:text-accent transition-colors" aria-label="Next">
                 <svg width="18" height="36" viewBox="0 0 18 36" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path d="M4 6L14 18L4 30" />
                 </svg>
@@ -173,7 +134,7 @@ export default function WspolpracaPage() {
           </div>
         </div>
 
-        <div className="px-16 border-t border-white/5">
+        <div className="px-[clamp(24px,4vw,64px)] border-t border-white/5">
           <div className="grid grid-cols-1 md:grid-cols-3">
             {fundamenty.map((item, i) => (
               <AnimateIn key={item.id} delay={i * 0.1} y={20}>
@@ -202,7 +163,7 @@ export default function WspolpracaPage() {
       </div>
 
       {/* ─── SECOND DESCRIPTION ─── */}
-      <section className="py-28 px-16">
+      <section className="py-28 px-[clamp(24px,4vw,64px)]">
         <ScrollRevealText
           text="Swoje usługi kierujemy do szerokiego spektrum odbiorców — od jednostek wojskowych i policyjnych, przez instytucje badawcze, aż po partnerów przemysłowych w modelu B2B. Każda relacja opiera się na dyskrecji, profesjonalizmie i dążeniu do doskonałości technicznej."
           className="text-[1.75rem] md:text-[3.2vw] font-medium leading-[1.1] tracking-[-0.48px] text-left"
@@ -219,16 +180,9 @@ export default function WspolpracaPage() {
       </section>
 
       {/* ─── PARTNERSTWA STRATEGICZNE ─── */}
-      <section className="relative grid grid-cols-1 md:grid-cols-2 min-h-[578px] overflow-hidden">
+      <section className="relative grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] min-h-[578px] overflow-hidden border-t border-white/5">
         {/* Left content */}
-        <div className="px-16 py-16 flex flex-col justify-center">
-          <TypewriterTitle
-            as="h2"
-            className="text-text text-[28px] font-medium leading-[34px] mb-8"
-            speed={45}
-          >
-            Partnerstwa strategiczne
-          </TypewriterTitle>
+        <div className="px-[clamp(24px,4vw,64px)] py-16 flex flex-col justify-center">
           <AnimateIn delay={0.1}>
             <p className="text-text-dim text-[16px] font-normal leading-[26px] mb-10 max-w-[500px]">
               Nasza wizja współpracy z sektorem publicznym i służbami mundurowymi
@@ -243,18 +197,28 @@ export default function WspolpracaPage() {
             href="/kontakt"
             className="font-[var(--font-mono)] text-[14px] text-accent tracking-[1.12px] hover:text-white transition-colors duration-300"
           >
-            [ Napisz do nas ]
+            [ Rozpocznij współpracę ]
           </ScrambleLink>
         </div>
-        {/* Right atmospheric image placeholder */}
+        {/* Center vertical label */}
+        <div className="hidden md:flex items-center justify-center border-x border-white/5 px-4">
+          <span
+            className="font-[var(--font-mono)] text-[14px] text-accent/60 tracking-[0.2em] uppercase whitespace-nowrap"
+            style={{ writingMode: "vertical-rl", textOrientation: "mixed" }}
+          >
+            Partnerstwa strategiczne
+          </span>
+        </div>
+        {/* Right atmospheric image */}
         <div className="relative min-h-[300px] md:min-h-0">
           <div className="absolute inset-0 bg-gradient-to-br from-[#061106] via-[#0a120a] to-[#050505]" />
+          <div className="absolute inset-0 opacity-[0.15] bg-[url('/hero-video-poster.jpg')] bg-cover bg-center grayscale" />
         </div>
       </section>
 
       {/* ─── KLUCZOWE KORZYŚCI ─── */}
       <section>
-        <div className="px-16 pt-16 pb-16 text-center">
+        <div className="px-[clamp(24px,4vw,64px)] pt-16 pb-16 text-center">
           <TypewriterTitle
             as="h2"
             className="text-[clamp(2rem,4.76vw,72px)] font-normal text-white leading-[76px] tracking-[-1.44px]"
@@ -265,49 +229,46 @@ export default function WspolpracaPage() {
         </div>
 
         {/* Tabs */}
-        <AnimateIn delay={0.1}>
-          <div className="flex flex-wrap gap-4 px-16 border-b border-white/10">
-            {korzysciTabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`text-[18px] font-medium leading-[23px] pb-3.5 transition-all duration-300 relative whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? "text-text"
-                    : "text-text-dim hover:text-text"
-                }`}
-              >
-                [ {tab.label} ]
-                {activeTab === tab.id && (
-                  <span className="absolute bottom-0 left-0 w-[75px] h-0.5 bg-accent" />
-                )}
-              </button>
-            ))}
-          </div>
-        </AnimateIn>
+        <div className="flex flex-wrap gap-6 px-[clamp(24px,4vw,64px)] py-3.5 border-b border-white/10">
+          {korzysciTabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`draw-line-hover font-[var(--font-mono)] text-[14px] tracking-[1.12px] transition-colors duration-300 ${
+                activeTab === tab.id
+                  ? "text-text"
+                  : "text-text-dim hover:text-text"
+              }`}
+            >
+              <span className="text-text-dim">[</span>
+              <span className={activeTab === tab.id ? "text-accent" : ""}> {tab.label} </span>
+              <span className="text-text-dim">]</span>
+            </button>
+          ))}
+        </div>
 
         {/* Content */}
-        <AnimateIn delay={0.15}>
-          <div className="px-20 pt-10 pb-8 border-b border-white/10">
-            <div className="border border-white/15 inline-block px-3 py-1.5 mb-8">
-              <span className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
-                <span className="text-accent">
-                  {String(activeIndex + 1).padStart(2, "0")}
+        <div className="border-b border-white/10">
+          <div ref={contentRef} className="px-[clamp(24px,4vw,80px)] pt-10 pb-16">
+            <div className="mb-9">
+              <div className="border border-text/50 px-2 py-1 inline-block">
+                <span className="font-[var(--font-mono)] text-[18px]">
+                  <span className="text-accent">
+                    {String(activeIndex + 1).padStart(2, "0")}
+                  </span>
+                  <span className="text-white/30">
+                    /{String(korzysciTabs.length).padStart(2, "0")}
+                  </span>
                 </span>
-                <span className="text-text-dim">
-                  /{String(korzysciTabs.length).padStart(2, "0")}
-                </span>
-              </span>
+              </div>
             </div>
 
-            <div key={activeTab} className="animate-fadeIn">
-              <h3 className="text-white text-[clamp(1.5rem,3.17vw,48px)] font-light leading-[53px] tracking-[-0.48px] mb-6 max-w-[600px]">
-                {korzysciContent[activeTab].title}
-              </h3>
-              <p className="text-text-dim text-[18px] font-normal leading-[30px] max-w-[750px]">
-                {korzysciContent[activeTab].desc}
-              </p>
-            </div>
+            <h3 className="text-white text-[clamp(1.5rem,3.17vw,48px)] font-light leading-[53px] tracking-[-0.48px] mb-6 max-w-[600px]">
+              {korzysciContent[activeTab].title}
+            </h3>
+            <p className="text-text-dim text-[18px] font-normal leading-[30px] max-w-[750px]">
+              {korzysciContent[activeTab].desc}
+            </p>
 
             <div className="flex justify-end mt-16">
               <ScrambleLink
@@ -318,15 +279,15 @@ export default function WspolpracaPage() {
               </ScrambleLink>
             </div>
           </div>
-        </AnimateIn>
+        </div>
       </section>
 
       {/* ─── ETHICS SECTION ─── */}
       <section className="relative overflow-hidden bg-bg-light">
         <div className="moving-grain" />
-        <div className="relative z-[1] grid grid-cols-1 md:grid-cols-2 min-h-[634px]">
+        <div className="relative z-[1] grid grid-cols-1 md:grid-cols-[1fr_1fr_0.6fr] min-h-[634px]">
           {/* Left - Title */}
-          <div className="px-16 pt-9">
+          <div className="px-[clamp(24px,4vw,64px)] pt-9">
             <TypewriterTitle
               as="h2"
               className="text-text text-[clamp(1.5rem,3.17vw,48px)] font-light leading-[53px] tracking-[-0.48px]"
@@ -336,11 +297,11 @@ export default function WspolpracaPage() {
             </TypewriterTitle>
           </div>
 
-          {/* Right - Items */}
-          <div className="px-16 pt-16">
+          {/* Center - Items */}
+          <div className="px-[clamp(24px,4vw,64px)] pt-16">
             {ethicsItems.map((item, i) => (
               <AnimateIn key={i} delay={i * 0.1} y={20}>
-                <div className={`pb-9 ${i > 0 ? "pt-9" : ""}`}>
+                <div className={`pb-9 ${i > 0 ? "pt-9 border-t border-white/5" : ""}`}>
                   <h4 className="text-text text-[28px] font-medium leading-[34px] mb-4">
                     {item.title}
                   </h4>
@@ -350,6 +311,12 @@ export default function WspolpracaPage() {
                 </div>
               </AnimateIn>
             ))}
+          </div>
+
+          {/* Right - Atmospheric image */}
+          <div className="hidden md:block relative">
+            <div className="absolute inset-0 bg-gradient-to-l from-[#0a0a0a] via-[#0f0f0f] to-transparent" />
+            <div className="absolute inset-0 opacity-[0.2] bg-[url('/hero-video-poster.jpg')] bg-cover bg-[center_right] grayscale" />
           </div>
         </div>
       </section>
