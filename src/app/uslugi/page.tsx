@@ -2,11 +2,10 @@
 
 import { useRef, useEffect, useState } from "react";
 import gsap from "gsap";
-import AnimateIn from "@/components/AnimateIn";
 import ScrollRevealText from "@/components/ScrollRevealText";
 import ScrambleLink from "@/components/ScrambleLink";
-import Image from "next/image";
 import SubpageHero from "@/components/SubpageHero";
+
 
 /* ──────────── DATA ──────────── */
 
@@ -89,7 +88,7 @@ export default function UslugiPage() {
           indent={2}
         />
         <div className="flex justify-end mt-11">
-          <ScrambleLink href="/kontakt" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
+          <ScrambleLink href="#" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
             [ Zapytaj o wycenę ]
           </ScrambleLink>
         </div>
@@ -98,7 +97,7 @@ export default function UslugiPage() {
       {/* ─── NASZE KOMPETENCJE ─── */}
       <section className="border-b border-white/10">
         {/* Title */}
-        <div className="flex items-center justify-center pt-16 pb-32 px-[clamp(24px,4vw,64px)]">
+        <div className="flex items-center justify-center py-20 px-[clamp(24px,4vw,64px)]">
           <h2 className="text-[clamp(2.5rem,4.76vw,72px)] font-normal text-text leading-[76px] tracking-[-1.44px]">
             Nasze kompetencje
           </h2>
@@ -110,7 +109,7 @@ export default function UslugiPage() {
             <button
               key={comp.id}
               onClick={() => setActiveTab(i)}
-              className={`draw-line-hover font-[var(--font-mono)] text-[14px] tracking-[1.12px] transition-colors duration-300 ${
+              className={`font-[var(--font-mono)] text-[14px] tracking-[1.12px] transition-colors duration-300 ${
                 activeTab === i
                   ? "text-text"
                   : "text-text-dim hover:text-text"
@@ -124,8 +123,8 @@ export default function UslugiPage() {
         </div>
 
         {/* Active tab content */}
-        <div className="border-b border-white/10">
-          <div ref={contentRef} className="px-[clamp(24px,4vw,80px)] pt-10 pb-32">
+        <div>
+          <div ref={contentRef} className="px-[clamp(24px,4vw,80px)] pt-10 pb-8">
             {/* Counter */}
             <div className="mb-9">
               <div className="border border-text/50 px-2 py-1 inline-block">
@@ -158,61 +157,50 @@ export default function UslugiPage() {
 
             {/* CTA */}
             <div className="flex justify-end">
-              <ScrambleLink href="/kontakt" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
+              <ScrambleLink href="#" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
                 {`[ ${active.cta} ]`}
               </ScrambleLink>
             </div>
           </div>
         </div>
 
-        {/* Full-width image */}
+        {/* Full-width video */}
         <div className="relative h-[680px] overflow-hidden">
-          <Image
-            src={active.img}
-            alt={active.title}
-            fill
-            className="object-cover grayscale brightness-[0.25] contrast-[1.1] sepia-[0.15] transition-all duration-700"
-          />
-          <div className="absolute inset-0 bg-[#0a1a0a]/40 mix-blend-multiply" />
-          <div className="moving-grain !opacity-[0.08]" />
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover grayscale brightness-[0.35] contrast-[1.1] sepia-[0.15]"
+          >
+            <source src="/dark-terrain.mp4" type="video/mp4" />
+          </video>
+          <div className="absolute inset-0 bg-[#0a1a0a]/40 mix-blend-multiply z-[1]" />
+          <div className="moving-grain !opacity-[0.08] z-[1]" />
           <div
-            className="absolute inset-0 pointer-events-none opacity-[0.04]"
+            className="absolute inset-0 pointer-events-none opacity-[0.04] z-[1]"
             style={{
               backgroundImage:
                 "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(19,255,21,0.12) 2px, rgba(19,255,21,0.12) 4px)",
             }}
           />
           {/* Top + bottom gradients */}
-          <div className="absolute top-0 left-0 right-0 h-[30%] bg-gradient-to-b from-bg via-bg/60 to-transparent" />
-          <div className="absolute bottom-0 left-0 right-0 h-[30%] bg-gradient-to-t from-bg via-bg/60 to-transparent" />
+          <div className="absolute top-0 left-0 right-0 h-[30%] bg-gradient-to-b from-bg via-bg/60 to-transparent z-[4]" />
+          <div className="absolute bottom-0 left-0 right-0 h-[30%] bg-gradient-to-t from-bg via-bg/60 to-transparent z-[4]" />
         </div>
       </section>
 
       {/* ─── WSPÓŁPRACA CTA ─── */}
-      <section className="border-b border-white/10">
-        <div className="grid grid-cols-1 md:grid-cols-[auto_1fr]">
-          {/* Left label */}
-          <div className="border-r border-white/10 px-12 py-16 flex items-start">
-            <AnimateIn>
-              <span className="font-[var(--font-mono)] text-[16px] font-medium text-text tracking-[0.8px]">
-                Współpraca
-              </span>
-            </AnimateIn>
-          </div>
-
-          {/* Right content */}
-          <div className="px-[clamp(24px,4vw,80px)] py-16 flex flex-col gap-9">
-            <AnimateIn delay={0.1}>
-              <p className="text-[clamp(2rem,3.17vw,48px)] font-light text-text-dim leading-[53px] tracking-[-0.48px]">
-                Dostarczamy rozwiązania tam, gdzie standardowe metody zawodzą.
-              </p>
-            </AnimateIn>
-            <AnimateIn delay={0.2}>
-              <ScrambleLink href="/wspolpraca" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
-                [ Rozpocznij współpracę ]
-              </ScrambleLink>
-            </AnimateIn>
-          </div>
+      <section className="border-b border-white/10 py-32 px-[clamp(24px,4vw,64px)]">
+        <ScrollRevealText
+          text="Dostarczamy rozwiązania tam, gdzie standardowe metody zawodzą. Szukasz partnera technologicznego do projektu obronnego lub cywilnego?"
+          className="text-[1.75rem] md:text-[3.2vw] font-medium leading-[1.1] tracking-[-0.48px] text-left"
+          indent={2}
+        />
+        <div className="flex justify-end mt-11">
+          <ScrambleLink href="/wspolpraca" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
+            [ Rozpocznij współpracę ]
+          </ScrambleLink>
         </div>
       </section>
     </main>

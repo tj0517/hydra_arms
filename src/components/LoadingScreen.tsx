@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 
+const ACCENT = "#b8d95a";
+
 const BOOT_LINES = [
   { text: "> HYDRA ARMS SYSTEMS v2.1.4", color: "#ffffff" },
-  { text: "> INITIALIZING CORE MODULES...", color: "#888888" },
-  { text: "> LOADING DEFENSE PROTOCOLS... OK", color: "#13ff15" },
-  { text: "> SECURE CONNECTION........... OK", color: "#13ff15" },
-  { text: "> SYSTEM READY", color: "#ffffff" },
+  { text: "> INICJALIZACJA MODUŁÓW...", color: "#888888" },
+  { text: "> ŁADOWANIE PROTOKOŁÓW........ OK", color: ACCENT },
+  { text: "> BEZPIECZNE POŁĄCZENIE....... OK", color: ACCENT },
+  { text: "> SYSTEM GOTOWY", color: "#ffffff" },
 ];
 
 export default function LoadingScreen() {

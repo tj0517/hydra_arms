@@ -9,6 +9,7 @@ interface ScrambleLinkProps {
   children: string;
   className?: string;
   disabled?: boolean;
+  fill?: boolean;
 }
 
 export default function ScrambleLink({
@@ -16,6 +17,7 @@ export default function ScrambleLink({
   children,
   className = "",
   disabled = false,
+  fill = false,
 }: ScrambleLinkProps) {
   const [display, setDisplay] = useState(children);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -56,12 +58,13 @@ export default function ScrambleLink({
   // Split display into bracket and inner parts for separate styling
   const renderStyled = () => {
     const match = display.match(/^(\[)\s*(.*?)\s*(\])$/);
-    if (!match) return <span className="text-accent">{display}</span>;
+    if (!match) return <span className={`text-accent ${fill ? "group-hover:text-bg transition-colors duration-300" : ""}`}>{display}</span>;
+    const hoverClass = fill ? "group-hover:text-bg transition-colors duration-300" : "";
     return (
       <>
-        <span className="text-text-dim text-2xl">{match[1]}</span>
-        <span className="text-accent"> {match[2]} </span>
-        <span className="text-text-dim text-2xl">{match[3]}</span>
+        <span className={`text-text-dim text-2xl ${hoverClass}`}>{match[1]}</span>
+        <span className={`text-accent ${hoverClass}`}> {match[2]} </span>
+        <span className={`text-text-dim text-2xl ${hoverClass}`}>{match[3]}</span>
       </>
     );
   };
@@ -70,7 +73,7 @@ export default function ScrambleLink({
     <a
       ref={linkRef}
       href={disabled ? undefined : href}
-      className={`draw-line-hover ${className}`}
+      className={`group ${className}`}
       onMouseEnter={scramble}
       onMouseLeave={reset}
       onClick={disabled ? (e) => e.preventDefault() : undefined}

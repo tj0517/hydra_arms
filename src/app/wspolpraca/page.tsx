@@ -6,7 +6,10 @@ import AnimateIn from "@/components/AnimateIn";
 import ScrollRevealText from "@/components/ScrollRevealText";
 import ScrambleLink from "@/components/ScrambleLink";
 import TypewriterTitle from "@/components/TypewriterTitle";
+import DrawReveal from "@/components/DrawReveal";
+import MissionBriefing from "@/components/MissionBriefing";
 import SubpageHero from "@/components/SubpageHero";
+import TacticalGrid from "@/components/TacticalGrid";
 
 /* ──────────── DATA ──────────── */
 
@@ -18,13 +21,23 @@ const fundamenty = [
   },
   {
     id: "02",
-    title: "Wszechstronność projektowa",
-    desc: "Tworzymy koncepcje dla różnych rodzajów uzbrojenia.",
+    title: "Transparentność operacyjna",
+    desc: "Działamy w ścisłej zgodności z krajowymi i międzynarodowymi procedurami kontroli obrotu specjalnego.",
   },
   {
     id: "03",
     title: "Nowoczesne materiały",
     desc: "Od wysokogatunkowych stopów metali, przez zaawansowane tworzywa sztuczne, aż po kompozyty nowej generacji.",
+  },
+  {
+    id: "04",
+    title: "Inżynieria precyzyjna",
+    desc: "Dysponujemy zapleczem technologicznym zdolnym do realizacji złożonych zadań produkcyjnych i prototypowych.",
+  },
+  {
+    id: "05",
+    title: "Wszechstronność projektowa",
+    desc: "Tworzymy koncepcje dla różnych rodzajów uzbrojenia.",
   },
 ];
 
@@ -73,9 +86,12 @@ const ethicsItems = [
 
 export default function WspolpracaPage() {
   const [activeTab, setActiveTab] = useState("suwer");
+  const [fundPage, setFundPage] = useState(0);
   const activeIndex = korzysciTabs.findIndex((t) => t.id === activeTab);
+  const fundMaxPage = Math.ceil(fundamenty.length / 2) - 1;
 
   const contentRef = useRef<HTMLDivElement>(null);
+  const fundRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!contentRef.current) return;
@@ -85,6 +101,15 @@ export default function WspolpracaPage() {
       { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }
     );
   }, [activeTab]);
+
+  useEffect(() => {
+    if (!fundRef.current) return;
+    gsap.fromTo(
+      fundRef.current.children,
+      { opacity: 0, y: 20 },
+      { opacity: 1, y: 0, duration: 0.5, stagger: 0.12, ease: "power2.out" }
+    );
+  }, [fundPage]);
 
   return (
     <main>
@@ -100,7 +125,7 @@ export default function WspolpracaPage() {
         />
         <div className="flex justify-end mt-11">
           <ScrambleLink
-            href="/kontakt"
+            href="#"
             className="font-[var(--font-mono)] text-[14px] text-accent tracking-[1.12px] hover:text-white transition-colors duration-300"
           >
             [ Rozpocznij współpracę ]
@@ -109,57 +134,95 @@ export default function WspolpracaPage() {
       </section>
 
       {/* ─── FUNDAMENTY SECTION ─── */}
-      <section>
-        <div className="px-[clamp(24px,4vw,64px)] border-t border-white/5">
-          <div className="flex items-end justify-between pt-4 pb-8">
-            <TypewriterTitle
-              as="h2"
-              className="text-[clamp(1.5rem,3.17vw,48px)] font-light text-text leading-[53px] tracking-[-0.48px]"
-              speed={50}
+      <section className="border-t border-white/5">
+        <div className="flex items-end justify-between px-[clamp(24px,4vw,64px)] pt-16 pb-8">
+          <TypewriterTitle
+            as="h2"
+            className="text-[clamp(2rem,3.17vw,48px)] font-light text-text leading-[53px] tracking-[-0.48px]"
+            speed={50}
+          >
+            Fundamenty naszej działalności
+          </TypewriterTitle>
+
+          <div className="flex gap-3 shrink-0 ml-8">
+            <button
+              onClick={() => setFundPage((p) => p - 1)}
+              disabled={fundPage === 0}
+              className="w-11 h-11 rounded-full border border-white/15 flex items-center justify-center text-text-dim hover:border-accent hover:text-accent transition-colors duration-300 disabled:opacity-20 disabled:pointer-events-none"
             >
-              Fundamenty naszej działalności
-            </TypewriterTitle>
-            <AnimateIn delay={0.2} className="hidden md:flex gap-9 items-center">
-              <button className="draw-line-hover text-text-dim hover:text-accent transition-colors" aria-label="Previous">
-                <svg width="18" height="36" viewBox="0 0 18 36" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M14 6L4 18L14 30" />
-                </svg>
-              </button>
-              <button className="draw-line-hover text-text-dim hover:text-accent transition-colors" aria-label="Next">
-                <svg width="18" height="36" viewBox="0 0 18 36" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M4 6L14 18L4 30" />
-                </svg>
-              </button>
-            </AnimateIn>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M10 3L5 8L10 13" /></svg>
+            </button>
+            <button
+              onClick={() => setFundPage((p) => p + 1)}
+              disabled={fundPage >= fundMaxPage}
+              className="w-11 h-11 rounded-full border border-white/15 flex items-center justify-center text-text-dim hover:border-accent hover:text-accent transition-colors duration-300 disabled:opacity-20 disabled:pointer-events-none"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 3L11 8L6 13" /></svg>
+            </button>
           </div>
         </div>
 
-        <div className="px-[clamp(24px,4vw,64px)] border-t border-white/5">
-          <div className="grid grid-cols-1 md:grid-cols-3">
-            {fundamenty.map((item, i) => (
-              <AnimateIn key={item.id} delay={i * 0.1} y={20}>
-                <div className={`relative py-8 px-4 ${i < fundamenty.length - 1 ? "md:border-r md:border-white/5" : ""}`}>
-                  <span className="font-[var(--font-mono)] text-[14px] tracking-[1.12px] block mb-5">
-                    <span className="text-text text-2xl">[</span>
-                    <span className="text-accent">{item.id}</span>
-                    <span className="text-text text-2xl">]</span>
-                  </span>
-                  <h3 className="text-text text-[28px] font-medium leading-[34px] mb-5">
-                    {item.title}
-                  </h3>
-                  <p className="text-text-dim text-[16px] font-normal leading-[26px]">
-                    {item.desc}
-                  </p>
+        <div
+          ref={fundRef}
+          className="grid grid-cols-1 md:grid-cols-2 min-h-[450px] border-t border-b border-white/5"
+        >
+          {[0, 1].map((offset) => {
+            const item = fundamenty[fundPage * 2 + offset];
+            if (!item) return <div key={offset} />;
+            return (
+              <div
+                key={item.id}
+                className={`flex flex-col p-[clamp(24px,4vw,64px)] ${
+                  offset === 0 ? "md:border-r border-white/5" : ""
+                }`}
+              >
+                <p className="text-[clamp(1.25rem,2vw,30px)] font-normal text-text-dim leading-[1.4] tracking-[-0.2px]">
+                  {item.desc}
+                </p>
+
+                <div className="mt-auto flex items-start gap-4 pt-12">
+                  <span className="w-6 h-px bg-text-dim/40 mt-2.5 shrink-0" />
+                  <div>
+                    <span className="font-[var(--font-mono)] text-accent text-[14px] tracking-[1px]">
+                      {item.id}
+                    </span>
+                    <h3 className="text-text-dim text-[16px] font-medium leading-[22px] mt-1">
+                      {item.title}
+                    </h3>
+                  </div>
                 </div>
-              </AnimateIn>
-            ))}
-          </div>
+              </div>
+            );
+          })}
         </div>
+
       </section>
 
-      {/* ─── IMAGE SECTION ─── */}
-      <div className="h-[549px] bg-[#080808] relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111] to-[#080808] opacity-80" />
+      {/* ─── TACTICAL GRID BREAK ─── */}
+      <div className="h-[549px] bg-[#060806] relative overflow-hidden">
+        {/* Background video */}
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover opacity-30 grayscale brightness-[0.6] z-0"
+        >
+          <source src="/aerial-view.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 z-[1]">
+          <TacticalGrid />
+        </div>
+        {/* Vignette */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: "radial-gradient(ellipse at center, transparent 30%, rgba(6,8,6,0.85) 100%)" }}
+        />
+        {/* Top + bottom fade */}
+        <div
+          className="absolute top-0 left-0 right-0 h-full pointer-events-none"
+          style={{ background: "linear-gradient(to bottom, var(--color-bg) 0%, transparent 15%, transparent 85%, var(--color-bg) 100%)" }}
+        />
       </div>
 
       {/* ─── SECOND DESCRIPTION ─── */}
@@ -171,7 +234,7 @@ export default function WspolpracaPage() {
         />
         <div className="flex justify-end mt-11">
           <ScrambleLink
-            href="/kontakt"
+            href="#"
             className="font-[var(--font-mono)] text-[14px] text-accent tracking-[1.12px] hover:text-white transition-colors duration-300"
           >
             [ Rozpocznij współpracę ]
@@ -180,40 +243,38 @@ export default function WspolpracaPage() {
       </section>
 
       {/* ─── PARTNERSTWA STRATEGICZNE ─── */}
-      <section className="relative grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] min-h-[578px] overflow-hidden border-t border-white/5">
-        {/* Left content */}
-        <div className="px-[clamp(24px,4vw,64px)] py-16 flex flex-col justify-center">
-          <AnimateIn delay={0.1}>
-            <p className="text-text-dim text-[16px] font-normal leading-[26px] mb-10 max-w-[500px]">
-              Nasza wizja współpracy z sektorem publicznym i służbami mundurowymi
-              opiera się na dostarczaniu rozwiązań wyprzedzających współczesne
-              wyzwania operacyjne. Poprzez integrację kompetencji R&D z potrzebami
-              jednostek liniowych, tworzymy fundament pod długofalowe programy
-              modernizacyjne, które gwarantują przewagę technologiczną, niezależność
-              sprzętową oraz najwyższy poziom ochrony funkcjonariuszy i żołnierzy.
-            </p>
-          </AnimateIn>
-          <ScrambleLink
-            href="/kontakt"
-            className="font-[var(--font-mono)] text-[14px] text-accent tracking-[1.12px] hover:text-white transition-colors duration-300"
+      <section className="border-t border-b border-white/5">
+        <div className="px-[clamp(24px,4vw,64px)] pt-16">
+          <TypewriterTitle
+            as="h2"
+            className="text-[clamp(3rem,9.26vw,140px)] font-normal text-text leading-[1] tracking-[-2px] uppercase"
+            speed={60}
           >
-            [ Rozpocznij współpracę ]
-          </ScrambleLink>
+            PARTNERSTWA STRATEGICZNE
+          </TypewriterTitle>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 mt-16 pb-16">
+            <div>
+              <AnimateIn delay={0.1}>
+                <p className="text-text-dim text-[18px] font-normal leading-[30px]">
+                  Nasza wizja współpracy z sektorem publicznym i służbami mundurowymi
+                  opiera się na dostarczaniu rozwiązań wyprzedzających współczesne
+                  wyzwania operacyjne. Poprzez integrację kompetencji R&D z potrzebami
+                  jednostek liniowych, tworzymy fundament pod długofalowe programy
+                  modernizacyjne.
+                </p>
+              </AnimateIn>
+            </div>
+            <div className="flex items-start justify-end">
+              <a href="#" className="w-[100px] h-[100px] border border-white/10 flex items-center justify-center hover:border-accent/40 transition-colors duration-300">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-text-dim">
+                  <path d="M7 17L17 7M17 7H7M17 7V17" />
+                </svg>
+              </a>
+            </div>
+          </div>
         </div>
-        {/* Center vertical label */}
-        <div className="hidden md:flex items-center justify-center border-x border-white/5 px-4">
-          <span
-            className="font-[var(--font-mono)] text-[14px] text-accent/60 tracking-[0.2em] uppercase whitespace-nowrap"
-            style={{ writingMode: "vertical-rl", textOrientation: "mixed" }}
-          >
-            Partnerstwa strategiczne
-          </span>
-        </div>
-        {/* Right atmospheric image */}
-        <div className="relative min-h-[300px] md:min-h-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#061106] via-[#0a120a] to-[#050505]" />
-          <div className="absolute inset-0 opacity-[0.15] bg-[url('/hero-video-poster.jpg')] bg-cover bg-center grayscale" />
-        </div>
+
       </section>
 
       {/* ─── KLUCZOWE KORZYŚCI ─── */}
@@ -234,7 +295,7 @@ export default function WspolpracaPage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`draw-line-hover font-[var(--font-mono)] text-[14px] tracking-[1.12px] transition-colors duration-300 ${
+              className={`font-[var(--font-mono)] text-[14px] tracking-[1.12px] transition-colors duration-300 ${
                 activeTab === tab.id
                   ? "text-text"
                   : "text-text-dim hover:text-text"
@@ -272,8 +333,9 @@ export default function WspolpracaPage() {
 
             <div className="flex justify-end mt-16">
               <ScrambleLink
-                href="/kontakt"
+                href="#"
                 className="font-[var(--font-mono)] text-[14px] text-accent tracking-[1.12px] border border-accent/40 px-6 py-2 hover:bg-accent hover:text-bg transition-all duration-300"
+                fill
               >
                 [ Napisz do nas ]
               </ScrambleLink>
@@ -283,40 +345,32 @@ export default function WspolpracaPage() {
       </section>
 
       {/* ─── ETHICS SECTION ─── */}
-      <section className="relative overflow-hidden bg-bg-light">
-        <div className="moving-grain" />
-        <div className="relative z-[1] grid grid-cols-1 md:grid-cols-[1fr_1fr_0.6fr] min-h-[634px]">
-          {/* Left - Title */}
-          <div className="px-[clamp(24px,4vw,64px)] pt-9">
-            <TypewriterTitle
-              as="h2"
-              className="text-text text-[clamp(1.5rem,3.17vw,48px)] font-light leading-[53px] tracking-[-0.48px]"
-              speed={45}
-            >
-              Kodeks etyki w partnerstwie strategicznym
-            </TypewriterTitle>
+      <section className="grid grid-cols-1 md:grid-cols-2">
+        {/* Left */}
+        <div className="px-[clamp(24px,4vw,64px)] pt-9 pb-16 flex flex-col h-full">
+          <TypewriterTitle
+            as="h2"
+            className="text-text text-[28px] font-medium leading-[34px]"
+            speed={45}
+          >
+            Kodeks etyki w partnerstwie strategicznym
+          </TypewriterTitle>
+          <div className="mt-auto">
+            <MissionBriefing />
           </div>
+        </div>
 
-          {/* Center - Items */}
-          <div className="px-[clamp(24px,4vw,64px)] pt-16">
+        {/* Right */}
+        <div className="pt-16 pb-16 px-[clamp(24px,4vw,64px)]">
+          <div className="flex flex-col gap-9">
             {ethicsItems.map((item, i) => (
-              <AnimateIn key={i} delay={i * 0.1} y={20}>
-                <div className={`pb-9 ${i > 0 ? "pt-9 border-t border-white/5" : ""}`}>
-                  <h4 className="text-text text-[28px] font-medium leading-[34px] mb-4">
-                    {item.title}
-                  </h4>
-                  <p className="text-text-dim text-[18px] font-normal leading-[30px] max-w-[535px]">
-                    {item.desc}
-                  </p>
-                </div>
-              </AnimateIn>
+              <DrawReveal
+                key={i}
+                title={item.title}
+                desc={item.desc}
+                delay={i * 0.2}
+              />
             ))}
-          </div>
-
-          {/* Right - Atmospheric image */}
-          <div className="hidden md:block relative">
-            <div className="absolute inset-0 bg-gradient-to-l from-[#0a0a0a] via-[#0f0f0f] to-transparent" />
-            <div className="absolute inset-0 opacity-[0.2] bg-[url('/hero-video-poster.jpg')] bg-cover bg-[center_right] grayscale" />
           </div>
         </div>
       </section>

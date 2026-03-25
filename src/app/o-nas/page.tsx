@@ -116,7 +116,7 @@ export default function ONasPage() {
           indent={2}
         />
         <div className="flex justify-end mt-11">
-          <ScrambleLink href="/wspolpraca" disabled className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
+          <ScrambleLink href="/wspolpraca" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
             [ Rozpocznij współpracę ]
           </ScrambleLink>
         </div>
@@ -165,7 +165,7 @@ export default function ONasPage() {
             indent={2}
           />
           <div className="flex justify-end mt-11">
-            <ScrambleLink href="/wspolpraca" disabled className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
+            <ScrambleLink href="/wspolpraca" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
               [ Rozpocznij współpracę ]
             </ScrambleLink>
           </div>
@@ -193,7 +193,7 @@ export default function ONasPage() {
                     {card.desc}
                   </p>
                 </div>
-                <ScrambleLink href="/kontakt" disabled className="font-[var(--font-mono)] text-[14px] tracking-[1.12px] mt-auto">
+                <ScrambleLink href="#" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px] mt-auto">
                   [ Więcej ]
                 </ScrambleLink>
               </div>
@@ -237,7 +237,7 @@ export default function ONasPage() {
                 <p className="text-text-dim text-[14px] font-normal leading-[21px]">
                   {seg.desc}
                 </p>
-                <ScrambleLink href={seg.href} disabled className="font-[var(--font-mono)] text-[14px] tracking-[1.12px] mt-auto">
+                <ScrambleLink href={seg.href} className="font-[var(--font-mono)] text-[14px] tracking-[1.12px] mt-auto">
                   [ Więcej ]
                 </ScrambleLink>
               </div>
@@ -258,7 +258,7 @@ export default function ONasPage() {
             Fundamenty naszej działalności
           </TypewriterTitle>
           <div className="mt-auto">
-            <ScrambleLink href="/wspolpraca" disabled className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
+            <ScrambleLink href="/wspolpraca" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
               [ Rozpocznij współpracę ]
             </ScrambleLink>
           </div>
@@ -279,7 +279,7 @@ export default function ONasPage() {
                   className="w-full text-left flex items-center justify-between gap-4 pb-6 group"
                 >
                   <span
-                    className={`draw-line-hover text-[28px] font-medium leading-[34px] transition-colors duration-300 ${
+                    className={`text-[28px] font-medium leading-[34px] transition-colors duration-300 ${
                       openFundament === i
                         ? "text-text"
                         : "text-text-dim group-hover:text-text"

@@ -8,6 +8,7 @@ import SplitText from "@/components/SplitText";
 import ScrollRevealText from "@/components/ScrollRevealText";
 import ScrambleLink from "@/components/ScrambleLink";
 import MilitaryMap from "@/components/MilitaryMap";
+import MapCrosshair from "@/components/MapCrosshair";
 import TypewriterTitle from "@/components/TypewriterTitle";
 import DrawCard from "@/components/DrawCard";
 import Image from "next/image";
@@ -96,6 +97,8 @@ export default function HomePage() {
   const heroRef = useRef<HTMLElement>(null);
   const scopeOverlayRef = useRef<HTMLDivElement>(null);
   const scopeReticleRef = useRef<HTMLDivElement>(null);
+  const coordLatRef = useRef<HTMLDivElement>(null);
+  const coordLngRef = useRef<HTMLDivElement>(null);
   const videoSectionRef = useRef<HTMLDivElement>(null);
   const servicesWrapRef = useRef<HTMLDivElement>(null);
   const serviceRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -121,12 +124,33 @@ export default function HomePage() {
     let raf = 0;
     const RADIUS = 90;
 
+    const formatCoord = (deg: number, pos: string, neg: string) => {
+      const dir = deg >= 0 ? pos : neg;
+      const abs = Math.abs(deg);
+      const d = Math.floor(abs);
+      const m = Math.floor((abs - d) * 60);
+      const s = Math.floor(((abs - d) * 60 - m) * 60);
+      return `${String(d).padStart(3, "0")}°${String(m).padStart(2, "0")}'${String(s).padStart(2, "0")}"${dir}`;
+    };
+
+    const updateCoords = (nx: number, ny: number) => {
+      const rect = hero.getBoundingClientRect();
+      const px = nx / rect.width;
+      const py = ny / rect.height;
+      // Map to area around Kraków: lat ~50.02–50.10, lng ~19.88–20.02
+      const lat = 50.02 + (1 - py) * 0.08;
+      const lng = 19.88 + px * 0.14;
+      if (coordLatRef.current) coordLatRef.current.textContent = `[ ${formatCoord(lat, "N", "S")} ]`;
+      if (coordLngRef.current) coordLngRef.current.textContent = `[ ${formatCoord(lng, "E", "W")} ]`;
+    };
+
     const tick = () => {
       curX += (targetX - curX) * 0.08;
       curY += (targetY - curY) * 0.08;
       scopeOv.style.setProperty("--sx", `${curX}px`);
       scopeOv.style.setProperty("--sy", `${curY}px`);
       reticle.style.transform = `translate(${curX - RADIUS}px, ${curY - RADIUS}px)`;
+      updateCoords(curX, curY);
       raf = requestAnimationFrame(tick);
     };
 
@@ -258,14 +282,13 @@ export default function HomePage() {
         {/* HUD UI layer + bottom content */}
         <div className="absolute inset-0 z-[10] pointer-events-none">
           <div className="absolute top-[100px] left-[clamp(24px,4vw,80px)] font-[var(--font-mono)] text-[11px] text-accent leading-[2.2] opacity-60 hidden md:block">
-            <div>// HYDRA ARMS</div>
             <div>// PL-2026</div>
             <div>// KRAKÓW, PL</div>
           </div>
           <div className="absolute top-[100px] right-[clamp(24px,4vw,80px)] font-[var(--font-mono)] text-[11px] text-accent text-right leading-[2.2] opacity-60 hidden md:block">
-            <div>[ 52°24&apos;N ]</div>
-            <div>[ 016°55&apos;E ]</div>
-            <div>[ SEC // DEF ]</div>
+            <div ref={coordLatRef}>[ 050°04&apos;00&quot;N ]</div>
+            <div ref={coordLngRef}>[ 019°57&apos;00&quot;E ]</div>
+            <div>[ BEZ // OBR ]</div>
           </div>
 
           {/* Bottom content */}
@@ -291,7 +314,7 @@ export default function HomePage() {
                 [ Nasze usługi ]
               </ScrambleLink>
               <ScrambleLink
-                href="/sklep"
+                href="#"
                 className="font-[var(--font-mono)] text-[14px] tracking-[1.12px] hover:text-white transition-colors duration-300"
               >
                 [ Sklep ]
@@ -373,9 +396,9 @@ export default function HomePage() {
 
                     <a
                       href="/uslugi"
-                      className="draw-line-hover font-[var(--font-mono)] text-[14px] tracking-[1.12px] border border-accent/40 px-6 py-2.5 hover:bg-accent hover:text-bg transition-all duration-300 inline-block"
+                      className="group font-[var(--font-mono)] text-[14px] tracking-[1.12px] border border-accent/40 px-6 py-2.5 hover:bg-accent hover:text-bg transition-all duration-300 inline-block"
                     >
-                      <span className="text-text-dim text-2xl">[</span> <span className="text-accent">Szczegóły →</span> <span className="text-text-dim text-2xl">]</span>
+                      <span className="text-text-dim text-2xl group-hover:text-bg transition-colors duration-300">[</span> <span className="text-accent group-hover:text-bg transition-colors duration-300">Szczegóły →</span> <span className="text-text-dim text-2xl group-hover:text-bg transition-colors duration-300">]</span>
                     </a>
                   </div>
                 </div>
@@ -389,7 +412,7 @@ export default function HomePage() {
       <section>
         <div className="border-t border-white/[0.25] px-11 py-2">
           <span className="font-[var(--font-mono)] text-[16px] font-medium text-accent tracking-[0.8px]">
-            //02 SECTION
+            //02 O NAS
           </span>
         </div>
         <div className="py-20 px-16">
@@ -418,7 +441,7 @@ export default function HomePage() {
           playsInline
           className="absolute inset-0 w-full h-full object-cover grayscale brightness-[0.5] contrast-[1.15] sepia-[0.15]"
         >
-          <source src="/full.mov" type="video/mp4" />
+          <source src="/soldiers.mp4" type="video/mp4" />
         </video>
         {/* Dark green tint */}
         <div className="absolute inset-0 bg-[#0a1a0a]/30 mix-blend-multiply z-[1]" />
@@ -432,17 +455,23 @@ export default function HomePage() {
               "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(19,255,21,0.12) 2px, rgba(19,255,21,0.12) 4px)",
           }}
         />
-        {/* Top gradient fade — long and fluid */}
-        <div className="absolute top-0 left-0 right-0 h-[40%] bg-gradient-to-b from-bg via-bg/60 to-transparent z-[2]" />
-        {/* Bottom gradient fade — long and fluid */}
-        <div className="absolute bottom-0 left-0 right-0 h-[40%] bg-gradient-to-t from-bg via-bg/60 to-transparent z-[2]" />
+        {/* Top gradient fade */}
+        <div
+          className="absolute top-0 left-0 right-0 h-full z-[2] pointer-events-none"
+          style={{ background: "linear-gradient(to bottom, var(--color-bg) 0%, var(--color-bg) 5%, transparent 55%)" }}
+        />
+        {/* Bottom gradient fade */}
+        <div
+          className="absolute bottom-0 left-0 right-0 h-full z-[2] pointer-events-none"
+          style={{ background: "linear-gradient(to top, var(--color-bg) 0%, var(--color-bg) 5%, transparent 55%)" }}
+        />
       </div>
 
       {/* ─── POTENCJAŁ I OPOWIEDZIALNOŚĆ ─── */}
       <section>
         <div className="border-t border-white/[0.25] px-11 py-2">
           <span className="font-[var(--font-mono)] text-[16px] font-medium text-accent tracking-[0.8px]">
-            //03 SECTION
+            //03 POTENCJAŁ
           </span>
         </div>
         <div className="px-16 pt-16">
@@ -476,7 +505,7 @@ export default function HomePage() {
       <section>
         <div className="border-t border-white/[0.25] px-11 py-2">
           <span className="font-[var(--font-mono)] text-[16px] font-medium text-accent tracking-[0.8px]">
-            //04 SECTION
+            //04 DYSTRYBUCJA
           </span>
         </div>
         <div className="px-16 py-16">
@@ -495,7 +524,7 @@ export default function HomePage() {
         </div>
 
         {/* Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-16 pb-16">
           {filary.map((item, i) => (
             <DrawCard key={i} delay={i * 0.2}>
               <div className="p-8 flex flex-col gap-5 h-full">
@@ -522,119 +551,185 @@ export default function HomePage() {
 
       {/* ─── MAP SECTION ─── */}
       <section>
-        <div className="border-t border-white/[0.25] px-11 py-2">
-          <span className="font-[var(--font-mono)] text-[16px] font-medium text-accent tracking-[0.8px]">
-            //05 SECTION
-          </span>
-        </div>
-        <div className="h-[542px] bg-[#080808] relative overflow-hidden -mt-px">
+        <div className="h-[542px] bg-[#080808] relative overflow-hidden border-t border-white/[0.25]">
           <MilitaryMap />
-          {/* Info overlay — dark backdrop so text doesn't blend with map */}
-          <div className="absolute left-16 top-6 z-10 font-[var(--font-mono)] text-[14px] leading-[28px] tracking-[0.2px] bg-bg/70 backdrop-blur-sm px-4 py-3 border border-white/5">
-            <p className="text-text text-[16px] font-bold mb-2">HYDRA ARMS SP. Z O.O.</p>
-            <p className="text-text-dim">[→] Kraków, Polska</p>
-            <p className="text-text-dim">[→] 50°03&apos;N 019°56&apos;E</p>
-          </div>
-          <div className="absolute right-16 bottom-8 z-10">
-            <a
-              href="https://maps.google.com/?q=50.06,19.94"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="draw-line-hover font-[var(--font-mono)] text-[14px] tracking-[1.12px] border border-accent/40 px-6 py-2 hover:bg-accent hover:text-bg transition-all duration-300"
-            >
-              <span className="text-text-dim text-2xl">[</span> <span className="text-accent">Wyznacz Trasę →</span> <span className="text-text-dim text-2xl">]</span>
-            </a>
+
+          {/* HUD crosshair cursor */}
+          <MapCrosshair />
+
+          {/* Right info panel with gradient backdrop */}
+          <div
+            className="absolute right-0 top-0 w-[45%] h-full z-[3] px-[52px] py-[20px] pointer-events-none"
+            style={{ backgroundImage: "linear-gradient(60deg, rgba(10,10,11,0) 0%, rgb(10,10,11) 38%)" }}
+          >
+            <h3 className="text-text-dim text-[28px] font-medium leading-[34px] mb-6">
+              HYDRA ARMS SP. Z O.O.
+            </h3>
+
+            <div className="font-[var(--font-mono)] text-[16px] tracking-[0.8px] leading-[24px] text-text-dim space-y-0">
+              <p>[<span className="text-accent">→</span>]  Kraków, Polska</p>
+              <p>[<span className="text-accent">→</span>]  50°04&apos;N  019°57&apos;E</p>
+              <p>[<span className="text-accent">→</span>]  Droga krajowa S7</p>
+              <p>[<span className="text-accent">→</span>]  Trasa północ–południe</p>
+              <p>[<span className="text-accent">→</span>]  Punkt handlowo-biurowy</p>
+            </div>
+
+            <div className="mt-8 pointer-events-auto">
+              <a
+                href="https://maps.google.com/?q=50.06,19.94"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group font-[var(--font-mono)] text-[20px] tracking-[0.2px] hover:text-white transition-colors duration-300"
+              >
+                <span className="text-text-dim group-hover:text-white transition-colors duration-300">[</span> <span className="text-accent group-hover:text-white transition-colors duration-300">Wyznacz Trasę →</span> <span className="text-text-dim group-hover:text-white transition-colors duration-300">]</span>
+              </a>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ─── KONTAKT ─── */}
-      <section className="border-t border-white/5">
-        <div className="px-14 pt-9">
-          <AnimateIn>
-            <TypewriterTitle
-              as="h2"
-              className="text-text text-[48px] font-light leading-[53px] tracking-[-0.48px]"
-              speed={50}
-            >
-              Skontaktuj się z nami
-            </TypewriterTitle>
-          </AnimateIn>
-        </div>
+      {/* ─── KONTAKT — TERMINAL ─── */}
+      <section className="border-t border-white/[0.25] px-[clamp(24px,4vw,80px)] py-16">
+        <div className="max-w-[1100px] mx-auto">
+          {/* Terminal window */}
+          <div className="border border-accent/20 bg-[#060806] relative overflow-hidden">
+            {/* Scanlines overlay */}
+            <div
+              className="absolute inset-0 pointer-events-none opacity-[0.03] z-[1]"
+              style={{
+                backgroundImage:
+                  "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(184,217,90,0.15) 2px, rgba(184,217,90,0.15) 4px)",
+              }}
+            />
+            {/* CRT glow */}
+            <div
+              className="absolute inset-0 pointer-events-none z-[1]"
+              style={{
+                boxShadow: "inset 0 0 80px rgba(184,217,90,0.03)",
+              }}
+            />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 px-14 py-9 border-t border-white/5 mt-9">
-          {/* Left — info */}
-          <div className="pr-8">
-            <AnimateIn>
-              <p className="text-text text-[28px] font-medium leading-[34px] mb-6">
-                Napisz do nas na wybrany z podanych maili
-                albo uzupełnij formularz kontaktowy
-              </p>
-            </AnimateIn>
-            <AnimateIn delay={0.1}>
-              <div className="font-[var(--font-mono)] text-[14px] text-text-dim leading-[30px] space-y-1">
-                <p>Koordynacja Projektów R&D: <span className="text-accent">[ research@hydra-arms.com ]</span></p>
-                <p>Dział Zamówień Publicznych (B2G): <span className="text-accent">[ gov@hydra-arms.com ]</span></p>
-                <p>Dział handlowy: <span className="text-accent">[ sprzedaz@hydra-arms.com ]</span></p>
-                <p>Sekretariat: <span className="text-accent">[ office@hydra-arms.com ]</span></p>
+            {/* Title bar */}
+            <div className="flex items-center gap-3 px-4 py-2 border-b border-accent/15 bg-accent/[0.04]">
+              <div className="flex gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-accent/40" />
+                <span className="w-2.5 h-2.5 rounded-full bg-accent/20" />
+                <span className="w-2.5 h-2.5 rounded-full bg-accent/20" />
               </div>
-            </AnimateIn>
-          </div>
+              <span className="font-[var(--font-mono)] text-[11px] text-accent/50 tracking-[0.15em] uppercase">
+                hydra-arms@terminal:~/kontakt
+              </span>
+            </div>
 
-          {/* Right — form */}
-          <div className="border-l border-white/5 pl-9 pt-4">
-            <AnimateIn delay={0.15}>
-              <form className="space-y-6">
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <input
-                      type="text"
-                      placeholder="IMIĘ"
-                      className="w-full bg-transparent border-b border-white/10 pb-2 text-text font-[var(--font-mono)] text-[14px] tracking-[0.5px] focus:border-accent focus:outline-none transition-colors placeholder:text-text-dim/50"
-                    />
-                  </div>
-                  <div>
-                    <input
-                      type="email"
-                      placeholder="EMAIL"
-                      className="w-full bg-transparent border-b border-white/10 pb-2 text-text font-[var(--font-mono)] text-[14px] tracking-[0.5px] focus:border-accent focus:outline-none transition-colors placeholder:text-text-dim/50"
-                    />
-                  </div>
-                </div>
+            {/* Terminal body */}
+            <div className="relative z-[2] p-6 md:p-8">
+              {/* Boot-up header */}
+              <div className="font-[var(--font-mono)] text-[11px] text-accent/40 leading-[1.8] mb-6">
+                <div>HYDRA ARMS — BEZPIECZNY KANAŁ ŁĄCZNOŚCI v2.4.1</div>
+                <div>Inicjalizacja szyfrowanego kanału... <span className="text-accent/70">OK</span></div>
+                <div>Połączenie nawiązane. Oczekiwanie na dane wejściowe.</div>
+                <div className="mt-2 border-t border-accent/10 pt-2" />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Left — contact info as terminal output */}
                 <div>
-                  <input
-                    type="text"
-                    placeholder="TYTUŁ"
-                    className="w-full bg-transparent border-b border-white/10 pb-2 text-text font-[var(--font-mono)] text-[14px] tracking-[0.5px] focus:border-accent focus:outline-none transition-colors placeholder:text-text-dim/50"
-                  />
+                  <div className="font-[var(--font-mono)] text-[12px] text-accent/50 mb-4">
+                    $ cat /etc/hydra/contact.conf
+                  </div>
+                  <div className="font-[var(--font-mono)] text-[13px] leading-[2.2] space-y-0">
+                    <p className="text-text-dim">
+                      <span className="text-accent/50">R&D</span>{" "}
+                      <span className="text-accent">research@hydra-arms.com</span>
+                    </p>
+                    <p className="text-text-dim">
+                      <span className="text-accent/50">B2G</span>{" "}
+                      <span className="text-accent">gov@hydra-arms.com</span>
+                    </p>
+                    <p className="text-text-dim">
+                      <span className="text-accent/50">HANDEL</span>{" "}
+                      <span className="text-accent">sprzedaz@hydra-arms.com</span>
+                    </p>
+                    <p className="text-text-dim">
+                      <span className="text-accent/50">BIURO</span>{" "}
+                      <span className="text-accent">office@hydra-arms.com</span>
+                    </p>
+                  </div>
+
+                  <div className="font-[var(--font-mono)] text-[12px] text-accent/50 mt-6 mb-3">
+                    $ hydra --status
+                  </div>
+                  <div className="font-[var(--font-mono)] text-[12px] text-accent/30 leading-[2]">
+                    <div>SZYFROWANIE: <span className="text-accent/60">AES-256</span></div>
+                    <div>PROTOKÓŁ:    <span className="text-accent/60">TLS 1.3</span></div>
+                    <div>STATUS:      <span className="text-accent">AKTYWNY</span> <span className="terminal-blink">█</span></div>
+                  </div>
                 </div>
-                <div>
-                  <textarea
-                    placeholder="TREŚĆ"
-                    rows={4}
-                    className="w-full bg-transparent border border-white/10 p-3 text-text font-[var(--font-mono)] text-[14px] tracking-[0.5px] focus:border-accent focus:outline-none transition-colors resize-none placeholder:text-text-dim/50"
-                  />
+
+                {/* Right — form as terminal input */}
+                <div className="border-l border-accent/10 pl-6 md:pl-8">
+                  <div className="font-[var(--font-mono)] text-[12px] text-accent/50 mb-4">
+                    $ hydra --wyslij-wiadomosc
+                  </div>
+                  <form className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <span className="font-[var(--font-mono)] text-[13px] text-accent/50 shrink-0">&gt;</span>
+                      <input
+                        type="text"
+                        placeholder="IMIĘ"
+                        className="w-full bg-transparent text-accent font-[var(--font-mono)] text-[13px] tracking-[0.5px] focus:outline-none placeholder:text-accent/20 caret-accent"
+                      />
+                    </div>
+                    <div className="border-t border-accent/5" />
+                    <div className="flex items-center gap-2">
+                      <span className="font-[var(--font-mono)] text-[13px] text-accent/50 shrink-0">&gt;</span>
+                      <input
+                        type="email"
+                        placeholder="EMAIL"
+                        className="w-full bg-transparent text-accent font-[var(--font-mono)] text-[13px] tracking-[0.5px] focus:outline-none placeholder:text-accent/20 caret-accent"
+                      />
+                    </div>
+                    <div className="border-t border-accent/5" />
+                    <div className="flex items-center gap-2">
+                      <span className="font-[var(--font-mono)] text-[13px] text-accent/50 shrink-0">&gt;</span>
+                      <input
+                        type="text"
+                        placeholder="TYTUŁ"
+                        className="w-full bg-transparent text-accent font-[var(--font-mono)] text-[13px] tracking-[0.5px] focus:outline-none placeholder:text-accent/20 caret-accent"
+                      />
+                    </div>
+                    <div className="border-t border-accent/5" />
+                    <div className="flex items-start gap-2">
+                      <span className="font-[var(--font-mono)] text-[13px] text-accent/50 shrink-0 pt-0.5">&gt;</span>
+                      <textarea
+                        placeholder="TREŚĆ WIADOMOŚCI"
+                        rows={4}
+                        className="w-full bg-transparent text-accent font-[var(--font-mono)] text-[13px] tracking-[0.5px] focus:outline-none resize-none placeholder:text-accent/20 caret-accent"
+                      />
+                    </div>
+                    <div className="border-t border-accent/5" />
+                    <div className="flex items-start gap-2 mt-2">
+                      <input type="checkbox" className="mt-0.5 accent-accent" />
+                      <span className="font-[var(--font-mono)] text-[11px] text-accent/30 leading-[1.6]">
+                        Wyrażam zgodę na przetwarzanie danych przez HYDRA ARMS
+                        w celu inicjacji procedury kontaktowej. Akceptuję{" "}
+                        <a href="/polityka-prywatnosci" className="text-accent/60 hover:text-accent transition-colors">
+                          Politykę Prywatności
+                        </a>.
+                      </span>
+                    </div>
+                    <div className="flex justify-end pt-2">
+                      <button
+                        type="submit"
+                        className="font-[var(--font-mono)] text-[13px] border border-accent/40 px-6 py-2 tracking-[1px] text-accent hover:bg-accent hover:text-bg transition-all duration-300"
+                      >
+                        [ WYŚLIJ ]
+                      </button>
+                    </div>
+                  </form>
                 </div>
-                <div className="flex items-start gap-3">
-                  <input type="checkbox" className="mt-1 accent-accent" />
-                  <span className="text-text-dim text-[13px] leading-[18px]">
-                    Wyrażam zgodę na przetwarzanie danych przez HYDRA ARMS w celu inicjacji
-                    procedury kontaktowej. Akceptuję{" "}
-                    <a href="/polityka-prywatnosci" className="text-accent hover:underline">
-                      Politykę Prywatności
-                    </a>.
-                  </span>
-                </div>
-                <div className="flex justify-end">
-                  <button
-                    type="submit"
-                    className="draw-line-hover font-[var(--font-mono)] text-[14px] bg-accent px-8 py-2 tracking-[1px] hover:bg-white transition-colors duration-300"
-                  >
-                    <span className="text-bg text-2xl">[</span> <span className="text-bg">Wyślij</span> <span className="text-bg text-2xl">]</span>
-                  </button>
-                </div>
-              </form>
-            </AnimateIn>
+              </div>
+            </div>
           </div>
         </div>
       </section>

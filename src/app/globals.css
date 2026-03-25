@@ -143,6 +143,33 @@ a, button, [role="button"], input[type="submit"] {
   to { transform: scaleX(1); }
 }
 
+/* Terminal blinking cursor */
+.terminal-blink {
+  animation: termBlink 1s step-end infinite;
+  font-size: 0.85em;
+}
+@keyframes termBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Footer dot pulse */
+.footer-dot-pulse {
+  animation: dotPulse 2s ease-in-out infinite;
+}
+@keyframes dotPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* Footer scan line */
+@keyframes footerScan {
+  0% { top: 0; opacity: 0; }
+  5% { opacity: 1; }
+  95% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
 /* Button entrance animation */
 @keyframes btnEntrance {
   from {

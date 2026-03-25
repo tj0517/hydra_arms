@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*!?";
 
 const links = [
-  { href: "/", label: "Home" },
+  { href: "/", label: "Start" },
   { href: "/uslugi", label: "Usługi" },
   { href: "/o-nas", label: "O nas" },
   { href: "/sklep", label: "Sklep" },
@@ -108,7 +108,7 @@ export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
-  const navDisabled = pathname === "/o-nas";
+
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
@@ -136,7 +136,7 @@ export default function Nav() {
         {/* Desktop links */}
         <ul className="hidden md:flex gap-9 list-none items-center">
           {links.map((link) => (
-            <ScrambleNavLink key={link.href} href={link.href} label={link.label} active={pathname === link.href} disabled={navDisabled} />
+            <ScrambleNavLink key={link.href} href={link.href} label={link.label} active={pathname === link.href} />
           ))}
         </ul>
 
@@ -166,17 +166,7 @@ export default function Nav() {
               : "opacity-0 pointer-events-none"
           }`}
         >
-          {links.map((link) =>
-            navDisabled ? (
-              <span
-                key={link.href}
-                className={`font-[var(--font-mono)] text-2xl uppercase tracking-[0.2em] transition-colors duration-300 cursor-default ${
-                  pathname === link.href ? "text-accent" : "text-text-dim hover:text-white"
-                }`}
-              >
-                {link.label}
-              </span>
-            ) : (
+          {links.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -186,8 +176,7 @@ export default function Nav() {
               >
                 {link.label}
               </Link>
-            )
-          )}
+          ))}
         </div>
       </div>
     </nav>
