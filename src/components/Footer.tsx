@@ -35,7 +35,7 @@ export default function Footer() {
         muted
         loop
         playsInline
-        className="absolute inset-0 w-full h-full object-cover grayscale brightness-[0.25] contrast-[1.3]"
+        className="absolute inset-0 w-full h-full object-cover grayscale brightness-[0.55] contrast-[1.3]"
       >
         <source src="/rain.mp4" type="video/mp4" />
       </video>
@@ -43,7 +43,7 @@ export default function Footer() {
       {/* Overlays */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="moving-grain !opacity-[0.06]" />
-        <div className="absolute inset-0 bg-gradient-to-b from-bg/80 via-bg/40 to-bg/80" />
+        <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(to bottom, var(--color-bg) 0%, transparent 40%, transparent 70%, var(--color-bg) 100%)" }} />
       </div>
 
       {/* Animated scan line */}
@@ -55,7 +55,7 @@ export default function Footer() {
         }}
       />
 
-      <div className="relative max-w-[1400px] mx-auto px-[clamp(24px,4vw,80px)] py-16 md:py-24">
+      <div className="relative max-w-[1400px] mx-auto px-8 md:px-16 py-16 md:py-24">
         <div className="flex flex-col md:flex-row md:justify-between gap-12 md:gap-8">
           {/* Company info */}
           <div
@@ -63,10 +63,10 @@ export default function Footer() {
               visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
             }`}
           >
-            <div className="font-[var(--font-mono)] text-xl font-bold text-white tracking-[0.15em] mb-6">
+            <div className="font-[var(--font-mono)] text-3xl font-bold text-white tracking-[0.15em] mb-6">
               HYDRA<span className="text-accent footer-dot-pulse">.</span>ARMS
             </div>
-            <div className="font-[var(--font-mono)] text-xs text-text-dim leading-relaxed space-y-1">
+            <div className="font-[var(--font-mono)] text-sm text-text-dim leading-relaxed space-y-1">
               <p>HYDRA ARMS SP. Z O.O.</p>
               <p>NIP: [ 000000000 ]</p>
               <p>REGON: [ 00000000 ]</p>
@@ -81,10 +81,10 @@ export default function Footer() {
               visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
             }`}
           >
-            <h4 className="font-[var(--font-mono)] text-sm text-white uppercase tracking-[0.2em] mb-6">
+            <h4 className="font-[var(--font-mono)] text-base text-white uppercase tracking-[0.2em] mb-6">
               Nawigacja
             </h4>
-            <ul className="space-y-3">
+            <ul className="space-y-1.5">
               {navLinks.map((link, i) => (
                 <li
                   key={link.href}
@@ -95,7 +95,7 @@ export default function Footer() {
                     transform: visible ? "translateX(0)" : "translateX(10px)",
                   }}
                 >
-                  <Link href={link.href} className="font-[var(--font-mono)] text-xs text-text-dim hover:text-accent transition-colors duration-300">
+                  <Link href={link.href} className="font-[var(--font-mono)] text-sm text-text-dim hover:text-accent transition-colors duration-300">
                     {link.label}
                   </Link>
                 </li>
@@ -109,7 +109,7 @@ export default function Footer() {
               visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
             }`}
           >
-            <h4 className="font-[var(--font-mono)] text-sm text-white uppercase tracking-[0.2em] mb-6">
+            <h4 className="font-[var(--font-mono)] text-base text-white uppercase tracking-[0.2em] mb-6">
               Kontakt
             </h4>
             <div className="flex gap-4 mb-6 md:justify-end">
@@ -157,14 +157,14 @@ export default function Footer() {
 
       {/* Bottom bar */}
       <div className="relative border-t border-white/5">
-        <div className="max-w-[1400px] mx-auto px-[clamp(24px,4vw,80px)] py-5 flex flex-col md:flex-row justify-between items-center gap-4">
-          <Link href="/polityka-prywatnosci" className="font-[var(--font-mono)] text-[10px] text-text-dim hover:text-accent transition-colors duration-300 uppercase tracking-[0.15em]">
+        <div className="max-w-[1400px] mx-auto px-8 md:px-16 py-5 flex flex-col md:flex-row justify-between items-center gap-4">
+          <Link href="/polityka-prywatnosci" className="font-[var(--font-mono)] text-xs text-text-dim hover:text-accent transition-colors duration-300 uppercase tracking-[0.15em]">
             [ Polityka prywatności ]
           </Link>
-          <Link href="/regulamin" className="font-[var(--font-mono)] text-[10px] text-text-dim hover:text-accent transition-colors duration-300 uppercase tracking-[0.15em]">
+          <Link href="/regulamin" className="font-[var(--font-mono)] text-xs text-text-dim hover:text-accent transition-colors duration-300 uppercase tracking-[0.15em]">
             [ Regulamin ]
           </Link>
-          <span className="font-[var(--font-mono)] text-[10px] text-text-dim uppercase tracking-[0.15em]">
+          <span className="font-[var(--font-mono)] text-xs text-text-dim uppercase tracking-[0.15em]">
             [ REALIZACJA ... ]
           </span>
         </div>

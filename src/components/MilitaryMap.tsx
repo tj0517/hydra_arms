@@ -32,6 +32,7 @@ export default function MilitaryMap() {
     });
 
     // Custom marker — accent green target reticle with pulse
+    const accent = getComputedStyle(document.documentElement).getPropertyValue("--color-accent").trim();
     const markerEl = document.createElement("div");
     markerEl.style.cssText = "position:relative;width:60px;height:60px;cursor:default;";
     markerEl.innerHTML = `
@@ -47,7 +48,7 @@ export default function MilitaryMap() {
           width: 20px; height: 20px;
           margin: -10px 0 0 -10px;
           border-radius: 50%;
-          border: 1px solid #b8d95a;
+          border: 1px solid ${accent};
           animation: markerPulse 2.5s ease-out infinite;
         }
         .marker-pulse-2 { animation-delay: 1.25s; }
@@ -55,13 +56,13 @@ export default function MilitaryMap() {
       <div class="marker-pulse"></div>
       <div class="marker-pulse marker-pulse-2"></div>
       <svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg" style="position:relative;">
-        <circle cx="30" cy="30" r="22" stroke="#b8d95a" stroke-width="1" fill="none" opacity="0.4"/>
-        <circle cx="30" cy="30" r="14" stroke="#b8d95a" stroke-width="0.75" fill="none" opacity="0.6"/>
-        <circle cx="30" cy="30" r="4" fill="#b8d95a" opacity="1"/>
-        <line x1="30" y1="2" x2="30" y2="12" stroke="#b8d95a" stroke-width="0.75" opacity="0.5"/>
-        <line x1="30" y1="48" x2="30" y2="58" stroke="#b8d95a" stroke-width="0.75" opacity="0.5"/>
-        <line x1="2" y1="30" x2="12" y2="30" stroke="#b8d95a" stroke-width="0.75" opacity="0.5"/>
-        <line x1="48" y1="30" x2="58" y2="30" stroke="#b8d95a" stroke-width="0.75" opacity="0.5"/>
+        <circle cx="30" cy="30" r="22" stroke="${accent}" stroke-width="1" fill="none" opacity="0.4"/>
+        <circle cx="30" cy="30" r="14" stroke="${accent}" stroke-width="0.75" fill="none" opacity="0.6"/>
+        <circle cx="30" cy="30" r="4" fill="${accent}" opacity="1"/>
+        <line x1="30" y1="2" x2="30" y2="12" stroke="${accent}" stroke-width="0.75" opacity="0.5"/>
+        <line x1="30" y1="48" x2="30" y2="58" stroke="${accent}" stroke-width="0.75" opacity="0.5"/>
+        <line x1="2" y1="30" x2="12" y2="30" stroke="${accent}" stroke-width="0.75" opacity="0.5"/>
+        <line x1="48" y1="30" x2="58" y2="30" stroke="${accent}" stroke-width="0.75" opacity="0.5"/>
       </svg>
     `;
 
@@ -86,7 +87,7 @@ export default function MilitaryMap() {
         } else if (type === "line") {
           m.setPaintProperty(id, "line-color", "rgba(192,200,199,0.12)");
         } else if (type === "symbol") {
-          m.setPaintProperty(id, "text-color", "rgba(184,217,90,0.25)");
+          m.setPaintProperty(id, "text-color", `rgba(${parseInt(accent.slice(1,3),16)},${parseInt(accent.slice(3,5),16)},${parseInt(accent.slice(5,7),16)},0.25)`);
         }
       }
 

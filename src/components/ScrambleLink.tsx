@@ -10,6 +10,8 @@ interface ScrambleLinkProps {
   className?: string;
   disabled?: boolean;
   fill?: boolean;
+  target?: string;
+  rel?: string;
 }
 
 export default function ScrambleLink({
@@ -18,6 +20,8 @@ export default function ScrambleLink({
   className = "",
   disabled = false,
   fill = false,
+  target,
+  rel,
 }: ScrambleLinkProps) {
   const [display, setDisplay] = useState(children);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -78,6 +82,8 @@ export default function ScrambleLink({
       onMouseLeave={reset}
       onClick={disabled ? (e) => e.preventDefault() : undefined}
       style={disabled ? { cursor: "default" } : undefined}
+      target={target}
+      rel={rel}
     >
       {renderStyled()}
     </a>

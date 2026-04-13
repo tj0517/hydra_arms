@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const ACCENT = "#b8d95a";
+const ACCENT = "var(--color-accent)";
 
 const BOOT_LINES = [
   { text: "> HYDRA ARMS SYSTEMS v2.1.4", color: "#ffffff" },

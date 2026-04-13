@@ -2,11 +2,26 @@
 
 import { useRef, useEffect } from "react";
 
-const ACCENT = "#b8d95a";
 const DOT_SPACING = 40;
 const DOT_RADIUS = 1.2;
 const SWEEP_SPEED = 0.0006;
 const PULSE_SPEED = 0.002;
+const BLIP_DURATION = 220; // frames until blip fully fades (~3.6s @ 60fps)
+
+type Contact = {
+  angle: number;   // radians
+  dist: number;    // fraction of max radar radius (0–1)
+  lastHit: number; // frame number of last sweep crossing
+};
+
+const CONTACTS: Contact[] = [
+  { angle: 0.42, dist: 0.33, lastHit: -9999 },
+  { angle: 1.18, dist: 0.54, lastHit: -9999 },
+  { angle: 2.05, dist: 0.41, lastHit: -9999 },
+  { angle: 3.47, dist: 0.27, lastHit: -9999 },
+  { angle: 4.31, dist: 0.60, lastHit: -9999 },
+  { angle: 5.14, dist: 0.38, lastHit: -9999 },
+];
 
 export default function TacticalGrid() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -16,10 +31,16 @@ export default function TacticalGrid() {
     if (!canvas) return;
 
     const ctx = canvas.getContext("2d")!;
+    const accentHex = getComputedStyle(document.documentElement).getPropertyValue("--color-accent").trim();
+    const r = parseInt(accentHex.slice(1, 3), 16);
+    const g = parseInt(accentHex.slice(3, 5), 16);
+    const b = parseInt(accentHex.slice(5, 7), 16);
+    const ac = (a: number) => `rgba(${r},${g},${b},${a})`;
     let raf = 0;
     let time = 0;
     let mouseX = -1;
     let mouseY = -1;
+    let prevSweepAngle = 0;
 
     const resize = () => {
       const dpr = window.devicePixelRatio || 1;
@@ -102,7 +123,7 @@ export default function TacticalGrid() {
 
           ctx.beginPath();
           ctx.arc(x, y, DOT_RADIUS, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(184,217,90,${Math.min(opacity, 0.8)})`;
+          ctx.fillStyle = ac(Math.min(opacity, 0.8));
           ctx.fill();
         }
       }
@@ -126,7 +147,7 @@ export default function TacticalGrid() {
       const hProxL = sweepProximity(Math.PI);
       const hProx = Math.max(hProxR, hProxL);
       const hAlpha = 0.02 + 0.08 * hProx;
-      ctx.strokeStyle = `rgba(184,217,90,${hAlpha})`;
+      ctx.strokeStyle = ac(hAlpha);
       ctx.beginPath();
       ctx.moveTo(0, cy);
       ctx.lineTo(w, cy);
@@ -137,7 +158,7 @@ export default function TacticalGrid() {
       const vProxB = sweepProximity(Math.PI / 2);
       const vProx = Math.max(vProxT, vProxB);
       const vAlpha = 0.02 + 0.08 * vProx;
-      ctx.strokeStyle = `rgba(184,217,90,${vAlpha})`;
+      ctx.strokeStyle = ac(vAlpha);
       ctx.beginPath();
       ctx.moveTo(cx, 0);
       ctx.lineTo(cx, h);
@@ -156,7 +177,7 @@ export default function TacticalGrid() {
           const alpha = baseAlpha + (maxAlpha - baseAlpha) * prox;
           ctx.beginPath();
           ctx.arc(cx, cy, r, a0, a1);
-          ctx.strokeStyle = `rgba(184,217,90,${alpha})`;
+          ctx.strokeStyle = ac(alpha);
           ctx.stroke();
         }
       }
@@ -168,15 +189,15 @@ export default function TacticalGrid() {
         cx + Math.cos(sweepAngle) * Math.max(w, h) * 0.6,
         cy + Math.sin(sweepAngle) * Math.max(w, h) * 0.6
       );
-      ctx.strokeStyle = `rgba(184,217,90,0.35)`;
+      ctx.strokeStyle = ac(0.35);
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
       // Sweep line gradient trail
       const gradient = ctx.createConicGradient(sweepAngle, cx, cy);
-      gradient.addColorStop(0, "rgba(184,217,90,0.14)");
-      gradient.addColorStop(0.12, "rgba(184,217,90,0)");
-      gradient.addColorStop(1, "rgba(184,217,90,0)");
+      gradient.addColorStop(0, ac(0.14));
+      gradient.addColorStop(0.12, ac(0));
+      gradient.addColorStop(1, ac(0));
 
       ctx.beginPath();
       ctx.moveTo(cx, cy);
@@ -185,6 +206,60 @@ export default function TacticalGrid() {
       ctx.fillStyle = gradient;
       ctx.fill();
 
+      // ── Contact points — blip when sweep crosses ──
+      const maxRadar = Math.min(w, h) * 0.48;
+      const norm = (a: number) => ((a % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+      const sa = norm(sweepAngle);
+      const pa = norm(prevSweepAngle);
+
+      CONTACTS.forEach((contact) => {
+        const ca = norm(contact.angle);
+        // Detect crossing this frame
+        const crossed = pa < sa ? (ca > pa && ca <= sa) : (ca > pa || ca <= sa);
+        if (crossed) contact.lastHit = time;
+
+        const px = cx + Math.cos(contact.angle) * contact.dist * maxRadar;
+        const py = cy + Math.sin(contact.angle) * contact.dist * maxRadar;
+        const age = time - contact.lastHit;
+
+        // Resting dim dot — always visible
+        ctx.beginPath();
+        ctx.arc(px, py, 2, 0, Math.PI * 2);
+        ctx.fillStyle = ac(0.22);
+        ctx.fill();
+
+        if (age < BLIP_DURATION) {
+          const t = 1 - age / BLIP_DURATION; // 1=fresh → 0=faded
+
+          // Bright center flash
+          ctx.beginPath();
+          ctx.arc(px, py, 2.5, 0, Math.PI * 2);
+          ctx.fillStyle = ac(0.95 * t);
+          ctx.fill();
+
+          // First expanding ring
+          const r1 = 4 + (1 - t) * 28;
+          ctx.beginPath();
+          ctx.arc(px, py, r1, 0, Math.PI * 2);
+          ctx.strokeStyle = ac(0.65 * t);
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+
+          // Second ring, slightly delayed
+          const t2 = Math.max(0, t - 0.15);
+          if (t2 > 0) {
+            const r2 = 4 + (1 - t2) * 22;
+            ctx.beginPath();
+            ctx.arc(px, py, r2, 0, Math.PI * 2);
+            ctx.strokeStyle = ac(0.3 * t2);
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+
+        }
+      });
+
+      prevSweepAngle = sweepAngle;
       raf = requestAnimationFrame(draw);
     };
 

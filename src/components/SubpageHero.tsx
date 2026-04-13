@@ -178,7 +178,7 @@ export default function SubpageHero({ subtitle, title, titleClass, video }: Subp
   }, []);
 
   return (
-    <section ref={heroRef} className="relative h-[450px] flex flex-col justify-end px-[clamp(24px,4vw,64px)] pb-2.5 border-b border-white/10 overflow-hidden">
+    <section ref={heroRef} className="relative h-[280px] md:h-[450px] flex flex-col justify-end px-[clamp(24px,4vw,64px)] pb-2.5 border-b border-white/10 overflow-hidden">
       {/* Clean video — only visible through scope hole */}
       <video
         ref={videoRef}

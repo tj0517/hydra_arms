@@ -117,7 +117,7 @@ export default function WspolpracaPage() {
       <SubpageHero subtitle="HYDRA ARMS / Współpraca" title="Współpraca" video="/hero-wspolpraca.mp4" />
 
       {/* ─── INTRO SECTION ─── */}
-      <section className="py-32 px-[clamp(24px,4vw,64px)]">
+      <section className="py-16 md:py-32 px-[clamp(24px,4vw,64px)]">
         <ScrollRevealText
           text="Jesteśmy interdyscyplinarnym ośrodkiem inżynieryjnym specjalizującym się w projektowaniu, wytwarzaniu oraz obrocie zaawansowanymi rozwiązaniami dla sektora obronnego i służb porządku publicznego."
           className="text-[1.75rem] md:text-[3.2vw] font-medium leading-[1.1] tracking-[-0.48px] text-left"
@@ -135,7 +135,7 @@ export default function WspolpracaPage() {
 
       {/* ─── FUNDAMENTY SECTION ─── */}
       <section className="border-t border-white/5">
-        <div className="flex items-end justify-between px-[clamp(24px,4vw,64px)] pt-16 pb-8">
+        <div className="flex items-start md:items-end justify-between px-[clamp(24px,4vw,64px)] pt-10 md:pt-16 pb-6 md:pb-8 gap-4">
           <TypewriterTitle
             as="h2"
             className="text-[clamp(2rem,3.17vw,48px)] font-light text-text leading-[53px] tracking-[-0.48px]"
@@ -164,7 +164,7 @@ export default function WspolpracaPage() {
 
         <div
           ref={fundRef}
-          className="grid grid-cols-1 md:grid-cols-2 min-h-[450px] border-t border-b border-white/5"
+          className="grid grid-cols-1 md:grid-cols-2 md:min-h-[450px] border-t border-b border-white/5"
         >
           {[0, 1].map((offset) => {
             const item = fundamenty[fundPage * 2 + offset];
@@ -173,7 +173,7 @@ export default function WspolpracaPage() {
               <div
                 key={item.id}
                 className={`flex flex-col p-[clamp(24px,4vw,64px)] ${
-                  offset === 0 ? "md:border-r border-white/5" : ""
+                  offset === 0 ? "md:border-r border-white/5 border-b md:border-b-0" : ""
                 }`}
               >
                 <p className="text-[clamp(1.25rem,2vw,30px)] font-normal text-text-dim leading-[1.4] tracking-[-0.2px]">
@@ -199,7 +199,7 @@ export default function WspolpracaPage() {
       </section>
 
       {/* ─── TACTICAL GRID BREAK ─── */}
-      <div className="h-[549px] bg-[#060806] relative overflow-hidden">
+      <div className="h-[280px] md:h-[549px] bg-[#060806] relative overflow-hidden">
         {/* Background video */}
         <video
           autoPlay
@@ -226,7 +226,7 @@ export default function WspolpracaPage() {
       </div>
 
       {/* ─── SECOND DESCRIPTION ─── */}
-      <section className="py-28 px-[clamp(24px,4vw,64px)]">
+      <section className="py-16 md:py-28 px-[clamp(24px,4vw,64px)]">
         <ScrollRevealText
           text="Swoje usługi kierujemy do szerokiego spektrum odbiorców — od jednostek wojskowych i policyjnych, przez instytucje badawcze, aż po partnerów przemysłowych w modelu B2B. Każda relacja opiera się na dyskrecji, profesjonalizmie i dążeniu do doskonałości technicznej."
           className="text-[1.75rem] md:text-[3.2vw] font-medium leading-[1.1] tracking-[-0.48px] text-left"
@@ -247,13 +247,13 @@ export default function WspolpracaPage() {
         <div className="px-[clamp(24px,4vw,64px)] pt-16">
           <TypewriterTitle
             as="h2"
-            className="text-[clamp(3rem,9.26vw,140px)] font-normal text-text leading-[1] tracking-[-2px] uppercase"
+            className="text-[clamp(2rem,9.26vw,140px)] font-normal text-text leading-[1] tracking-[-1px] md:tracking-[-2px] uppercase"
             speed={60}
           >
             PARTNERSTWA STRATEGICZNE
           </TypewriterTitle>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 mt-16 pb-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8 pb-8 md:gap-16 md:mt-16 md:pb-16">
             <div>
               <AnimateIn delay={0.1}>
                 <p className="text-text-dim text-[18px] font-normal leading-[30px]">
@@ -265,7 +265,7 @@ export default function WspolpracaPage() {
                 </p>
               </AnimateIn>
             </div>
-            <div className="flex items-start justify-end">
+            <div className="hidden md:flex items-start justify-end">
               <a href="#" className="w-[100px] h-[100px] border border-white/10 flex items-center justify-center hover:border-accent/40 transition-colors duration-300">
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-text-dim">
                   <path d="M7 17L17 7M17 7H7M17 7V17" />
@@ -279,7 +279,7 @@ export default function WspolpracaPage() {
 
       {/* ─── KLUCZOWE KORZYŚCI ─── */}
       <section>
-        <div className="px-[clamp(24px,4vw,64px)] pt-16 pb-16 text-center">
+        <div className="px-[clamp(24px,4vw,64px)] pt-10 md:pt-16 pb-8 md:pb-16 text-center">
           <TypewriterTitle
             as="h2"
             className="text-[clamp(2rem,4.76vw,72px)] font-normal text-white leading-[76px] tracking-[-1.44px]"
@@ -324,14 +324,14 @@ export default function WspolpracaPage() {
               </div>
             </div>
 
-            <h3 className="text-white text-[clamp(1.5rem,3.17vw,48px)] font-light leading-[53px] tracking-[-0.48px] mb-6 max-w-[600px]">
+            <h3 className="text-white text-[clamp(1.5rem,3.17vw,48px)] font-light leading-tight md:leading-[53px] tracking-[-0.48px] mb-6 max-w-[600px]">
               {korzysciContent[activeTab].title}
             </h3>
             <p className="text-text-dim text-[18px] font-normal leading-[30px] max-w-[750px]">
               {korzysciContent[activeTab].desc}
             </p>
 
-            <div className="flex justify-end mt-16">
+            <div className="flex justify-end mt-8 md:mt-16">
               <ScrambleLink
                 href="#"
                 className="font-[var(--font-mono)] text-[14px] text-accent tracking-[1.12px] border border-accent/40 px-6 py-2 hover:bg-accent hover:text-bg transition-all duration-300"
@@ -347,7 +347,7 @@ export default function WspolpracaPage() {
       {/* ─── ETHICS SECTION ─── */}
       <section className="grid grid-cols-1 md:grid-cols-2">
         {/* Left */}
-        <div className="px-[clamp(24px,4vw,64px)] pt-9 pb-16 flex flex-col h-full">
+        <div className="px-[clamp(24px,4vw,64px)] pt-9 pb-8 md:pb-16 flex flex-col h-full border-b md:border-b-0">
           <TypewriterTitle
             as="h2"
             className="text-text text-[28px] font-medium leading-[34px]"
@@ -355,13 +355,13 @@ export default function WspolpracaPage() {
           >
             Kodeks etyki w partnerstwie strategicznym
           </TypewriterTitle>
-          <div className="mt-auto">
+          <div className="mt-6 md:mt-auto">
             <MissionBriefing />
           </div>
         </div>
 
         {/* Right */}
-        <div className="pt-16 pb-16 px-[clamp(24px,4vw,64px)]">
+        <div className="pt-10 md:pt-16 pb-16 px-[clamp(24px,4vw,64px)]">
           <div className="flex flex-col gap-9">
             {ethicsItems.map((item, i) => (
               <DrawReveal

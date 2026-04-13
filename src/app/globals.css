@@ -6,7 +6,7 @@
   --color-bg-card: #0F0F0F;
   --color-text: #E0F2F1;
   --color-text-dim: #c0c8c7;
-  --color-accent: #b8d95a;
+  --color-accent: #13FF15;
   --color-white: #ffffff;
   --font-main: var(--font-outfit);
   --font-mono: var(--font-jetbrains-mono);
@@ -27,6 +27,15 @@ body {
 
 a, button, [role="button"], input[type="submit"] {
   cursor: none;
+}
+
+@media (pointer: coarse) {
+  body, a, button, [role="button"], input[type="submit"] {
+    cursor: auto;
+  }
+  .global-cursor {
+    display: none;
+  }
 }
 
 /* Global small circle cursor */
@@ -67,12 +76,19 @@ a, button, [role="button"], input[type="submit"] {
   position: fixed;
   top: 0;
   bottom: 0;
-  left: 32px;
-  right: 32px;
+  left: 16px;
+  right: 16px;
   pointer-events: none;
   z-index: 9997;
   border-left: 0.5px solid rgba(192, 200, 199, 0.25);
   border-right: 0.5px solid rgba(192, 200, 199, 0.25);
+}
+
+@media (min-width: 768px) {
+  .lines-grid {
+    left: 32px;
+    right: 32px;
+  }
 }
 
 /* Scrollbar */

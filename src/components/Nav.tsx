@@ -128,7 +128,7 @@ export default function Nav() {
           : "py-6"
       }`}
     >
-      <div className="max-w-[1400px] mx-auto px-[clamp(24px,4vw,80px)] flex justify-between items-center">
+      <div className="max-w-[1400px] mx-auto px-8 md:px-16 flex justify-between items-center">
         <span className="font-[var(--font-mono)] text-xl font-bold text-white tracking-[0.15em] z-[101]">
           HYDRA<span className="text-accent">.</span>ARMS
         </span>
