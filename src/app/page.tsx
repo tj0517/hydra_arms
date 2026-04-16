@@ -10,6 +10,7 @@ import MilitaryMap from "@/components/MilitaryMap";
 import MapCrosshair from "@/components/MapCrosshair";
 import TypewriterTitle from "@/components/TypewriterTitle";
 import Image from "next/image";
+import DrawSVG from "@/components/DrawSVG";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -173,27 +174,40 @@ export default function HomePage() {
           className="absolute inset-0 bg-bg z-[15] pointer-events-none"
         />
 
-        {/* Clean video background — visible through the cursor hole */}
+        {/* Video — grayscale source for NV processing */}
         <video
           autoPlay
           muted
           loop
           playsInline
-          className="absolute inset-0 w-full h-full object-cover z-[1]"
+          className="absolute inset-0 w-full h-full object-cover z-[1] grayscale contrast-[1.3] brightness-[0.45]"
         >
           <source src="/hero-video.mp4" type="video/mp4" />
         </video>
 
-        {/* Text cutout mask — black bg + mix-blend-multiply reveals the video through the text glyphs.
-            A radial-gradient mask also punches a circular hole at the cursor position, so the clean
-            video shows directly around the cursor (in addition to inside the text). */}
+        {/* NV phosphor green tint */}
         <div
-          className="absolute inset-0 z-[3] bg-black mix-blend-multiply flex flex-col justify-center px-8 md:px-16"
+          className="absolute inset-0 z-[2] pointer-events-none mix-blend-screen"
+          style={{ background: "rgba(19,255,21,0.18)" }}
+        />
+
+        {/* NV scanlines */}
+        <div
+          className="absolute inset-0 z-[3] pointer-events-none opacity-[0.05]"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(19,255,21,0.15) 2px, rgba(19,255,21,0.15) 4px)",
+          }}
+        />
+
+        {/* Dark overlay with cursor hole + text cutout via mix-blend-multiply */}
+        <div
+          className="absolute inset-0 z-[4] bg-black mix-blend-multiply flex flex-col justify-start pt-[22vh] px-8 md:px-16"
           style={{
             maskImage:
-              "radial-gradient(circle 90px at var(--sx, -9999px) var(--sy, -9999px), transparent 55%, rgba(0,0,0,0.5) 80%, black 100%)",
+              "radial-gradient(circle 90px at var(--sx, -9999px) var(--sy, -9999px), transparent 0%, transparent 68%, rgba(0,0,0,0.5) 85%, black 100%)",
             WebkitMaskImage:
-              "radial-gradient(circle 90px at var(--sx, -9999px) var(--sy, -9999px), transparent 55%, rgba(0,0,0,0.5) 80%, black 100%)",
+              "radial-gradient(circle 90px at var(--sx, -9999px) var(--sy, -9999px), transparent 0%, transparent 68%, rgba(0,0,0,0.5) 85%, black 100%)",
           } as React.CSSProperties}
         >
           <TypewriterTitle
@@ -214,44 +228,36 @@ export default function HomePage() {
           </TypewriterTitle>
         </div>
 
-        {/* Subtle dark overlay on top */}
-        <div className="absolute inset-0 z-[3] bg-bg/15 pointer-events-none" />
-
-        {/* Nightvision reticle overlay */}
+        {/* NV scope reticle */}
         <div
           ref={scopeReticleRef}
-          className="absolute top-0 left-0 z-[4] pointer-events-none opacity-0 transition-opacity duration-300 hidden md:block"
+          className="absolute top-0 left-0 z-[5] pointer-events-none opacity-0 transition-opacity duration-300 hidden md:block"
         >
           <svg width="180" height="180" viewBox="0 0 180 180" fill="none" className="text-accent">
-            {/* Outer circle */}
-            <circle cx="90" cy="90" r="85" stroke="currentColor" strokeWidth="0.5" opacity="0.25" />
-            {/* Inner circle */}
-            <circle cx="90" cy="90" r="45" stroke="currentColor" strokeWidth="0.4" opacity="0.15" strokeDasharray="4 3" />
-            {/* Crosshair lines */}
-            <line x1="90" y1="5" x2="90" y2="40" stroke="currentColor" strokeWidth="0.5" opacity="0.2" />
-            <line x1="90" y1="140" x2="90" y2="175" stroke="currentColor" strokeWidth="0.5" opacity="0.2" />
-            <line x1="5" y1="90" x2="40" y2="90" stroke="currentColor" strokeWidth="0.5" opacity="0.2" />
-            <line x1="140" y1="90" x2="175" y2="90" stroke="currentColor" strokeWidth="0.5" opacity="0.2" />
-            {/* Center dot */}
-            <circle cx="90" cy="90" r="2" fill="currentColor" opacity="0.4" />
-            {/* Tick marks */}
-            {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => {
-              const rad = (deg * Math.PI) / 180;
-              const r1 = 82;
-              const r2 = 88;
-              return (
-                <line
-                  key={deg}
-                  x1={90 + Math.cos(rad) * r1}
-                  y1={90 + Math.sin(rad) * r1}
-                  x2={90 + Math.cos(rad) * r2}
-                  y2={90 + Math.sin(rad) * r2}
-                  stroke="currentColor"
-                  strokeWidth="0.5"
-                  opacity="0.2"
-                />
-              );
-            })}
+            {/* Outer scope ring */}
+            <circle cx="90" cy="90" r="84" stroke="currentColor" strokeWidth="0.9" opacity="0.65" />
+            {/* Top arm — gap 11px from center */}
+            <line x1="90" y1="6" x2="90" y2="79" stroke="currentColor" strokeWidth="0.7" opacity="0.8" />
+            {/* Bottom arm — longer for BDC */}
+            <line x1="90" y1="101" x2="90" y2="174" stroke="currentColor" strokeWidth="0.7" opacity="0.8" />
+            {/* Left arm */}
+            <line x1="6" y1="90" x2="79" y2="90" stroke="currentColor" strokeWidth="0.7" opacity="0.8" />
+            {/* Right arm */}
+            <line x1="101" y1="90" x2="174" y2="90" stroke="currentColor" strokeWidth="0.7" opacity="0.8" />
+            {/* Windage hash marks — symmetric on horizontal arms */}
+            <line x1="30" y1="89" x2="30" y2="91" stroke="currentColor" strokeWidth="0.6" opacity="0.5" />
+            <line x1="48" y1="88.5" x2="48" y2="91.5" stroke="currentColor" strokeWidth="0.6" opacity="0.55" />
+            <line x1="65" y1="89" x2="65" y2="91" stroke="currentColor" strokeWidth="0.6" opacity="0.5" />
+            <line x1="150" y1="89" x2="150" y2="91" stroke="currentColor" strokeWidth="0.6" opacity="0.5" />
+            <line x1="132" y1="88.5" x2="132" y2="91.5" stroke="currentColor" strokeWidth="0.6" opacity="0.55" />
+            <line x1="115" y1="89" x2="115" y2="91" stroke="currentColor" strokeWidth="0.6" opacity="0.5" />
+            {/* BDC hash marks — lower vertical arm */}
+            <line x1="86.5" y1="115" x2="93.5" y2="115" stroke="currentColor" strokeWidth="0.6" opacity="0.6" />
+            <line x1="87" y1="128" x2="93" y2="128" stroke="currentColor" strokeWidth="0.55" opacity="0.5" />
+            <line x1="87" y1="141" x2="93" y2="141" stroke="currentColor" strokeWidth="0.55" opacity="0.45" />
+            <line x1="87.5" y1="154" x2="92.5" y2="154" stroke="currentColor" strokeWidth="0.5" opacity="0.4" />
+            {/* Center precision dot */}
+            <circle cx="90" cy="90" r="1.7" fill="currentColor" opacity="0.85" />
           </svg>
         </div>
 
@@ -272,15 +278,26 @@ export default function HomePage() {
             <span className="font-[var(--font-mono)] text-[14px] text-accent tracking-[1.12px] uppercase mb-4 md:mb-6 block">
               // HYDRA ARMS - PL-2026
             </span>
-            <SplitText
-              as="p"
-              className="text-[clamp(1.5rem,4.76vw,72px)] font-normal text-text-dim leading-[1.2] md:leading-[76px] tracking-[-2px]"
-              splitBy="words"
-              staggerAmount={0.06}
-              delay={0.6}
-            >
-              Zaawansowana inżynieria obronna Obrót nowoczesnym uzbrojeniem
-            </SplitText>
+            <div>
+              <SplitText
+                as="p"
+                className="text-[clamp(1.5rem,4.76vw,72px)] font-normal text-text-dim leading-[1.2] md:leading-[76px] tracking-[-2px]"
+                splitBy="words"
+                staggerAmount={0.06}
+                delay={0.6}
+              >
+                Zaawansowana inżynieria obronna
+              </SplitText>
+              <SplitText
+                as="p"
+                className="text-[clamp(1.5rem,4.76vw,72px)] font-normal text-text-dim leading-[1.2] md:leading-[76px] tracking-[-2px]"
+                splitBy="words"
+                staggerAmount={0.06}
+                delay={0.9}
+              >
+                Obrót nowoczesnym uzbrojeniem
+              </SplitText>
+            </div>
 
             <div className="flex gap-6 mt-6 md:gap-12 md:mt-8 items-center">
               <ScrambleLink
@@ -390,7 +407,7 @@ export default function HomePage() {
             //02 O NAS
           </span>
         </div>
-        <div className="py-10 md:py-20 px-[clamp(24px,4vw,64px)]">
+        <div className="pt-10 md:pt-20 pb-0 px-[clamp(24px,4vw,64px)]">
           <ScrollRevealText
             text="Realizujemy krytyczne projekty z zakresu wytwarzania uzbrojenia oraz technologii dual-use. Łączymy rygorystyczne standardy NATO z precyzją nowoczesnych technologii tworząc innowacje. Prowadzimy również działalność handlową na rynku cywilnym i specjalnym."
             className="text-[clamp(1.5rem,3.17vw,48px)] font-light leading-[1.3] md:leading-[53px] tracking-[-0.48px] text-left"
@@ -414,7 +431,7 @@ export default function HomePage() {
           muted
           loop
           playsInline
-          className="absolute inset-0 w-full h-full object-cover grayscale brightness-[0.5] contrast-[1.15] sepia-[0.15]"
+          className="absolute inset-0 w-full h-full object-cover object-[center_20%] grayscale brightness-[0.5] contrast-[1.15] sepia-[0.15]"
         >
           <source src="/soldiers.mp4" type="video/mp4" />
         </video>
@@ -433,12 +450,22 @@ export default function HomePage() {
         {/* Top gradient fade */}
         <div
           className="absolute top-0 left-0 right-0 h-full z-[2] pointer-events-none"
-          style={{ background: "linear-gradient(to bottom, var(--color-bg) 0%, var(--color-bg) 5%, transparent 55%)" }}
+          style={{ background: "linear-gradient(to bottom, var(--color-bg) 0%, var(--color-bg) 8%, rgba(10,10,11,0.6) 35%, transparent 65%)" }}
         />
         {/* Bottom gradient fade */}
         <div
           className="absolute bottom-0 left-0 right-0 h-full z-[2] pointer-events-none"
-          style={{ background: "linear-gradient(to top, var(--color-bg) 0%, var(--color-bg) 5%, transparent 55%)" }}
+          style={{ background: "linear-gradient(to top, var(--color-bg) 0%, var(--color-bg) 8%, rgba(10,10,11,0.6) 35%, transparent 65%)" }}
+        />
+        {/* Left side gradient fade */}
+        <div
+          className="absolute top-0 left-0 bottom-0 w-full z-[2] pointer-events-none"
+          style={{ background: "linear-gradient(to right, var(--color-bg) 0%, rgba(10,10,11,0.5) 8%, transparent 22%)" }}
+        />
+        {/* Right side gradient fade */}
+        <div
+          className="absolute top-0 right-0 bottom-0 w-full z-[2] pointer-events-none"
+          style={{ background: "linear-gradient(to left, var(--color-bg) 0%, rgba(10,10,11,0.5) 8%, transparent 22%)" }}
         />
       </div>
 
@@ -494,29 +521,20 @@ export default function HomePage() {
           {/* ── B2G — Heksagonalna siatka strukturalna ── */}
           <div className="md:border-r border-b border-white/[0.08] flex flex-col justify-between px-6 py-8 md:px-10 md:py-12">
             <div className="hidden md:flex flex-1 items-center justify-center">
-              <svg viewBox="0 0 200 200" fill="none" className="w-60 h-60 text-accent">
-                {/* 3 nested hexagons — alternating rotation */}
+              <DrawSVG className="w-60 h-60 text-accent" stagger={80}>
                 {([78, 52, 26] as number[]).map((r, k) => {
                   const offset = k % 2 === 0 ? -Math.PI / 2 : -Math.PI / 6;
                   const pts = Array.from({ length: 6 }, (_, j) => {
                     const a = (j / 6) * Math.PI * 2 + offset;
                     return `${(100 + r * Math.cos(a)).toFixed(1)},${(100 + r * Math.sin(a)).toFixed(1)}`;
                   }).join(" ");
-                  return <polygon key={k} points={pts}
-                    stroke="currentColor"
-                    strokeWidth={k === 0 ? "1.0" : "0.7"}
-                    fill="none"
-                    opacity={0.55 - k * 0.1} />;
+                  return <polygon key={k} points={pts} stroke="currentColor" strokeWidth={k === 0 ? "1.0" : "0.7"} fill="none" opacity={0.55 - k * 0.1} />;
                 })}
-                {/* 6 spokes from center to outer vertices */}
                 {Array.from({ length: 6 }, (_, k) => {
                   const a = (k / 6) * Math.PI * 2 - Math.PI / 2;
-                  return <line key={k} x1="100" y1="100"
-                    x2={(100 + Math.cos(a) * 78).toFixed(1)}
-                    y2={(100 + Math.sin(a) * 78).toFixed(1)}
-                    stroke="currentColor" strokeWidth="0.5" opacity="0.22" />;
+                  return <line key={k} x1="100" y1="100" x2={(100 + Math.cos(a) * 78).toFixed(1)} y2={(100 + Math.sin(a) * 78).toFixed(1)} stroke="currentColor" strokeWidth="0.5" opacity="0.22" />;
                 })}
-              </svg>
+              </DrawSVG>
             </div>
             <div>
               <div className="font-[var(--font-mono)] text-[10px] tracking-[0.25em] text-accent/50 border border-accent/20 px-2.5 py-1 inline-block mb-5">B2G</div>
@@ -531,19 +549,14 @@ export default function HomePage() {
           {/* ── B2B — Walec (komponent obrabiany CNC) ── */}
           <div className="md:border-r border-b border-white/[0.08] flex flex-col justify-between px-6 py-8 md:px-10 md:py-12">
             <div className="hidden md:flex flex-1 items-center justify-center">
-              <svg viewBox="0 0 200 200" fill="none" className="w-60 h-60 text-accent">
-                {/* Top face ellipse */}
+              <DrawSVG className="w-60 h-60 text-accent">
                 <ellipse cx="100" cy="58" rx="72" ry="20" stroke="currentColor" strokeWidth="1.0" opacity="0.6" />
-                {/* Side edges */}
                 <line x1="28" y1="58" x2="28" y2="152" stroke="currentColor" strokeWidth="1.0" opacity="0.55" />
                 <line x1="172" y1="58" x2="172" y2="152" stroke="currentColor" strokeWidth="1.0" opacity="0.55" />
-                {/* Bottom arc (visible half) */}
                 <path d="M 28,152 A 72,20 0 0 0 172,152" stroke="currentColor" strokeWidth="1.0" opacity="0.5" fill="none" />
-                {/* Inner bore — top face */}
                 <ellipse cx="100" cy="58" rx="28" ry="8" stroke="currentColor" strokeWidth="0.65" opacity="0.35" />
-                {/* Section line at 1/3 height */}
-                <ellipse cx="100" cy="102" rx="72" ry="20" stroke="currentColor" strokeWidth="0.5" strokeDasharray="5 4" opacity="0.22" />
-              </svg>
+                <ellipse cx="100" cy="102" rx="72" ry="20" stroke="currentColor" strokeWidth="0.5" opacity="0.22" />
+              </DrawSVG>
             </div>
             <div>
               <div className="font-[var(--font-mono)] text-[10px] tracking-[0.25em] text-accent/50 border border-accent/20 px-2.5 py-1 inline-block mb-5">B2B</div>
@@ -558,19 +571,15 @@ export default function HomePage() {
           {/* ── B2C — Tarcza strzelnicza (rynek cywilny) ── */}
           <div className="border-b border-white/[0.08] flex flex-col justify-between px-6 py-8 md:px-10 md:py-12">
             <div className="hidden md:flex flex-1 items-center justify-center">
-              <svg viewBox="0 0 200 200" fill="none" className="w-60 h-60 text-accent">
+              <DrawSVG className="w-60 h-60 text-accent">
                 {[84, 66, 48, 30, 14].map((r, k) => (
-                  <circle key={k} cx="100" cy="100" r={r}
-                    stroke="currentColor"
-                    strokeWidth={k === 0 ? "1.0" : "0.7"}
-                    opacity={0.55 - k * 0.08}
-                    fill="none" />
+                  <circle key={k} cx="100" cy="100" r={r} stroke="currentColor" strokeWidth={k === 0 ? "1.0" : "0.7"} opacity={0.55 - k * 0.08} fill="none" />
                 ))}
                 <line x1="100" y1="8" x2="100" y2="22" stroke="currentColor" strokeWidth="0.7" opacity="0.38" />
                 <line x1="100" y1="178" x2="100" y2="192" stroke="currentColor" strokeWidth="0.7" opacity="0.38" />
                 <line x1="8" y1="100" x2="22" y2="100" stroke="currentColor" strokeWidth="0.7" opacity="0.38" />
                 <line x1="178" y1="100" x2="192" y2="100" stroke="currentColor" strokeWidth="0.7" opacity="0.38" />
-              </svg>
+              </DrawSVG>
             </div>
             <div>
               <div className="font-[var(--font-mono)] text-[10px] tracking-[0.25em] text-accent/50 border border-accent/20 px-2.5 py-1 inline-block mb-5">B2C</div>
@@ -593,32 +602,34 @@ export default function HomePage() {
           {/* HUD crosshair cursor */}
           <MapCrosshair />
 
-          {/* Right info panel with gradient backdrop */}
+          {/* Right info panel — solid bg box, absolutely positioned */}
           <div
-            className="absolute right-0 top-0 w-full md:w-[45%] h-full z-[3] px-6 py-4 md:px-[52px] md:py-[20px] pointer-events-none hidden md:block"
-            style={{ backgroundImage: "linear-gradient(60deg, rgba(10,10,11,0) 0%, rgb(10,10,11) 38%)" }}
+            className="absolute right-0 top-0 z-[5] hidden md:flex items-center px-[52px] py-10 bg-bg"
+            style={{ width: "36%" }}
           >
-            <h3 className="text-text-dim text-[28px] font-medium leading-[34px] mb-6">
-              HYDRA ARMS SP. Z O.O.
-            </h3>
+            <div>
+              <h3 className="text-text-dim text-[28px] font-medium leading-[34px] mb-6">
+                HYDRA ARMS SP. Z O.O.
+              </h3>
 
-            <div className="font-[var(--font-mono)] text-[16px] tracking-[0.8px] leading-[24px] text-text-dim space-y-0">
-              <p>[<span className="text-accent">→</span>]  Kraków, Polska</p>
-              <p>[<span className="text-accent">→</span>]  50°04&apos;N  019°57&apos;E</p>
-              <p>[<span className="text-accent">→</span>]  Droga krajowa S7</p>
-              <p>[<span className="text-accent">→</span>]  Trasa północ–południe</p>
-              <p>[<span className="text-accent">→</span>]  Punkt handlowo-biurowy</p>
-            </div>
+              <div className="font-[var(--font-mono)] text-[16px] tracking-[0.8px] leading-[24px] text-text-dim space-y-0">
+                <p>[<span className="text-accent">→</span>]  Kraków, Polska</p>
+                <p>[<span className="text-accent">→</span>]  50°04&apos;N  019°57&apos;E</p>
+                <p>[<span className="text-accent">→</span>]  Droga krajowa S7</p>
+                <p>[<span className="text-accent">→</span>]  Trasa północ–południe</p>
+                <p>[<span className="text-accent">→</span>]  Punkt handlowo-biurowy</p>
+              </div>
 
-            <div className="mt-8 pointer-events-auto">
-              <ScrambleLink
-                href="https://maps.google.com/?q=50.06,19.94"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]"
-              >
-                [ Wyznacz Trasę → ]
-              </ScrambleLink>
+              <div className="mt-8">
+                <ScrambleLink
+                  href="https://maps.google.com/?q=50.06,19.94"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]"
+                >
+                  [ Wyznacz Trasę → ]
+                </ScrambleLink>
+              </div>
             </div>
           </div>
         </div>
@@ -762,7 +773,11 @@ export default function HomePage() {
                     </div>
                     <div className="border-t border-accent/5" />
                     <div className="flex items-start gap-2 mt-2">
-                      <input type="checkbox" className="mt-0.5 accent-accent" />
+                      <label className="mt-0.5 shrink-0 w-3.5 h-3.5 relative cursor-pointer block">
+                        <input type="checkbox" className="sr-only peer" />
+                        <span className="absolute inset-0 border border-accent/50 peer-checked:border-accent transition-colors duration-150" />
+                        <span className="absolute inset-[3px] bg-accent scale-0 peer-checked:scale-100 transition-transform duration-150" />
+                      </label>
                       <span className="font-[var(--font-mono)] text-[11px] text-accent/30 leading-[1.6]">
                         Wyrażam zgodę na przetwarzanie danych przez HYDRA ARMS
                         w celu inicjacji procedury kontaktowej. Akceptuję{" "}

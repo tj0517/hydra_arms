@@ -161,7 +161,7 @@ export default function ONasPage() {
         <div className="px-[clamp(24px,4vw,64px)] pt-9 pb-4 flex flex-col h-full border-b md:border-b-0">
           <TypewriterTitle
             as="h2"
-            className="text-text text-[28px] font-medium leading-[34px]"
+            className="text-text text-[clamp(1.75rem,2.5vw,2.5rem)] font-medium leading-[1.15]"
             speed={45}
           >
             Nasza misja, Innowacja i rzetelność

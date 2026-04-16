@@ -124,8 +124,8 @@ export default function Nav() {
     <nav
       className={`fixed top-0 left-0 right-0 z-[1000] transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] ${
         scrolled
-          ? "py-4"
-          : "py-6"
+          ? "py-4 bg-bg/95 backdrop-blur-sm border-b border-white/[0.06]"
+          : "py-6 bg-gradient-to-b from-bg/70 to-transparent"
       }`}
     >
       <div className="max-w-[1400px] mx-auto px-8 md:px-16 flex justify-between items-center">
