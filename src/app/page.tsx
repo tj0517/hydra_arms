@@ -9,8 +9,8 @@ import ScrambleLink from "@/components/ScrambleLink";
 import MilitaryMap from "@/components/MilitaryMap";
 import MapCrosshair from "@/components/MapCrosshair";
 import TypewriterTitle from "@/components/TypewriterTitle";
+import PixelBlast from "@/components/PixelBlast";
 import Image from "next/image";
-import DrawSVG from "@/components/DrawSVG";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -74,9 +74,17 @@ const filary = [
 export default function HomePage() {
   const overlayRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLElement>(null);
-  const scopeReticleRef = useRef<HTMLDivElement>(null);
   const coordLatRef = useRef<HTMLDivElement>(null);
   const coordLngRef = useRef<HTMLDivElement>(null);
+  const crosshairRef = useRef<HTMLDivElement>(null);
+  const lineXRef = useRef<HTMLDivElement>(null);
+  const lineYRef = useRef<HTMLDivElement>(null);
+  const coordDisplayRef = useRef<HTMLSpanElement>(null);
+  const heroOverflowRef = useRef<HTMLDivElement>(null);
+  const beznazwyVideoRef = useRef<HTMLVideoElement>(null);
+  const beznazwyWrapperRef = useRef<HTMLDivElement>(null);
+  const glitchOverlayRef = useRef<HTMLDivElement>(null);
+  const overflowVideoInnerRef = useRef<HTMLVideoElement>(null);
   const videoSectionRef = useRef<HTMLDivElement>(null);
   const servicesWrapRef = useRef<HTMLDivElement>(null);
   const serviceRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -90,17 +98,53 @@ export default function HomePage() {
     );
   }, []);
 
-  /* ── Nightvision scope — circular brightened area follows cursor ── */
+  /* ── Glitch on video loop — triggers before loop to hide the cut ── */
+  useEffect(() => {
+    const video = beznazwyVideoRef.current;
+    const hero = heroRef.current;
+    const overlay = glitchOverlayRef.current;
+    if (!video || !hero || !overlay) return;
+    let triggered = false;
+    const onTimeUpdate = () => {
+      const curr = video.currentTime;
+      const dur = video.duration;
+      if (isNaN(dur)) return;
+      // Trigger 0.35s before end so flash peaks right at the loop frame
+      if (!triggered && curr > dur - 0.35) {
+        triggered = true;
+        hero.classList.remove("hero-loop-glitch");
+        void hero.offsetWidth;
+        hero.classList.add("hero-loop-glitch");
+        overlay.classList.remove("hero-loop-flash");
+        void overlay.offsetWidth;
+        overlay.classList.add("hero-loop-flash");
+        setTimeout(() => { hero.classList.remove("hero-loop-glitch"); overlay.classList.remove("hero-loop-flash"); }, 650);
+      }
+      // Reset after loop happened
+      if (triggered && curr < 0.5) triggered = false;
+    };
+    video.addEventListener("timeupdate", onTimeUpdate);
+    return () => video.removeEventListener("timeupdate", onTimeUpdate);
+  }, []);
+
+  /* ── Sync hero-overflow video to beznazwy ── */
+  useEffect(() => {
+    const bg = beznazwyVideoRef.current;
+    const fg = overflowVideoInnerRef.current;
+    if (!bg || !fg) return;
+    const sync = () => { if (Math.abs(fg.currentTime - bg.currentTime) > 0.1) fg.currentTime = bg.currentTime; };
+    const interval = setInterval(sync, 500);
+    fg.addEventListener("loadedmetadata", sync);
+    return () => { clearInterval(interval); fg.removeEventListener("loadedmetadata", sync); };
+  }, []);
+
+  /* ── Cursor → scope crosshair + video reveal ── */
   useEffect(() => {
     const hero = heroRef.current;
-    const reticle = scopeReticleRef.current;
-    if (!hero || !reticle) return;
-
+    if (!hero) return;
     let targetX = 0, targetY = 0, curX = 0, curY = 0;
     let active = false;
     let raf = 0;
-    const RADIUS = 90;
-
     const formatCoord = (deg: number, pos: string, neg: string) => {
       const dir = deg >= 0 ? pos : neg;
       const abs = Math.abs(deg);
@@ -109,52 +153,56 @@ export default function HomePage() {
       const s = Math.floor(((abs - d) * 60 - m) * 60);
       return `${String(d).padStart(3, "0")}°${String(m).padStart(2, "0")}'${String(s).padStart(2, "0")}"${dir}`;
     };
-
     const updateCoords = (nx: number, ny: number) => {
       const rect = hero.getBoundingClientRect();
       const px = nx / rect.width;
       const py = ny / rect.height;
-      // Map to area around Kraków: lat ~50.02–50.10, lng ~19.88–20.02
       const lat = 50.02 + (1 - py) * 0.08;
       const lng = 19.88 + px * 0.14;
       if (coordLatRef.current) coordLatRef.current.textContent = `[ ${formatCoord(lat, "N", "S")} ]`;
       if (coordLngRef.current) coordLngRef.current.textContent = `[ ${formatCoord(lng, "E", "W")} ]`;
     };
-
+    const crosshair = crosshairRef.current;
+    const lx = lineXRef.current;
+    const ly = lineYRef.current;
+    const coordDisplay = coordDisplayRef.current;
+    const overflowVid = heroOverflowRef.current;
+    const W = 80, H = 50; // half-width, half-height of scope rect (160×100)
+    const clip = (x: number, y: number) =>
+      `inset(${y - H}px calc(100% - ${x + W}px) calc(100% - ${y + H}px) ${x - W}px)`;
     const tick = () => {
       curX += (targetX - curX) * 0.08;
       curY += (targetY - curY) * 0.08;
-      hero.style.setProperty("--sx", `${curX}px`);
-      hero.style.setProperty("--sy", `${curY}px`);
-      reticle.style.transform = `translate(${curX - RADIUS}px, ${curY - RADIUS}px)`;
       updateCoords(curX, curY);
+      if (overflowVid) overflowVid.style.clipPath = clip(curX, curY);
+      if (crosshair) crosshair.style.transform = `translate(${curX}px, ${curY}px)`;
+      if (lx) lx.style.transform = `translateY(${curY}px)`;
+      if (ly) ly.style.transform = `translateX(${curX}px)`;
+      if (coordDisplay) coordDisplay.textContent = `X:${Math.round(curX).toString().padStart(4, "0")}  Y:${Math.round(curY).toString().padStart(4, "0")}`;
       raf = requestAnimationFrame(tick);
     };
-
     const onMove = (e: MouseEvent) => {
       const rect = hero.getBoundingClientRect();
       targetX = e.clientX - rect.left;
       targetY = e.clientY - rect.top;
       if (!active) {
         active = true;
-        curX = targetX;
-        curY = targetY;
-        hero.style.setProperty("--sx", `${curX}px`);
-        hero.style.setProperty("--sy", `${curY}px`);
-        reticle.style.transform = `translate(${curX - RADIUS}px, ${curY - RADIUS}px)`;
-        reticle.style.opacity = "1";
+        curX = targetX; curY = targetY;
+        if (overflowVid) overflowVid.style.clipPath = clip(curX, curY);
+        if (crosshair) { crosshair.style.opacity = "1"; crosshair.style.transform = `translate(${curX}px, ${curY}px)`; }
+        if (lx) { lx.style.opacity = "1"; lx.style.transform = `translateY(${curY}px)`; }
+        if (ly) { ly.style.opacity = "1"; ly.style.transform = `translateX(${curX}px)`; }
         raf = requestAnimationFrame(tick);
       }
     };
-
     const onLeave = () => {
       active = false;
       cancelAnimationFrame(raf);
-      hero.style.setProperty("--sx", "-9999px");
-      hero.style.setProperty("--sy", "-9999px");
-      reticle.style.opacity = "0";
+      if (overflowVid) overflowVid.style.clipPath = "inset(50% 50% 50% 50%)";
+      if (crosshair) crosshair.style.opacity = "0";
+      if (lx) lx.style.opacity = "0";
+      if (ly) ly.style.opacity = "0";
     };
-
     hero.addEventListener("mousemove", onMove);
     hero.addEventListener("mouseleave", onLeave);
     return () => {
@@ -168,100 +216,97 @@ export default function HomePage() {
   return (
     <main>
       {/* ─── HERO ─── */}
-      <section ref={heroRef} className="relative h-[100dvh] overflow-hidden bg-bg">
-        <div
-          ref={overlayRef}
-          className="absolute inset-0 bg-bg z-[15] pointer-events-none"
-        />
+      <section ref={heroRef} className="relative h-[100dvh] overflow-hidden bg-bg cursor-none">
+        <div ref={overlayRef} className="absolute inset-0 bg-bg z-[15] pointer-events-none" />
 
-        {/* Video — grayscale source for NV processing */}
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover z-[1] grayscale contrast-[1.3] brightness-[0.45]"
-        >
-          <source src="/hero-video.mp4" type="video/mp4" />
-        </video>
-
-        {/* NV phosphor green tint */}
-        <div
-          className="absolute inset-0 z-[2] pointer-events-none mix-blend-screen"
-          style={{ background: "rgba(19,255,21,0.18)" }}
-        />
-
-        {/* NV scanlines */}
-        <div
-          className="absolute inset-0 z-[3] pointer-events-none opacity-[0.05]"
-          style={{
-            backgroundImage:
-              "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(19,255,21,0.15) 2px, rgba(19,255,21,0.15) 4px)",
-          }}
-        />
-
-        {/* Dark overlay with cursor hole + text cutout via mix-blend-multiply */}
-        <div
-          className="absolute inset-0 z-[4] bg-black mix-blend-multiply flex flex-col justify-start pt-[22vh] px-8 md:px-16"
-          style={{
-            maskImage:
-              "radial-gradient(circle 90px at var(--sx, -9999px) var(--sy, -9999px), transparent 0%, transparent 68%, rgba(0,0,0,0.5) 85%, black 100%)",
-            WebkitMaskImage:
-              "radial-gradient(circle 90px at var(--sx, -9999px) var(--sy, -9999px), transparent 0%, transparent 68%, rgba(0,0,0,0.5) 85%, black 100%)",
-          } as React.CSSProperties}
-        >
-          <TypewriterTitle
-            as="h1"
-            className="text-[clamp(3.5rem,14vw,14rem)] font-bold text-accent leading-[0.9] tracking-[-0.04em] uppercase"
-            speed={70}
-            delay={800}
+        <div ref={beznazwyWrapperRef} className="absolute inset-0">
+          <video
+            ref={beznazwyVideoRef}
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover grayscale contrast-[1.15] brightness-[0.5] sepia-[0.08]"
           >
-            PRECYZJA.
-          </TypewriterTitle>
-          <TypewriterTitle
-            as="span"
-            className="text-[clamp(3.5rem,14vw,14rem)] font-bold text-accent leading-[0.9] tracking-[-0.04em] uppercase block"
-            speed={70}
-            delay={1400}
-          >
-            PRZEWAGA.
-          </TypewriterTitle>
+            <source src="/hero-overflow.mp4" type="video/mp4" />
+          </video>
         </div>
 
-        {/* NV scope reticle */}
+        {/* hero-overflow — revealed by scope cursor via clip-path */}
         <div
-          ref={scopeReticleRef}
-          className="absolute top-0 left-0 z-[5] pointer-events-none opacity-0 transition-opacity duration-300 hidden md:block"
+          ref={heroOverflowRef}
+          className="absolute inset-0 z-[1] pointer-events-none scope-glitch overflow-hidden"
+          style={{ clipPath: "inset(50% 50% 50% 50%)" }}
         >
-          <svg width="180" height="180" viewBox="0 0 180 180" fill="none" className="text-accent">
-            {/* Outer scope ring */}
-            <circle cx="90" cy="90" r="84" stroke="currentColor" strokeWidth="0.9" opacity="0.65" />
-            {/* Top arm — gap 11px from center */}
-            <line x1="90" y1="6" x2="90" y2="79" stroke="currentColor" strokeWidth="0.7" opacity="0.8" />
-            {/* Bottom arm — longer for BDC */}
-            <line x1="90" y1="101" x2="90" y2="174" stroke="currentColor" strokeWidth="0.7" opacity="0.8" />
-            {/* Left arm */}
-            <line x1="6" y1="90" x2="79" y2="90" stroke="currentColor" strokeWidth="0.7" opacity="0.8" />
-            {/* Right arm */}
-            <line x1="101" y1="90" x2="174" y2="90" stroke="currentColor" strokeWidth="0.7" opacity="0.8" />
-            {/* Windage hash marks — symmetric on horizontal arms */}
-            <line x1="30" y1="89" x2="30" y2="91" stroke="currentColor" strokeWidth="0.6" opacity="0.5" />
-            <line x1="48" y1="88.5" x2="48" y2="91.5" stroke="currentColor" strokeWidth="0.6" opacity="0.55" />
-            <line x1="65" y1="89" x2="65" y2="91" stroke="currentColor" strokeWidth="0.6" opacity="0.5" />
-            <line x1="150" y1="89" x2="150" y2="91" stroke="currentColor" strokeWidth="0.6" opacity="0.5" />
-            <line x1="132" y1="88.5" x2="132" y2="91.5" stroke="currentColor" strokeWidth="0.6" opacity="0.55" />
-            <line x1="115" y1="89" x2="115" y2="91" stroke="currentColor" strokeWidth="0.6" opacity="0.5" />
-            {/* BDC hash marks — lower vertical arm */}
-            <line x1="86.5" y1="115" x2="93.5" y2="115" stroke="currentColor" strokeWidth="0.6" opacity="0.6" />
-            <line x1="87" y1="128" x2="93" y2="128" stroke="currentColor" strokeWidth="0.55" opacity="0.5" />
-            <line x1="87" y1="141" x2="93" y2="141" stroke="currentColor" strokeWidth="0.55" opacity="0.45" />
-            <line x1="87.5" y1="154" x2="92.5" y2="154" stroke="currentColor" strokeWidth="0.5" opacity="0.4" />
-            {/* Center precision dot */}
-            <circle cx="90" cy="90" r="1.7" fill="currentColor" opacity="0.85" />
+          <video
+            ref={overflowVideoInnerRef}
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover grayscale brightness-[0.55] contrast-[1.2]"
+          >
+            <source src="/hero-overflow.mp4" type="video/mp4" />
+          </video>
+          {/* Green tint */}
+          <div className="absolute inset-0 bg-[#13FF15]/30 mix-blend-screen pointer-events-none" />
+          <div className="absolute inset-0 bg-[#0a2a0a]/40 mix-blend-multiply pointer-events-none" />
+          {/* Grain inside scope */}
+          <div className="moving-grain !opacity-[0.18] !z-[2]" />
+        </div>
+
+        {/* Scope guide lines */}
+        <div ref={lineXRef} className="absolute top-0 left-0 w-full h-px bg-accent/30 pointer-events-none opacity-0 transition-opacity duration-300 z-[8]" />
+        <div ref={lineYRef} className="absolute top-0 left-0 w-px h-full bg-accent/30 pointer-events-none opacity-0 transition-opacity duration-300 z-[8]" />
+
+        {/* Scope crosshair reticle */}
+        <div
+          ref={crosshairRef}
+          className="absolute top-0 left-0 z-[9] pointer-events-none opacity-0 transition-opacity duration-300"
+          style={{ marginLeft: -80, marginTop: -50 }}
+        >
+          <svg width="160" height="100" viewBox="0 0 160 100" fill="none">
+            <rect x="1" y="1" width="158" height="98" stroke="#13FF15" strokeWidth="0.5" opacity="0.5" />
+            <path d="M1 14 L1 1 L14 1" stroke="#13FF15" strokeWidth="1.5" fill="none" opacity="0.9" />
+            <path d="M146 1 L159 1 L159 14" stroke="#13FF15" strokeWidth="1.5" fill="none" opacity="0.9" />
+            <path d="M159 86 L159 99 L146 99" stroke="#13FF15" strokeWidth="1.5" fill="none" opacity="0.9" />
+            <path d="M14 99 L1 99 L1 86" stroke="#13FF15" strokeWidth="1.5" fill="none" opacity="0.9" />
+            <line x1="74" y1="50" x2="86" y2="50" stroke="#13FF15" strokeWidth="1" opacity="0.7" />
+            <line x1="80" y1="44" x2="80" y2="56" stroke="#13FF15" strokeWidth="1" opacity="0.7" />
           </svg>
+          <span
+            ref={coordDisplayRef}
+            className="absolute bottom-[8px] left-[10px] font-[var(--font-mono)] text-[9px] text-accent/60 tracking-[0.1em]"
+          >
+            X:0000  Y:0000
+          </span>
         </div>
 
-        {/* HUD UI layer + bottom content */}
+        {/* Vignette */}
+        <div
+          className="absolute inset-0 z-[2] pointer-events-none"
+          style={{ background: "radial-gradient(ellipse 85% 75% at 50% 50%, transparent 30%, rgba(10,10,11,0.65) 75%, rgba(10,10,11,0.95) 100%)" }}
+        />
+
+        {/* Bottom gradient fade to bg */}
+        <div
+          className="absolute bottom-0 left-0 right-0 h-[50%] z-[5] pointer-events-none"
+          style={{ background: "linear-gradient(to top, var(--color-bg) 0%, var(--color-bg) 30%, rgba(10,10,11,0.85) 60%, transparent 100%)" }}
+        />
+
+        {/* Grain */}
+        <div className="moving-grain !opacity-[0.15]" style={{ zIndex: 3 }} />
+
+        {/* Scanlines */}
+        <div
+          className="absolute inset-0 z-[4] pointer-events-none opacity-[0.04]"
+          style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.08) 2px, rgba(255,255,255,0.08) 4px)" }}
+        />
+
+        {/* Loop glitch flash overlay */}
+        <div ref={glitchOverlayRef} className="absolute inset-0 z-[6] pointer-events-none opacity-0" />
+
+        {/* HUD + bottom content */}
         <div className="absolute inset-0 z-[10] pointer-events-none">
           <div className="absolute top-[100px] left-16 font-[var(--font-mono)] text-[11px] text-accent leading-[2.2] opacity-60 hidden md:block">
             <div>// PL-2026</div>
@@ -273,7 +318,6 @@ export default function HomePage() {
             <div>[ BEZ // OBR ]</div>
           </div>
 
-          {/* Bottom content */}
           <div className="absolute bottom-8 left-8 right-8 md:bottom-16 md:left-16 md:right-16 pointer-events-auto">
             <span className="font-[var(--font-mono)] text-[14px] text-accent tracking-[1.12px] uppercase mb-4 md:mb-6 block">
               // HYDRA ARMS - PL-2026
@@ -298,20 +342,25 @@ export default function HomePage() {
                 Obrót nowoczesnym uzbrojeniem
               </SplitText>
             </div>
-
             <div className="flex gap-6 mt-6 md:gap-12 md:mt-8 items-center">
-              <ScrambleLink
-                href="/uslugi"
-                className="font-[var(--font-mono)] text-[14px] tracking-[1.12px] hover:text-white transition-colors duration-300"
-              >
-                [ Nasze usługi ]
-              </ScrambleLink>
-              <ScrambleLink
-                href="#"
-                className="font-[var(--font-mono)] text-[14px] tracking-[1.12px] hover:text-white transition-colors duration-300"
-              >
-                [ Sklep ]
-              </ScrambleLink>
+              <div className="relative px-6 py-1.5 inline-flex items-center">
+                <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
+                <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
+                <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
+                <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
+                <ScrambleLink href="/uslugi" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px] hover:text-white transition-colors duration-300">
+                  Nasze usługi
+                </ScrambleLink>
+              </div>
+              <div className="relative px-6 py-1.5 inline-flex items-center">
+                <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
+                <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
+                <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
+                <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
+                <ScrambleLink href="#" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px] hover:text-white transition-colors duration-300">
+                  Sklep
+                </ScrambleLink>
+              </div>
             </div>
           </div>
         </div>
@@ -358,7 +407,11 @@ export default function HomePage() {
                       <span className="text-[16px] md:text-[18px] font-medium text-text-dim">
                         {service.label}
                       </span>
-                      <div className="border border-text/50 px-2 py-1">
+                      <div className="relative px-3 py-1 inline-flex items-center">
+                        <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
+                        <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
+                        <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
+                        <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
                         <span className="text-[16px] md:text-[18px]">
                           <span className="text-accent">{service.id}</span>
                           <span className="text-white/30">/{String(services.length).padStart(2, "0")}</span>
@@ -369,7 +422,7 @@ export default function HomePage() {
                     <h2 className="text-[clamp(1.8rem,4vw,48px)] font-light text-text leading-[1.1] md:leading-[53px] tracking-[-0.48px] mb-6 md:mb-9">
                       {service.title}
                     </h2>
-                    <p className="text-[16px] md:text-[18px] font-light text-text-dim leading-[26px] md:leading-[28px] mb-6 md:mb-8">
+                    <p className="text-[16px] md:text-[18px] font-light text-text-dim leading-[26px] md:leading-[28px] mb-6 md:mb-8 text-justify">
                       {service.desc}
                     </p>
 
@@ -387,9 +440,13 @@ export default function HomePage() {
                       ))}
                     </div>
 
-                    <div className="border border-accent/40 px-14 py-2.5 inline-flex items-center">
+                    <div className="relative px-6 py-1.5 inline-flex items-center">
+                      <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
+                      <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
+                      <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
+                      <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
                       <ScrambleLink href="/uslugi" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
-                        [ Szczegóły → ]
+                        Szczegóły →
                       </ScrambleLink>
                     </div>
                   </div>
@@ -410,16 +467,22 @@ export default function HomePage() {
         <div className="pt-10 md:pt-20 pb-0 px-[clamp(24px,4vw,64px)]">
           <ScrollRevealText
             text="Realizujemy krytyczne projekty z zakresu wytwarzania uzbrojenia oraz technologii dual-use. Łączymy rygorystyczne standardy NATO z precyzją nowoczesnych technologii tworząc innowacje. Prowadzimy również działalność handlową na rynku cywilnym i specjalnym."
-            className="text-[clamp(1.5rem,3.17vw,48px)] font-light leading-[1.3] md:leading-[53px] tracking-[-0.48px] text-left"
+            className="text-[clamp(1.5rem,3.17vw,48px)] font-light leading-[1.3] md:leading-[53px] tracking-[-0.48px] text-justify"
             indent={2}
           />
           <div className="flex justify-end mt-8">
-            <ScrambleLink
-              href="/o-nas"
-              className="font-[var(--font-mono)] text-[14px] text-accent tracking-[1.12px] hover:text-white transition-colors duration-300"
-            >
-              [ Zobacz więcej ]
-            </ScrambleLink>
+            <div className="relative px-6 py-1.5 inline-flex items-center">
+              <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
+              <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
+              <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
+              <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
+              <ScrambleLink
+                href="/o-nas"
+                className="font-[var(--font-mono)] text-[14px] text-accent tracking-[1.12px] hover:text-white transition-colors duration-300"
+              >
+                Zobacz więcej
+              </ScrambleLink>
+            </div>
           </div>
         </div>
       </section>
@@ -484,7 +547,7 @@ export default function HomePage() {
           >
             POTENCJAŁ I OPOWIEDZIALNOŚĆ
           </TypewriterTitle>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8 pb-8 md:gap-16 md:mt-16 md:pb-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8 pb-0 md:gap-16 md:mt-16 md:pb-4">
             <div>
               <p className="text-text-dim text-[18px] font-normal leading-[30px]">
                 HYDRA ARMS to krakowski ośrodek kompetencyjny dedykowany dla sektora
@@ -504,90 +567,117 @@ export default function HomePage() {
       </section>
 
       {/* ─── 3 FILARY ─── */}
-      <section className="relative">
-        {/* Full-width top border line */}
-        <div className="border-t border-white/[0.25]" />
-
-        {/* Section label — absolutely positioned over the cards */}
-        <div className="absolute top-0 left-0 px-[clamp(24px,4vw,64px)] py-2 z-10 pointer-events-none">
+      <section>
+        <div className="border-t border-white/[0.25] px-[clamp(24px,4vw,64px)] py-2">
           <span className="font-[var(--font-mono)] text-[16px] font-medium text-accent tracking-[0.8px]">
             //04 DYSTRYBUCJA
           </span>
         </div>
 
-        {/* 3-card grid — width constrained to vertical grid lines (32px margins) */}
-        <div className="mx-[clamp(24px,4vw,64px)] grid grid-cols-1 md:grid-cols-3 h-auto md:h-[680px] pt-10 md:pt-0">
+        <div className="mx-[clamp(24px,4vw,64px)] grid grid-cols-1 md:grid-cols-3">
 
-          {/* ── B2G — Heksagonalna siatka strukturalna ── */}
-          <div className="md:border-r border-b border-white/[0.08] flex flex-col justify-between px-6 py-8 md:px-10 md:py-12">
-            <div className="hidden md:flex flex-1 items-center justify-center">
-              <DrawSVG className="w-60 h-60 text-accent" stagger={80}>
-                {([78, 52, 26] as number[]).map((r, k) => {
-                  const offset = k % 2 === 0 ? -Math.PI / 2 : -Math.PI / 6;
-                  const pts = Array.from({ length: 6 }, (_, j) => {
-                    const a = (j / 6) * Math.PI * 2 + offset;
-                    return `${(100 + r * Math.cos(a)).toFixed(1)},${(100 + r * Math.sin(a)).toFixed(1)}`;
-                  }).join(" ");
-                  return <polygon key={k} points={pts} stroke="currentColor" strokeWidth={k === 0 ? "1.0" : "0.7"} fill="none" opacity={0.55 - k * 0.1} />;
-                })}
-                {Array.from({ length: 6 }, (_, k) => {
-                  const a = (k / 6) * Math.PI * 2 - Math.PI / 2;
-                  return <line key={k} x1="100" y1="100" x2={(100 + Math.cos(a) * 78).toFixed(1)} y2={(100 + Math.sin(a) * 78).toFixed(1)} stroke="currentColor" strokeWidth="0.5" opacity="0.22" />;
-                })}
-              </DrawSVG>
+          {/* ── B2G ── */}
+          <div className="md:border-r border-b border-white/[0.08] flex flex-col">
+            <div className="relative aspect-[2/1] hidden md:block overflow-hidden">
+              <PixelBlast
+                variant="diamond"
+                color="#0D6E0E"
+                pixelSize={5}
+                patternScale={2.5}
+                patternDensity={1.45}
+                enableRipples
+                rippleSpeed={0.3}
+                rippleThickness={0.1}
+                rippleIntensityScale={1.2}
+                transparent
+                edgeFade={0.05}
+                speed={0.8}
+                maskColor="#13FF15"
+                maskText="B2G"
+              />
             </div>
-            <div>
-              <div className="font-[var(--font-mono)] text-[10px] tracking-[0.25em] text-accent/50 border border-accent/20 px-2.5 py-1 inline-block mb-5">B2G</div>
-              <h3 className="text-[clamp(1.4rem,2vw,1.9rem)] font-normal text-text leading-[1.1] mb-4">{filary[0].title}</h3>
-              <p className="font-[var(--font-mono)] text-[11px] tracking-[0.12em] uppercase text-text-dim leading-[1.9] mb-8">{filary[0].desc}</p>
-              <ScrambleLink href="/wspolpraca" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
-                [ Dowiedz się więcej ]
-              </ScrambleLink>
+            <div className="px-6 py-6 md:px-8 md:py-8">
+              <h3 className="text-[clamp(1.1rem,1.5vw,1.4rem)] font-normal text-text leading-[1.15] mb-3">{filary[0].title}</h3>
+              <p className="font-[var(--font-mono)] text-[10px] tracking-[0.12em] uppercase text-text-dim leading-[1.8] mb-6 text-justify">{filary[0].desc}</p>
+              <div className="relative px-6 py-1.5 inline-flex items-center">
+                <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
+                <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
+                <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
+                <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
+                <ScrambleLink href="/wspolpraca" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
+                  Dowiedz się więcej
+                </ScrambleLink>
+              </div>
             </div>
           </div>
 
-          {/* ── B2B — Walec (komponent obrabiany CNC) ── */}
-          <div className="md:border-r border-b border-white/[0.08] flex flex-col justify-between px-6 py-8 md:px-10 md:py-12">
-            <div className="hidden md:flex flex-1 items-center justify-center">
-              <DrawSVG className="w-60 h-60 text-accent">
-                <ellipse cx="100" cy="58" rx="72" ry="20" stroke="currentColor" strokeWidth="1.0" opacity="0.6" />
-                <line x1="28" y1="58" x2="28" y2="152" stroke="currentColor" strokeWidth="1.0" opacity="0.55" />
-                <line x1="172" y1="58" x2="172" y2="152" stroke="currentColor" strokeWidth="1.0" opacity="0.55" />
-                <path d="M 28,152 A 72,20 0 0 0 172,152" stroke="currentColor" strokeWidth="1.0" opacity="0.5" fill="none" />
-                <ellipse cx="100" cy="58" rx="28" ry="8" stroke="currentColor" strokeWidth="0.65" opacity="0.35" />
-                <ellipse cx="100" cy="102" rx="72" ry="20" stroke="currentColor" strokeWidth="0.5" opacity="0.22" />
-              </DrawSVG>
+          {/* ── B2B ── */}
+          <div className="md:border-r border-b border-white/[0.08] flex flex-col">
+            <div className="relative aspect-[2/1] hidden md:block overflow-hidden">
+              <PixelBlast
+                variant="diamond"
+                color="#0D6E0E"
+                pixelSize={5}
+                patternScale={2.5}
+                patternDensity={1.45}
+                enableRipples
+                rippleSpeed={0.35}
+                rippleThickness={0.12}
+                rippleIntensityScale={1.5}
+                transparent
+                edgeFade={0.05}
+                speed={0.8}
+                maskColor="#13FF15"
+                maskText="B2B"
+              />
             </div>
-            <div>
-              <div className="font-[var(--font-mono)] text-[10px] tracking-[0.25em] text-accent/50 border border-accent/20 px-2.5 py-1 inline-block mb-5">B2B</div>
-              <h3 className="text-[clamp(1.4rem,2vw,1.9rem)] font-normal text-text leading-[1.1] mb-4">{filary[1].title}</h3>
-              <p className="font-[var(--font-mono)] text-[11px] tracking-[0.12em] uppercase text-text-dim leading-[1.9] mb-8">{filary[1].desc}</p>
-              <ScrambleLink href="/wspolpraca" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
-                [ Dowiedz się więcej ]
-              </ScrambleLink>
+            <div className="px-6 py-6 md:px-8 md:py-8">
+              <h3 className="text-[clamp(1.1rem,1.5vw,1.4rem)] font-normal text-text leading-[1.15] mb-3">{filary[1].title}</h3>
+              <p className="font-[var(--font-mono)] text-[10px] tracking-[0.12em] uppercase text-text-dim leading-[1.8] mb-6 text-justify">{filary[1].desc}</p>
+              <div className="relative px-6 py-1.5 inline-flex items-center">
+                <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
+                <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
+                <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
+                <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
+                <ScrambleLink href="/wspolpraca" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
+                  Dowiedz się więcej
+                </ScrambleLink>
+              </div>
             </div>
           </div>
 
-          {/* ── B2C — Tarcza strzelnicza (rynek cywilny) ── */}
-          <div className="border-b border-white/[0.08] flex flex-col justify-between px-6 py-8 md:px-10 md:py-12">
-            <div className="hidden md:flex flex-1 items-center justify-center">
-              <DrawSVG className="w-60 h-60 text-accent">
-                {[84, 66, 48, 30, 14].map((r, k) => (
-                  <circle key={k} cx="100" cy="100" r={r} stroke="currentColor" strokeWidth={k === 0 ? "1.0" : "0.7"} opacity={0.55 - k * 0.08} fill="none" />
-                ))}
-                <line x1="100" y1="8" x2="100" y2="22" stroke="currentColor" strokeWidth="0.7" opacity="0.38" />
-                <line x1="100" y1="178" x2="100" y2="192" stroke="currentColor" strokeWidth="0.7" opacity="0.38" />
-                <line x1="8" y1="100" x2="22" y2="100" stroke="currentColor" strokeWidth="0.7" opacity="0.38" />
-                <line x1="178" y1="100" x2="192" y2="100" stroke="currentColor" strokeWidth="0.7" opacity="0.38" />
-              </DrawSVG>
+          {/* ── B2C ── */}
+          <div className="border-b border-white/[0.08] flex flex-col">
+            <div className="relative aspect-[2/1] hidden md:block overflow-hidden">
+              <PixelBlast
+                variant="diamond"
+                color="#0D6E0E"
+                pixelSize={5}
+                patternScale={2.5}
+                patternDensity={1.45}
+                enableRipples
+                rippleSpeed={0.4}
+                rippleThickness={0.09}
+                rippleIntensityScale={1.8}
+                transparent
+                edgeFade={0.05}
+                speed={0.8}
+                maskColor="#13FF15"
+                maskText="B2C"
+              />
             </div>
-            <div>
-              <div className="font-[var(--font-mono)] text-[10px] tracking-[0.25em] text-accent/50 border border-accent/20 px-2.5 py-1 inline-block mb-5">B2C</div>
-              <h3 className="text-[clamp(1.4rem,2vw,1.9rem)] font-normal text-text leading-[1.1] mb-4">{filary[2].title}</h3>
-              <p className="font-[var(--font-mono)] text-[11px] tracking-[0.12em] uppercase text-text-dim leading-[1.9] mb-8">{filary[2].desc}</p>
-              <ScrambleLink href="/wspolpraca" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
-                [ Dowiedz się więcej ]
-              </ScrambleLink>
+            <div className="px-6 py-6 md:px-8 md:py-8">
+              <h3 className="text-[clamp(1.1rem,1.5vw,1.4rem)] font-normal text-text leading-[1.15] mb-3">{filary[2].title}</h3>
+              <p className="font-[var(--font-mono)] text-[10px] tracking-[0.12em] uppercase text-text-dim leading-[1.8] mb-6 text-justify">{filary[2].desc}</p>
+              <div className="relative px-6 py-1.5 inline-flex items-center">
+                <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
+                <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
+                <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
+                <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
+                <ScrambleLink href="/wspolpraca" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
+                  Dowiedz się więcej
+                </ScrambleLink>
+              </div>
             </div>
           </div>
 
@@ -604,9 +694,11 @@ export default function HomePage() {
 
           {/* Right info panel — solid bg box, absolutely positioned */}
           <div
-            className="absolute right-0 top-0 z-[5] hidden md:flex items-center px-[52px] py-10 bg-bg"
+            className="absolute right-0 top-0 z-[5] hidden md:flex items-center px-[52px] py-10 bg-bg border-l border-accent/20"
             style={{ width: "36%" }}
           >
+            <span className="absolute bottom-0 left-0 w-4 h-4 border-b border-l border-accent/40" />
+            <span className="absolute bottom-0 left-0 right-0 h-px bg-accent/20" />
             <div>
               <h3 className="text-text-dim text-[28px] font-medium leading-[34px] mb-6">
                 HYDRA ARMS SP. Z O.O.
@@ -621,14 +713,20 @@ export default function HomePage() {
               </div>
 
               <div className="mt-8">
-                <ScrambleLink
-                  href="https://maps.google.com/?q=50.06,19.94"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]"
-                >
-                  [ Wyznacz Trasę → ]
-                </ScrambleLink>
+                <div className="relative px-6 py-1.5 inline-flex items-center">
+                  <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
+                  <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
+                  <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
+                  <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
+                  <ScrambleLink
+                    href="https://maps.google.com/?q=50.06,19.94"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]"
+                  >
+                    Wyznacz Trasę →
+                  </ScrambleLink>
+                </div>
               </div>
             </div>
           </div>
@@ -642,14 +740,20 @@ export default function HomePage() {
           <p>[<span className="text-accent">→</span>] Kraków, Polska</p>
           <p>[<span className="text-accent">→</span>] 50°04&apos;N  019°57&apos;E</p>
         </div>
-        <a
-          href="https://maps.google.com/?q=50.06,19.94"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-block mt-4 font-[var(--font-mono)] text-[13px] text-accent tracking-[0.5px] hover:text-white transition-colors duration-300"
-        >
-          [ Wyznacz Trasę → ]
-        </a>
+        <div className="relative px-6 py-1.5 inline-flex items-center mt-4">
+          <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
+          <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
+          <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
+          <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
+          <a
+            href="https://maps.google.com/?q=50.06,19.94"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-[var(--font-mono)] text-[13px] text-accent tracking-[0.5px] hover:text-white transition-colors duration-300"
+          >
+            Wyznacz Trasę →
+          </a>
+        </div>
       </div>
 
       {/* ─── KONTAKT — TERMINAL ─── */}
@@ -787,12 +891,18 @@ export default function HomePage() {
                       </span>
                     </div>
                     <div className="flex justify-end pt-2">
-                      <button
-                        type="submit"
-                        className="font-[var(--font-mono)] text-[13px] border border-accent/40 px-6 py-2 tracking-[1px] text-accent hover:bg-accent hover:text-bg transition-all duration-300"
-                      >
-                        [ WYŚLIJ ]
-                      </button>
+                      <div className="relative px-6 py-1.5 inline-flex items-center">
+                        <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
+                        <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
+                        <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
+                        <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
+                        <button
+                          type="submit"
+                          className="font-[var(--font-mono)] text-[13px] tracking-[1px] text-accent hover:text-white transition-colors duration-300"
+                        >
+                          WYŚLIJ
+                        </button>
+                      </div>
                     </div>
                   </form>
                 </div>

@@ -154,7 +154,7 @@ export default function UslugiPage() {
       <section className="py-16 md:py-32 px-[clamp(24px,4vw,64px)] border-b border-white/10">
         <ScrollRevealText
           text="W HYDRA ARMS proces twórczy zaczyna się od precyzyjnej definicji potrzeb operacyjnych. Nasz zespół inżynierski, wspierany przez praktyków z sektora obronnego, projektuje systemy uzbrojenia i komponenty zorientowane na ekstremalną trwałość i niezawodność."
-          className="text-[1.75rem] md:text-[3.2vw] font-medium leading-[1.1] tracking-[-0.48px] text-left"
+          className="text-[1.75rem] md:text-[3.2vw] font-medium leading-[1.1] tracking-[-0.48px] text-justify"
           indent={2}
         />
         <div className="flex justify-end mt-11">
@@ -209,7 +209,7 @@ export default function UslugiPage() {
             <h3 className="text-[clamp(2rem,3.17vw,48px)] font-light text-text leading-[53px] tracking-[-0.48px] mb-6">
               {active.title}
             </h3>
-            <p className="text-[18px] font-light text-text-dim leading-[23px] max-w-[749px] mb-8">
+            <p className="text-[18px] font-light text-text-dim leading-[23px] max-w-[749px] mb-8 text-justify">
               {active.desc}
             </p>
 
@@ -280,7 +280,7 @@ export default function UslugiPage() {
           </TypewriterTitle>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8 pb-8 md:gap-16 md:mt-16 md:pb-16">
             <div>
-              <p className="text-text-dim text-[18px] font-normal leading-[30px]">
+              <p className="text-text-dim text-[18px] font-normal leading-[30px] text-justify">
                 Swoje usługi kierujemy do szerokiego spektrum odbiorców — od jednostek wojskowych i policyjnych,
                 przez instytucje badawcze, aż po partnerów przemysłowych w modelu B2B.
               </p>
@@ -310,7 +310,7 @@ export default function UslugiPage() {
                 <h3 className="text-[clamp(1.4rem,2vw,1.9rem)] font-normal text-text leading-[1.1] mb-4">
                   {seg.title}
                 </h3>
-                <p className="font-[var(--font-mono)] text-[11px] tracking-[0.12em] uppercase text-text-dim leading-[1.9] mb-8">
+                <p className="font-[var(--font-mono)] text-[11px] tracking-[0.12em] uppercase text-text-dim leading-[1.9] mb-8 text-justify">
                   {seg.desc}
                 </p>
                 <ScrambleLink href={seg.href} className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
@@ -326,7 +326,7 @@ export default function UslugiPage() {
       <section className="border-b border-white/10 py-16 md:py-32 px-[clamp(24px,4vw,64px)]">
         <ScrollRevealText
           text="Dostarczamy rozwiązania tam, gdzie standardowe metody zawodzą. Szukasz partnera technologicznego do projektu obronnego lub cywilnego?"
-          className="text-[1.75rem] md:text-[3.2vw] font-medium leading-[1.1] tracking-[-0.48px] text-left"
+          className="text-[1.75rem] md:text-[3.2vw] font-medium leading-[1.1] tracking-[-0.48px] text-justify"
           indent={2}
         />
         <div className="flex justify-end mt-11">

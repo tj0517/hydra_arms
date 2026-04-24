@@ -145,7 +145,7 @@ export default function ONasPage() {
       <section className="py-16 md:py-32 px-[clamp(24px,4vw,64px)] border-b border-white/10">
         <ScrollRevealText
           text="Powstaliśmy z połączenia ekspertów zaawansowanej inżynierii i sektora strzelecko-obronnego. Ta synergia pozwala nam wytwarzać uzbrojenie, które odpowiada na realne potrzeby użytkownika."
-          className="text-[1.75rem] md:text-[3.2vw] font-medium leading-[1.1] tracking-[-0.48px] text-left"
+          className="text-[1.75rem] md:text-[3.2vw] font-medium leading-[1.1] tracking-[-0.48px] text-justify"
           indent={2}
         />
         <div className="flex justify-end mt-11">
@@ -194,7 +194,7 @@ export default function ONasPage() {
         <div className="py-16 px-[clamp(24px,4vw,64px)]">
           <ScrollRevealText
             text="Działamy w oparciu o własną infrastrukturę technologiczną w Krakowie, co pozwala na sprawne zarządzanie kluczowymi procesami produkcyjnymi oraz logistyką obrotu specjalnego."
-            className="text-[1.75rem] md:text-[3.2vw] font-medium leading-[1.1] tracking-[-0.48px] text-left"
+            className="text-[1.75rem] md:text-[3.2vw] font-medium leading-[1.1] tracking-[-0.48px] text-justify"
             indent={2}
           />
           <div className="flex justify-end mt-11">
@@ -222,7 +222,7 @@ export default function ONasPage() {
                   <h3 className="text-text text-[28px] font-medium leading-[34px]">
                     {card.title}
                   </h3>
-                  <p className="text-text-dim text-[14px] font-normal leading-[21px]">
+                  <p className="text-text-dim text-[14px] font-normal leading-[21px] text-justify">
                     {card.desc}
                   </p>
                 </div>
@@ -253,7 +253,7 @@ export default function ONasPage() {
           >
             Dla kogo pracujemy
           </TypewriterTitle>
-          <p className="text-text-dim text-[18px] font-normal leading-[30px] max-w-[700px] mt-6">
+          <p className="text-text-dim text-[18px] font-normal leading-[30px] max-w-[700px] mt-6 text-justify">
             Swoje usługi kierujemy do szerokiego spektrum odbiorców — od
             jednostek wojskowych i policyjnych, przez instytucje badawcze, aż
             po partnerów przemysłowych w modelu B2B.
@@ -273,7 +273,7 @@ export default function ONasPage() {
                 <h3 className="text-[clamp(1.4rem,2vw,1.9rem)] font-normal text-text leading-[1.1] mb-4">
                   {seg.title}
                 </h3>
-                <p className="font-[var(--font-mono)] text-[11px] tracking-[0.12em] uppercase text-text-dim leading-[1.9] mb-8">
+                <p className="font-[var(--font-mono)] text-[11px] tracking-[0.12em] uppercase text-text-dim leading-[1.9] mb-8 text-justify">
                   {seg.desc}
                 </p>
                 <ScrambleLink href={seg.href} className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
@@ -338,7 +338,7 @@ export default function ONasPage() {
                     openFundament === i ? "max-h-[200px] pb-6" : "max-h-0"
                   }`}
                 >
-                  <p className="text-text-dim text-[15px] leading-[24px]">
+                  <p className="text-text-dim text-[15px] leading-[24px] text-justify">
                     {item.desc}
                   </p>
                 </div>

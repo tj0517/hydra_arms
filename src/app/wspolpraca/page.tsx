@@ -120,7 +120,7 @@ export default function WspolpracaPage() {
       <section className="py-16 md:py-32 px-[clamp(24px,4vw,64px)]">
         <ScrollRevealText
           text="Jesteśmy interdyscyplinarnym ośrodkiem inżynieryjnym specjalizującym się w projektowaniu, wytwarzaniu oraz obrocie zaawansowanymi rozwiązaniami dla sektora obronnego i służb porządku publicznego."
-          className="text-[1.75rem] md:text-[3.2vw] font-medium leading-[1.1] tracking-[-0.48px] text-left"
+          className="text-[1.75rem] md:text-[3.2vw] font-medium leading-[1.1] tracking-[-0.48px] text-justify"
           indent={2}
         />
         <div className="flex justify-end mt-11">
@@ -176,7 +176,7 @@ export default function WspolpracaPage() {
                   offset === 0 ? "md:border-r border-white/5 border-b md:border-b-0" : ""
                 }`}
               >
-                <p className="text-[clamp(1.25rem,2vw,30px)] font-normal text-text-dim leading-[1.4] tracking-[-0.2px]">
+                <p className="text-[clamp(1.25rem,2vw,30px)] font-normal text-text-dim leading-[1.4] tracking-[-0.2px] text-justify">
                   {item.desc}
                 </p>
 
@@ -229,7 +229,7 @@ export default function WspolpracaPage() {
       <section className="py-16 md:py-28 px-[clamp(24px,4vw,64px)]">
         <ScrollRevealText
           text="Swoje usługi kierujemy do szerokiego spektrum odbiorców — od jednostek wojskowych i policyjnych, przez instytucje badawcze, aż po partnerów przemysłowych w modelu B2B. Każda relacja opiera się na dyskrecji, profesjonalizmie i dążeniu do doskonałości technicznej."
-          className="text-[1.75rem] md:text-[3.2vw] font-medium leading-[1.1] tracking-[-0.48px] text-left"
+          className="text-[1.75rem] md:text-[3.2vw] font-medium leading-[1.1] tracking-[-0.48px] text-justify"
           indent={2}
         />
         <div className="flex justify-end mt-11">
@@ -256,7 +256,7 @@ export default function WspolpracaPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8 pb-8 md:gap-16 md:mt-16 md:pb-16">
             <div>
               <AnimateIn delay={0.1}>
-                <p className="text-text-dim text-[18px] font-normal leading-[30px]">
+                <p className="text-text-dim text-[18px] font-normal leading-[30px] text-justify">
                   Nasza wizja współpracy z sektorem publicznym i służbami mundurowymi
                   opiera się na dostarczaniu rozwiązań wyprzedzających współczesne
                   wyzwania operacyjne. Poprzez integrację kompetencji R&D z potrzebami
@@ -327,7 +327,7 @@ export default function WspolpracaPage() {
             <h3 className="text-white text-[clamp(1.5rem,3.17vw,48px)] font-light leading-tight md:leading-[53px] tracking-[-0.48px] mb-6 max-w-[600px]">
               {korzysciContent[activeTab].title}
             </h3>
-            <p className="text-text-dim text-[18px] font-normal leading-[30px] max-w-[750px]">
+            <p className="text-text-dim text-[18px] font-normal leading-[30px] max-w-[750px] text-justify">
               {korzysciContent[activeTab].desc}
             </p>
 

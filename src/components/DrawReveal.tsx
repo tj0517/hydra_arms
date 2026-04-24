@@ -106,7 +106,7 @@ export default function DrawReveal({ title, desc, delay = 0 }: DrawRevealProps) 
             <span className="invisible">{title}</span>
           )}
         </h3>
-        <p className="text-text-dim text-[18px] font-normal leading-[30px] max-w-[535px]">
+        <p className="text-text-dim text-[18px] font-normal leading-[30px] max-w-[535px] text-justify">
           {desc.split(" ").map((word, i) => (
             <span
               key={i}
