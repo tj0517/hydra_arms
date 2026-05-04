@@ -79,7 +79,7 @@ const clientSegments = [
   },
 ];
 
-const competencies = [
+const DEFAULT_COMPETENCIES = [
   {
     id: "01",
     tab: "Projektowanie i R&D",
@@ -127,9 +127,19 @@ const competencies = [
   },
 ];
 
+const DEFAULT_INTRO_TEXT = "W HYDRA ARMS proces twórczy zaczyna się od precyzyjnej definicji potrzeb operacyjnych. Nasz zespół inżynierski, wspierany przez praktyków z sektora obronnego, projektuje systemy uzbrojenia i komponenty zorientowane na ekstremalną trwałość i niezawodność.";
+
+interface UslugiPageClientProps {
+  introText?: string
+  competencies?: typeof DEFAULT_COMPETENCIES
+}
+
 /* ──────────── PAGE ──────────── */
 
-export default function UslugiPage() {
+export default function UslugiPageClient({
+  introText = DEFAULT_INTRO_TEXT,
+  competencies = DEFAULT_COMPETENCIES,
+}: UslugiPageClientProps = {}) {
   const [activeTab, setActiveTab] = useState(0);
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -153,7 +163,7 @@ export default function UslugiPage() {
       {/* ─── INTRO DESCRIPTION ─── */}
       <section className="py-16 md:py-32 px-[clamp(24px,4vw,64px)] border-b border-white/10">
         <ScrollRevealText
-          text="W HYDRA ARMS proces twórczy zaczyna się od precyzyjnej definicji potrzeb operacyjnych. Nasz zespół inżynierski, wspierany przez praktyków z sektora obronnego, projektuje systemy uzbrojenia i komponenty zorientowane na ekstremalną trwałość i niezawodność."
+          text={introText}
           className="text-[1.75rem] md:text-[3.2vw] font-medium leading-[1.1] tracking-[-0.48px] text-justify"
           indent={2}
         />

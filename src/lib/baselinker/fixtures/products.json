@@ -1,0 +1,286 @@
+{
+  "products_list": {
+    "301001": { "id": 301001, "ean": "5901234567001", "asin": "", "sku": "KD-SP-001", "name": "Spodnie taktyczne Ripstop Multicam", "parent_id": 0, "stock": { "blconnect_6820": 45 }, "prices": { "23934": 349 } },
+    "301002": { "id": 301002, "ean": "5901234567002", "asin": "", "sku": "KD-SP-002", "name": "Spodnie taktyczne Softshell Czarne", "parent_id": 0, "stock": { "blconnect_6820": 22 }, "prices": { "23934": 289 } },
+    "301003": { "id": 301003, "ean": "5901234567003", "asin": "", "sku": "KD-KU-001", "name": "Kurtka taktyczna Softshell Ranger Green", "parent_id": 0, "stock": { "blconnect_6820": 15 }, "prices": { "23934": 549 } },
+    "301004": { "id": 301004, "ean": "5901234567004", "asin": "", "sku": "KD-KU-002", "name": "Bluza Combat Flecktarn", "parent_id": 0, "stock": { "blconnect_6820": 30 }, "prices": { "23934": 199 } },
+    "302001": { "id": 302001, "ean": "5901234567101", "asin": "", "sku": "KD-KT-001", "name": "Kamizelka taktyczna JPC Coyote Brown", "parent_id": 0, "stock": { "blconnect_6820": 8 }, "prices": { "23934": 899 } },
+    "302002": { "id": 302002, "ean": "5901234567102", "asin": "", "sku": "KD-PL-001", "name": "Plecak taktyczny 40L Multicam", "parent_id": 0, "stock": { "blconnect_6820": 18 }, "prices": { "23934": 449 } },
+    "302003": { "id": 302003, "ean": "5901234567103", "asin": "", "sku": "KD-PL-002", "name": "Plecak assault 25L Black", "parent_id": 0, "stock": { "blconnect_6820": 24 }, "prices": { "23934": 299 } },
+    "302004": { "id": 302004, "ean": "5901234567104", "asin": "", "sku": "KD-PS-001", "name": "Pas taktyczny rigger 1.75\" Czarny", "parent_id": 0, "stock": { "blconnect_6820": 55 }, "prices": { "23934": 89 } },
+    "303001": { "id": 303001, "ean": "5901234567201", "asin": "", "sku": "KD-RK-001", "name": "Rękawice taktyczne Mechanix M-Pact Black L", "parent_id": 0, "stock": { "blconnect_6820": 38 }, "prices": { "23934": 149 } },
+    "303002": { "id": 303002, "ean": "5901234567202", "asin": "", "sku": "KD-OG-001", "name": "Gogle balistyczne ESS Crossbow Smoke", "parent_id": 0, "stock": { "blconnect_6820": 12 }, "prices": { "23934": 279 } },
+    "304001": { "id": 304001, "ean": "5901234567301", "asin": "", "sku": "KD-LT-001", "name": "Latarka taktyczna SureFire G2X Pro", "parent_id": 0, "stock": { "blconnect_6820": 20 }, "prices": { "23934": 399 } },
+    "304002": { "id": 304002, "ean": "5901234567302", "asin": "", "sku": "KD-LB-001", "name": "Lornetka taktyczna 10x42 HD", "parent_id": 0, "stock": { "blconnect_6820": 6 }, "prices": { "23934": 799 } },
+    "306001": { "id": 306001, "ean": "5901234567401", "asin": "", "sku": "KD-NT-001", "name": "Nóż taktyczny Gerber StrongArm Fixed Blade", "parent_id": 0, "stock": { "blconnect_6820": 25 }, "prices": { "23934": 349 } },
+    "306002": { "id": 306002, "ean": "5901234567402", "asin": "", "sku": "KD-MT-001", "name": "Multitool Leatherman Wave+ Black", "parent_id": 0, "stock": { "blconnect_6820": 14 }, "prices": { "23934": 499 } },
+    "307001": { "id": 307001, "ean": "5901234567501", "asin": "", "sku": "KD-AK-001", "name": "Kaburka udowa pistolet Glock 17/19 Czarna", "parent_id": 0, "stock": { "blconnect_6820": 16 }, "prices": { "23934": 249 } },
+    "307002": { "id": 307002, "ean": "5901234567502", "asin": "", "sku": "KD-AK-002", "name": "Zestaw do czyszczenia broni 9mm", "parent_id": 0, "stock": { "blconnect_6820": 42 }, "prices": { "23934": 89 } },
+    "309001": { "id": 309001, "ean": "5901234567601", "asin": "", "sku": "KD-AP-001", "name": "Apteczka IFAK powypadkowa Coyote", "parent_id": 0, "stock": { "blconnect_6820": 33 }, "prices": { "23934": 199 } },
+    "309002": { "id": 309002, "ean": "5901234567602", "asin": "", "sku": "KD-TQ-001", "name": "Opaska uciskowa CAT Combat Application Tourniquet", "parent_id": 0, "stock": { "blconnect_6820": 67 }, "prices": { "23934": 129 } },
+    "310001": { "id": 310001, "ean": "5901234567701", "asin": "", "sku": "KD-BT-001", "name": "Buty taktyczne Haix Black Eagle Athletic 10 Low", "parent_id": 0, "stock": { "blconnect_6820": 28 }, "prices": { "23934": 649 } },
+    "311001": { "id": 311001, "ean": "5901234567801", "asin": "", "sku": "KD-AM-001", "name": "Naszywka flaga PL IR Multicam", "parent_id": 0, "stock": { "blconnect_6820": 120 }, "prices": { "23934": 29 } }
+  },
+  "products_data": {
+    "301001": {
+      "is_bundle": false, "ean": "5901234567001", "asin": "", "parent_id": 0, "sku": "KD-SP-001",
+      "tags": ["multicam", "ripstop", "taktyczne"], "tax_rate": 23, "weight": 0.65,
+      "height": 0, "width": 0, "length": 0, "star": 0, "category_id": 1002, "manufacturer_id": 0,
+      "text_fields": {
+        "name": "Spodnie taktyczne Ripstop Multicam",
+        "description": "<p>Profesjonalne spodnie taktyczne wykonane z tkaniny Ripstop w kamuflażu Multicam. Idealne do służby i szkoleń w terenie.</p><ul><li>Tkanina: 65% poliester, 35% bawełna Ripstop</li><li>Wzmocnienia na kolanach z kieszeniami na wkładki</li><li>6 kieszeni z zamknięciami na rzep i zatrzaski</li><li>Regulacja obwodu pasa</li></ul>",
+        "features": { "Materiał": "65% poliester, 35% bawełna Ripstop", "Kamuflaż": "Multicam", "Wzmocnienia kolan": "Tak", "Liczba kieszeni": "6" }
+      },
+      "stock": { "blconnect_6820": 45 }, "prices": { "23934": 349 },
+      "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,
+      "images": { "1": "https://cdn.baselinker.com/products/kd/sp-001-1.jpg", "2": "https://cdn.baselinker.com/products/kd/sp-001-2.jpg" }
+    },
+    "301002": {
+      "is_bundle": false, "ean": "5901234567002", "asin": "", "parent_id": 0, "sku": "KD-SP-002",
+      "tags": ["softshell", "czarne", "taktyczne"], "tax_rate": 23, "weight": 0.72,
+      "height": 0, "width": 0, "length": 0, "star": 0, "category_id": 1002, "manufacturer_id": 0,
+      "text_fields": {
+        "name": "Spodnie taktyczne Softshell Czarne",
+        "description": "<p>Spodnie Softshell odporne na wiatr i wilgoć. Świetne na chłodniejsze dni w terenie.</p>",
+        "features": { "Materiał": "Softshell 3-warstwowy", "Kolor": "Czarny", "Wodoodporność": "10 000 mm H2O" }
+      },
+      "stock": { "blconnect_6820": 22 }, "prices": { "23934": 289 },
+      "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,
+      "images": { "1": "https://cdn.baselinker.com/products/kd/sp-002-1.jpg" }
+    },
+    "301003": {
+      "is_bundle": false, "ean": "5901234567003", "asin": "", "parent_id": 0, "sku": "KD-KU-001",
+      "tags": ["softshell", "kurtka", "ranger green"], "tax_rate": 23, "weight": 0.95,
+      "height": 0, "width": 0, "length": 0, "star": 0, "category_id": 1003, "manufacturer_id": 0,
+      "text_fields": {
+        "name": "Kurtka taktyczna Softshell Ranger Green",
+        "description": "<p>Kurtka taktyczna Softshell w kolorze Ranger Green. Oddychający materiał 3-warstwowy, wodoodporność 10 000 mm H2O.</p>",
+        "features": { "Materiał": "Softshell 3L", "Kolor": "Ranger Green", "Kaptur": "Tak, odpinany" }
+      },
+      "stock": { "blconnect_6820": 15 }, "prices": { "23934": 549 },
+      "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,
+      "images": { "1": "https://cdn.baselinker.com/products/kd/ku-001-1.jpg", "2": "https://cdn.baselinker.com/products/kd/ku-001-2.jpg" }
+    },
+    "301004": {
+      "is_bundle": false, "ean": "5901234567004", "asin": "", "parent_id": 0, "sku": "KD-KU-002",
+      "tags": ["bluza", "combat", "flecktarn"], "tax_rate": 23, "weight": 0.5,
+      "height": 0, "width": 0, "length": 0, "star": 0, "category_id": 1003, "manufacturer_id": 0,
+      "text_fields": {
+        "name": "Bluza Combat Flecktarn",
+        "description": "<p>Bluza bojowa w kamuflażu Flecktarn. Wzmocnione łokcie i naramienniki.</p>",
+        "features": { "Materiał": "100% bawełna rip-stop", "Kamuflaż": "Flecktarn", "Naramienniki": "Tak" }
+      },
+      "stock": { "blconnect_6820": 30 }, "prices": { "23934": 199 },
+      "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,
+      "images": { "1": "https://cdn.baselinker.com/products/kd/ku-002-1.jpg" }
+    },
+    "302001": {
+      "is_bundle": false, "ean": "5901234567101", "asin": "", "parent_id": 0, "sku": "KD-KT-001",
+      "tags": ["kamizelka", "jpc", "coyote"], "tax_rate": 23, "weight": 1.8,
+      "height": 0, "width": 0, "length": 0, "star": 0, "category_id": 2002, "manufacturer_id": 0,
+      "text_fields": {
+        "name": "Kamizelka taktyczna JPC Coyote Brown",
+        "description": "<p>Lekka kamizelka taktyczna Jumpable Plate Carrier w kolorze Coyote Brown. Kompatybilna z płytami balistycznymi SAPI M.</p>",
+        "features": { "System": "MOLLE", "Kolor": "Coyote Brown", "Płyty": "SAPI M (nie w zestawie)", "Waga": "1.8 kg" }
+      },
+      "stock": { "blconnect_6820": 8 }, "prices": { "23934": 899 },
+      "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,
+      "images": { "1": "https://cdn.baselinker.com/products/kd/kt-001-1.jpg", "2": "https://cdn.baselinker.com/products/kd/kt-001-2.jpg" }
+    },
+    "302002": {
+      "is_bundle": false, "ean": "5901234567102", "asin": "", "parent_id": 0, "sku": "KD-PL-001",
+      "tags": ["plecak", "40l", "multicam"], "tax_rate": 23, "weight": 1.4,
+      "height": 0, "width": 0, "length": 0, "star": 0, "category_id": 2003, "manufacturer_id": 0,
+      "text_fields": {
+        "name": "Plecak taktyczny 40L Multicam",
+        "description": "<p>Taktyczny plecak 40 litrów w kamuflażu Multicam. System nośny MOLLE, wydzielona kieszeń na mapę i system hydratacji.</p>",
+        "features": { "Pojemność": "40 L", "Kamuflaż": "Multicam", "System": "MOLLE", "Hydratacja": "Tak" }
+      },
+      "stock": { "blconnect_6820": 18 }, "prices": { "23934": 449 },
+      "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,
+      "images": { "1": "https://cdn.baselinker.com/products/kd/pl-001-1.jpg" }
+    },
+    "302003": {
+      "is_bundle": false, "ean": "5901234567103", "asin": "", "parent_id": 0, "sku": "KD-PL-002",
+      "tags": ["plecak", "assault", "czarny"], "tax_rate": 23, "weight": 0.85,
+      "height": 0, "width": 0, "length": 0, "star": 0, "category_id": 2003, "manufacturer_id": 0,
+      "text_fields": {
+        "name": "Plecak assault 25L Black",
+        "description": "<p>Kompaktowy plecak szturmowy 25L. Idealny jako plecak dzienny lub do ćwiczeń. System MOLLE po bokach.</p>",
+        "features": { "Pojemność": "25 L", "Kolor": "Czarny", "System": "MOLLE" }
+      },
+      "stock": { "blconnect_6820": 24 }, "prices": { "23934": 299 },
+      "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,
+      "images": { "1": "https://cdn.baselinker.com/products/kd/pl-002-1.jpg" }
+    },
+    "302004": {
+      "is_bundle": false, "ean": "5901234567104", "asin": "", "parent_id": 0, "sku": "KD-PS-001",
+      "tags": ["pas", "rigger", "czarny"], "tax_rate": 23, "weight": 0.25,
+      "height": 0, "width": 0, "length": 0, "star": 0, "category_id": 2005, "manufacturer_id": 0,
+      "text_fields": {
+        "name": "Pas taktyczny rigger 1.75\" Czarny",
+        "description": "<p>Wytrzymały pas taktyczny Rigger 1.75 cala. Klamra kompozytowa, regulacja bez ograniczeń.</p>",
+        "features": { "Szerokość": "1.75\"", "Kolor": "Czarny", "Klamra": "Kompozytowa" }
+      },
+      "stock": { "blconnect_6820": 55 }, "prices": { "23934": 89 },
+      "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,
+      "images": { "1": "https://cdn.baselinker.com/products/kd/ps-001-1.jpg" }
+    },
+    "303001": {
+      "is_bundle": false, "ean": "5901234567201", "asin": "", "parent_id": 0, "sku": "KD-RK-001",
+      "tags": ["rękawice", "mechanix", "taktyczne"], "tax_rate": 23, "weight": 0.18,
+      "height": 0, "width": 0, "length": 0, "star": 0, "category_id": 3005, "manufacturer_id": 0,
+      "text_fields": {
+        "name": "Rękawice taktyczne Mechanix M-Pact Black L",
+        "description": "<p>Rękawice taktyczne Mechanix M-Pact z wkładkami EVA na dłoni, rozmiar L. Ochrona przed uderzeniami i odpryski.</p>",
+        "features": { "Rozmiar": "L", "Kolor": "Czarny", "Ochrona": "EVA na knykciach", "Materiał": "0.8mm TrekDry" }
+      },
+      "stock": { "blconnect_6820": 38 }, "prices": { "23934": 149 },
+      "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,
+      "images": { "1": "https://cdn.baselinker.com/products/kd/rk-001-1.jpg" }
+    },
+    "303002": {
+      "is_bundle": false, "ean": "5901234567202", "asin": "", "parent_id": 0, "sku": "KD-OG-001",
+      "tags": ["gogle", "balistyczne", "ess"], "tax_rate": 23, "weight": 0.12,
+      "height": 0, "width": 0, "length": 0, "star": 0, "category_id": 3006, "manufacturer_id": 0,
+      "text_fields": {
+        "name": "Gogle balistyczne ESS Crossbow Smoke",
+        "description": "<p>Gogle balistyczne ESS Crossbow z soczewką dymną. Certyfikat ANSI Z87.1. Ochrona UV400.</p>",
+        "features": { "Certyfikat": "ANSI Z87.1 / MIL-PRF-31013", "Soczewka": "Smoke (dymna)", "UV": "UV400" }
+      },
+      "stock": { "blconnect_6820": 12 }, "prices": { "23934": 279 },
+      "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,
+      "images": { "1": "https://cdn.baselinker.com/products/kd/og-001-1.jpg" }
+    },
+    "304001": {
+      "is_bundle": false, "ean": "5901234567301", "asin": "", "parent_id": 0, "sku": "KD-LT-001",
+      "tags": ["latarka", "surefire", "taktyczna"], "tax_rate": 23, "weight": 0.16,
+      "height": 0, "width": 0, "length": 0, "star": 0, "category_id": 4002, "manufacturer_id": 0,
+      "text_fields": {
+        "name": "Latarka taktyczna SureFire G2X Pro",
+        "description": "<p>Latarka taktyczna SureFire G2X Pro. 600 lumenów, zasilanie 2x CR123A, odporność IPX7.</p>",
+        "features": { "Jasność": "600 lm / 15 lm", "Zasilanie": "2x CR123A", "Odporność": "IPX7", "Długość": "140 mm" }
+      },
+      "stock": { "blconnect_6820": 20 }, "prices": { "23934": 399 },
+      "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,
+      "images": { "1": "https://cdn.baselinker.com/products/kd/lt-001-1.jpg" }
+    },
+    "304002": {
+      "is_bundle": false, "ean": "5901234567302", "asin": "", "parent_id": 0, "sku": "KD-LB-001",
+      "tags": ["lornetka", "10x42", "hd"], "tax_rate": 23, "weight": 0.78,
+      "height": 0, "width": 0, "length": 0, "star": 0, "category_id": 4003, "manufacturer_id": 0,
+      "text_fields": {
+        "name": "Lornetka taktyczna 10x42 HD",
+        "description": "<p>Lornetka 10x42 z powłoką antyrefleksyjną, wodoszczelna IPX7. Idealna do obserwacji w każdych warunkach.</p>",
+        "features": { "Powiększenie": "10x", "Średnica obiektywu": "42 mm", "Wodoszczelność": "IPX7", "Pole widzenia": "110m/1000m" }
+      },
+      "stock": { "blconnect_6820": 6 }, "prices": { "23934": 799 },
+      "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,
+      "images": { "1": "https://cdn.baselinker.com/products/kd/lb-001-1.jpg" }
+    },
+    "306001": {
+      "is_bundle": false, "ean": "5901234567401", "asin": "", "parent_id": 0, "sku": "KD-NT-001",
+      "tags": ["nóż", "gerber", "fixed blade"], "tax_rate": 23, "weight": 0.3,
+      "height": 0, "width": 0, "length": 0, "star": 0, "category_id": 6002, "manufacturer_id": 0,
+      "text_fields": {
+        "name": "Nóż taktyczny Gerber StrongArm Fixed Blade",
+        "description": "<p>Nóż taktyczny Gerber StrongArm z głownią ze stali 420HC. Powłoka DLC, rękojeść z TPE. Dołączona pochwa MOLLE.</p>",
+        "features": { "Stal": "420HC + powłoka DLC", "Długość głowni": "12.1 cm", "Twardość": "56-58 HRC", "Pochwa": "MOLLE" }
+      },
+      "stock": { "blconnect_6820": 25 }, "prices": { "23934": 349 },
+      "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,
+      "images": { "1": "https://cdn.baselinker.com/products/kd/nt-001-1.jpg" }
+    },
+    "306002": {
+      "is_bundle": false, "ean": "5901234567402", "asin": "", "parent_id": 0, "sku": "KD-MT-001",
+      "tags": ["multitool", "leatherman", "wave"], "tax_rate": 23, "weight": 0.27,
+      "height": 0, "width": 0, "length": 0, "star": 0, "category_id": 6003, "manufacturer_id": 0,
+      "text_fields": {
+        "name": "Multitool Leatherman Wave+ Black",
+        "description": "<p>Leatherman Wave+ w czarnej wersji. 18 narzędzi ze stali nierdzewnej 420HC, wszystkie dostępne w trybie otwartym i zamkniętym.</p>",
+        "features": { "Narzędzia": "18", "Stal": "420HC nierdzewna", "Waga": "241 g", "Gwarancja": "25 lat" }
+      },
+      "stock": { "blconnect_6820": 14 }, "prices": { "23934": 499 },
+      "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,
+      "images": { "1": "https://cdn.baselinker.com/products/kd/mt-001-1.jpg" }
+    },
+    "307001": {
+      "is_bundle": false, "ean": "5901234567501", "asin": "", "parent_id": 0, "sku": "KD-AK-001",
+      "tags": ["kaburka", "glock", "udowa"], "tax_rate": 23, "weight": 0.35,
+      "height": 0, "width": 0, "length": 0, "star": 0, "category_id": 7005, "manufacturer_id": 0,
+      "text_fields": {
+        "name": "Kaburka udowa pistolet Glock 17/19 Czarna",
+        "description": "<p>Kaburka udowa do Glockа 17/19. Regulowane paski udowe, zamek poziomowy.</p>",
+        "features": { "Kompatybilność": "Glock 17 / 19", "Mocowanie": "Udowe regulowane", "Kolor": "Czarny", "Materiał": "Nylon 600D" }
+      },
+      "stock": { "blconnect_6820": 16 }, "prices": { "23934": 249 },
+      "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,
+      "images": { "1": "https://cdn.baselinker.com/products/kd/ak-001-1.jpg" }
+    },
+    "307002": {
+      "is_bundle": false, "ean": "5901234567502", "asin": "", "parent_id": 0, "sku": "KD-AK-002",
+      "tags": ["zestaw", "czyszczenie", "broń"], "tax_rate": 23, "weight": 0.4,
+      "height": 0, "width": 0, "length": 0, "star": 0, "category_id": 7004, "manufacturer_id": 0,
+      "text_fields": {
+        "name": "Zestaw do czyszczenia broni 9mm",
+        "description": "<p>Kompletny zestaw do czyszczenia pistoletów 9mm. Wyciory mosiężne, pędzle, smar CLP, ścierki flanel.</p>",
+        "features": { "Kaliber": "9mm / .38", "Wyciory": "Mosiężne", "Smar": "CLP w komplecie", "Pojemnik": "Skrzynka aluminiowa" }
+      },
+      "stock": { "blconnect_6820": 42 }, "prices": { "23934": 89 },
+      "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,
+      "images": { "1": "https://cdn.baselinker.com/products/kd/ak-002-1.jpg" }
+    },
+    "309001": {
+      "is_bundle": false, "ean": "5901234567601", "asin": "", "parent_id": 0, "sku": "KD-AP-001",
+      "tags": ["apteczka", "ifak", "taktyczna"], "tax_rate": 23, "weight": 0.55,
+      "height": 0, "width": 0, "length": 0, "star": 0, "category_id": 9002, "manufacturer_id": 0,
+      "text_fields": {
+        "name": "Apteczka IFAK powypadkowa Coyote",
+        "description": "<p>Indywidualna apteczka IFAK (Individual First Aid Kit) w kolorze Coyote. Zawiera opaskę CAT, opatrunek izraelski, rękawice, bandaż elastyczny i nożyczki taktyczne.</p>",
+        "features": { "Mocowanie": "MOLLE", "Kolor": "Coyote Brown", "Zawartość": "CAT, opatrunek izraelski, rękawice, bandaż, nożyczki" }
+      },
+      "stock": { "blconnect_6820": 33 }, "prices": { "23934": 199 },
+      "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,
+      "images": { "1": "https://cdn.baselinker.com/products/kd/ap-001-1.jpg" }
+    },
+    "309002": {
+      "is_bundle": false, "ean": "5901234567602", "asin": "", "parent_id": 0, "sku": "KD-TQ-001",
+      "tags": ["opaska", "uciskowa", "cat", "tourniquet"], "tax_rate": 23, "weight": 0.08,
+      "height": 0, "width": 0, "length": 0, "star": 0, "category_id": 9003, "manufacturer_id": 0,
+      "text_fields": {
+        "name": "Opaska uciskowa CAT Combat Application Tourniquet",
+        "description": "<p>Oryginalna opaska uciskowa CAT Gen 7. Standard NATO / US Army. Zastosowanie jedną ręką. Certyfikat FDA.</p>",
+        "features": { "Standard": "NATO / US Army", "Certyfikat": "FDA", "Wersja": "Gen 7", "Kolor": "Czarny" }
+      },
+      "stock": { "blconnect_6820": 67 }, "prices": { "23934": 129 },
+      "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,
+      "images": { "1": "https://cdn.baselinker.com/products/kd/tq-001-1.jpg" }
+    },
+    "310001": {
+      "is_bundle": false, "ean": "5901234567701", "asin": "", "parent_id": 0, "sku": "KD-BT-001",
+      "tags": ["buty", "haix", "taktyczne"], "tax_rate": 23, "weight": 0.9,
+      "height": 0, "width": 0, "length": 0, "star": 0, "category_id": 10002, "manufacturer_id": 0,
+      "text_fields": {
+        "name": "Buty taktyczne Haix Black Eagle Athletic 10 Low",
+        "description": "<p>Lekkie buty taktyczne Haix Black Eagle Athletic 10 Low. Membrana Gore-Tex Extended Comfort, podeszwa antyelektrostatyczna.</p>",
+        "features": { "Membrana": "Gore-Tex Extended Comfort", "Podeszwa": "Antyelektrostatyczna, olejoodporna", "Norma": "EN ISO 20347:2012", "Kolor": "Czarny" }
+      },
+      "stock": { "blconnect_6820": 28 }, "prices": { "23934": 649 },
+      "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,
+      "images": { "1": "https://cdn.baselinker.com/products/kd/bt-001-1.jpg" }
+    },
+    "311001": {
+      "is_bundle": false, "ean": "5901234567801", "asin": "", "parent_id": 0, "sku": "KD-AM-001",
+      "tags": ["naszywka", "flaga", "ir", "multicam"], "tax_rate": 23, "weight": 0.02,
+      "height": 0, "width": 0, "length": 0, "star": 0, "category_id": 11003, "manufacturer_id": 0,
+      "text_fields": {
+        "name": "Naszywka flaga PL IR Multicam",
+        "description": "<p>Naszywka z flagą Polski w wersji IR (podczerwień) na tle Multicam. Widoczna w noktowizji, niewidoczna w świetle dziennym. Mocowanie na rzep.</p>",
+        "features": { "Technologia": "IR (podczerwień)", "Tło": "Multicam", "Mocowanie": "Rzep", "Wymiary": "9 x 6 cm" }
+      },
+      "stock": { "blconnect_6820": 120 }, "prices": { "23934": 29 },
+      "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,
+      "images": { "1": "https://cdn.baselinker.com/products/kd/am-001-1.jpg" }
+    }
+  }
+}

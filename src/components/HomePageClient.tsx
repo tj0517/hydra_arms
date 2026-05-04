@@ -16,7 +16,10 @@ gsap.registerPlugin(ScrollTrigger);
 
 /* ──────────── DATA ──────────── */
 
-const services = [
+type Service = { id: string; label: string; title: string; desc: string; tags: string[]; img: string }
+type Filar = { tag: string; title: string; desc: string }
+
+const DEFAULT_SERVICES: Service[] = [
   {
     id: "01",
     label: "Projektowanie i R&D",
@@ -51,7 +54,7 @@ const services = [
   },
 ];
 
-const filary = [
+const DEFAULT_FILARY: Filar[] = [
   {
     tag: "B2G",
     title: "Zamówienia rządowe",
@@ -69,9 +72,30 @@ const filary = [
   },
 ];
 
+const DEFAULT_HERO_TAGLINE1 = "Zaawansowana inżynieria obronna";
+const DEFAULT_HERO_TAGLINE2 = "Obrót nowoczesnym uzbrojeniem";
+const DEFAULT_HUD_LABEL = "// HYDRA ARMS - PL-2026";
+const DEFAULT_ABOUT_TEXT = "Realizujemy krytyczne projekty z zakresu wytwarzania uzbrojenia oraz technologii dual-use. Łączymy rygorystyczne standardy NATO z precyzją nowoczesnych technologii tworząc innowacje. Prowadzimy również działalność handlową na rynku cywilnym i specjalnym.";
+
+interface HomePageClientProps {
+  services?: Service[]
+  filary?: Filar[]
+  heroTagline1?: string
+  heroTagline2?: string
+  hudLabel?: string
+  aboutText?: string
+}
+
 /* ──────────── PAGE ──────────── */
 
-export default function HomePage() {
+export default function HomePageClient({
+  services = DEFAULT_SERVICES,
+  filary = DEFAULT_FILARY,
+  heroTagline1 = DEFAULT_HERO_TAGLINE1,
+  heroTagline2 = DEFAULT_HERO_TAGLINE2,
+  hudLabel = DEFAULT_HUD_LABEL,
+  aboutText = DEFAULT_ABOUT_TEXT,
+}: HomePageClientProps = {}) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLElement>(null);
   const coordLatRef = useRef<HTMLDivElement>(null);
@@ -320,7 +344,7 @@ export default function HomePage() {
 
           <div className="absolute bottom-8 left-8 right-8 md:bottom-16 md:left-16 md:right-16 pointer-events-auto">
             <span className="font-[var(--font-mono)] text-[14px] text-accent tracking-[1.12px] uppercase mb-4 md:mb-6 block">
-              // HYDRA ARMS - PL-2026
+              {hudLabel}
             </span>
             <div>
               <SplitText
@@ -330,7 +354,7 @@ export default function HomePage() {
                 staggerAmount={0.06}
                 delay={0.6}
               >
-                Zaawansowana inżynieria obronna
+                {heroTagline1}
               </SplitText>
               <SplitText
                 as="p"
@@ -339,7 +363,7 @@ export default function HomePage() {
                 staggerAmount={0.06}
                 delay={0.9}
               >
-                Obrót nowoczesnym uzbrojeniem
+                {heroTagline2}
               </SplitText>
             </div>
             <div className="flex gap-6 mt-6 md:gap-12 md:mt-8 items-center">
@@ -466,7 +490,7 @@ export default function HomePage() {
         </div>
         <div className="pt-10 md:pt-20 pb-0 px-[clamp(24px,4vw,64px)]">
           <ScrollRevealText
-            text="Realizujemy krytyczne projekty z zakresu wytwarzania uzbrojenia oraz technologii dual-use. Łączymy rygorystyczne standardy NATO z precyzją nowoczesnych technologii tworząc innowacje. Prowadzimy również działalność handlową na rynku cywilnym i specjalnym."
+            text={aboutText}
             className="text-[clamp(1.5rem,3.17vw,48px)] font-light leading-[1.3] md:leading-[53px] tracking-[-0.48px] text-justify"
             indent={2}
           />

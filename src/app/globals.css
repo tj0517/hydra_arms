@@ -538,3 +538,23 @@ html.loading-active body > *:not(.ls) {
   30%  { filter: grayscale(1); transform: translate(0); }
   100% { filter: grayscale(1); transform: translate(0); }
 }
+
+/* ── Shop description HTML ── */
+.shop-description h1, .shop-description h2, .shop-description h3 {
+  color: var(--color-text);
+  font-family: var(--font-main);
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+.shop-description h2 { font-size: 1.1rem; }
+.shop-description h3 { font-size: 0.95rem; }
+.shop-description p { margin-bottom: 0.75rem; }
+.shop-description ul, .shop-description ol {
+  padding-left: 1.25rem;
+  margin-bottom: 0.75rem;
+  space-y: 0.25rem;
+}
+.shop-description li { margin-bottom: 0.25rem; }
+.shop-description strong { color: var(--color-text); font-weight: 600; }
+.shop-description em { opacity: 0.7; }

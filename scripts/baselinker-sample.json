@@ -1,0 +1,374 @@
+{
+  "inventories": {
+    "status": "SUCCESS",
+    "inventories": [
+      {
+        "inventory_id": 27277,
+        "name": "Domyślny",
+        "description": "",
+        "languages": [
+          "pl"
+        ],
+        "default_language": "pl",
+        "price_groups": [
+          23934
+        ],
+        "default_price_group": 23934,
+        "warehouses": [
+          "bl_45657"
+        ],
+        "default_warehouse": "bl_45657",
+        "reservations": true,
+        "is_default": true
+      },
+      {
+        "inventory_id": 35743,
+        "name": "Kobold Defense",
+        "description": "Kobold",
+        "languages": [
+          "pl"
+        ],
+        "default_language": "pl",
+        "price_groups": [
+          23934
+        ],
+        "default_price_group": 23934,
+        "warehouses": [
+          "blconnect_6820"
+        ],
+        "default_warehouse": "blconnect_6820",
+        "reservations": false,
+        "is_default": false
+      },
+      {
+        "inventory_id": 35836,
+        "name": "Sharg",
+        "description": "Sharg",
+        "languages": [
+          "pl"
+        ],
+        "default_language": "pl",
+        "price_groups": [
+          23934
+        ],
+        "default_price_group": 23934,
+        "warehouses": [
+          "bl_45657",
+          "bl_57196"
+        ],
+        "default_warehouse": "bl_45657",
+        "reservations": false,
+        "is_default": false
+      },
+      {
+        "inventory_id": 36112,
+        "name": "Sharg 2.0 XML",
+        "description": "",
+        "languages": [
+          "pl"
+        ],
+        "default_language": "pl",
+        "price_groups": [
+          23934
+        ],
+        "default_price_group": 23934,
+        "warehouses": [
+          "bl_45657"
+        ],
+        "default_warehouse": "bl_45657",
+        "reservations": true,
+        "is_default": false
+      },
+      {
+        "inventory_id": 36115,
+        "name": "MILICON",
+        "description": "MILICON",
+        "languages": [
+          "pl"
+        ],
+        "default_language": "pl",
+        "price_groups": [
+          23934
+        ],
+        "default_price_group": 23934,
+        "warehouses": [
+          "blconnect_6971"
+        ],
+        "default_warehouse": "blconnect_6971",
+        "reservations": false,
+        "is_default": false
+      },
+      {
+        "inventory_id": 36522,
+        "name": "Własny",
+        "description": "Produkty do samodzielnej wysyłi/odbioru osobistego",
+        "languages": [
+          "pl"
+        ],
+        "default_language": "pl",
+        "price_groups": [
+          23934
+        ],
+        "default_price_group": 23934,
+        "warehouses": [
+          "bl_58093"
+        ],
+        "default_warehouse": "bl_58093",
+        "reservations": true,
+        "is_default": false
+      }
+    ]
+  },
+  "productsList": {
+    "status": "SUCCESS",
+    "products": {
+      "238028166": {
+        "id": 238028166,
+        "ean": "5905247620859",
+        "asin": "",
+        "sku": "100571",
+        "name": "Obcinacze do paznokci Everts Solingen Chrom 55mm 12szt (002730)",
+        "parent_id": 0,
+        "stock": {
+          "bl_45657": 0
+        },
+        "prices": {
+          "23934": 60
+        }
+      },
+      "249307019": {
+        "id": 249307019,
+        "ean": "5905247620859",
+        "asin": "",
+        "sku": "100571",
+        "name": "Obcinacze do paznokci Everts Solingen Chrom 55mm 12szt (002730)",
+        "parent_id": 0,
+        "stock": {
+          "bl_45657": 0
+        },
+        "prices": {
+          "23934": 60
+        }
+      },
+      "249307497": {
+        "id": 249307497,
+        "ean": "5905247620859",
+        "asin": "",
+        "sku": "100571",
+        "name": "Obcinacze do paznokci Everts Solingen Chrom 55mm 12szt (002730)",
+        "parent_id": 0,
+        "stock": {
+          "bl_45657": 0
+        },
+        "prices": {
+          "23934": 60
+        }
+      },
+      "249327055": {
+        "id": 249327055,
+        "ean": "5905247620859",
+        "asin": "",
+        "sku": "100571",
+        "name": "Obcinacze do paznokci Everts Solingen Chrom 55mm 12szt (002730)",
+        "parent_id": 0,
+        "stock": {
+          "bl_45657": 0
+        },
+        "prices": {
+          "23934": 60
+        }
+      }
+    }
+  },
+  "productsData": {
+    "status": "SUCCESS",
+    "products": {
+      "238028166": {
+        "is_bundle": false,
+        "ean": "5905247620859",
+        "asin": "",
+        "parent_id": 0,
+        "sku": "100571",
+        "tags": [],
+        "tax_rate": 23,
+        "weight": 1,
+        "height": 0,
+        "width": 0,
+        "length": 0,
+        "star": 0,
+        "category_id": 3406170,
+        "manufacturer_id": 1170762,
+        "text_fields": {
+          "name": "Obcinacze do paznokci Everts Solingen Chrom 55mm 12szt (002730)",
+          "description": "&lt;h2&gt;Obcinacze do Paznokci Everts Solingen: Precyzja i Elegancja w Jednym&lt;/h2&gt;\n&lt;p&gt;Kiedy myślisz o idealnych obcinaczkach do paznokci, co przychodzi Ci na myśl? Precyzja? Wygoda? A może trwałość? Dzięki obcinaczkom Everts Solingen, nie musisz wybierać między jednym a drugim.&lt;/p&gt;\n&lt;h3&gt;Dlaczego warto wybrać obcinaczki Everts Solingen?&lt;/h3&gt;\n&lt;ol&gt;\n&lt;li&gt;&lt;strong&gt;Niemiecka jakość&lt;/strong&gt;: Wyprodukowane przez renomowaną firmę Everts Solingen, te obcinaczki gwarantują najwyższą jakość wykonania.&lt;/li&gt;\n&lt;li&gt;&lt;strong&gt;Precyzyjne cięcie&lt;/strong&gt;: Dzięki zagiętemu ostrzu, każde cięcie jest dokładne i precyzyjne, pozwalając na idealne przycięcie paznokci.&lt;/li&gt;\n&lt;li&gt;&lt;strong&gt;Trwałość na lata&lt;/strong&gt;: Wykonane ze stali węglowej i pokryte niklem, te obcinaczki są nie tylko eleganckie, ale także niezwykle trwałe.&lt;/li&gt;\n&lt;li&gt;&lt;strong&gt;Wygodne w użyciu&lt;/strong&gt;: Klasyczne uchwyty sprawiają, że są one niezwykle wygodne w użyciu, nawet przez dłuższy czas.&lt;/li&gt;\n&lt;/ol&gt;\n&lt;p&gt;&lt;strong&gt;Nie czekaj, dbaj o swoje paznokcie z klasą!&lt;/strong&gt;&lt;br /&gt;Zainwestuj w zestaw obcinaczek do paznokci Everts Solingen i doświadcz różnicy. Zadbaj o swoje paznokcie z precyzją i elegancją, jakiej zasługują.&lt;/p&gt;\n&lt;h3&gt;Dane Techniczne:&lt;/h3&gt;\n&lt;ul&gt;\n&lt;li&gt;Numer produktu: 002730&lt;/li&gt;\n&lt;li&gt;Długość całkowita: 55 mm&lt;/li&gt;\n&lt;li&gt;Materiał: stal węglowa&lt;/li&gt;\n&lt;li&gt;Wykończenie: Nikiel&lt;/li&gt;\n&lt;li&gt;Dezynfekcja: Nie&lt;/li&gt;\n&lt;/ul&gt;\n&lt;p&gt;&lt;em&gt;Opracowanie: firma Sharg®&lt;/em&gt;&lt;/p&gt;\n&lt;p&gt;&lt;strong&gt;Zamów już dziś i przekonaj się sam!&lt;/strong&gt;&lt;/p&gt;",
+          "description_extra1": "asda",
+          "description_extra2": "dsadasdasd",
+          "features": {
+            "POLECAMY": "Crazy Christmas Prices",
+            "Kod producenta": "5905247620859"
+          }
+        },
+        "stock": {
+          "bl_45657": 0
+        },
+        "prices": {
+          "23934": 60
+        },
+        "locations": {
+          "bl_45657": ""
+        },
+        "links": {},
+        "average_cost": 0,
+        "average_landed_cost": 0,
+        "images": {
+          "1": "https://hurt.sharg.pl/data/gfx/pictures/large/1/7/100571_1.jpg",
+          "2": "https://hurt.sharg.pl/data/gfx/pictures/large/1/7/100571_2.jpg",
+          "3": "https://hurt.sharg.pl/data/gfx/pictures/large/1/7/100571_3.jpg",
+          "4": "https://hurt.sharg.pl/data/gfx/pictures/large/1/7/100571_4.jpg"
+        }
+      },
+      "249307019": {
+        "is_bundle": false,
+        "ean": "5905247620859",
+        "asin": "",
+        "parent_id": 0,
+        "sku": "100571",
+        "tags": [],
+        "tax_rate": 23,
+        "weight": 1,
+        "height": 0,
+        "width": 0,
+        "length": 0,
+        "star": 0,
+        "category_id": 3406170,
+        "manufacturer_id": 1170762,
+        "text_fields": {
+          "name": "Obcinacze do paznokci Everts Solingen Chrom 55mm 12szt (002730)",
+          "description": "&lt;h2&gt;Obcinacze do Paznokci Everts Solingen: Precyzja i Elegancja w Jednym&lt;/h2&gt;\n&lt;p&gt;Kiedy myślisz o idealnych obcinaczkach do paznokci, co przychodzi Ci na myśl? Precyzja? Wygoda? A może trwałość? Dzięki obcinaczkom Everts Solingen, nie musisz wybierać między jednym a drugim.&lt;/p&gt;\n&lt;h3&gt;Dlaczego warto wybrać obcinaczki Everts Solingen?&lt;/h3&gt;\n&lt;ol&gt;\n&lt;li&gt;&lt;strong&gt;Niemiecka jakość&lt;/strong&gt;: Wyprodukowane przez renomowaną firmę Everts Solingen, te obcinaczki gwarantują najwyższą jakość wykonania.&lt;/li&gt;\n&lt;li&gt;&lt;strong&gt;Precyzyjne cięcie&lt;/strong&gt;: Dzięki zagiętemu ostrzu, każde cięcie jest dokładne i precyzyjne, pozwalając na idealne przycięcie paznokci.&lt;/li&gt;\n&lt;li&gt;&lt;strong&gt;Trwałość na lata&lt;/strong&gt;: Wykonane ze stali węglowej i pokryte niklem, te obcinaczki są nie tylko eleganckie, ale także niezwykle trwałe.&lt;/li&gt;\n&lt;li&gt;&lt;strong&gt;Wygodne w użyciu&lt;/strong&gt;: Klasyczne uchwyty sprawiają, że są one niezwykle wygodne w użyciu, nawet przez dłuższy czas.&lt;/li&gt;\n&lt;/ol&gt;\n&lt;p&gt;&lt;strong&gt;Nie czekaj, dbaj o swoje paznokcie z klasą!&lt;/strong&gt;&lt;br /&gt;Zainwestuj w zestaw obcinaczek do paznokci Everts Solingen i doświadcz różnicy. Zadbaj o swoje paznokcie z precyzją i elegancją, jakiej zasługują.&lt;/p&gt;\n&lt;h3&gt;Dane Techniczne:&lt;/h3&gt;\n&lt;ul&gt;\n&lt;li&gt;Numer produktu: 002730&lt;/li&gt;\n&lt;li&gt;Długość całkowita: 55 mm&lt;/li&gt;\n&lt;li&gt;Materiał: stal węglowa&lt;/li&gt;\n&lt;li&gt;Wykończenie: Nikiel&lt;/li&gt;\n&lt;li&gt;Dezynfekcja: Nie&lt;/li&gt;\n&lt;/ul&gt;\n&lt;p&gt;&lt;em&gt;Opracowanie: firma Sharg®&lt;/em&gt;&lt;/p&gt;\n&lt;p&gt;&lt;strong&gt;Zamów już dziś i przekonaj się sam!&lt;/strong&gt;&lt;/p&gt;",
+          "description_extra1": "asda",
+          "description_extra2": "dsadasdasd",
+          "features": {
+            "POLECAMY": "Crazy Christmas Prices",
+            "Kod producenta": "5905247620859"
+          }
+        },
+        "stock": {
+          "bl_45657": 0
+        },
+        "prices": {
+          "23934": 60
+        },
+        "locations": {
+          "bl_45657": ""
+        },
+        "links": {},
+        "average_cost": 0,
+        "average_landed_cost": 0,
+        "images": {
+          "1": "https://hurt.sharg.pl/data/gfx/pictures/large/1/7/100571_1.jpg",
+          "2": "https://hurt.sharg.pl/data/gfx/pictures/large/1/7/100571_2.jpg",
+          "3": "https://hurt.sharg.pl/data/gfx/pictures/large/1/7/100571_3.jpg",
+          "4": "https://hurt.sharg.pl/data/gfx/pictures/large/1/7/100571_4.jpg"
+        }
+      },
+      "249307497": {
+        "is_bundle": false,
+        "ean": "5905247620859",
+        "asin": "",
+        "parent_id": 0,
+        "sku": "100571",
+        "tags": [],
+        "tax_rate": 23,
+        "weight": 1,
+        "height": 0,
+        "width": 0,
+        "length": 0,
+        "star": 0,
+        "category_id": 3406170,
+        "manufacturer_id": 1170762,
+        "text_fields": {
+          "name": "Obcinacze do paznokci Everts Solingen Chrom 55mm 12szt (002730)",
+          "description": "&lt;h2&gt;Obcinacze do Paznokci Everts Solingen: Precyzja i Elegancja w Jednym&lt;/h2&gt;\n&lt;p&gt;Kiedy myślisz o idealnych obcinaczkach do paznokci, co przychodzi Ci na myśl? Precyzja? Wygoda? A może trwałość? Dzięki obcinaczkom Everts Solingen, nie musisz wybierać między jednym a drugim.&lt;/p&gt;\n&lt;h3&gt;Dlaczego warto wybrać obcinaczki Everts Solingen?&lt;/h3&gt;\n&lt;ol&gt;\n&lt;li&gt;&lt;strong&gt;Niemiecka jakość&lt;/strong&gt;: Wyprodukowane przez renomowaną firmę Everts Solingen, te obcinaczki gwarantują najwyższą jakość wykonania.&lt;/li&gt;\n&lt;li&gt;&lt;strong&gt;Precyzyjne cięcie&lt;/strong&gt;: Dzięki zagiętemu ostrzu, każde cięcie jest dokładne i precyzyjne, pozwalając na idealne przycięcie paznokci.&lt;/li&gt;\n&lt;li&gt;&lt;strong&gt;Trwałość na lata&lt;/strong&gt;: Wykonane ze stali węglowej i pokryte niklem, te obcinaczki są nie tylko eleganckie, ale także niezwykle trwałe.&lt;/li&gt;\n&lt;li&gt;&lt;strong&gt;Wygodne w użyciu&lt;/strong&gt;: Klasyczne uchwyty sprawiają, że są one niezwykle wygodne w użyciu, nawet przez dłuższy czas.&lt;/li&gt;\n&lt;/ol&gt;\n&lt;p&gt;&lt;strong&gt;Nie czekaj, dbaj o swoje paznokcie z klasą!&lt;/strong&gt;&lt;br /&gt;Zainwestuj w zestaw obcinaczek do paznokci Everts Solingen i doświadcz różnicy. Zadbaj o swoje paznokcie z precyzją i elegancją, jakiej zasługują.&lt;/p&gt;\n&lt;h3&gt;Dane Techniczne:&lt;/h3&gt;\n&lt;ul&gt;\n&lt;li&gt;Numer produktu: 002730&lt;/li&gt;\n&lt;li&gt;Długość całkowita: 55 mm&lt;/li&gt;\n&lt;li&gt;Materiał: stal węglowa&lt;/li&gt;\n&lt;li&gt;Wykończenie: Nikiel&lt;/li&gt;\n&lt;li&gt;Dezynfekcja: Nie&lt;/li&gt;\n&lt;/ul&gt;\n&lt;p&gt;&lt;em&gt;Opracowanie: firma Sharg®&lt;/em&gt;&lt;/p&gt;\n&lt;p&gt;&lt;strong&gt;Zamów już dziś i przekonaj się sam!&lt;/strong&gt;&lt;/p&gt;",
+          "description_extra1": "asda",
+          "description_extra2": "dsadasdasd",
+          "features": {
+            "POLECAMY": "Crazy Christmas Prices",
+            "Kod producenta": "5905247620859"
+          }
+        },
+        "stock": {
+          "bl_45657": 0
+        },
+        "prices": {
+          "23934": 60
+        },
+        "locations": {
+          "bl_45657": ""
+        },
+        "links": {},
+        "average_cost": 0,
+        "average_landed_cost": 0,
+        "images": {
+          "1": "https://hurt.sharg.pl/data/gfx/pictures/large/1/7/100571_1.jpg",
+          "2": "https://hurt.sharg.pl/data/gfx/pictures/large/1/7/100571_2.jpg",
+          "3": "https://hurt.sharg.pl/data/gfx/pictures/large/1/7/100571_3.jpg",
+          "4": "https://hurt.sharg.pl/data/gfx/pictures/large/1/7/100571_4.jpg"
+        }
+      },
+      "249327055": {
+        "is_bundle": false,
+        "ean": "5905247620859",
+        "asin": "",
+        "parent_id": 0,
+        "sku": "100571",
+        "tags": [],
+        "tax_rate": 23,
+        "weight": 1,
+        "height": 0,
+        "width": 0,
+        "length": 0,
+        "star": 0,
+        "category_id": 3406170,
+        "manufacturer_id": 1170762,
+        "text_fields": {
+          "name": "Obcinacze do paznokci Everts Solingen Chrom 55mm 12szt (002730)",
+          "description_extra1": "asda",
+          "description_extra2": "dsadasdasd",
+          "features": {
+            "POLECAMY": "Crazy Christmas Prices",
+            "Kod producenta": "5905247620859"
+          },
+          "description": "&lt;h2&gt;Obcinacze do Paznokci Everts Solingen: Precyzja i Elegancja w Jednym&lt;/h2&gt;\n&lt;p&gt;Kiedy myślisz o idealnych obcinaczkach do paznokci, co przychodzi Ci na myśl? Precyzja? Wygoda? A może trwałość? Dzięki obcinaczkom Everts Solingen, nie musisz wybierać między jednym a drugim.&lt;/p&gt;\n&lt;h3&gt;Dlaczego warto wybrać obcinaczki Everts Solingen?&lt;/h3&gt;\n&lt;ol&gt;\n&lt;li&gt;&lt;strong&gt;Niemiecka jakość&lt;/strong&gt;: Wyprodukowane przez renomowaną firmę Everts Solingen, te obcinaczki gwarantują najwyższą jakość wykonania.&lt;/li&gt;\n&lt;li&gt;&lt;strong&gt;Precyzyjne cięcie&lt;/strong&gt;: Dzięki zagiętemu ostrzu, każde cięcie jest dokładne i precyzyjne, pozwalając na idealne przycięcie paznokci.&lt;/li&gt;\n&lt;li&gt;&lt;strong&gt;Trwałość na lata&lt;/strong&gt;: Wykonane ze stali węglowej i pokryte niklem, te obcinaczki są nie tylko eleganckie, ale także niezwykle trwałe.&lt;/li&gt;\n&lt;li&gt;&lt;strong&gt;Wygodne w użyciu&lt;/strong&gt;: Klasyczne uchwyty sprawiają, że są one niezwykle wygodne w użyciu, nawet przez dłuższy czas.&lt;/li&gt;\n&lt;/ol&gt;\n&lt;p&gt;&lt;strong&gt;Nie czekaj, dbaj o swoje paznokcie z klasą!&lt;/strong&gt;&lt;br /&gt;Zainwestuj w zestaw obcinaczek do paznokci Everts Solingen i doświadcz różnicy. Zadbaj o swoje paznokcie z precyzją i elegancją, jakiej zasługują.&lt;/p&gt;\n&lt;h3&gt;Dane Techniczne:&lt;/h3&gt;\n&lt;ul&gt;\n&lt;li&gt;Numer produktu: 002730&lt;/li&gt;\n&lt;li&gt;Długość całkowita: 55 mm&lt;/li&gt;\n&lt;li&gt;Materiał: stal węglowa&lt;/li&gt;\n&lt;li&gt;Wykończenie: Nikiel&lt;/li&gt;\n&lt;li&gt;Dezynfekcja: Nie&lt;/li&gt;\n&lt;/ul&gt;\n&lt;p&gt;&lt;em&gt;Opracowanie: firma Sharg®&lt;/em&gt;&lt;/p&gt;\n&lt;p&gt;&lt;strong&gt;Zamów już dziś i przekonaj się sam!&lt;/strong&gt;&lt;/p&gt;"
+        },
+        "stock": {
+          "bl_45657": 0
+        },
+        "prices": {
+          "23934": 60
+        },
+        "locations": {
+          "bl_45657": ""
+        },
+        "links": {},
+        "average_cost": 0,
+        "average_landed_cost": 0,
+        "images": {
+          "1": "https://hurt.sharg.pl/data/gfx/pictures/large/1/7/100571_1.jpg",
+          "2": "https://hurt.sharg.pl/data/gfx/pictures/large/1/7/100571_2.jpg",
+          "3": "https://hurt.sharg.pl/data/gfx/pictures/large/1/7/100571_3.jpg",
+          "4": "https://hurt.sharg.pl/data/gfx/pictures/large/1/7/100571_4.jpg"
+        }
+      }
+    }
+  },
+  "categories": {
+    "status": "SUCCESS",
+    "categories": [
+      {
+        "category_id": 3406170,
+        "name": "Uroda/Manicure i Pedicure/Akcesoria do manicure i pedicure",
+        "parent_id": 0
+      }
+    ]
+  }
+}

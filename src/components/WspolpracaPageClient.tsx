@@ -11,81 +11,54 @@ import MissionBriefing from "@/components/MissionBriefing";
 import SubpageHero from "@/components/SubpageHero";
 import TacticalGrid from "@/components/TacticalGrid";
 
-/* ──────────── DATA ──────────── */
+/* ──────────── DEFAULTS ──────────── */
 
-const fundamenty = [
-  {
-    id: "01",
-    title: "Interdyscyplinarne badania i rozwój",
-    desc: "Nasze projekty badawcze łączą wiele dziedzin nauki.",
-  },
-  {
-    id: "02",
-    title: "Transparentność operacyjna",
-    desc: "Działamy w ścisłej zgodności z krajowymi i międzynarodowymi procedurami kontroli obrotu specjalnego.",
-  },
-  {
-    id: "03",
-    title: "Nowoczesne materiały",
-    desc: "Od wysokogatunkowych stopów metali, przez zaawansowane tworzywa sztuczne, aż po kompozyty nowej generacji.",
-  },
-  {
-    id: "04",
-    title: "Inżynieria precyzyjna",
-    desc: "Dysponujemy zapleczem technologicznym zdolnym do realizacji złożonych zadań produkcyjnych i prototypowych.",
-  },
-  {
-    id: "05",
-    title: "Wszechstronność projektowa",
-    desc: "Tworzymy koncepcje dla różnych rodzajów uzbrojenia.",
-  },
+type FundamentItem = { id: string; title: string; desc: string }
+type KorzyscTab = { id: string; label: string; title: string; desc: string }
+type EthicsItem = { title: string; desc: string }
+
+const DEFAULT_FUNDAMENTY: FundamentItem[] = [
+  { id: "01", title: "Interdyscyplinarne badania i rozwój", desc: "Nasze projekty badawcze łączą wiele dziedzin nauki." },
+  { id: "02", title: "Transparentność operacyjna", desc: "Działamy w ścisłej zgodności z krajowymi i międzynarodowymi procedurami kontroli obrotu specjalnego." },
+  { id: "03", title: "Nowoczesne materiały", desc: "Od wysokogatunkowych stopów metali, przez zaawansowane tworzywa sztuczne, aż po kompozyty nowej generacji." },
+  { id: "04", title: "Inżynieria precyzyjna", desc: "Dysponujemy zapleczem technologicznym zdolnym do realizacji złożonych zadań produkcyjnych i prototypowych." },
+  { id: "05", title: "Wszechstronność projektowa", desc: "Tworzymy koncepcje dla różnych rodzajów uzbrojenia." },
 ];
 
-const korzysciTabs = [
-  { label: "Suwerenność technologiczna", id: "suwer" },
-  { label: "Optymalizacja kosztów", id: "optym" },
-  { label: "Szybka adaptacja", id: "adapt" },
-  { label: "Bezpieczeństwo prawne", id: "bezp" },
+const DEFAULT_KORZYSCI_TABS: KorzyscTab[] = [
+  { id: "suwer", label: "Suwerenność technologiczna", title: "Suwerenność technologiczna", desc: "Rozwijanie krajowych kompetencji w zakresie wytwarzania kluczowych komponentów uzbrojenia i amunicji, redukujące zależność od zewnętrznych łańcuchów dostaw." },
+  { id: "optym", label: "Optymalizacja kosztów", title: "Optymalizacja kosztów", desc: "Efektywne zarządzanie procesami produkcyjnymi pozwalające na redukcję kosztów przy zachowaniu najwyższych standardów jakości i bezpieczeństwa." },
+  { id: "adapt", label: "Szybka adaptacja", title: "Szybka adaptacja", desc: "Elastyczne podejście do zmieniających się wymagań operacyjnych, umożliwiające szybkie wdrażanie nowych rozwiązań technologicznych." },
+  { id: "bezp", label: "Bezpieczeństwo prawne", title: "Bezpieczeństwo prawne", desc: "Pełna zgodność z krajowymi i międzynarodowymi regulacjami dotyczącymi obrotu specjalnego, gwarantująca bezpieczeństwo prawne współpracy." },
 ];
 
-const korzysciContent: Record<string, { title: string; desc: string }> = {
-  suwer: {
-    title: "Suwerenność technologiczna",
-    desc: "Rozwijanie krajowych kompetencji w zakresie wytwarzania kluczowych komponentów uzbrojenia i amunicji, redukujące zależność od zewnętrznych łańcuchów dostaw.",
-  },
-  optym: {
-    title: "Optymalizacja kosztów",
-    desc: "Efektywne zarządzanie procesami produkcyjnymi pozwalające na redukcję kosztów przy zachowaniu najwyższych standardów jakości i bezpieczeństwa.",
-  },
-  adapt: {
-    title: "Szybka adaptacja",
-    desc: "Elastyczne podejście do zmieniających się wymagań operacyjnych, umożliwiające szybkie wdrażanie nowych rozwiązań technologicznych.",
-  },
-  bezp: {
-    title: "Bezpieczeństwo prawne",
-    desc: "Pełna zgodność z krajowymi i międzynarodowymi regulacjami dotyczącymi obrotu specjalnego, gwarantująca bezpieczeństwo prawne współpracy.",
-  },
-};
-
-const ethicsItems = [
-  {
-    title: "Bezwzględna zgodność prawna",
-    desc: "Każda transakcja i proces wytwórczy realizowane są w pełnej zgodności z krajowymi i międzynarodowymi regulacjami dotyczącymi obrotu specjalnego.",
-  },
-  {
-    title: "Ochrona informacji",
-    desc: "Zobowiązujemy się do najwyższych standardów poufności na każdym etapie współpracy — od ofertowania po dostawy.",
-  },
-  {
-    title: "Inżynieryjna rzetelność",
-    desc: "Jako partner strategiczny, zobowiązujemy się do transparentności procesów badawczo-wytwórczych oraz ochrony interesu bezpieczeństwa państwa na każdym etapie cyklu życia produktu.",
-  },
+const DEFAULT_ETHICS_ITEMS: EthicsItem[] = [
+  { title: "Bezwzględna zgodność prawna", desc: "Każda transakcja i proces wytwórczy realizowane są w pełnej zgodności z krajowymi i międzynarodowymi regulacjami dotyczącymi obrotu specjalnego." },
+  { title: "Ochrona informacji", desc: "Zobowiązujemy się do najwyższych standardów poufności na każdym etapie współpracy — od ofertowania po dostawy." },
+  { title: "Inżynieryjna rzetelność", desc: "Jako partner strategiczny, zobowiązujemy się do transparentności procesów badawczo-wytwórczych oraz ochrony interesu bezpieczeństwa państwa na każdym etapie cyklu życia produktu." },
 ];
+
+const DEFAULT_INTRO_TEXT = "Jesteśmy interdyscyplinarnym ośrodkiem inżynieryjnym specjalizującym się w projektowaniu, wytwarzaniu oraz obrocie zaawansowanymi rozwiązaniami dla sektora obronnego i służb porządku publicznego.";
+const DEFAULT_SECOND_TEXT = "Swoje usługi kierujemy do szerokiego spektrum odbiorców — od jednostek wojskowych i policyjnych, przez instytucje badawcze, aż po partnerów przemysłowych w modelu B2B. Każda relacja opiera się na dyskrecji, profesjonalizmie i dążeniu do doskonałości technicznej.";
+
+interface WspolpracaPageClientProps {
+  introText?: string
+  secondText?: string
+  fundamenty?: FundamentItem[]
+  korzysciTabs?: KorzyscTab[]
+  ethicsItems?: EthicsItem[]
+}
 
 /* ──────────── PAGE ──────────── */
 
-export default function WspolpracaPage() {
-  const [activeTab, setActiveTab] = useState("suwer");
+export default function WspolpracaPageClient({
+  introText = DEFAULT_INTRO_TEXT,
+  secondText = DEFAULT_SECOND_TEXT,
+  fundamenty = DEFAULT_FUNDAMENTY,
+  korzysciTabs = DEFAULT_KORZYSCI_TABS,
+  ethicsItems = DEFAULT_ETHICS_ITEMS,
+}: WspolpracaPageClientProps = {}) {
+  const [activeTab, setActiveTab] = useState(korzysciTabs[0]?.id ?? "suwer");
   const [fundPage, setFundPage] = useState(0);
   const activeIndex = korzysciTabs.findIndex((t) => t.id === activeTab);
   const fundMaxPage = Math.ceil(fundamenty.length / 2) - 1;
@@ -119,7 +92,7 @@ export default function WspolpracaPage() {
       {/* ─── INTRO SECTION ─── */}
       <section className="py-16 md:py-32 px-[clamp(24px,4vw,64px)]">
         <ScrollRevealText
-          text="Jesteśmy interdyscyplinarnym ośrodkiem inżynieryjnym specjalizującym się w projektowaniu, wytwarzaniu oraz obrocie zaawansowanymi rozwiązaniami dla sektora obronnego i służb porządku publicznego."
+          text={introText}
           className="text-[1.75rem] md:text-[3.2vw] font-medium leading-[1.1] tracking-[-0.48px] text-justify"
           indent={2}
         />
@@ -228,7 +201,7 @@ export default function WspolpracaPage() {
       {/* ─── SECOND DESCRIPTION ─── */}
       <section className="py-16 md:py-28 px-[clamp(24px,4vw,64px)]">
         <ScrollRevealText
-          text="Swoje usługi kierujemy do szerokiego spektrum odbiorców — od jednostek wojskowych i policyjnych, przez instytucje badawcze, aż po partnerów przemysłowych w modelu B2B. Każda relacja opiera się na dyskrecji, profesjonalizmie i dążeniu do doskonałości technicznej."
+          text={secondText}
           className="text-[1.75rem] md:text-[3.2vw] font-medium leading-[1.1] tracking-[-0.48px] text-justify"
           indent={2}
         />
@@ -325,10 +298,10 @@ export default function WspolpracaPage() {
             </div>
 
             <h3 className="text-white text-[clamp(1.5rem,3.17vw,48px)] font-light leading-tight md:leading-[53px] tracking-[-0.48px] mb-6 max-w-[600px]">
-              {korzysciContent[activeTab].title}
+              {korzysciTabs.find((t) => t.id === activeTab)?.title}
             </h3>
             <p className="text-text-dim text-[18px] font-normal leading-[30px] max-w-[750px] text-justify">
-              {korzysciContent[activeTab].desc}
+              {korzysciTabs.find((t) => t.id === activeTab)?.desc}
             </p>
 
             <div className="flex justify-end mt-8 md:mt-16">

@@ -13,9 +13,9 @@ import SubpageHero from "@/components/SubpageHero";
 import TacticalReadout from "@/components/TacticalReadout";
 
 
-/* ──────────── DATA ──────────── */
+/* ──────────── DEFAULTS ──────────── */
 
-const missionItems = [
+const DEFAULT_MISSION_ITEMS = [
   {
     title: "Wytwarzanie i R&D",
     desc: "Projektujemy autorskie rozwiązania, kładąc nacisk na precyzję wykonania i niezawodność mechanizmów.",
@@ -30,7 +30,7 @@ const missionItems = [
   },
 ];
 
-const certCards = [
+const DEFAULT_CERT_CARDS = [
   {
     tag: "MSWiA",
     title: "Koncesja MSWiA",
@@ -47,6 +47,24 @@ const certCards = [
     desc: "Nasze lokalizacje w Małopolsce, przy głównych węzłach komunikacyjnych, zapewniają bezpieczne i profesjonalne zaplecze do realizacji transakcji.",
   },
 ];
+
+const DEFAULT_FUNDAMENTY_ITEMS = [
+  { title: "Interdyscyplinarne badania i rozwój", desc: "Nasze projekty badawcze łączą wiele dziedzin nauki." },
+  { title: "Wszechstronność projektowa", desc: "Tworzymy koncepcje dla różnych rodzajów uzbrojenia." },
+  { title: "Nowoczesne materiały", desc: "Od wysokogatunkowych stopów metali, przez zaawansowane tworzywa sztuczne, aż po kompozyty nowej generacji." },
+  { title: "Innowacja procesowa", desc: "Wdrażamy rozwiązania, które redefiniują skuteczność, ergonomię i trwałość systemów obronnych." },
+  { title: "Inżynieria precyzyjna", desc: "Dysponujemy zapleczem technologicznym zdolnym do realizacji złożonych zadań." },
+  { title: "Transparentność", desc: "Działamy w ścisłej zgodności z krajowymi i międzynarodowymi procedurami kontroli." },
+];
+
+const DEFAULT_INTRO_TEXT = "Powstaliśmy z połączenia ekspertów zaawansowanej inżynierii i sektora strzelecko-obronnego. Ta synergia pozwala nam wytwarzać uzbrojenie, które odpowiada na realne potrzeby użytkownika.";
+
+interface ONasPageClientProps {
+  introText?: string
+  missionItems?: typeof DEFAULT_MISSION_ITEMS
+  certCards?: typeof DEFAULT_CERT_CARDS
+  fundamentyItems?: typeof DEFAULT_FUNDAMENTY_ITEMS
+}
 
 const clientSegments = [
   {
@@ -122,18 +140,14 @@ const clientSegments = [
   },
 ];
 
-const fundamentyItems = [
-  { title: "Interdyscyplinarne badania i rozwój", desc: "Nasze projekty badawcze łączą wiele dziedzin nauki." },
-  { title: "Wszechstronność projektowa", desc: "Tworzymy koncepcje dla różnych rodzajów uzbrojenia." },
-  { title: "Nowoczesne materiały", desc: "Od wysokogatunkowych stopów metali, przez zaawansowane tworzywa sztuczne, aż po kompozyty nowej generacji." },
-  { title: "Innowacja procesowa", desc: "Wdrażamy rozwiązania, które redefiniują skuteczność, ergonomię i trwałość systemów obronnych." },
-  { title: "Inżynieria precyzyjna", desc: "Dysponujemy zapleczem technologicznym zdolnym do realizacji złożonych zadań." },
-  { title: "Transparentność", desc: "Działamy w ścisłej zgodności z krajowymi i międzynarodowymi procedurami kontroli." },
-];
-
 /* ──────────── PAGE ──────────── */
 
-export default function ONasPage() {
+export default function ONasPageClient({
+  introText = DEFAULT_INTRO_TEXT,
+  missionItems = DEFAULT_MISSION_ITEMS,
+  certCards = DEFAULT_CERT_CARDS,
+  fundamentyItems = DEFAULT_FUNDAMENTY_ITEMS,
+}: ONasPageClientProps = {}) {
   const [openFundament, setOpenFundament] = useState<number | null>(null);
 
   return (
@@ -144,7 +158,7 @@ export default function ONasPage() {
       {/* ─── INTRO DESCRIPTION ─── */}
       <section className="py-16 md:py-32 px-[clamp(24px,4vw,64px)] border-b border-white/10">
         <ScrollRevealText
-          text="Powstaliśmy z połączenia ekspertów zaawansowanej inżynierii i sektora strzelecko-obronnego. Ta synergia pozwala nam wytwarzać uzbrojenie, które odpowiada na realne potrzeby użytkownika."
+          text={introText}
           className="text-[1.75rem] md:text-[3.2vw] font-medium leading-[1.1] tracking-[-0.48px] text-justify"
           indent={2}
         />
