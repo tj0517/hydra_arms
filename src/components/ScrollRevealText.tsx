@@ -51,7 +51,7 @@ export default function ScrollRevealText({
     <p ref={containerRef} className={className}>
       {indent > 0 &&
         Array.from({ length: indent }).map((_, i) => (
-          <span key={`indent-${i}`} className="inline-block w-32" />
+          <span key={`indent-${i}`} className="inline-block w-10 md:w-32" />
         ))}
       {text.split(" ").map((word, wi) => (
         <span key={wi}>

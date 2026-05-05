@@ -121,64 +121,66 @@ export default function Nav() {
   }, [pathname]);
 
   return (
-    <nav
-      className={`fixed top-0 left-0 right-0 z-[1000] transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-        scrolled
-          ? "py-4 bg-bg/95 backdrop-blur-sm border-b border-white/[0.06]"
-          : "py-6 bg-gradient-to-b from-bg/70 to-transparent"
-      }`}
-    >
-      <div className="max-w-[1400px] mx-auto px-8 md:px-16 flex justify-between items-center">
-        <span className="font-[var(--font-mono)] text-xl font-bold text-white tracking-[0.15em] z-[101]">
-          HYDRA<span className="text-accent">.</span>ARMS
-        </span>
+    <>
+      <nav
+        className={`fixed top-0 left-0 right-0 z-[1000] transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          scrolled
+            ? "py-4 bg-bg/95 backdrop-blur-sm border-b border-white/[0.06]"
+            : "py-6 bg-gradient-to-b from-bg/70 to-transparent"
+        }`}
+      >
+        <div className="max-w-[1400px] mx-auto px-8 md:px-16 flex justify-between items-center">
+          <span className="font-[var(--font-mono)] text-xl font-bold text-white tracking-[0.15em] z-[101]">
+            HYDRA<span className="text-accent">.</span>ARMS
+          </span>
 
-        {/* Desktop links */}
-        <ul className="hidden md:flex gap-9 list-none items-center">
-          {links.map((link) => (
-            <ScrambleNavLink key={link.href} href={link.href} label={link.label} active={pathname === link.href} />
-          ))}
-        </ul>
+          {/* Desktop links */}
+          <ul className="hidden md:flex gap-9 list-none items-center">
+            {links.map((link) => (
+              <ScrambleNavLink key={link.href} href={link.href} label={link.label} active={pathname === link.href} />
+            ))}
+          </ul>
 
-        {/* Mobile burger */}
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className="md:hidden flex flex-col gap-1.5 z-[101]"
-          aria-label="Menu"
-        >
-          <span
-            className={`w-6 h-px bg-accent transition-all duration-300 ${
-              menuOpen ? "rotate-45 translate-y-[3.5px]" : ""
-            }`}
-          />
-          <span
-            className={`w-6 h-px bg-accent transition-all duration-300 ${
-              menuOpen ? "-rotate-45 -translate-y-[3.5px]" : ""
-            }`}
-          />
-        </button>
-
-        {/* Mobile menu */}
-        <div
-          className={`fixed inset-0 bg-bg z-[100] flex flex-col items-center justify-center gap-8 transition-all duration-500 md:hidden ${
-            menuOpen
-              ? "opacity-100 pointer-events-auto"
-              : "opacity-0 pointer-events-none"
-          }`}
-        >
-          {links.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`font-[var(--font-mono)] text-2xl uppercase tracking-[0.2em] transition-colors duration-300 ${
-                  pathname === link.href ? "text-accent" : "text-text-dim hover:text-white"
-                }`}
-              >
-                {link.label}
-              </Link>
-          ))}
+          {/* Mobile burger */}
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="md:hidden flex flex-col gap-1.5 z-[101]"
+            aria-label="Menu"
+          >
+            <span
+              className={`w-6 h-px bg-accent transition-all duration-300 ${
+                menuOpen ? "rotate-45 translate-y-[3.5px]" : ""
+              }`}
+            />
+            <span
+              className={`w-6 h-px bg-accent transition-all duration-300 ${
+                menuOpen ? "-rotate-45 -translate-y-[3.5px]" : ""
+              }`}
+            />
+          </button>
         </div>
+      </nav>
+
+      {/* Mobile menu — outside nav to avoid backdrop-blur containing block */}
+      <div
+        className={`fixed inset-0 bg-bg z-[999] flex flex-col items-center justify-center gap-8 transition-all duration-500 md:hidden ${
+          menuOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
+        }`}
+      >
+        {links.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`font-[var(--font-mono)] text-2xl uppercase tracking-[0.2em] transition-colors duration-300 ${
+                pathname === link.href ? "text-accent" : "text-text-dim hover:text-white"
+              }`}
+            >
+              {link.label}
+            </Link>
+        ))}
       </div>
-    </nav>
+    </>
   );
 }

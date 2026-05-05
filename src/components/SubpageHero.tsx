@@ -66,8 +66,8 @@ export default function SubpageHero({ subtitle, title, titleClass, video }: Subp
     if (!vid || !canvas) return;
 
     const ctx = canvas.getContext("2d")!;
-    const W = 1280;
-    const H = 720;
+    const W = window.innerWidth > 768 ? 1920 : 960;
+    const H = window.innerWidth > 768 ? 1080 : 540;
     canvas.width = W;
     canvas.height = H;
 
@@ -178,7 +178,7 @@ export default function SubpageHero({ subtitle, title, titleClass, video }: Subp
   }, []);
 
   return (
-    <section ref={heroRef} className="relative h-[280px] md:h-[450px] flex flex-col justify-end px-[clamp(24px,4vw,64px)] pb-2.5 border-b border-white/10 overflow-hidden">
+    <section ref={heroRef} className="relative h-[280px] sm:h-[360px] md:h-[450px] flex flex-col justify-end px-[clamp(32px,5vw,64px)] pb-2.5 border-b border-white/10 overflow-hidden">
       {/* Clean video — only visible through scope hole */}
       <video
         ref={videoRef}
@@ -264,7 +264,7 @@ export default function SubpageHero({ subtitle, title, titleClass, video }: Subp
       </TypewriterTitle>
       <TypewriterTitle
         as="h1"
-        className={titleClass || "text-[clamp(4rem,12vw,140px)] font-semibold text-text leading-none tracking-[-3px] relative z-[6] ml-[-4px]"}
+        className={titleClass || "text-[clamp(2.5rem,12vw,140px)] font-semibold text-white leading-none tracking-[-2px] md:tracking-[-3px] relative z-[6] ml-[-4px]"}
         speed={80}
         delay={1400}
       >

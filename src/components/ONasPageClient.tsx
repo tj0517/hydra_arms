@@ -156,23 +156,29 @@ export default function ONasPageClient({
       <SubpageHero subtitle="HYDRA ARMS / O nas" title="O nas" video="/hero-onas.mp4" />
 
       {/* ─── INTRO DESCRIPTION ─── */}
-      <section className="py-16 md:py-32 px-[clamp(24px,4vw,64px)] border-b border-white/10">
+      <section className="py-20 md:py-32 px-[clamp(32px,5vw,64px)] border-b border-white/10">
         <ScrollRevealText
           text={introText}
-          className="text-[1.75rem] md:text-[3.2vw] font-medium leading-[1.1] tracking-[-0.48px] text-justify"
+          className="text-[1.4rem] md:text-[3.2vw] font-medium text-text-dim leading-[1.3] md:leading-[1.1] tracking-[-0.48px] text-justify"
           indent={2}
         />
         <div className="flex justify-end mt-11">
-          <ScrambleLink href="/wspolpraca" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
-            [ Rozpocznij współpracę ]
-          </ScrambleLink>
+          <div className="relative px-6 py-1.5 inline-flex items-center w-fit">
+            <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
+            <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
+            <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
+            <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
+            <ScrambleLink href="/wspolpraca" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
+              Rozpocznij współpracę
+            </ScrambleLink>
+          </div>
         </div>
       </section>
 
       {/* ─── MISSION SECTION ─── */}
       <section className="grid grid-cols-1 md:grid-cols-2">
         {/* Left */}
-        <div className="px-[clamp(24px,4vw,64px)] pt-9 pb-4 flex flex-col h-full border-b md:border-b-0">
+        <div className="px-[clamp(32px,5vw,64px)] pt-9 pb-4 flex flex-col h-full border-b md:border-b-0">
           <TypewriterTitle
             as="h2"
             className="text-text text-[clamp(1.75rem,2.5vw,2.5rem)] font-medium leading-[1.15]"
@@ -186,7 +192,7 @@ export default function ONasPageClient({
         </div>
 
         {/* Right */}
-        <div className="pt-10 md:pt-16 pb-4 px-[clamp(24px,4vw,64px)]">
+        <div className="pt-10 md:pt-16 pb-4 px-[clamp(32px,5vw,64px)]">
           <div className="flex flex-col gap-9">
             {missionItems.map((item, i) => (
               <DrawReveal
@@ -205,21 +211,27 @@ export default function ONasPageClient({
 
       {/* ─── SECOND DESCRIPTION ─── */}
       <section>
-        <div className="py-16 px-[clamp(24px,4vw,64px)]">
+        <div className="py-16 px-[clamp(32px,5vw,64px)]">
           <ScrollRevealText
             text="Działamy w oparciu o własną infrastrukturę technologiczną w Krakowie, co pozwala na sprawne zarządzanie kluczowymi procesami produkcyjnymi oraz logistyką obrotu specjalnego."
-            className="text-[1.75rem] md:text-[3.2vw] font-medium leading-[1.1] tracking-[-0.48px] text-justify"
+            className="text-[1.4rem] md:text-[3.2vw] font-medium text-text-dim leading-[1.3] md:leading-[1.1] tracking-[-0.48px] text-justify"
             indent={2}
           />
           <div className="flex justify-end mt-11">
-            <ScrambleLink href="/wspolpraca" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
-              [ Rozpocznij współpracę ]
-            </ScrambleLink>
+            <div className="relative px-6 py-1.5 inline-flex items-center w-fit">
+              <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
+              <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
+              <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
+              <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
+              <ScrambleLink href="/wspolpraca" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
+                Rozpocznij współpracę
+              </ScrambleLink>
+            </div>
           </div>
         </div>
 
         {/* ─── CERTIFICATION CARDS ─── */}
-        <div className="grid grid-cols-1 md:grid-cols-3 border-t border-white/5 px-[clamp(24px,4vw,64px)]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 border-t border-white/5 px-[clamp(32px,5vw,64px)]">
           {certCards.map((card, i) => (
             <AnimateIn key={i} delay={i * 0.25} y={20}>
               <div
@@ -233,16 +245,22 @@ export default function ONasPageClient({
                       {card.tag}
                     </span>
                   </span>
-                  <h3 className="text-text text-[28px] font-medium leading-[34px]">
+                  <h3 className="text-text text-[clamp(1.25rem,3vw,28px)] font-medium leading-[1.2]">
                     {card.title}
                   </h3>
                   <p className="text-text-dim text-[14px] font-normal leading-[21px] text-justify">
                     {card.desc}
                   </p>
                 </div>
-                <ScrambleLink href="#" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px] mt-auto">
-                  [ Więcej ]
-                </ScrambleLink>
+                <div className="relative px-6 py-1.5 inline-flex items-center w-fit mt-auto">
+                  <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
+                  <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
+                  <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
+                  <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
+                  <ScrambleLink href="#" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
+                    Więcej
+                  </ScrambleLink>
+                </div>
               </div>
             </AnimateIn>
           ))}
@@ -253,30 +271,30 @@ export default function ONasPageClient({
       <section className="relative border-b border-white/10">
         <div className="border-t border-white/[0.25]" />
 
-        <div className="absolute top-0 left-0 px-[clamp(24px,4vw,64px)] py-2 z-10 pointer-events-none">
+        <div className="absolute top-0 left-0 px-[clamp(32px,5vw,64px)] py-2 z-10 pointer-events-none">
           <span className="font-[var(--font-mono)] text-[16px] font-medium text-accent tracking-[0.8px]">
             //04 KLIENCI
           </span>
         </div>
 
-        <div className="px-[clamp(24px,4vw,64px)] pt-16 pb-10">
+        <div className="px-[clamp(32px,5vw,64px)] pt-16 pb-10">
           <TypewriterTitle
             as="h2"
-            className="text-[clamp(2rem,9.26vw,140px)] font-normal text-text leading-[1] tracking-[-1px] md:tracking-[-2px] uppercase"
+            className="text-[clamp(1.75rem,9.26vw,140px)] font-medium text-white leading-[1.05] tracking-[-0.5px] md:tracking-[-2px] uppercase"
             speed={60}
           >
             Dla kogo pracujemy
           </TypewriterTitle>
-          <p className="text-text-dim text-[18px] font-normal leading-[30px] max-w-[700px] mt-6 text-justify">
+          <p className="text-text-dim text-[15px] md:text-[18px] font-normal leading-[1.7] md:leading-[30px] max-w-[700px] mt-6 text-justify">
             Swoje usługi kierujemy do szerokiego spektrum odbiorców — od
             jednostek wojskowych i policyjnych, przez instytucje badawcze, aż
             po partnerów przemysłowych w modelu B2B.
           </p>
         </div>
 
-        <div className="mx-[clamp(24px,4vw,64px)] grid grid-cols-1 md:grid-cols-3 h-auto md:h-[680px] border-t border-white/[0.08]">
+        <div className="mx-[clamp(32px,5vw,64px)] grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 h-auto md:h-[680px] border-t border-white/[0.08]">
           {clientSegments.map((seg, i) => (
-            <div key={seg.tag} className={`${i < clientSegments.length - 1 ? "md:border-r" : ""} border-b border-white/[0.08] flex flex-col justify-between px-6 py-8 md:px-10 md:py-12`}>
+            <div key={seg.tag} className={`${i < clientSegments.length - 1 ? "md:border-r" : ""} border-b border-white/[0.08] flex flex-col justify-between py-8 md:px-10 md:py-12`}>
               <div className="hidden md:flex flex-1 items-center justify-center">
                 {seg.icon}
               </div>
@@ -290,9 +308,15 @@ export default function ONasPageClient({
                 <p className="font-[var(--font-mono)] text-[11px] tracking-[0.12em] uppercase text-text-dim leading-[1.9] mb-8 text-justify">
                   {seg.desc}
                 </p>
-                <ScrambleLink href={seg.href} className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
-                  [ Dowiedz się więcej ]
-                </ScrambleLink>
+                <div className="relative px-6 py-1.5 inline-flex items-center w-fit">
+                  <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
+                  <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
+                  <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
+                  <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
+                  <ScrambleLink href={seg.href} className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
+                    Dowiedz się więcej
+                  </ScrambleLink>
+                </div>
               </div>
             </div>
           ))}
@@ -302,18 +326,24 @@ export default function ONasPageClient({
       {/* ─── FUNDAMENTY NASZEJ DZIAŁALNOŚCI ─── */}
       <section className="grid grid-cols-1 md:grid-cols-[0.6fr_1fr]">
         {/* Left */}
-        <div className="md:border-r border-white/10 pt-12 md:pt-24 px-[clamp(24px,4vw,64px)] pb-12 md:pb-16 flex flex-col h-full">
+        <div className="md:border-r border-white/10 pt-12 md:pt-24 px-[clamp(32px,5vw,64px)] pb-12 md:pb-16 flex flex-col h-full">
           <TypewriterTitle
             as="h2"
-            className="text-[clamp(2rem,3.17vw,48px)] font-light text-text leading-[53px] tracking-[-0.48px]"
+            className="text-[clamp(1.5rem,3.17vw,48px)] font-normal text-white leading-[1.15] md:leading-[53px] tracking-[-0.48px]"
             speed={50}
           >
             Fundamenty naszej działalności
           </TypewriterTitle>
           <div className="mt-auto">
-            <ScrambleLink href="/wspolpraca" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
-              [ Rozpocznij współpracę ]
-            </ScrambleLink>
+            <div className="relative px-6 py-1.5 inline-flex items-center w-fit">
+              <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
+              <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
+              <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
+              <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
+              <ScrambleLink href="/wspolpraca" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
+                Rozpocznij współpracę
+              </ScrambleLink>
+            </div>
           </div>
         </div>
 
@@ -322,7 +352,7 @@ export default function ONasPageClient({
           {fundamentyItems.map((item, i) => (
             <AnimateIn key={i} delay={i * 0.06} y={15}>
               <div
-                className={`border-b border-white/10 px-[clamp(24px,4vw,64px)] ${i === 0 ? "pt-10 md:pt-32" : "pt-6"}`}
+                className={`border-b border-white/10 px-[clamp(32px,5vw,64px)] ${i === 0 ? "pt-10 md:pt-32" : "pt-6"}`}
               >
                 <button
                   onClick={() =>
@@ -331,7 +361,7 @@ export default function ONasPageClient({
                   className="w-full text-left flex items-center justify-between gap-4 pb-6 group"
                 >
                   <span
-                    className={`text-[28px] font-medium leading-[34px] transition-colors duration-300 ${
+                    className={`text-[clamp(1.25rem,3vw,28px)] font-medium leading-[1.2] transition-colors duration-300 ${
                       openFundament === i
                         ? "text-text"
                         : "text-text-dim group-hover:text-text"

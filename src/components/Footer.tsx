@@ -56,7 +56,7 @@ export default function Footer() {
       />
 
       <div className="relative max-w-[1400px] mx-auto px-8 md:px-16 py-16 md:py-24">
-        <div className="flex flex-col md:flex-row md:justify-between gap-12 md:gap-8">
+        <div className="flex flex-col md:flex-row md:justify-between gap-8 md:gap-8">
           {/* Company info */}
           <div
             className={`md:mr-auto transition-all duration-700 ${

@@ -4,10 +4,13 @@ import { useRef, useEffect, useCallback } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
-// Hydra Arms store address area in Kraków
-// Shift center left so pin doesn't sit under the right text panel
-const MAP_CENTER: [number, number] = [20.07, 50.065];
 const STORE_LOCATION: [number, number] = [19.945, 50.065];
+const DESKTOP_CENTER: [number, number] = [20.07, 50.065];
+
+function getCenter(): [number, number] {
+  if (typeof window === "undefined") return DESKTOP_CENTER;
+  return window.innerWidth < 768 ? STORE_LOCATION : DESKTOP_CENTER;
+}
 
 export default function MilitaryMap() {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -19,7 +22,7 @@ export default function MilitaryMap() {
     map.current = new maplibregl.Map({
       container: mapContainer.current,
       style: "https://tiles.openfreemap.org/styles/dark",
-      center: MAP_CENTER,
+      center: getCenter(),
       zoom: 11,
       attributionControl: false,
       dragRotate: false,
@@ -97,7 +100,13 @@ export default function MilitaryMap() {
       }
     });
 
+    const onResize = () => {
+      map.current?.easeTo({ center: getCenter(), duration: 300 });
+    };
+    window.addEventListener("resize", onResize);
+
     return () => {
+      window.removeEventListener("resize", onResize);
       map.current?.remove();
       map.current = null;
     };
