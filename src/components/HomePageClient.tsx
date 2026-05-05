@@ -367,7 +367,7 @@ export default function HomePageClient({
               </SplitText>
             </div>
             <div className="flex gap-6 mt-6 md:gap-12 md:mt-8 items-center">
-              <div className="relative px-6 py-1.5 inline-flex items-center">
+              <div className="relative px-6 py-1.5 inline-flex items-center w-fit">
                 <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
                 <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
                 <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
@@ -376,7 +376,7 @@ export default function HomePageClient({
                   Nasze usługi
                 </ScrambleLink>
               </div>
-              <div className="relative px-6 py-1.5 inline-flex items-center">
+              <div className="relative px-6 py-1.5 inline-flex items-center w-fit">
                 <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
                 <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
                 <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
@@ -425,10 +425,10 @@ export default function HomePageClient({
                 </div>
 
                 {/* Right — content */}
-                <div className="border-l border-text-dim/25 px-5 md:px-10 flex flex-col justify-center py-10 md:py-0">
+                <div className="md:border-l border-text-dim/25 px-8 md:px-10 flex flex-col justify-center py-10 md:py-0">
                   <div className="max-w-[600px]">
                     <div className="flex items-center justify-between mb-6 md:mb-10">
-                      <span className="text-[16px] md:text-[18px] font-medium text-text-dim">
+                      <span className="text-[14px] md:text-[18px] font-medium text-text-dim">
                         {service.label}
                       </span>
                       <div className="relative px-3 py-1 inline-flex items-center">
@@ -443,10 +443,10 @@ export default function HomePageClient({
                       </div>
                     </div>
 
-                    <h2 className="text-[clamp(1.8rem,4vw,48px)] font-light text-text leading-[1.1] md:leading-[53px] tracking-[-0.48px] mb-6 md:mb-9">
+                    <h2 className="text-[clamp(1.5rem,4vw,48px)] font-normal text-white leading-[1.15] md:leading-[53px] tracking-[-0.48px] mb-6 md:mb-9">
                       {service.title}
                     </h2>
-                    <p className="text-[16px] md:text-[18px] font-light text-text-dim leading-[26px] md:leading-[28px] mb-6 md:mb-8 text-justify">
+                    <p className="text-[15px] md:text-[18px] font-light text-text-dim leading-[1.7] md:leading-[28px] mb-6 md:mb-8 text-justify">
                       {service.desc}
                     </p>
 
@@ -454,17 +454,17 @@ export default function HomePageClient({
                     <div className="flex gap-2.5 items-center py-2.5 flex-wrap mb-8">
                       {service.tags.map((tag, ti) => (
                         <span key={ti} className="flex items-center gap-2.5">
-                          <span className="font-[var(--font-mono)] text-[20px] text-accent tracking-[0.2px]">
+                          <span className="font-[var(--font-mono)] text-[13px] md:text-[20px] text-accent/70 md:text-accent tracking-[0.2px]">
                             {tag}
                           </span>
                           {ti < service.tags.length - 1 && (
-                            <span className="w-[5px] h-[5px] bg-[#d9d9d9]" />
+                            <span className="w-[4px] h-[4px] md:w-[5px] md:h-[5px] bg-[#d9d9d9]/50 md:bg-[#d9d9d9]" />
                           )}
                         </span>
                       ))}
                     </div>
 
-                    <div className="relative px-6 py-1.5 inline-flex items-center">
+                    <div className="relative px-6 py-1.5 inline-flex items-center w-fit">
                       <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
                       <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
                       <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
@@ -483,19 +483,19 @@ export default function HomePageClient({
 
       {/* ─── DESCRIPTION SECTION ─── */}
       <section>
-        <div className="border-t border-white/[0.25] px-[clamp(24px,4vw,64px)] py-2">
+        <div className="border-t border-white/[0.25] px-[clamp(32px,5vw,64px)] py-2">
           <span className="font-[var(--font-mono)] text-[16px] font-medium text-accent tracking-[0.8px]">
             //02 O NAS
           </span>
         </div>
-        <div className="pt-10 md:pt-20 pb-0 px-[clamp(24px,4vw,64px)]">
+        <div className="pt-12 md:pt-20 pb-0 px-[clamp(32px,5vw,64px)]">
           <ScrollRevealText
             text={aboutText}
-            className="text-[clamp(1.5rem,3.17vw,48px)] font-light leading-[1.3] md:leading-[53px] tracking-[-0.48px] text-justify"
+            className="text-[clamp(1.4rem,3.17vw,48px)] font-light text-text-dim leading-[1.35] md:leading-[53px] tracking-[-0.48px] text-justify"
             indent={2}
           />
           <div className="flex justify-end mt-8">
-            <div className="relative px-6 py-1.5 inline-flex items-center">
+            <div className="relative px-6 py-1.5 inline-flex items-center w-fit">
               <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
               <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
               <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
@@ -512,7 +512,7 @@ export default function HomePageClient({
       </section>
 
       {/* ─── VIDEO SECTION ─── */}
-      <div ref={videoSectionRef} className="h-[280px] md:h-[549px] bg-bg relative overflow-hidden">
+      <div ref={videoSectionRef} className="h-[280px] sm:h-[380px] md:h-[549px] bg-bg relative overflow-hidden">
         <video
           autoPlay
           muted
@@ -558,22 +558,22 @@ export default function HomePageClient({
 
       {/* ─── POTENCJAŁ I OPOWIEDZIALNOŚĆ ─── */}
       <section>
-        <div className="border-t border-white/[0.25] px-[clamp(24px,4vw,64px)] py-2">
+        <div className="border-t border-white/[0.25] px-[clamp(32px,5vw,64px)] py-2">
           <span className="font-[var(--font-mono)] text-[16px] font-medium text-accent tracking-[0.8px]">
             //03 POTENCJAŁ
           </span>
         </div>
-        <div className="pt-8 md:pt-16 px-[clamp(24px,4vw,64px)]">
+        <div className="pt-12 md:pt-16 px-[clamp(32px,5vw,64px)]">
           <TypewriterTitle
             as="h2"
-            className="text-[clamp(2rem,9.26vw,140px)] font-normal text-text leading-[1] tracking-[-1px] md:tracking-[-2px] uppercase"
+            className="text-[clamp(1.75rem,9.26vw,140px)] font-medium text-white leading-[1.05] tracking-[-0.5px] md:tracking-[-2px] uppercase"
             speed={60}
           >
             POTENCJAŁ I OPOWIEDZIALNOŚĆ
           </TypewriterTitle>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8 pb-0 md:gap-16 md:mt-16 md:pb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mt-8 pb-0 md:gap-16 md:mt-16 md:pb-4">
             <div>
-              <p className="text-text-dim text-[18px] font-normal leading-[30px]">
+              <p className="text-text-dim text-[15px] md:text-[18px] font-normal leading-[1.7] md:leading-[30px]">
                 HYDRA ARMS to krakowski ośrodek kompetencyjny dedykowany dla sektora
                 Security & Defense. Specjalizujemy się w wytwarzaniu zaawansowanych
                 komponentów o wysokim stopniu skomplikowania.
@@ -592,13 +592,13 @@ export default function HomePageClient({
 
       {/* ─── 3 FILARY ─── */}
       <section>
-        <div className="border-t border-white/[0.25] px-[clamp(24px,4vw,64px)] py-2">
+        <div className="border-t border-white/[0.25] px-[clamp(32px,5vw,64px)] py-2">
           <span className="font-[var(--font-mono)] text-[16px] font-medium text-accent tracking-[0.8px]">
             //04 DYSTRYBUCJA
           </span>
         </div>
 
-        <div className="mx-[clamp(24px,4vw,64px)] grid grid-cols-1 md:grid-cols-3">
+        <div className="mx-[clamp(32px,5vw,64px)] grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
 
           {/* ── B2G ── */}
           <div className="md:border-r border-b border-white/[0.08] flex flex-col">
@@ -620,10 +620,10 @@ export default function HomePageClient({
                 maskText="B2G"
               />
             </div>
-            <div className="px-6 py-6 md:px-8 md:py-8">
-              <h3 className="text-[clamp(1.1rem,1.5vw,1.4rem)] font-normal text-text leading-[1.15] mb-3">{filary[0].title}</h3>
-              <p className="font-[var(--font-mono)] text-[10px] tracking-[0.12em] uppercase text-text-dim leading-[1.8] mb-6 text-justify">{filary[0].desc}</p>
-              <div className="relative px-6 py-1.5 inline-flex items-center">
+            <div className="py-8 md:px-8 md:py-8">
+              <h3 className="text-[clamp(1.25rem,1.5vw,1.4rem)] font-medium text-white leading-[1.2] mb-3">{filary[0].title}</h3>
+              <p className="font-[var(--font-mono)] text-[12px] md:text-[10px] tracking-[0.08em] md:tracking-[0.12em] uppercase text-text-dim leading-[1.9] mb-6 text-justify">{filary[0].desc}</p>
+              <div className="relative px-6 py-1.5 inline-flex items-center w-fit">
                 <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
                 <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
                 <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
@@ -655,10 +655,10 @@ export default function HomePageClient({
                 maskText="B2B"
               />
             </div>
-            <div className="px-6 py-6 md:px-8 md:py-8">
-              <h3 className="text-[clamp(1.1rem,1.5vw,1.4rem)] font-normal text-text leading-[1.15] mb-3">{filary[1].title}</h3>
-              <p className="font-[var(--font-mono)] text-[10px] tracking-[0.12em] uppercase text-text-dim leading-[1.8] mb-6 text-justify">{filary[1].desc}</p>
-              <div className="relative px-6 py-1.5 inline-flex items-center">
+            <div className="py-8 md:px-8 md:py-8">
+              <h3 className="text-[clamp(1.25rem,1.5vw,1.4rem)] font-medium text-white leading-[1.2] mb-3">{filary[1].title}</h3>
+              <p className="font-[var(--font-mono)] text-[12px] md:text-[10px] tracking-[0.08em] md:tracking-[0.12em] uppercase text-text-dim leading-[1.9] mb-6 text-justify">{filary[1].desc}</p>
+              <div className="relative px-6 py-1.5 inline-flex items-center w-fit">
                 <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
                 <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
                 <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
@@ -690,10 +690,10 @@ export default function HomePageClient({
                 maskText="B2C"
               />
             </div>
-            <div className="px-6 py-6 md:px-8 md:py-8">
-              <h3 className="text-[clamp(1.1rem,1.5vw,1.4rem)] font-normal text-text leading-[1.15] mb-3">{filary[2].title}</h3>
-              <p className="font-[var(--font-mono)] text-[10px] tracking-[0.12em] uppercase text-text-dim leading-[1.8] mb-6 text-justify">{filary[2].desc}</p>
-              <div className="relative px-6 py-1.5 inline-flex items-center">
+            <div className="py-8 md:px-8 md:py-8">
+              <h3 className="text-[clamp(1.25rem,1.5vw,1.4rem)] font-medium text-white leading-[1.2] mb-3">{filary[2].title}</h3>
+              <p className="font-[var(--font-mono)] text-[12px] md:text-[10px] tracking-[0.08em] md:tracking-[0.12em] uppercase text-text-dim leading-[1.9] mb-6 text-justify">{filary[2].desc}</p>
+              <div className="relative px-6 py-1.5 inline-flex items-center w-fit">
                 <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
                 <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
                 <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
@@ -710,7 +710,7 @@ export default function HomePageClient({
 
       {/* ─── MAP SECTION ─── */}
       <section>
-        <div className="h-[300px] md:h-[542px] bg-[#080808] relative overflow-hidden border-t border-white/[0.25]">
+        <div className="h-[300px] sm:h-[400px] md:h-[542px] bg-[#080808] relative overflow-hidden border-t border-white/[0.25]">
           <MilitaryMap />
 
           {/* HUD crosshair cursor */}
@@ -718,13 +718,13 @@ export default function HomePageClient({
 
           {/* Right info panel — solid bg box, absolutely positioned */}
           <div
-            className="absolute right-0 top-0 z-[5] hidden md:flex items-center px-[52px] py-10 bg-bg border-l border-accent/20"
-            style={{ width: "36%" }}
+            className="absolute right-0 top-0 z-[5] hidden md:flex items-center px-[clamp(24px,3vw,52px)] py-10 bg-bg border-l border-accent/20"
+            style={{ width: "36%", maxWidth: "460px" }}
           >
             <span className="absolute bottom-0 left-0 w-4 h-4 border-b border-l border-accent/40" />
             <span className="absolute bottom-0 left-0 right-0 h-px bg-accent/20" />
             <div>
-              <h3 className="text-text-dim text-[28px] font-medium leading-[34px] mb-6">
+              <h3 className="text-white text-[22px] md:text-[28px] font-medium leading-[1.25] md:leading-[34px] mb-6">
                 HYDRA ARMS SP. Z O.O.
               </h3>
 
@@ -737,7 +737,7 @@ export default function HomePageClient({
               </div>
 
               <div className="mt-8">
-                <div className="relative px-6 py-1.5 inline-flex items-center">
+                <div className="relative px-6 py-1.5 inline-flex items-center w-fit">
                   <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
                   <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
                   <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
@@ -764,7 +764,7 @@ export default function HomePageClient({
           <p>[<span className="text-accent">→</span>] Kraków, Polska</p>
           <p>[<span className="text-accent">→</span>] 50°04&apos;N  019°57&apos;E</p>
         </div>
-        <div className="relative px-6 py-1.5 inline-flex items-center mt-4">
+        <div className="relative px-6 py-1.5 inline-flex items-center w-fit mt-4">
           <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
           <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
           <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
@@ -781,7 +781,7 @@ export default function HomePageClient({
       </div>
 
       {/* ─── KONTAKT — TERMINAL ─── */}
-      <section className="border-t border-white/[0.25] px-[clamp(24px,4vw,64px)] py-16">
+      <section className="border-t border-white/[0.25] px-[clamp(32px,5vw,64px)] py-20 md:py-16">
         <div className="max-w-[1100px] mx-auto">
           {/* Terminal window */}
           <div className="border border-accent/20 bg-[#060806] relative overflow-hidden">
@@ -848,13 +848,15 @@ export default function HomePageClient({
                     </p>
                   </div>
 
-                  <div className="font-[var(--font-mono)] text-[12px] text-accent/50 mt-6 mb-3">
-                    $ hydra --status
-                  </div>
-                  <div className="font-[var(--font-mono)] text-[12px] text-accent/30 leading-[2]">
-                    <div>SZYFROWANIE: <span className="text-accent/60">AES-256</span></div>
-                    <div>PROTOKÓŁ:    <span className="text-accent/60">TLS 1.3</span></div>
-                    <div>STATUS:      <span className="text-accent">AKTYWNY</span> <span className="terminal-blink">█</span></div>
+                  <div className="hidden md:block">
+                    <div className="font-[var(--font-mono)] text-[12px] text-accent/50 mt-6 mb-3">
+                      $ hydra --status
+                    </div>
+                    <div className="font-[var(--font-mono)] text-[12px] text-accent/30 leading-[2]">
+                      <div>SZYFROWANIE: <span className="text-accent/60">AES-256</span></div>
+                      <div>PROTOKÓŁ:    <span className="text-accent/60">TLS 1.3</span></div>
+                      <div>STATUS:      <span className="text-accent">AKTYWNY</span> <span className="terminal-blink">█</span></div>
+                    </div>
                   </div>
                 </div>
 
@@ -915,7 +917,7 @@ export default function HomePageClient({
                       </span>
                     </div>
                     <div className="flex justify-end pt-2">
-                      <div className="relative px-6 py-1.5 inline-flex items-center">
+                      <div className="relative px-6 py-1.5 inline-flex items-center w-fit">
                         <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
                         <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
                         <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />

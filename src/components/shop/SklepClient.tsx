@@ -187,7 +187,7 @@ export default function SklepClient({
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="SZUKAJ..."
-                className="bg-transparent border border-white/15 px-3 py-2 font-[var(--font-mono)] text-[10px] text-white placeholder-text-dim/40 tracking-widest focus:outline-none focus:border-accent/40 transition-colors w-40 md:w-56"
+                className="bg-transparent border border-white/15 px-3 py-2 font-[var(--font-mono)] text-[10px] text-white placeholder-text-dim/40 tracking-widest focus:outline-none focus:border-accent/40 transition-colors w-32 sm:w-40 md:w-56"
               />
               {search && (
                 <button
@@ -226,7 +226,7 @@ export default function SklepClient({
 
           {/* Sidebar — mobile */}
           {mobileNavOpen && (
-            <div className="md:hidden w-full mb-6 border border-white/10 p-4 absolute left-0 right-0 bg-bg z-10 shadow-xl">
+            <div className="md:hidden w-full mb-6 border border-white/10 p-4 fixed left-0 right-0 top-[140px] bg-bg z-10 shadow-xl max-h-[60vh] overflow-y-auto">
               {CategoryNav}
             </div>
           )}

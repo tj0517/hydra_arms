@@ -90,28 +90,31 @@ export default function WspolpracaPageClient({
       <SubpageHero subtitle="HYDRA ARMS / Współpraca" title="Współpraca" video="/hero-wspolpraca.mp4" />
 
       {/* ─── INTRO SECTION ─── */}
-      <section className="py-16 md:py-32 px-[clamp(24px,4vw,64px)]">
+      <section className="py-20 md:py-32 px-[clamp(32px,5vw,64px)]">
         <ScrollRevealText
           text={introText}
-          className="text-[1.75rem] md:text-[3.2vw] font-medium leading-[1.1] tracking-[-0.48px] text-justify"
+          className="text-[1.4rem] md:text-[3.2vw] font-medium text-text-dim leading-[1.3] md:leading-[1.1] tracking-[-0.48px] text-justify"
           indent={2}
         />
         <div className="flex justify-end mt-11">
-          <ScrambleLink
-            href="#"
-            className="font-[var(--font-mono)] text-[14px] text-accent tracking-[1.12px] hover:text-white transition-colors duration-300"
-          >
-            [ Rozpocznij współpracę ]
-          </ScrambleLink>
+          <div className="relative px-6 py-1.5 inline-flex items-center w-fit">
+            <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
+            <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
+            <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
+            <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
+            <ScrambleLink href="#" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
+              Rozpocznij współpracę
+            </ScrambleLink>
+          </div>
         </div>
       </section>
 
       {/* ─── FUNDAMENTY SECTION ─── */}
       <section className="border-t border-white/5">
-        <div className="flex items-start md:items-end justify-between px-[clamp(24px,4vw,64px)] pt-10 md:pt-16 pb-6 md:pb-8 gap-4">
+        <div className="flex items-start md:items-end justify-between px-[clamp(32px,5vw,64px)] pt-10 md:pt-16 pb-6 md:pb-8 gap-4">
           <TypewriterTitle
             as="h2"
-            className="text-[clamp(2rem,3.17vw,48px)] font-light text-text leading-[53px] tracking-[-0.48px]"
+            className="text-[clamp(1.5rem,3.17vw,48px)] font-normal text-white leading-[1.15] md:leading-[53px] tracking-[-0.48px]"
             speed={50}
           >
             Fundamenty naszej działalności
@@ -145,7 +148,7 @@ export default function WspolpracaPageClient({
             return (
               <div
                 key={item.id}
-                className={`flex flex-col p-[clamp(24px,4vw,64px)] ${
+                className={`flex flex-col p-[clamp(32px,5vw,64px)] ${
                   offset === 0 ? "md:border-r border-white/5 border-b md:border-b-0" : ""
                 }`}
               >
@@ -172,7 +175,7 @@ export default function WspolpracaPageClient({
       </section>
 
       {/* ─── TACTICAL GRID BREAK ─── */}
-      <div className="h-[280px] md:h-[549px] bg-[#060806] relative overflow-hidden">
+      <div className="h-[280px] sm:h-[380px] md:h-[549px] bg-[#060806] relative overflow-hidden">
         {/* Background video */}
         <video
           autoPlay
@@ -199,28 +202,31 @@ export default function WspolpracaPageClient({
       </div>
 
       {/* ─── SECOND DESCRIPTION ─── */}
-      <section className="py-16 md:py-28 px-[clamp(24px,4vw,64px)]">
+      <section className="py-16 md:py-28 px-[clamp(32px,5vw,64px)]">
         <ScrollRevealText
           text={secondText}
-          className="text-[1.75rem] md:text-[3.2vw] font-medium leading-[1.1] tracking-[-0.48px] text-justify"
+          className="text-[1.4rem] md:text-[3.2vw] font-medium text-text-dim leading-[1.3] md:leading-[1.1] tracking-[-0.48px] text-justify"
           indent={2}
         />
         <div className="flex justify-end mt-11">
-          <ScrambleLink
-            href="#"
-            className="font-[var(--font-mono)] text-[14px] text-accent tracking-[1.12px] hover:text-white transition-colors duration-300"
-          >
-            [ Rozpocznij współpracę ]
-          </ScrambleLink>
+          <div className="relative px-6 py-1.5 inline-flex items-center w-fit">
+            <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
+            <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
+            <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
+            <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
+            <ScrambleLink href="#" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
+              Rozpocznij współpracę
+            </ScrambleLink>
+          </div>
         </div>
       </section>
 
       {/* ─── PARTNERSTWA STRATEGICZNE ─── */}
       <section className="border-t border-b border-white/5">
-        <div className="px-[clamp(24px,4vw,64px)] pt-16">
+        <div className="px-[clamp(32px,5vw,64px)] pt-16">
           <TypewriterTitle
             as="h2"
-            className="text-[clamp(2rem,9.26vw,140px)] font-normal text-text leading-[1] tracking-[-1px] md:tracking-[-2px] uppercase"
+            className="text-[clamp(1.75rem,9.26vw,140px)] font-medium text-white leading-[1.05] tracking-[-0.5px] md:tracking-[-2px] uppercase"
             speed={60}
           >
             PARTNERSTWA STRATEGICZNE
@@ -229,7 +235,7 @@ export default function WspolpracaPageClient({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8 pb-8 md:gap-16 md:mt-16 md:pb-16">
             <div>
               <AnimateIn delay={0.1}>
-                <p className="text-text-dim text-[18px] font-normal leading-[30px] text-justify">
+                <p className="text-text-dim text-[15px] md:text-[18px] font-normal leading-[1.7] md:leading-[30px] text-justify">
                   Nasza wizja współpracy z sektorem publicznym i służbami mundurowymi
                   opiera się na dostarczaniu rozwiązań wyprzedzających współczesne
                   wyzwania operacyjne. Poprzez integrację kompetencji R&D z potrzebami
@@ -252,10 +258,10 @@ export default function WspolpracaPageClient({
 
       {/* ─── KLUCZOWE KORZYŚCI ─── */}
       <section>
-        <div className="px-[clamp(24px,4vw,64px)] pt-10 md:pt-16 pb-8 md:pb-16 text-center">
+        <div className="px-[clamp(32px,5vw,64px)] pt-10 md:pt-16 pb-8 md:pb-16 text-center">
           <TypewriterTitle
             as="h2"
-            className="text-[clamp(2rem,4.76vw,72px)] font-normal text-white leading-[76px] tracking-[-1.44px]"
+            className="text-[clamp(1.75rem,4.76vw,72px)] font-medium text-white leading-[1.1] md:leading-[76px] tracking-[-1.44px]"
             speed={55}
           >
             Kluczowe korzyści
@@ -263,12 +269,12 @@ export default function WspolpracaPageClient({
         </div>
 
         {/* Tabs */}
-        <div className="flex flex-wrap gap-6 px-[clamp(24px,4vw,64px)] py-3.5 border-b border-white/10">
+        <div className="flex gap-4 sm:gap-6 px-[clamp(32px,5vw,64px)] py-3.5 border-b border-white/10 overflow-x-auto scrollbar-hide">
           {korzysciTabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`font-[var(--font-mono)] text-[14px] tracking-[1.12px] transition-colors duration-300 ${
+              className={`font-[var(--font-mono)] text-[12px] sm:text-[14px] tracking-[1.12px] transition-colors duration-300 whitespace-nowrap shrink-0 ${
                 activeTab === tab.id
                   ? "text-text"
                   : "text-text-dim hover:text-text"
@@ -283,7 +289,7 @@ export default function WspolpracaPageClient({
 
         {/* Content */}
         <div className="border-b border-white/10">
-          <div ref={contentRef} className="px-[clamp(24px,4vw,80px)] pt-10 pb-16">
+          <div ref={contentRef} className="px-[clamp(32px,5vw,80px)] pt-10 pb-16">
             <div className="mb-9">
               <div className="border border-text/50 px-2 py-1 inline-block">
                 <span className="font-[var(--font-mono)] text-[18px]">
@@ -297,21 +303,23 @@ export default function WspolpracaPageClient({
               </div>
             </div>
 
-            <h3 className="text-white text-[clamp(1.5rem,3.17vw,48px)] font-light leading-tight md:leading-[53px] tracking-[-0.48px] mb-6 max-w-[600px]">
+            <h3 className="text-white text-[clamp(1.5rem,3.17vw,48px)] font-normal leading-[1.15] md:leading-[53px] tracking-[-0.48px] mb-6 max-w-[600px]">
               {korzysciTabs.find((t) => t.id === activeTab)?.title}
             </h3>
-            <p className="text-text-dim text-[18px] font-normal leading-[30px] max-w-[750px] text-justify">
+            <p className="text-text-dim text-[15px] md:text-[18px] font-normal leading-[1.7] md:leading-[30px] max-w-[750px] text-justify">
               {korzysciTabs.find((t) => t.id === activeTab)?.desc}
             </p>
 
             <div className="flex justify-end mt-8 md:mt-16">
-              <ScrambleLink
-                href="#"
-                className="font-[var(--font-mono)] text-[14px] text-accent tracking-[1.12px] border border-accent/40 px-6 py-2 hover:bg-accent hover:text-bg transition-all duration-300"
-                fill
-              >
-                [ Napisz do nas ]
-              </ScrambleLink>
+              <div className="relative px-6 py-1.5 inline-flex items-center w-fit">
+                <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
+                <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
+                <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
+                <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
+                <ScrambleLink href="#" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
+                  Napisz do nas
+                </ScrambleLink>
+              </div>
             </div>
           </div>
         </div>
@@ -320,10 +328,10 @@ export default function WspolpracaPageClient({
       {/* ─── ETHICS SECTION ─── */}
       <section className="grid grid-cols-1 md:grid-cols-2">
         {/* Left */}
-        <div className="px-[clamp(24px,4vw,64px)] pt-9 pb-8 md:pb-16 flex flex-col h-full border-b md:border-b-0">
+        <div className="px-[clamp(32px,5vw,64px)] pt-9 pb-8 md:pb-16 flex flex-col h-full border-b md:border-b-0">
           <TypewriterTitle
             as="h2"
-            className="text-text text-[28px] font-medium leading-[34px]"
+            className="text-text text-[clamp(1.25rem,3vw,28px)] font-medium leading-[1.2]"
             speed={45}
           >
             Kodeks etyki w partnerstwie strategicznym
@@ -334,7 +342,7 @@ export default function WspolpracaPageClient({
         </div>
 
         {/* Right */}
-        <div className="pt-10 md:pt-16 pb-16 px-[clamp(24px,4vw,64px)]">
+        <div className="pt-10 md:pt-16 pb-16 px-[clamp(32px,5vw,64px)]">
           <div className="flex flex-col gap-9">
             {ethicsItems.map((item, i) => (
               <DrawReveal

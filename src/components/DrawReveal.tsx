@@ -99,14 +99,14 @@ export default function DrawReveal({ title, desc, delay = 0 }: DrawRevealProps) 
       <div
         className={`draw-reveal-border pb-6${borderActive ? " active" : ""}`}
       >
-        <h3 className="text-text text-[28px] font-medium leading-[34px] mb-4">
+        <h3 className="text-white text-[20px] md:text-[28px] font-medium leading-[1.25] md:leading-[34px] mb-4">
           {textActive ? (
             titleText
           ) : (
             <span className="invisible">{title}</span>
           )}
         </h3>
-        <p className="text-text-dim text-[18px] font-normal leading-[30px] max-w-[535px] text-justify">
+        <p className="text-text-dim text-[15px] md:text-[18px] font-normal leading-[1.7] md:leading-[30px] max-w-[535px] text-justify">
           {desc.split(" ").map((word, i) => (
             <span
               key={i}

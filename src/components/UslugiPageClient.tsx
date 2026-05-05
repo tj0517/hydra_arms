@@ -161,35 +161,41 @@ export default function UslugiPageClient({
       <SubpageHero subtitle="HYDRA ARMS / Usługi" title="Usługi" video="/hero-uslugi.mp4" />
 
       {/* ─── INTRO DESCRIPTION ─── */}
-      <section className="py-16 md:py-32 px-[clamp(24px,4vw,64px)] border-b border-white/10">
+      <section className="py-20 md:py-32 px-[clamp(32px,5vw,64px)] border-b border-white/10">
         <ScrollRevealText
           text={introText}
-          className="text-[1.75rem] md:text-[3.2vw] font-medium leading-[1.1] tracking-[-0.48px] text-justify"
+          className="text-[1.4rem] md:text-[3.2vw] font-medium text-text-dim leading-[1.3] md:leading-[1.1] tracking-[-0.48px] text-justify"
           indent={2}
         />
         <div className="flex justify-end mt-11">
-          <ScrambleLink href="#" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
-            [ Zapytaj o wycenę ]
-          </ScrambleLink>
+          <div className="relative px-6 py-1.5 inline-flex items-center w-fit">
+            <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
+            <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
+            <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
+            <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
+            <ScrambleLink href="#" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
+              Zapytaj o wycenę
+            </ScrambleLink>
+          </div>
         </div>
       </section>
 
       {/* ─── NASZE KOMPETENCJE ─── */}
       <section className="border-b border-white/10">
         {/* Title */}
-        <div className="flex items-center justify-center py-10 md:py-20 px-[clamp(24px,4vw,64px)]">
-          <h2 className="text-[clamp(2.5rem,4.76vw,72px)] font-normal text-text leading-[76px] tracking-[-1.44px]">
+        <div className="flex items-center justify-center py-10 md:py-20 px-[clamp(32px,5vw,64px)]">
+          <h2 className="text-[clamp(1.75rem,4.76vw,72px)] font-medium text-white leading-[1.1] md:leading-[76px] tracking-[-1.44px]">
             Nasze kompetencje
           </h2>
         </div>
 
         {/* Tab navigation */}
-        <div className="flex flex-wrap gap-6 px-[clamp(24px,4vw,64px)] py-3.5 border-b border-white/10">
+        <div className="flex gap-4 sm:gap-6 px-[clamp(32px,5vw,64px)] py-3.5 border-b border-white/10 overflow-x-auto scrollbar-hide">
           {competencies.map((comp, i) => (
             <button
               key={comp.id}
               onClick={() => setActiveTab(i)}
-              className={`font-[var(--font-mono)] text-[14px] tracking-[1.12px] transition-colors duration-300 ${
+              className={`font-[var(--font-mono)] text-[12px] sm:text-[14px] tracking-[1.12px] transition-colors duration-300 whitespace-nowrap shrink-0 ${
                 activeTab === i
                   ? "text-text"
                   : "text-text-dim hover:text-text"
@@ -204,7 +210,7 @@ export default function UslugiPageClient({
 
         {/* Active tab content */}
         <div>
-          <div ref={contentRef} className="px-[clamp(24px,4vw,80px)] pt-10 pb-2 relative z-10">
+          <div ref={contentRef} className="px-[clamp(32px,5vw,80px)] pt-10 pb-2 relative z-10">
             {/* Counter */}
             <div className="mb-9">
               <div className="border border-text/50 px-2 py-1 inline-block">
@@ -216,10 +222,10 @@ export default function UslugiPageClient({
             </div>
 
             {/* Title + description */}
-            <h3 className="text-[clamp(2rem,3.17vw,48px)] font-light text-text leading-[53px] tracking-[-0.48px] mb-6">
+            <h3 className="text-[clamp(1.5rem,3.17vw,48px)] font-normal text-white leading-[1.15] md:leading-[53px] tracking-[-0.48px] mb-6">
               {active.title}
             </h3>
-            <p className="text-[18px] font-light text-text-dim leading-[23px] max-w-[749px] mb-8 text-justify">
+            <p className="text-[15px] md:text-[18px] font-light text-text-dim leading-[1.7] md:leading-[23px] max-w-[749px] mb-8 text-justify">
               {active.desc}
             </p>
 
@@ -227,25 +233,31 @@ export default function UslugiPageClient({
             <div className="flex gap-2.5 items-center py-2.5 flex-wrap mb-8">
               {active.tags.map((tag, ti) => (
                 <span key={ti} className="flex items-center gap-2.5">
-                  <span className="font-[var(--font-mono)] text-[20px] text-accent tracking-[0.2px]">
+                  <span className="font-[var(--font-mono)] text-[13px] md:text-[20px] text-accent/70 md:text-accent tracking-[0.2px]">
                     {tag}
                   </span>
-                  <span className="w-[5px] h-[5px] bg-[#d9d9d9]" />
+                  <span className="w-[4px] h-[4px] md:w-[5px] md:h-[5px] bg-[#d9d9d9]/50 md:bg-[#d9d9d9]" />
                 </span>
               ))}
             </div>
 
             {/* CTA */}
             <div className="flex justify-end">
-              <ScrambleLink href="#" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
-                {`[ ${active.cta} ]`}
-              </ScrambleLink>
+              <div className="relative px-6 py-1.5 inline-flex items-center w-fit">
+                <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
+                <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
+                <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
+                <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
+                <ScrambleLink href="#" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
+                  {active.cta}
+                </ScrambleLink>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Full-width video */}
-        <div className="relative h-[300px] md:h-[680px] overflow-hidden -mt-16">
+        <div className="relative h-[300px] sm:h-[460px] md:h-[680px] overflow-hidden -mt-16">
           <video
             autoPlay
             muted
@@ -273,24 +285,24 @@ export default function UslugiPageClient({
       {/* ─── DLA KOGO PRACUJEMY ─── */}
       <section className="border-b border-white/10">
         {/* Section label inline with top border */}
-        <div className="border-t border-white/[0.25] px-[clamp(24px,4vw,64px)] py-2">
+        <div className="border-t border-white/[0.25] px-[clamp(32px,5vw,64px)] py-2">
           <span className="font-[var(--font-mono)] text-[16px] font-medium text-accent tracking-[0.8px]">
             //05 KLIENCI
           </span>
         </div>
 
         {/* Title + description */}
-        <div className="pt-8 md:pt-16 px-[clamp(24px,4vw,64px)]">
+        <div className="pt-8 md:pt-16 px-[clamp(32px,5vw,64px)]">
           <TypewriterTitle
             as="h2"
-            className="text-[clamp(2rem,9.26vw,140px)] font-normal text-text leading-[1] tracking-[-1px] md:tracking-[-2px] uppercase"
+            className="text-[clamp(1.75rem,9.26vw,140px)] font-medium text-white leading-[1.05] tracking-[-0.5px] md:tracking-[-2px] uppercase"
             speed={60}
           >
             Dla kogo pracujemy
           </TypewriterTitle>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8 pb-8 md:gap-16 md:mt-16 md:pb-16">
             <div>
-              <p className="text-text-dim text-[18px] font-normal leading-[30px] text-justify">
+              <p className="text-text-dim text-[15px] md:text-[18px] font-normal leading-[1.7] md:leading-[30px] text-justify">
                 Swoje usługi kierujemy do szerokiego spektrum odbiorców — od jednostek wojskowych i policyjnych,
                 przez instytucje badawcze, aż po partnerów przemysłowych w modelu B2B.
               </p>
@@ -307,9 +319,9 @@ export default function UslugiPageClient({
 
         {/* 3-card grid */}
         <div className="border-t border-white/[0.08]" />
-        <div className="mx-[clamp(24px,4vw,64px)] grid grid-cols-1 md:grid-cols-3 h-auto md:h-[680px]">
+        <div className="mx-[clamp(32px,5vw,64px)] grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 h-auto md:h-[680px]">
           {clientSegments.map((seg, i) => (
-            <div key={seg.tag} className={`${i < clientSegments.length - 1 ? "md:border-r" : ""} border-b border-white/[0.08] flex flex-col justify-between px-6 py-8 md:px-10 md:py-12`}>
+            <div key={seg.tag} className={`${i < clientSegments.length - 1 ? "md:border-r" : ""} border-b border-white/[0.08] flex flex-col justify-between py-8 md:px-10 md:py-12`}>
               <div className="hidden md:flex flex-1 items-center justify-center">
                 {seg.svg}
               </div>
@@ -323,9 +335,15 @@ export default function UslugiPageClient({
                 <p className="font-[var(--font-mono)] text-[11px] tracking-[0.12em] uppercase text-text-dim leading-[1.9] mb-8 text-justify">
                   {seg.desc}
                 </p>
-                <ScrambleLink href={seg.href} className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
-                  [ Dowiedz się więcej ]
-                </ScrambleLink>
+                <div className="relative px-6 py-1.5 inline-flex items-center w-fit">
+                  <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
+                  <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
+                  <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
+                  <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
+                  <ScrambleLink href={seg.href} className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
+                    Dowiedz się więcej
+                  </ScrambleLink>
+                </div>
               </div>
             </div>
           ))}
@@ -333,16 +351,22 @@ export default function UslugiPageClient({
       </section>
 
       {/* ─── WSPÓŁPRACA CTA ─── */}
-      <section className="border-b border-white/10 py-16 md:py-32 px-[clamp(24px,4vw,64px)]">
+      <section className="border-b border-white/10 py-20 md:py-32 px-[clamp(32px,5vw,64px)]">
         <ScrollRevealText
           text="Dostarczamy rozwiązania tam, gdzie standardowe metody zawodzą. Szukasz partnera technologicznego do projektu obronnego lub cywilnego?"
-          className="text-[1.75rem] md:text-[3.2vw] font-medium leading-[1.1] tracking-[-0.48px] text-justify"
+          className="text-[1.4rem] md:text-[3.2vw] font-medium text-text-dim leading-[1.3] md:leading-[1.1] tracking-[-0.48px] text-justify"
           indent={2}
         />
         <div className="flex justify-end mt-11">
-          <ScrambleLink href="/wspolpraca" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
-            [ Rozpocznij współpracę ]
-          </ScrambleLink>
+          <div className="relative px-6 py-1.5 inline-flex items-center w-fit">
+            <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
+            <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
+            <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
+            <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
+            <ScrambleLink href="/wspolpraca" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
+              Rozpocznij współpracę
+            </ScrambleLink>
+          </div>
         </div>
       </section>
     </main>
