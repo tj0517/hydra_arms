@@ -2,6 +2,12 @@ import HomePageClient from '@/components/HomePageClient'
 import { sanityFetch } from '@/sanity/client'
 import { homePageQuery, servicesQuery, distributionChannelsQuery } from '@/sanity/queries'
 
+const filaryImgMap: Record<string, string> = {
+  "B2G": "/img/tactical-gun-in-olive-glove-on-white-backdrop-2026-03-20-00-48-48-utc.jpg",
+  "B2B": "/img/cnc-part.png",
+  "B2C": "/img/high-powered-sporting-rifle-with-scope-and-bipod-2026-01-05-00-53-07-utc.jpg",
+}
+
 export default async function HomePage() {
   let services, filary, heroData
 
@@ -17,20 +23,25 @@ export default async function HomePage() {
     heroData = null
   }
 
-  // Map Sanity services to local format (use imagePath as img fallback)
   const mappedServices = services?.map((s, i) => ({
     id: s.id,
     label: s.label,
     title: s.title,
     desc: s.desc,
     tags: s.tags ?? [],
-    img: s.imagePath ?? `/service-0${i + 1}.jpg`,
+    img: s.imagePath ?? `/img/service-0${i + 1}.jpg`,
+  })) ?? undefined
+
+  const mappedFilary = filary?.map(f => ({
+    ...f,
+    img: filaryImgMap[f.tag] ?? "",
+    href: "/wspolpraca",
   })) ?? undefined
 
   return (
     <HomePageClient
       services={mappedServices}
-      filary={filary ?? undefined}
+      filary={mappedFilary}
       heroTagline1={heroData?.heroTagline1}
       heroTagline2={heroData?.heroTagline2}
       hudLabel={heroData?.hudLabel}

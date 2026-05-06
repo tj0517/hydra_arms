@@ -37,7 +37,7 @@ export default function Footer() {
         playsInline
         className="absolute inset-0 w-full h-full object-cover grayscale brightness-[0.55] contrast-[1.3]"
       >
-        <source src="/rain.mp4" type="video/mp4" />
+        <source src="/video/rain.mp4" type="video/mp4" />
       </video>
 
       {/* Overlays */}

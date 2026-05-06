@@ -115,7 +115,7 @@ export default function AsciiHelicopter() {
       }
       ctx.globalAlpha = 1;
     };
-    img.src = "/plane.png";
+    img.src = "/img/plane.png";
 
   }, []);
 

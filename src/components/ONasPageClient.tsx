@@ -11,6 +11,7 @@ import AsciiHelicopter from "@/components/AsciiHelicopter";
 import DrawCard from "@/components/DrawCard";
 import SubpageHero from "@/components/SubpageHero";
 import TacticalReadout from "@/components/TacticalReadout";
+import TacticalEdge from "@/components/TacticalEdge";
 
 
 /* ──────────── DEFAULTS ──────────── */
@@ -72,71 +73,21 @@ const clientSegments = [
     title: "Siły Zbrojne",
     desc: "Dostarczamy uzbrojenie i wyposażenie spełniające najwyższe standardy wojskowe, testowane w warunkach operacyjnych.",
     href: "/wspolpraca",
-    icon: (
-      /* Compass rose / tactical map marker */
-      <svg viewBox="0 0 200 200" fill="none" className="w-60 h-60 text-accent">
-        <circle cx="100" cy="100" r="82" stroke="currentColor" strokeWidth="0.7" opacity="0.2" />
-        {/* 4-pointed diamond star — vertical */}
-        <polygon points="100,18 128,100 100,182 72,100" stroke="currentColor" strokeWidth="1.0" fill="none" opacity="0.55" />
-        {/* 4-pointed diamond star — horizontal */}
-        <polygon points="182,100 100,128 18,100 100,72" stroke="currentColor" strokeWidth="0.7" fill="none" opacity="0.4" />
-        {/* Inner diamond */}
-        <polygon points="100,60 140,100 100,140 60,100" stroke="currentColor" strokeWidth="0.65" fill="none" opacity="0.3" />
-        {/* Cardinal tick marks */}
-        <line x1="100" y1="18" x2="100" y2="30" stroke="currentColor" strokeWidth="1.2" opacity="0.5" />
-        <line x1="100" y1="170" x2="100" y2="182" stroke="currentColor" strokeWidth="1.2" opacity="0.5" />
-        <line x1="18" y1="100" x2="30" y2="100" stroke="currentColor" strokeWidth="1.2" opacity="0.5" />
-        <line x1="170" y1="100" x2="182" y2="100" stroke="currentColor" strokeWidth="1.2" opacity="0.5" />
-        {/* Center ring */}
-        <circle cx="100" cy="100" r="6" stroke="currentColor" strokeWidth="0.7" opacity="0.5" fill="none" />
-      </svg>
-    ),
+    img: "/img/army-ranger-in-field-uniforms-2026-03-18-17-39-05-utc.jpg",
   },
   {
     tag: "Formacje",
     title: "Służby mundurowe",
     desc: "Współpracujemy z policją, strażą graniczną i innymi formacjami mundurowymi, oferując dedykowane rozwiązania.",
     href: "/wspolpraca",
-    icon: (
-      /* Shield / badge */
-      <svg viewBox="0 0 200 200" fill="none" className="w-60 h-60 text-accent">
-        {/* Outer shield */}
-        <path d="M100 16 L172 46 L172 110 Q172 160 100 184 Q28 160 28 110 L28 46 Z" stroke="currentColor" strokeWidth="1.0" fill="none" opacity="0.55" />
-        {/* Inner shield */}
-        <path d="M100 36 L152 62 L152 110 Q152 148 100 166 Q48 148 48 110 L48 62 Z" stroke="currentColor" strokeWidth="0.65" fill="none" opacity="0.35" />
-        {/* Vertical axis */}
-        <line x1="100" y1="36" x2="100" y2="150" stroke="currentColor" strokeWidth="0.5" opacity="0.22" strokeDasharray="4 3" />
-        {/* Horizontal axis */}
-        <line x1="54" y1="96" x2="146" y2="96" stroke="currentColor" strokeWidth="0.5" opacity="0.22" strokeDasharray="4 3" />
-        {/* Center mark */}
-        <circle cx="100" cy="96" r="4" stroke="currentColor" strokeWidth="0.7" opacity="0.45" fill="none" />
-      </svg>
-    ),
+    img: "/img/tactical-gun-in-olive-glove-on-white-backdrop-2026-03-20-00-48-48-utc.jpg",
   },
   {
     tag: "B2B",
     title: "Przemysł B2B",
     desc: "Realizujemy zlecenia dla partnerów przemysłowych — od prototypowania po produkcję seryjną komponentów obronnych.",
     href: "/wspolpraca",
-    icon: (
-      /* Delta / nested triangles */
-      <svg viewBox="0 0 200 200" fill="none" className="w-60 h-60 text-accent">
-        {/* Outer triangle */}
-        <polygon points="100,16 186,166 14,166" stroke="currentColor" strokeWidth="1.0" fill="none" opacity="0.55" />
-        {/* Mid triangle */}
-        <polygon points="100,50 162,150 38,150" stroke="currentColor" strokeWidth="0.7" fill="none" opacity="0.38" />
-        {/* Inner triangle */}
-        <polygon points="100,84 138,134 62,134" stroke="currentColor" strokeWidth="0.65" fill="none" opacity="0.28" />
-        {/* Altitude line */}
-        <line x1="100" y1="16" x2="100" y2="166" stroke="currentColor" strokeWidth="0.5" opacity="0.18" strokeDasharray="5 4" />
-        {/* Base midpoint mark */}
-        <line x1="96" y1="166" x2="104" y2="166" stroke="currentColor" strokeWidth="1.2" opacity="0.5" />
-        {/* Apex mark */}
-        <line x1="96" y1="16" x2="104" y2="16" stroke="currentColor" strokeWidth="1.2" opacity="0.5" />
-        {/* Center circle */}
-        <circle cx="100" cy="117" r="5" stroke="currentColor" strokeWidth="0.7" opacity="0.45" fill="none" />
-      </svg>
-    ),
+    img: "/img/cnc-part.png",
   },
 ];
 
@@ -153,7 +104,7 @@ export default function ONasPageClient({
   return (
     <main>
       {/* ─── HERO ─── */}
-      <SubpageHero subtitle="HYDRA ARMS / O nas" title="O nas" video="/hero-onas.mp4" />
+      <SubpageHero subtitle="HYDRA ARMS / O nas" title="O nas" video="/video/hero-onas.mp4" />
 
       {/* ─── INTRO DESCRIPTION ─── */}
       <section className="py-20 md:py-32 px-[clamp(32px,5vw,64px)] border-b border-white/10">
@@ -178,21 +129,21 @@ export default function ONasPageClient({
       {/* ─── MISSION SECTION ─── */}
       <section className="grid grid-cols-1 md:grid-cols-2">
         {/* Left */}
-        <div className="px-[clamp(32px,5vw,64px)] pt-9 pb-4 flex flex-col h-full border-b md:border-b-0">
+        <div className="px-[clamp(32px,5vw,64px)] pt-20 pb-4 flex flex-col h-full border-b md:border-b-0">
           <TypewriterTitle
             as="h2"
-            className="text-text text-[clamp(1.75rem,2.5vw,2.5rem)] font-medium leading-[1.15]"
+            className="text-[clamp(1.5rem,3.17vw,48px)] font-normal text-white leading-[1.15] md:leading-[53px] tracking-[-0.48px]"
             speed={45}
           >
             Nasza misja, Innowacja i rzetelność
           </TypewriterTitle>
-          <div className="mt-6 md:mt-auto">
+          <div className="mt-6 md:mt-auto flex-1 flex items-end">
             <TacticalReadout />
           </div>
         </div>
 
         {/* Right */}
-        <div className="pt-10 md:pt-16 pb-4 px-[clamp(32px,5vw,64px)]">
+        <div className="pt-20 pb-4 px-[clamp(32px,5vw,64px)]">
           <div className="flex flex-col gap-9">
             {missionItems.map((item, i) => (
               <DrawReveal
@@ -292,11 +243,11 @@ export default function ONasPageClient({
           </p>
         </div>
 
-        <div className="mx-[clamp(32px,5vw,64px)] grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 h-auto md:h-[680px] border-t border-white/[0.08]">
+        <div className="mx-[clamp(32px,5vw,64px)] grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 border-t border-white/[0.08]">
           {clientSegments.map((seg, i) => (
-            <div key={seg.tag} className={`${i < clientSegments.length - 1 ? "md:border-r" : ""} border-b border-white/[0.08] flex flex-col justify-between py-8 md:px-10 md:py-12`}>
-              <div className="hidden md:flex flex-1 items-center justify-center">
-                {seg.icon}
+            <div key={seg.tag} className={`${i < clientSegments.length - 1 ? "md:border-r" : ""} border-b border-white/[0.08] flex flex-col py-8 md:px-10 md:py-12`}>
+              <div className="h-[260px] hidden md:block mb-8">
+                <TacticalEdge src={seg.img} alt={seg.title} glow="green" width={900} height={450} className="w-full h-full" />
               </div>
               <div>
                 <div className="font-[var(--font-mono)] text-[10px] tracking-[0.25em] text-accent/50 border border-accent/20 px-2.5 py-1 inline-block mb-5">

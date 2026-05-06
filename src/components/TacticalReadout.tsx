@@ -53,7 +53,7 @@ export default function TacticalReadout() {
   return (
     <div
       ref={ref}
-      className="font-[var(--font-mono)] select-none mt-12 max-w-[340px]"
+      className="font-[var(--font-mono)] select-none mt-12 w-full"
       style={{ opacity: active ? 1 : 0, transition: "opacity 0.6s ease-out" }}
     >
       {/* Header */}

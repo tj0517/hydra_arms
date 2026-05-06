@@ -60,11 +60,27 @@ export default function WspolpracaPageClient({
 }: WspolpracaPageClientProps = {}) {
   const [activeTab, setActiveTab] = useState(korzysciTabs[0]?.id ?? "suwer");
   const [fundPage, setFundPage] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
   const activeIndex = korzysciTabs.findIndex((t) => t.id === activeTab);
   const fundMaxPage = Math.ceil(fundamenty.length / 2) - 1;
 
   const contentRef = useRef<HTMLDivElement>(null);
   const fundRef = useRef<HTMLDivElement>(null);
+  const autoPlayRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const resetAutoPlay = () => {
+    if (autoPlayRef.current) clearInterval(autoPlayRef.current);
+    autoPlayRef.current = setInterval(() => {
+      setFundPage((p) => (p >= fundMaxPage ? 0 : p + 1));
+    }, 3500);
+  };
+
+  useEffect(() => {
+    if (!isHovered) resetAutoPlay();
+    else if (autoPlayRef.current) clearInterval(autoPlayRef.current);
+    return () => { if (autoPlayRef.current) clearInterval(autoPlayRef.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isHovered, fundMaxPage]);
 
   useEffect(() => {
     if (!contentRef.current) return;
@@ -87,7 +103,7 @@ export default function WspolpracaPageClient({
   return (
     <main>
       {/* ─── HERO ─── */}
-      <SubpageHero subtitle="HYDRA ARMS / Współpraca" title="Współpraca" video="/hero-wspolpraca.mp4" />
+      <SubpageHero subtitle="HYDRA ARMS / Współpraca" title="Współpraca" video="/video/hero-wspolpraca.mp4" />
 
       {/* ─── INTRO SECTION ─── */}
       <section className="py-20 md:py-32 px-[clamp(32px,5vw,64px)]">
@@ -122,14 +138,14 @@ export default function WspolpracaPageClient({
 
           <div className="flex gap-3 shrink-0 ml-8">
             <button
-              onClick={() => setFundPage((p) => p - 1)}
+              onClick={() => { setFundPage((p) => p - 1); resetAutoPlay(); }}
               disabled={fundPage === 0}
               className="w-11 h-11 rounded-full border border-white/15 flex items-center justify-center text-text-dim hover:border-accent hover:text-accent transition-colors duration-300 disabled:opacity-20 disabled:pointer-events-none"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M10 3L5 8L10 13" /></svg>
             </button>
             <button
-              onClick={() => setFundPage((p) => p + 1)}
+              onClick={() => { setFundPage((p) => p + 1); resetAutoPlay(); }}
               disabled={fundPage >= fundMaxPage}
               className="w-11 h-11 rounded-full border border-white/15 flex items-center justify-center text-text-dim hover:border-accent hover:text-accent transition-colors duration-300 disabled:opacity-20 disabled:pointer-events-none"
             >
@@ -140,7 +156,9 @@ export default function WspolpracaPageClient({
 
         <div
           ref={fundRef}
-          className="grid grid-cols-1 md:grid-cols-2 md:min-h-[450px] border-t border-b border-white/5"
+          className="grid grid-cols-1 md:grid-cols-2 md:min-h-[320px] border-t border-b border-white/5"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
         >
           {[0, 1].map((offset) => {
             const item = fundamenty[fundPage * 2 + offset];
@@ -148,7 +166,7 @@ export default function WspolpracaPageClient({
             return (
               <div
                 key={item.id}
-                className={`flex flex-col p-[clamp(32px,5vw,64px)] ${
+                className={`flex flex-col px-[clamp(32px,5vw,64px)] py-[clamp(16px,3vw,40px)] ${
                   offset === 0 ? "md:border-r border-white/5 border-b md:border-b-0" : ""
                 }`}
               >
@@ -156,7 +174,7 @@ export default function WspolpracaPageClient({
                   {item.desc}
                 </p>
 
-                <div className="mt-auto flex items-start gap-4 pt-12">
+                <div className="mt-auto flex items-start gap-4 pt-6">
                   <span className="w-6 h-px bg-text-dim/40 mt-2.5 shrink-0" />
                   <div>
                     <span className="font-[var(--font-mono)] text-accent text-[14px] tracking-[1px]">
@@ -184,7 +202,7 @@ export default function WspolpracaPageClient({
           playsInline
           className="absolute inset-0 w-full h-full object-cover opacity-30 grayscale brightness-[0.6] z-0"
         >
-          <source src="/aerial-view.mp4" type="video/mp4" />
+          <source src="/video/aerial-view.mp4" type="video/mp4" />
         </video>
         <div className="absolute inset-0 z-[1]">
           <TacticalGrid />

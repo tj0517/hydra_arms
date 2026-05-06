@@ -8,7 +8,7 @@ export default function PolitykaPrywatnosciPage() {
       <SubpageHero
         subtitle="HYDRA ARMS / Polityka prywatności"
         title="Polityka prywatności"
-        video="/Looping_Video_Ready.mp4"
+        video="/video/Looping_Video_Ready.mp4"
         titleClass="text-[clamp(3rem,9vw,100px)] font-semibold text-text leading-none tracking-[-3px] relative z-[6] ml-[-4px]"
       />
 

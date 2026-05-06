@@ -55,7 +55,7 @@ export default async function SklepPage({
 
   return (
     <main>
-      <SubpageHero subtitle="HYDRA ARMS / Sklep" title="Sklep" video="/hero-video.mp4" />
+      <SubpageHero subtitle="HYDRA ARMS / Sklep" title="Sklep" video="/video/hero-video.mp4" />
 
       {noData ? (
         <section className="min-h-[50vh] flex items-center justify-center">

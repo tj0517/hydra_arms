@@ -16,66 +16,21 @@ const clientSegments = [
     title: "Siły Zbrojne",
     desc: "Dostarczamy uzbrojenie i wyposażenie spełniające najwyższe standardy wojskowe, testowane w warunkach operacyjnych.",
     href: "/wspolpraca",
-    svg: (
-      <svg viewBox="0 0 200 200" fill="none" className="w-60 h-60 text-accent">
-        {([78, 52, 26] as number[]).map((r, k) => {
-          const offset = k % 2 === 0 ? -Math.PI / 2 : -Math.PI / 6;
-          const pts = Array.from({ length: 6 }, (_, j) => {
-            const a = (j / 6) * Math.PI * 2 + offset;
-            return `${(100 + r * Math.cos(a)).toFixed(1)},${(100 + r * Math.sin(a)).toFixed(1)}`;
-          }).join(" ");
-          return <polygon key={k} points={pts}
-            stroke="currentColor"
-            strokeWidth={k === 0 ? "1.0" : "0.7"}
-            fill="none"
-            opacity={0.55 - k * 0.1} />;
-        })}
-        {Array.from({ length: 6 }, (_, k) => {
-          const a = (k / 6) * Math.PI * 2 - Math.PI / 2;
-          return <line key={k} x1="100" y1="100"
-            x2={(100 + Math.cos(a) * 78).toFixed(1)}
-            y2={(100 + Math.sin(a) * 78).toFixed(1)}
-            stroke="currentColor" strokeWidth="0.5" opacity="0.22" />;
-        })}
-      </svg>
-    ),
+    img: "/img/army-ranger-in-field-uniforms-2026-03-18-17-39-05-utc.jpg",
   },
   {
     tag: "Formacje",
     title: "Służby mundurowe",
     desc: "Współpracujemy z policją, strażą graniczną i innymi formacjami mundurowymi, oferując dedykowane rozwiązania.",
     href: "/wspolpraca",
-    svg: (
-      <svg viewBox="0 0 200 200" fill="none" className="w-60 h-60 text-accent">
-        {[84, 66, 48, 30, 14].map((r, k) => (
-          <circle key={k} cx="100" cy="100" r={r}
-            stroke="currentColor"
-            strokeWidth={k === 0 ? "1.0" : "0.7"}
-            opacity={0.55 - k * 0.08}
-            fill="none" />
-        ))}
-        <line x1="100" y1="8" x2="100" y2="22" stroke="currentColor" strokeWidth="0.7" opacity="0.38" />
-        <line x1="100" y1="178" x2="100" y2="192" stroke="currentColor" strokeWidth="0.7" opacity="0.38" />
-        <line x1="8" y1="100" x2="22" y2="100" stroke="currentColor" strokeWidth="0.7" opacity="0.38" />
-        <line x1="178" y1="100" x2="192" y2="100" stroke="currentColor" strokeWidth="0.7" opacity="0.38" />
-      </svg>
-    ),
+    img: "/img/tactical-gun-in-olive-glove-on-white-backdrop-2026-03-20-00-48-48-utc.jpg",
   },
   {
     tag: "B2B",
     title: "Przemysł B2B",
     desc: "Realizujemy zlecenia dla partnerów przemysłowych — od prototypowania po produkcję seryjną komponentów obronnych.",
     href: "/wspolpraca",
-    svg: (
-      <svg viewBox="0 0 200 200" fill="none" className="w-60 h-60 text-accent">
-        <ellipse cx="100" cy="58" rx="72" ry="20" stroke="currentColor" strokeWidth="1.0" opacity="0.6" />
-        <line x1="28" y1="58" x2="28" y2="152" stroke="currentColor" strokeWidth="1.0" opacity="0.55" />
-        <line x1="172" y1="58" x2="172" y2="152" stroke="currentColor" strokeWidth="1.0" opacity="0.55" />
-        <path d="M 28,152 A 72,20 0 0 0 172,152" stroke="currentColor" strokeWidth="1.0" opacity="0.5" fill="none" />
-        <ellipse cx="100" cy="58" rx="28" ry="8" stroke="currentColor" strokeWidth="0.65" opacity="0.35" />
-        <ellipse cx="100" cy="102" rx="72" ry="20" stroke="currentColor" strokeWidth="0.5" strokeDasharray="5 4" opacity="0.22" />
-      </svg>
-    ),
+    img: "/img/cnc-part.png",
   },
 ];
 
@@ -87,7 +42,7 @@ const DEFAULT_COMPETENCIES = [
     desc: "Rozwijamy systemy uzbrojenia od koncepcji do kompletnej dokumentacji produkcyjnej. Modelowanie 3D, analizy wytrzymałościowe MES, inżynieria odwrotna — każdy projekt przechodzi pełny cykl walidacji przed wejściem do produkcji.",
     tags: ["CAD/CAM", "Analizy MES", "Inżynieria odwrotna"],
     cta: "Zapytaj o projekt",
-    img: "/service-01.jpg",
+    img: "/img/service-01.jpg",
   },
   {
     id: "02",
@@ -96,7 +51,7 @@ const DEFAULT_COMPETENCIES = [
     desc: "Wytwarzamy zaawansowane komponenty uzbrojenia z wykorzystaniem wieloosiowych centrów obróbczych CNC. Tolerancje na poziomie mikrometrów, powtarzalność seryjna i pełna kontrola wymiarowa każdej partii.",
     tags: ["Frezowanie 5-osi", "Toczenie CNC", "Kontrola CMM"],
     cta: "Zapytaj o produkcję",
-    img: "/service-02.jpg",
+    img: "/img/service-02.jpg",
   },
   {
     id: "03",
@@ -105,7 +60,7 @@ const DEFAULT_COMPETENCIES = [
     desc: "Wykorzystujemy technologie przyrostowe do szybkiego prototypowania i produkcji funkcjonalnych komponentów. Druk metalowy SLM oraz polimerowy FDM/SLA pozwala na iteracyjne testowanie koncepcji.",
     tags: ["SLM/DMLS", "FDM/SLA", "Rapid prototyping"],
     cta: "Zapytaj o prototyp",
-    img: "/service-03.jpg",
+    img: "/img/service-03.jpg",
   },
   {
     id: "04",
@@ -114,7 +69,7 @@ const DEFAULT_COMPETENCIES = [
     desc: "Każdy wyrób przechodzi wieloetapowy proces kontroli jakości zgodny ze standardami NATO AQAP. Stosujemy zaawansowane metody pomiarowe, testy balistyczne i analizy metalurgiczne.",
     tags: ["AQAP", "Testy balistyczne", "Metrologia"],
     cta: "Zapytaj o certyfikację",
-    img: "/service-04.jpg",
+    img: "/img/service-04.jpg",
   },
   {
     id: "05",
@@ -123,7 +78,7 @@ const DEFAULT_COMPETENCIES = [
     desc: "Zapewniamy kompleksowy montaż systemów uzbrojenia, modernizację istniejących platform oraz serwis gwarancyjny i pogwarancyjny. Każda jednostka przechodzi testy funkcjonalne przed przekazaniem.",
     tags: ["Modernizacja", "Diagnostyka", "Kalibracja"],
     cta: "Zapytaj o serwis",
-    img: "/service-01.jpg",
+    img: "/img/service-01.jpg",
   },
 ];
 
@@ -158,7 +113,7 @@ export default function UslugiPageClient({
   return (
     <main>
       {/* ─── HERO ─── */}
-      <SubpageHero subtitle="HYDRA ARMS / Usługi" title="Usługi" video="/hero-uslugi.mp4" />
+      <SubpageHero subtitle="HYDRA ARMS / Usługi" title="Usługi" video="/video/hero-uslugi.mp4" />
 
       {/* ─── INTRO DESCRIPTION ─── */}
       <section className="py-20 md:py-32 px-[clamp(32px,5vw,64px)] border-b border-white/10">
@@ -265,7 +220,7 @@ export default function UslugiPageClient({
             playsInline
             className="absolute inset-0 w-full h-full object-cover grayscale brightness-[0.35] contrast-[1.1] sepia-[0.15]"
           >
-            <source src="/dark-terrain.mp4" type="video/mp4" />
+            <source src="/video/dark-terrain.mp4" type="video/mp4" />
           </video>
           <div className="absolute inset-0 bg-[#0a1a0a]/40 mix-blend-multiply z-[1]" />
           <div className="moving-grain !opacity-[0.08] z-[1]" />
@@ -319,11 +274,11 @@ export default function UslugiPageClient({
 
         {/* 3-card grid */}
         <div className="border-t border-white/[0.08]" />
-        <div className="mx-[clamp(32px,5vw,64px)] grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 h-auto md:h-[680px]">
+        <div className="mx-[clamp(32px,5vw,64px)] grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
           {clientSegments.map((seg, i) => (
-            <div key={seg.tag} className={`${i < clientSegments.length - 1 ? "md:border-r" : ""} border-b border-white/[0.08] flex flex-col justify-between py-8 md:px-10 md:py-12`}>
-              <div className="hidden md:flex flex-1 items-center justify-center">
-                {seg.svg}
+            <div key={seg.tag} className={`${i < clientSegments.length - 1 ? "md:border-r" : ""} border-b border-white/[0.08] flex flex-col py-8 md:px-10 md:py-12`}>
+              <div className="h-[260px] pt-9 hidden md:block mb-8">
+                <TacticalEdge src={seg.img} alt={seg.tag} glow="green" width={900} height={450} className="w-full h-full" />
               </div>
               <div>
                 <div className="font-[var(--font-mono)] text-[10px] tracking-[0.25em] text-accent/50 border border-accent/20 px-2.5 py-1 inline-block mb-5">
