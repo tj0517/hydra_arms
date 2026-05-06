@@ -6,6 +6,7 @@ import ScrollRevealText from "@/components/ScrollRevealText";
 import ScrambleLink from "@/components/ScrambleLink";
 import SubpageHero from "@/components/SubpageHero";
 import TypewriterTitle from "@/components/TypewriterTitle";
+import TacticalEdge from "@/components/TacticalEdge";
 
 
 /* ──────────── DATA ──────────── */
