@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useCart } from './CartProvider';
 
 const fmt = (n: number) =>
@@ -8,6 +9,7 @@ const fmt = (n: number) =>
 
 export default function CartDrawer() {
   const { items, total, isOpen, closeCart, removeItem, updateQuantity, itemCount } = useCart();
+  const router = useRouter();
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? 'hidden' : '';
@@ -101,8 +103,9 @@ export default function CartDrawer() {
                           {quantity}
                         </span>
                         <button
-                          onClick={() => updateQuantity(product.id, quantity + 1)}
-                          className="w-7 h-7 border border-white/15 flex items-center justify-center text-text-dim hover:border-accent hover:text-accent transition-colors font-[var(--font-mono)] text-xs"
+                          onClick={() => updateQuantity(product.id, Math.min(quantity + 1, product.stock))}
+                          disabled={quantity >= product.stock}
+                          className="w-7 h-7 border border-white/15 flex items-center justify-center text-text-dim hover:border-accent hover:text-accent transition-colors font-[var(--font-mono)] text-xs disabled:opacity-30 disabled:cursor-not-allowed"
                         >+</button>
                         <span className="ml-3 font-[var(--font-mono)] text-xs text-text-dim">
                           = {fmt((product.price ?? 0) * quantity)} PLN
@@ -134,10 +137,10 @@ export default function CartDrawer() {
               Ceny brutto · dostawa liczona przy zamówieniu
             </div>
             <button
-              disabled
-              className="w-full py-3.5 border border-white/15 font-[var(--font-mono)] text-xs text-white/25 tracking-widest cursor-not-allowed"
+              onClick={() => { closeCart(); router.push('/sklep/zamowienie'); }}
+              className="w-full py-3.5 bg-accent text-black font-[var(--font-mono)] text-xs tracking-[0.2em] uppercase hover:bg-accent/90 transition-colors"
             >
-              [ KASA — W PRZYGOTOWANIU ]
+              PRZEJDŹ DO KASY
             </button>
           </div>
         )}

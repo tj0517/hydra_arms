@@ -29,8 +29,6 @@ export const distributionChannelsQuery = groq`*[_type == "distributionChannel"] 
 
 export const oNasPageQuery = groq`*[_type == "oNasPage"][0] {
   introText,
-  missionTitle,
-  missionDesc,
   missionItems[] {
     title,
     desc
