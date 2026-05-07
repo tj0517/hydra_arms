@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import DOMPurify from 'isomorphic-dompurify';
 import type { ShopProduct, ShopCategory } from '@/lib/supabase/types';
 import { useCart } from './CartProvider';
 import CartDrawer from './CartDrawer';
@@ -14,14 +15,15 @@ interface Props {
 const fmt = (n: number) =>
   new Intl.NumberFormat('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
 
-function decodeHtml(html: string): string {
-  return html
+function sanitizeHtml(html: string): string {
+  const decoded = html
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&amp;/g, '&')
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&nbsp;/g, '\u00a0');
+  return DOMPurify.sanitize(decoded, { ALLOWED_TAGS: ['p', 'br', 'b', 'strong', 'i', 'em', 'ul', 'ol', 'li', 'span', 'h2', 'h3', 'h4', 'table', 'tr', 'td', 'th', 'tbody', 'thead'] });
 }
 
 function CrosshairPlaceholder({ size = 64 }: { size?: number }) {
@@ -293,7 +295,7 @@ export default function ProductDetailClient({ product, categories }: Props) {
             </div>
             <div
               className="shop-description text-text-dim text-sm leading-relaxed max-w-3xl space-y-4"
-              dangerouslySetInnerHTML={{ __html: decodeHtml(product.description) }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(product.description) }}
             />
           </div>
         )}
