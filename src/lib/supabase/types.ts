@@ -1,4 +1,6 @@
 export type ProductType = 'standard' | 'age_restricted' | 'pickup_only';
+export type SourceWarehouse = 'H1' | 'H2' | 'own';
+export type FulfillmentRoute = 'direct_H1' | 'direct_H2' | 'consolidated';
 
 export interface Database {
   public: {
@@ -43,6 +45,7 @@ export interface Database {
           category_id: number | null;
           images: Record<string, string> | null;
           product_type: ProductType;
+          source_warehouse: SourceWarehouse | null;
           is_active: boolean;
           synced_at: string | null;
           updated_at: string;
@@ -62,6 +65,7 @@ export interface Database {
           category_id?: number | null;
           images?: Record<string, string> | null;
           product_type?: ProductType;
+          source_warehouse?: SourceWarehouse | null;
           is_active?: boolean;
           synced_at?: string | null;
           updated_at?: string;
@@ -81,6 +85,7 @@ export interface Database {
           category_id?: number | null;
           images?: Record<string, string> | null;
           product_type?: ProductType;
+          source_warehouse?: SourceWarehouse | null;
           is_active?: boolean;
           synced_at?: string | null;
           updated_at?: string;
@@ -153,6 +158,7 @@ export interface Database {
           status: string;
           shipping_address: Record<string, unknown> | null;
           total: number | null;
+          fulfillment_route: FulfillmentRoute | null;
           created_at: string;
           updated_at: string;
         };
@@ -164,6 +170,7 @@ export interface Database {
           status?: string;
           shipping_address?: Record<string, unknown> | null;
           total?: number | null;
+          fulfillment_route?: FulfillmentRoute | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -175,6 +182,7 @@ export interface Database {
           status?: string;
           shipping_address?: Record<string, unknown> | null;
           total?: number | null;
+          fulfillment_route?: FulfillmentRoute | null;
           created_at?: string;
           updated_at?: string;
         };

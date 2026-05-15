@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
 
 interface CheckoutItem {
   product_id: number
@@ -18,6 +19,7 @@ interface CheckoutBody {
     zip: string
   }
   idempotency_key?: string
+  fulfillment_route?: 'direct_H1' | 'direct_H2' | 'consolidated'
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -51,6 +53,10 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = createAdminClient()
+
+    // Get logged-in user if present
+    const serverClient = await createClient()
+    const { data: { user } } = await serverClient.auth.getUser()
 
     if (body.idempotency_key) {
       const { data: existing } = await supabase
@@ -123,9 +129,11 @@ export async function POST(req: NextRequest) {
       .from('orders')
       .insert({
         session_id: sessionId,
+        user_id: user?.id ?? null,
         status: 'paid',
         shipping_address: body.shipping,
         total: Math.round(total * 100) / 100,
+        fulfillment_route: body.fulfillment_route ?? 'consolidated',
       })
       .select('id')
       .single()

@@ -5,12 +5,13 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SplitText from "@/components/SplitText";
 import ScrollRevealText from "@/components/ScrollRevealText";
-import ScrambleLink from "@/components/ScrambleLink";
 import MilitaryMap from "@/components/MilitaryMap";
-import TacticalEdge from "@/components/TacticalEdge";
 import MapCrosshair from "@/components/MapCrosshair";
 import TypewriterTitle from "@/components/TypewriterTitle";
 import Image from "next/image";
+import CornerCTA from "@/components/ui/CornerCTA";
+import SectionLabel from "@/components/ui/SectionLabel";
+import ClientSegmentsGrid from "@/components/sections/ClientSegmentsGrid";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -82,6 +83,7 @@ const DEFAULT_HERO_TAGLINE1 = "Zaawansowana inżynieria obronna";
 const DEFAULT_HERO_TAGLINE2 = "Obrót nowoczesnym uzbrojeniem";
 const DEFAULT_HUD_LABEL = "// HYDRA ARMS - PL-2026";
 const DEFAULT_ABOUT_TEXT = "Realizujemy krytyczne projekty z zakresu wytwarzania uzbrojenia oraz technologii dual-use. Łączymy rygorystyczne standardy NATO z precyzją nowoczesnych technologii tworząc innowacje. Prowadzimy również działalność handlową na rynku cywilnym i specjalnym.";
+const DEFAULT_HERO_VIDEO = "/video/hero-overflow.mp4";
 
 interface HomePageClientProps {
   services?: Service[]
@@ -90,6 +92,7 @@ interface HomePageClientProps {
   heroTagline2?: string
   hudLabel?: string
   aboutText?: string
+  heroVideo?: string
 }
 
 /* ──────────── PAGE ──────────── */
@@ -101,6 +104,7 @@ export default function HomePageClient({
   heroTagline2 = DEFAULT_HERO_TAGLINE2,
   hudLabel = DEFAULT_HUD_LABEL,
   aboutText = DEFAULT_ABOUT_TEXT,
+  heroVideo = DEFAULT_HERO_VIDEO,
 }: HomePageClientProps = {}) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLElement>(null);
@@ -258,7 +262,7 @@ export default function HomePageClient({
             playsInline
             className="absolute inset-0 w-full h-full object-cover grayscale contrast-[1.15] brightness-[0.5] sepia-[0.08]"
           >
-            <source src="/video/hero-overflow.mp4" type="video/mp4" />
+            <source src={heroVideo} type="video/mp4" />
           </video>
         </div>
 
@@ -276,7 +280,7 @@ export default function HomePageClient({
             playsInline
             className="absolute inset-0 w-full h-full object-cover grayscale brightness-[0.55] contrast-[1.2]"
           >
-            <source src="/video/hero-overflow.mp4" type="video/mp4" />
+            <source src={heroVideo} type="video/mp4" />
           </video>
           {/* Green tint */}
           <div className="absolute inset-0 bg-[#13FF15]/30 mix-blend-screen pointer-events-none" />
@@ -373,24 +377,8 @@ export default function HomePageClient({
               </SplitText>
             </div>
             <div className="flex gap-6 mt-6 md:gap-12 md:mt-8 items-center">
-              <div className="relative px-6 py-1.5 inline-flex items-center w-fit">
-                <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
-                <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
-                <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
-                <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
-                <ScrambleLink href="/uslugi" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px] hover:text-white transition-colors duration-300">
-                  Nasze usługi
-                </ScrambleLink>
-              </div>
-              <div className="relative px-6 py-1.5 inline-flex items-center w-fit">
-                <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
-                <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
-                <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
-                <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
-                <ScrambleLink href="#" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px] hover:text-white transition-colors duration-300">
-                  Sklep
-                </ScrambleLink>
-              </div>
+              <CornerCTA href="/uslugi" label="Nasze usługi" linkClassName="hover:text-white transition-colors duration-300" />
+              <CornerCTA href="#" label="Sklep" linkClassName="hover:text-white transition-colors duration-300" />
             </div>
           </div>
         </div>
@@ -470,15 +458,7 @@ export default function HomePageClient({
                       ))}
                     </div>
 
-                    <div className="relative px-6 py-1.5 inline-flex items-center w-fit">
-                      <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
-                      <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
-                      <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
-                      <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
-                      <ScrambleLink href="/uslugi" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
-                        Szczegóły →
-                      </ScrambleLink>
-                    </div>
+                    <CornerCTA href="/uslugi" label="Szczegóły →" />
                   </div>
                 </div>
               </div>
@@ -489,11 +469,7 @@ export default function HomePageClient({
 
       {/* ─── DESCRIPTION SECTION ─── */}
       <section>
-        <div className="border-t border-white/[0.25] px-[clamp(32px,5vw,64px)] py-2">
-          <span className="font-[var(--font-mono)] text-[16px] font-medium text-accent tracking-[0.8px]">
-            //02 O NAS
-          </span>
-        </div>
+        <SectionLabel label="//02 O NAS" />
         <div className="pt-12 md:pt-20 pb-0 px-[clamp(32px,5vw,64px)]">
           <ScrollRevealText
             text={aboutText}
@@ -501,18 +477,7 @@ export default function HomePageClient({
             indent={2}
           />
           <div className="flex justify-end mt-8">
-            <div className="relative px-6 py-1.5 inline-flex items-center w-fit">
-              <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
-              <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
-              <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
-              <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
-              <ScrambleLink
-                href="/o-nas"
-                className="font-[var(--font-mono)] text-[14px] text-accent tracking-[1.12px] hover:text-white transition-colors duration-300"
-              >
-                Zobacz więcej
-              </ScrambleLink>
-            </div>
+            <CornerCTA href="/o-nas" label="Zobacz więcej" linkClassName="text-accent hover:text-white transition-colors duration-300" />
           </div>
         </div>
       </section>
@@ -564,11 +529,7 @@ export default function HomePageClient({
 
       {/* ─── POTENCJAŁ I OPOWIEDZIALNOŚĆ ─── */}
       <section>
-        <div className="border-t border-white/[0.25] px-[clamp(32px,5vw,64px)] py-2">
-          <span className="font-[var(--font-mono)] text-[16px] font-medium text-accent tracking-[0.8px]">
-            //03 POTENCJAŁ
-          </span>
-        </div>
+        <SectionLabel label="//03 POTENCJAŁ" />
         <div className="pt-12 md:pt-16 px-[clamp(32px,5vw,64px)]">
           <TypewriterTitle
             as="h2"
@@ -597,38 +558,9 @@ export default function HomePageClient({
       </section>
 
 {/* ─── 3 FILARY ─── */}
-      <section className="relative border-t border-white/[0.25]">
-        <div className="absolute top-0 left-[clamp(32px,5vw,64px)] py-2 pointer-events-none">
-          <span className="font-[var(--font-mono)] text-[16px] font-medium text-accent tracking-[0.8px]">
-            //04 DYSTRYBUCJA
-          </span>
-        </div>
-
-        <div className="mx-[clamp(32px,5vw,64px)] grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
-          {filary.map((f, i) => (
-            <div key={f.tag} className={`${i < filary.length - 1 ? "md:border-r" : ""} border-b border-white/[0.08] flex flex-col py-8 md:px-10 md:py-12`}>
-              <div className="h-[260px] pt-9 hidden md:block mb-8">
-                <TacticalEdge src={f.img} alt={f.tag} glow="green" width={900} height={450} className="w-full h-full" />
-              </div>
-              <div>
-                <div className="font-[var(--font-mono)] text-[10px] tracking-[0.25em] text-accent/50 border border-accent/20 px-2.5 py-1 inline-block mb-5">
-                  {f.tag}
-                </div>
-                <h3 className="text-[clamp(1.4rem,2vw,1.9rem)] font-normal text-text leading-[1.1] mb-4">{f.title}</h3>
-                <p className="font-[var(--font-mono)] text-[11px] tracking-[0.12em] uppercase text-text-dim leading-[1.9] mb-8 text-justify">{f.desc}</p>
-                <div className="relative px-6 py-1.5 inline-flex items-center w-fit">
-                  <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
-                  <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
-                  <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
-                  <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
-                  <ScrambleLink href={f.href} className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
-                    Dowiedz się więcej
-                  </ScrambleLink>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+      <section>
+        <SectionLabel label="//04 DYSTRYBUCJA" />
+        <ClientSegmentsGrid segments={filary} />
       </section>
 
       {/* ─── MAP SECTION ─── */}
@@ -660,20 +592,12 @@ export default function HomePageClient({
               </div>
 
               <div className="mt-8">
-                <div className="relative px-6 py-1.5 inline-flex items-center w-fit">
-                  <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
-                  <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
-                  <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
-                  <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
-                  <ScrambleLink
-                    href="https://maps.google.com/?q=50.06,19.94"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]"
-                  >
-                    Wyznacz Trasę →
-                  </ScrambleLink>
-                </div>
+                <CornerCTA
+                  href="https://maps.google.com/?q=50.06,19.94"
+                  label="Wyznacz Trasę →"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                />
               </div>
             </div>
           </div>

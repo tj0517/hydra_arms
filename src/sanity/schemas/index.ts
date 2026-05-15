@@ -6,6 +6,8 @@ import { oNasPage } from './oNasPage'
 import { uslugiPage } from './uslugiPage'
 import { wspolpracaPage } from './wspolpracaPage'
 import { navigation } from './navigation'
+import { newsPost } from './newsPost'
+import { blogPost } from './blogPost'
 
 export const schemaTypes = [
   siteSettings,
@@ -16,4 +18,6 @@ export const schemaTypes = [
   uslugiPage,
   wspolpracaPage,
   navigation,
+  newsPost,
+  blogPost,
 ]

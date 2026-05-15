@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCart } from './CartProvider'
 import Link from 'next/link'
+import { analyzeCart } from '@/lib/shop/cartAnalysis'
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
@@ -14,6 +15,7 @@ export default function CheckoutClient() {
   const { items, total, clearCart } = useCart()
   const router = useRouter()
   const [step, setStep] = useState<Step>('shipping')
+  const analysis = analyzeCart(items)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [idempotencyKey] = useState(() => crypto.randomUUID())
@@ -48,6 +50,7 @@ export default function CheckoutClient() {
           items: items.map(i => ({ product_id: i.product.id, quantity: i.quantity })),
           shipping: form,
           idempotency_key: idempotencyKey,
+          fulfillment_route: analysis.route,
         }),
       })
 
@@ -126,6 +129,14 @@ export default function CheckoutClient() {
             </div>
           </div>
         )}
+
+        <div className={`flex items-center gap-3 border px-4 py-3 mb-6 ${analysis.fast ? 'border-green-500/20 bg-green-500/5' : 'border-yellow-500/20 bg-yellow-500/5'}`}>
+          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${analysis.fast ? 'bg-green-400' : 'bg-yellow-400'}`} />
+          <div className="space-y-0.5">
+            <p className="font-[var(--font-mono)] text-[10px] text-white tracking-widest uppercase">{analysis.label}</p>
+            <p className="font-[var(--font-mono)] text-[9px] text-text-dim tracking-wider">{analysis.timing}</p>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-12">
           {/* Form */}

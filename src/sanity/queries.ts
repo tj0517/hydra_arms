@@ -24,11 +24,14 @@ export const distributionChannelsQuery = groq`*[_type == "distributionChannel"] 
   tag,
   title,
   desc,
+  image,
   order
 }`
 
 export const oNasPageQuery = groq`*[_type == "oNasPage"][0] {
   introText,
+  missionTitle,
+  missionDesc,
   missionItems[] {
     title,
     desc
@@ -96,5 +99,52 @@ export const navigationQuery = groq`*[_type == "navigation"][0] {
   links[] {
     href,
     label
+  }
+}`
+
+const postCardFields = `
+  _id,
+  title,
+  "slug": slug.current,
+  publishedAt,
+  coverImage,
+  excerpt,
+  tags,
+  featured
+`
+
+export const newsPostsQuery = groq`*[_type == "newsPost"] | order(publishedAt desc) {
+  ${postCardFields}
+}`
+
+export const blogPostsQuery = groq`*[_type == "blogPost"] | order(publishedAt desc) {
+  ${postCardFields}
+}`
+
+export const newsPostBySlugQuery = groq`*[_type == "newsPost" && slug.current == $slug][0] {
+  ${postCardFields},
+  body[] {
+    ...,
+    _type == "postImage" => {
+      ...,
+      image {
+        ...,
+        asset->
+      }
+    }
+  }
+}`
+
+export const blogPostBySlugQuery = groq`*[_type == "blogPost" && slug.current == $slug][0] {
+  ${postCardFields},
+  body[] {
+    ...,
+    _type == "postImage" => {
+      ...,
+      image {
+        ...,
+        asset->
+      }
+    }
   }
 }`

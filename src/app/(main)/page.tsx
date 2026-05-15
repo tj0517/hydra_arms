@@ -6,20 +6,20 @@ import { urlFor } from '@/sanity/image'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SanityImage = any
 
-const filaryImgMap: Record<string, string> = {
+const filaryImgFallback: Record<string, string> = {
   "B2G": "/img/tactical-gun-in-olive-glove-on-white-backdrop-2026-03-20-00-48-48-utc.jpg",
   "B2B": "/img/cnc-part.png",
   "B2C": "/img/high-powered-sporting-rifle-with-scope-and-bipod-2026-01-05-00-53-07-utc.jpg",
 }
 
 export default async function HomePage() {
-  let services, filary, heroData
+  let services, filary: ({ tag: string; title: string; desc: string; image?: SanityImage } | null)[] | null, heroData
 
   try {
     ;[services, filary, heroData] = await Promise.all([
       sanityFetch<{ id: string; label: string; title: string; desc: string; tags: string[]; image?: SanityImage; imagePath?: string }[]>({ query: servicesQuery }),
-      sanityFetch<{ tag: string; title: string; desc: string }[]>({ query: distributionChannelsQuery }),
-      sanityFetch<{ heroTagline1?: string; heroTagline2?: string; hudLabel?: string; aboutText?: string }>({ query: homePageQuery }),
+      sanityFetch<{ tag: string; title: string; desc: string; image?: SanityImage }[]>({ query: distributionChannelsQuery }),
+      sanityFetch<{ heroTagline1?: string; heroTagline2?: string; hudLabel?: string; aboutText?: string; heroVideo?: string }>({ query: homePageQuery }),
     ])
   } catch {
     services = null
@@ -37,8 +37,10 @@ export default async function HomePage() {
   })) ?? undefined
 
   const mappedFilary = filary?.map(f => ({
-    ...f,
-    img: filaryImgMap[f.tag] ?? "",
+    tag: f?.tag ?? '',
+    title: f?.title ?? '',
+    desc: f?.desc ?? '',
+    img: f?.image ? urlFor(f.image).width(800).url() : filaryImgFallback[f?.tag ?? ''] ?? '',
     href: "/wspolpraca",
   })) ?? undefined
 
@@ -50,6 +52,7 @@ export default async function HomePage() {
       heroTagline2={heroData?.heroTagline2}
       hudLabel={heroData?.hudLabel}
       aboutText={heroData?.aboutText}
+      heroVideo={heroData?.heroVideo}
     />
   )
 }

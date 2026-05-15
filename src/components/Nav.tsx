@@ -3,13 +3,16 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*!?";
 
-const links = [
+const DEFAULT_LINKS = [
   { href: "/", label: "Start" },
   { href: "/uslugi", label: "Usługi" },
   { href: "/o-nas", label: "O nas" },
+  { href: "/aktualnosci", label: "Aktualności" },
+  { href: "/blog", label: "Blog" },
   { href: "/sklep", label: "Sklep" },
   { href: "/wspolpraca", label: "Współpraca" },
   { href: "/kontakt", label: "Kontakt" },
@@ -104,11 +107,23 @@ function ScrambleButton({ href, label, disabled }: { href: string; label: string
   );
 }
 
-export default function Nav() {
+export default function Nav({ navLinks }: { navLinks?: { href: string; label: string }[] } = {}) {
+  const links = navLinks?.length ? navLinks : DEFAULT_LINKS;
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(false);
   const pathname = usePathname();
 
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setLoggedIn(!!session?.user);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      setLoggedIn(!!session?.user);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
@@ -139,6 +154,9 @@ export default function Nav() {
             {links.map((link) => (
               <ScrambleNavLink key={link.href} href={link.href} label={link.label} active={pathname === link.href} />
             ))}
+            <li>
+              <ScrambleButton href="/konto" label={loggedIn ? "Konto" : "Zaloguj"} />
+            </li>
           </ul>
 
           {/* Mobile burger */}
@@ -180,6 +198,12 @@ export default function Nav() {
               {link.label}
             </Link>
         ))}
+        <Link
+          href="/konto"
+          className="font-[var(--font-mono)] text-2xl uppercase tracking-[0.2em] text-text-dim hover:text-white transition-colors duration-300"
+        >
+          {loggedIn ? "Konto" : "Zaloguj"}
+        </Link>
       </div>
     </>
   );

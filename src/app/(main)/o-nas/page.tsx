@@ -5,6 +5,8 @@ import { oNasPageQuery } from '@/sanity/queries'
 export default async function ONasPage() {
   let data: {
     introText?: string
+    missionTitle?: string
+    missionDesc?: string
     missionItems?: { title: string; desc: string }[]
     certCards?: { tag: string; title: string; desc: string }[]
     fundamentyItems?: { title: string; desc: string }[]
@@ -19,6 +21,8 @@ export default async function ONasPage() {
   return (
     <ONasPageClient
       introText={data?.introText}
+      missionTitle={data?.missionTitle}
+      missionDesc={data?.missionDesc}
       missionItems={data?.missionItems}
       certCards={data?.certCards}
       fundamentyItems={data?.fundamentyItems}

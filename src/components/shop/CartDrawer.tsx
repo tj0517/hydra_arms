@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCart } from './CartProvider';
+import { analyzeCart } from '@/lib/shop/cartAnalysis';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
@@ -129,6 +130,20 @@ export default function CartDrawer() {
         {/* Footer */}
         {items.length > 0 && (
           <div className="border-t border-white/10 px-6 py-5 space-y-4">
+            {(() => {
+              const analysis = analyzeCart(items);
+              return (
+                <div className="flex items-center gap-2 py-1 border-b border-white/5 mb-1">
+                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${analysis.fast ? 'bg-green-400' : 'bg-yellow-400'}`} />
+                  <span className="font-[var(--font-mono)] text-[9px] text-text-dim tracking-[0.15em] uppercase flex-1">
+                    {analysis.label}
+                  </span>
+                  <span className={`font-[var(--font-mono)] text-[9px] tracking-[0.15em] uppercase ${analysis.fast ? 'text-green-400' : 'text-yellow-400'}`}>
+                    {analysis.timing}
+                  </span>
+                </div>
+              );
+            })()}
             <div className="flex justify-between items-center py-1">
               <span className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-[0.2em] uppercase">Suma</span>
               <span className="font-[var(--font-mono)] text-xl text-accent">{fmt(total)} PLN</span>

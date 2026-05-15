@@ -2,16 +2,16 @@
 
 import { useState } from "react";
 import AnimateIn from "@/components/AnimateIn";
-import ScrollRevealText from "@/components/ScrollRevealText";
-import ScrambleLink from "@/components/ScrambleLink";
 import TypewriterTitle from "@/components/TypewriterTitle";
 import DrawReveal from "@/components/DrawReveal";
 import AsciiHelicopter from "@/components/AsciiHelicopter";
-
-import DrawCard from "@/components/DrawCard";
 import SubpageHero from "@/components/SubpageHero";
 import TacticalReadout from "@/components/TacticalReadout";
-import TacticalEdge from "@/components/TacticalEdge";
+
+import CornerCTA from "@/components/ui/CornerCTA";
+import SectionLabel from "@/components/ui/SectionLabel";
+import IntroBlock from "@/components/sections/IntroBlock";
+import ClientSegmentsGrid, { CLIENT_SEGMENTS } from "@/components/sections/ClientSegmentsGrid";
 
 
 /* ──────────── DEFAULTS ──────────── */
@@ -60,41 +60,24 @@ const DEFAULT_FUNDAMENTY_ITEMS = [
 
 const DEFAULT_INTRO_TEXT = "Powstaliśmy z połączenia ekspertów zaawansowanej inżynierii i sektora strzelecko-obronnego. Ta synergia pozwala nam wytwarzać uzbrojenie, które odpowiada na realne potrzeby użytkownika.";
 
+const DEFAULT_MISSION_TITLE = "Nasza misja, Innowacja i rzetelność";
+const DEFAULT_MISSION_DESC = "Działamy w oparciu o własną infrastrukturę technologiczną w Krakowie, co pozwala na sprawne zarządzanie kluczowymi procesami produkcyjnymi oraz logistyką obrotu specjalnego.";
+
 interface ONasPageClientProps {
   introText?: string
+  missionTitle?: string
+  missionDesc?: string
   missionItems?: typeof DEFAULT_MISSION_ITEMS
   certCards?: typeof DEFAULT_CERT_CARDS
   fundamentyItems?: typeof DEFAULT_FUNDAMENTY_ITEMS
 }
 
-const clientSegments = [
-  {
-    tag: "Wojsko",
-    title: "Siły Zbrojne",
-    desc: "Dostarczamy uzbrojenie i wyposażenie spełniające najwyższe standardy wojskowe, testowane w warunkach operacyjnych.",
-    href: "/wspolpraca",
-    img: "/img/army-ranger-in-field-uniforms-2026-03-18-17-39-05-utc.jpg",
-  },
-  {
-    tag: "Formacje",
-    title: "Służby mundurowe",
-    desc: "Współpracujemy z policją, strażą graniczną i innymi formacjami mundurowymi, oferując dedykowane rozwiązania.",
-    href: "/wspolpraca",
-    img: "/img/tactical-gun-in-olive-glove-on-white-backdrop-2026-03-20-00-48-48-utc.jpg",
-  },
-  {
-    tag: "B2B",
-    title: "Przemysł B2B",
-    desc: "Realizujemy zlecenia dla partnerów przemysłowych — od prototypowania po produkcję seryjną komponentów obronnych.",
-    href: "/wspolpraca",
-    img: "/img/cnc-part.png",
-  },
-];
-
 /* ──────────── PAGE ──────────── */
 
 export default function ONasPageClient({
   introText = DEFAULT_INTRO_TEXT,
+  missionTitle = DEFAULT_MISSION_TITLE,
+  missionDesc = DEFAULT_MISSION_DESC,
   missionItems = DEFAULT_MISSION_ITEMS,
   certCards = DEFAULT_CERT_CARDS,
   fundamentyItems = DEFAULT_FUNDAMENTY_ITEMS,
@@ -107,24 +90,12 @@ export default function ONasPageClient({
       <SubpageHero subtitle="HYDRA ARMS / O nas" title="O nas" video="/video/hero-onas.mp4" />
 
       {/* ─── INTRO DESCRIPTION ─── */}
-      <section className="py-20 md:py-32 px-[clamp(32px,5vw,64px)] border-b border-white/10">
-        <ScrollRevealText
-          text={introText}
-          className="text-[1.4rem] md:text-[3.2vw] font-medium text-text-dim leading-[1.3] md:leading-[1.1] tracking-[-0.48px] text-justify"
-          indent={2}
-        />
-        <div className="flex justify-end mt-11">
-          <div className="relative px-6 py-1.5 inline-flex items-center w-fit">
-            <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
-            <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
-            <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
-            <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
-            <ScrambleLink href="/wspolpraca" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
-              Rozpocznij współpracę
-            </ScrambleLink>
-          </div>
-        </div>
-      </section>
+      <IntroBlock
+        text={introText}
+        ctaHref="/wspolpraca"
+        ctaLabel="Rozpocznij współpracę"
+        borderBottom
+      />
 
       {/* ─── MISSION SECTION ─── */}
       <section className="grid grid-cols-1 md:grid-cols-2">
@@ -135,7 +106,7 @@ export default function ONasPageClient({
             className="text-[clamp(1.5rem,3.17vw,48px)] font-normal text-white leading-[1.15] md:leading-[53px] tracking-[-0.48px]"
             speed={45}
           >
-            Nasza misja, Innowacja i rzetelność
+            {missionTitle}
           </TypewriterTitle>
           <div className="mt-6 md:mt-auto flex-1 flex items-end">
             <TacticalReadout />
@@ -161,27 +132,15 @@ export default function ONasPageClient({
       <AsciiHelicopter />
 
       {/* ─── SECOND DESCRIPTION ─── */}
-      <section>
-        <div className="py-16 px-[clamp(32px,5vw,64px)]">
-          <ScrollRevealText
-            text="Działamy w oparciu o własną infrastrukturę technologiczną w Krakowie, co pozwala na sprawne zarządzanie kluczowymi procesami produkcyjnymi oraz logistyką obrotu specjalnego."
-            className="text-[1.4rem] md:text-[3.2vw] font-medium text-text-dim leading-[1.3] md:leading-[1.1] tracking-[-0.48px] text-justify"
-            indent={2}
-          />
-          <div className="flex justify-end mt-11">
-            <div className="relative px-6 py-1.5 inline-flex items-center w-fit">
-              <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
-              <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
-              <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
-              <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
-              <ScrambleLink href="/wspolpraca" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
-                Rozpocznij współpracę
-              </ScrambleLink>
-            </div>
-          </div>
-        </div>
+      <IntroBlock
+        text={missionDesc}
+        ctaHref="/wspolpraca"
+        ctaLabel="Rozpocznij współpracę"
+        py="py-16"
+      />
 
-        {/* ─── CERTIFICATION CARDS ─── */}
+      {/* ─── CERTIFICATION CARDS ─── */}
+      <section>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 border-t border-white/5 px-[clamp(32px,5vw,64px)]">
           {certCards.map((card, i) => (
             <AnimateIn key={i} delay={i * 0.25} y={20}>
@@ -203,15 +162,7 @@ export default function ONasPageClient({
                     {card.desc}
                   </p>
                 </div>
-                <div className="relative px-6 py-1.5 inline-flex items-center w-fit mt-auto">
-                  <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
-                  <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
-                  <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
-                  <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
-                  <ScrambleLink href="#" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
-                    Więcej
-                  </ScrambleLink>
-                </div>
+                <CornerCTA href="#" label="Więcej" className="mt-auto" />
               </div>
             </AnimateIn>
           ))}
@@ -220,13 +171,7 @@ export default function ONasPageClient({
 
       {/* ─── DLA KOGO PRACUJEMY ─── */}
       <section className="relative border-b border-white/10">
-        <div className="border-t border-white/[0.25]" />
-
-        <div className="absolute top-0 left-0 px-[clamp(32px,5vw,64px)] py-2 z-10 pointer-events-none">
-          <span className="font-[var(--font-mono)] text-[16px] font-medium text-accent tracking-[0.8px]">
-            //04 KLIENCI
-          </span>
-        </div>
+        <SectionLabel label="//04 KLIENCI" />
 
         <div className="px-[clamp(32px,5vw,64px)] pt-16 pb-10">
           <TypewriterTitle
@@ -243,35 +188,7 @@ export default function ONasPageClient({
           </p>
         </div>
 
-        <div className="mx-[clamp(32px,5vw,64px)] grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 border-t border-white/[0.08]">
-          {clientSegments.map((seg, i) => (
-            <div key={seg.tag} className={`${i < clientSegments.length - 1 ? "md:border-r" : ""} border-b border-white/[0.08] flex flex-col py-8 md:px-10 md:py-12`}>
-              <div className="h-[260px] hidden md:block mb-8">
-                <TacticalEdge src={seg.img} alt={seg.title} glow="green" width={900} height={450} className="w-full h-full" />
-              </div>
-              <div>
-                <div className="font-[var(--font-mono)] text-[10px] tracking-[0.25em] text-accent/50 border border-accent/20 px-2.5 py-1 inline-block mb-5">
-                  {seg.tag}
-                </div>
-                <h3 className="text-[clamp(1.4rem,2vw,1.9rem)] font-normal text-text leading-[1.1] mb-4">
-                  {seg.title}
-                </h3>
-                <p className="font-[var(--font-mono)] text-[11px] tracking-[0.12em] uppercase text-text-dim leading-[1.9] mb-8 text-justify">
-                  {seg.desc}
-                </p>
-                <div className="relative px-6 py-1.5 inline-flex items-center w-fit">
-                  <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
-                  <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
-                  <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
-                  <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
-                  <ScrambleLink href={seg.href} className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
-                    Dowiedz się więcej
-                  </ScrambleLink>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        <ClientSegmentsGrid segments={CLIENT_SEGMENTS} topBorder />
       </section>
 
       {/* ─── FUNDAMENTY NASZEJ DZIAŁALNOŚCI ─── */}
@@ -286,15 +203,7 @@ export default function ONasPageClient({
             Fundamenty naszej działalności
           </TypewriterTitle>
           <div className="mt-auto">
-            <div className="relative px-6 py-1.5 inline-flex items-center w-fit">
-              <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
-              <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
-              <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
-              <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
-              <ScrambleLink href="/wspolpraca" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
-                Rozpocznij współpracę
-              </ScrambleLink>
-            </div>
+            <CornerCTA href="/wspolpraca" label="Rozpocznij współpracę" />
           </div>
         </div>
 

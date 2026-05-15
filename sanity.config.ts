@@ -4,6 +4,7 @@ import { visionTool } from '@sanity/vision'
 import { schemaTypes } from './src/sanity/schemas'
 
 const SINGLETONS = ['homePage', 'oNasPage', 'uslugiPage', 'wspolpracaPage', 'siteSettings', 'navigation']
+const POST_TYPES = ['newsPost', 'blogPost']
 
 export default defineConfig({
   name: 'default',
@@ -45,8 +46,16 @@ export default defineConfig({
               .id('wspolpracaPage')
               .child(S.document().schemaType('wspolpracaPage').documentId('wspolpracaPage')),
             S.divider(),
+            S.listItem().title('Aktualności').id('newsPost')
+              .child(S.documentTypeList('newsPost').title('Aktualności')),
+            S.listItem().title('Blog').id('blogPost')
+              .child(S.documentTypeList('blogPost').title('Blog')),
+            S.divider(),
             ...S.documentTypeListItems().filter(
-              (item) => item.getId() && !SINGLETONS.includes(item.getId()!)
+              (item) =>
+                item.getId() &&
+                !SINGLETONS.includes(item.getId()!) &&
+                !POST_TYPES.includes(item.getId()!)
             ),
           ]),
     }),

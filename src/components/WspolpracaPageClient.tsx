@@ -3,13 +3,13 @@
 import { useRef, useEffect, useState } from "react";
 import gsap from "gsap";
 import AnimateIn from "@/components/AnimateIn";
-import ScrollRevealText from "@/components/ScrollRevealText";
-import ScrambleLink from "@/components/ScrambleLink";
 import TypewriterTitle from "@/components/TypewriterTitle";
 import DrawReveal from "@/components/DrawReveal";
 import MissionBriefing from "@/components/MissionBriefing";
 import SubpageHero from "@/components/SubpageHero";
 import TacticalGrid from "@/components/TacticalGrid";
+import CornerCTA from "@/components/ui/CornerCTA";
+import IntroBlock from "@/components/sections/IntroBlock";
 
 /* ──────────── DEFAULTS ──────────── */
 
@@ -106,24 +106,11 @@ export default function WspolpracaPageClient({
       <SubpageHero subtitle="HYDRA ARMS / Współpraca" title="Współpraca" video="/video/hero-wspolpraca.mp4" />
 
       {/* ─── INTRO SECTION ─── */}
-      <section className="py-20 md:py-32 px-[clamp(32px,5vw,64px)]">
-        <ScrollRevealText
-          text={introText}
-          className="text-[1.4rem] md:text-[3.2vw] font-medium text-text-dim leading-[1.3] md:leading-[1.1] tracking-[-0.48px] text-justify"
-          indent={2}
-        />
-        <div className="flex justify-end mt-11">
-          <div className="relative px-6 py-1.5 inline-flex items-center w-fit">
-            <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
-            <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
-            <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
-            <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
-            <ScrambleLink href="#" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
-              Rozpocznij współpracę
-            </ScrambleLink>
-          </div>
-        </div>
-      </section>
+      <IntroBlock
+        text={introText}
+        ctaHref="#"
+        ctaLabel="Rozpocznij współpracę"
+      />
 
       {/* ─── FUNDAMENTY SECTION ─── */}
       <section className="border-t border-white/5">
@@ -220,24 +207,12 @@ export default function WspolpracaPageClient({
       </div>
 
       {/* ─── SECOND DESCRIPTION ─── */}
-      <section className="py-16 md:py-28 px-[clamp(32px,5vw,64px)]">
-        <ScrollRevealText
-          text={secondText}
-          className="text-[1.4rem] md:text-[3.2vw] font-medium text-text-dim leading-[1.3] md:leading-[1.1] tracking-[-0.48px] text-justify"
-          indent={2}
-        />
-        <div className="flex justify-end mt-11">
-          <div className="relative px-6 py-1.5 inline-flex items-center w-fit">
-            <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
-            <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
-            <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
-            <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
-            <ScrambleLink href="#" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
-              Rozpocznij współpracę
-            </ScrambleLink>
-          </div>
-        </div>
-      </section>
+      <IntroBlock
+        text={secondText}
+        ctaHref="#"
+        ctaLabel="Rozpocznij współpracę"
+        py="py-16 md:py-28"
+      />
 
       {/* ─── PARTNERSTWA STRATEGICZNE ─── */}
       <section className="border-t border-b border-white/5">
@@ -329,15 +304,7 @@ export default function WspolpracaPageClient({
             </p>
 
             <div className="flex justify-end mt-8 md:mt-16">
-              <div className="relative px-6 py-1.5 inline-flex items-center w-fit">
-                <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
-                <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
-                <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
-                <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
-                <ScrambleLink href="#" className="font-[var(--font-mono)] text-[14px] tracking-[1.12px]">
-                  Napisz do nas
-                </ScrambleLink>
-              </div>
+              <CornerCTA href="#" label="Napisz do nas" />
             </div>
           </div>
         </div>
@@ -346,10 +313,10 @@ export default function WspolpracaPageClient({
       {/* ─── ETHICS SECTION ─── */}
       <section className="grid grid-cols-1 md:grid-cols-2">
         {/* Left */}
-        <div className="px-[clamp(32px,5vw,64px)] pt-9 pb-8 md:pb-16 flex flex-col h-full border-b md:border-b-0">
+        <div className="px-[clamp(32px,5vw,64px)] pt-20 pb-8 md:pb-16 flex flex-col h-full border-b md:border-b-0">
           <TypewriterTitle
             as="h2"
-            className="text-text text-[clamp(1.25rem,3vw,28px)] font-medium leading-[1.2]"
+            className="text-[clamp(1.5rem,3.17vw,48px)] font-normal text-white leading-[1.15] md:leading-[53px] tracking-[-0.48px]"
             speed={45}
           >
             Kodeks etyki w partnerstwie strategicznym

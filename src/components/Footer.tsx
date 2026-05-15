@@ -3,7 +3,7 @@
 import { useRef, useEffect, useState } from "react";
 import Link from "next/link";
 
-const navLinks = [
+const DEFAULT_NAV_LINKS = [
   { href: "/", label: "Start" },
   { href: "/uslugi", label: "Usługi" },
   { href: "/o-nas", label: "O nas" },
@@ -12,7 +12,31 @@ const navLinks = [
   { href: "/kontakt", label: "Kontakt" },
 ];
 
-export default function Footer() {
+type SiteSettings = {
+  companyName?: string;
+  nip?: string;
+  regon?: string;
+  koncesja?: string;
+  facebookUrl?: string;
+  instagramUrl?: string;
+  emailBiuro?: string;
+} | null;
+
+export default function Footer({
+  navLinks,
+  siteSettings,
+}: {
+  navLinks?: { href: string; label: string }[];
+  siteSettings?: SiteSettings;
+} = {}) {
+  const links = navLinks?.length ? navLinks : DEFAULT_NAV_LINKS;
+  const company = siteSettings?.companyName ?? "HYDRA ARMS SP. Z O.O.";
+  const nip = siteSettings?.nip ?? "000000000";
+  const regon = siteSettings?.regon ?? "00000000";
+  const koncesja = siteSettings?.koncesja ?? "B-000/00";
+  const fbUrl = siteSettings?.facebookUrl ?? "#!";
+  const igUrl = siteSettings?.instagramUrl ?? "#!";
+  const emailBiuro = siteSettings?.emailBiuro ?? "kontakt@hydraarms.pl";
   const footerRef = useRef<HTMLElement>(null);
   const [visible, setVisible] = useState(false);
 
@@ -55,7 +79,7 @@ export default function Footer() {
         }}
       />
 
-      <div className="relative max-w-[1400px] mx-auto px-8 md:px-16 py-16 md:py-24">
+      <div className="relative px-[clamp(32px,5vw,64px)] py-16 md:py-24">
         <div className="flex flex-col md:flex-row md:justify-between gap-8 md:gap-8">
           {/* Company info */}
           <div
@@ -67,10 +91,10 @@ export default function Footer() {
               HYDRA<span className="text-accent footer-dot-pulse">.</span>ARMS
             </div>
             <div className="font-[var(--font-mono)] text-sm text-text-dim leading-relaxed space-y-1">
-              <p>HYDRA ARMS SP. Z O.O.</p>
-              <p>NIP: [ 000000000 ]</p>
-              <p>REGON: [ 00000000 ]</p>
-              <p>KONCESJA MSWiA NR: [ B-000/00 ]</p>
+              <p>{company}</p>
+              <p>NIP: [ {nip} ]</p>
+              <p>REGON: [ {regon} ]</p>
+              <p>KONCESJA MSWiA NR: [ {koncesja} ]</p>
             </div>
           </div>
 
@@ -85,7 +109,7 @@ export default function Footer() {
               Nawigacja
             </h4>
             <ul className="space-y-1.5">
-              {navLinks.map((link, i) => (
+              {links.map((link, i) => (
                 <li
                   key={link.href}
                   className="transition-all duration-500"
@@ -115,7 +139,7 @@ export default function Footer() {
             <div className="flex gap-4 mb-6 md:justify-end">
               {/* Social icons */}
               <a
-                href="#!"
+                href={fbUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group w-10 h-10 border border-white/10 flex items-center justify-center text-text-dim hover:text-accent hover:border-accent/30 transition-all duration-300 cursor-pointer relative overflow-hidden"
@@ -127,7 +151,7 @@ export default function Footer() {
                 </svg>
               </a>
               <a
-                href="#!"
+                href={igUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group w-10 h-10 border border-white/10 flex items-center justify-center text-text-dim hover:text-accent hover:border-accent/30 transition-all duration-300 cursor-pointer relative overflow-hidden"
@@ -139,7 +163,7 @@ export default function Footer() {
                 </svg>
               </a>
               <a
-                href="mailto:kontakt@hydraarms.pl"
+                href={`mailto:${emailBiuro}`}
                 className="group w-10 h-10 border border-white/10 flex items-center justify-center text-text-dim hover:text-accent hover:border-accent/30 transition-all duration-300 cursor-pointer relative overflow-hidden"
                 aria-label="Email"
               >
@@ -157,7 +181,7 @@ export default function Footer() {
 
       {/* Bottom bar */}
       <div className="relative border-t border-white/5">
-        <div className="max-w-[1400px] mx-auto px-8 md:px-16 py-5 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="px-[clamp(32px,5vw,64px)] py-5 flex flex-col md:flex-row justify-between items-center gap-4">
           <Link href="/polityka-prywatnosci" className="font-[var(--font-mono)] text-xs text-text-dim hover:text-accent transition-colors duration-300 uppercase tracking-[0.15em]">
             [ Polityka prywatności ]
           </Link>

@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
       totalSynced += rows.length;
     }
 
-    log.push(`products: ${totalSynced} upserted (product_type preserved)`);
+    log.push(`products: ${totalSynced} upserted (product_type, source_warehouse preserved)`);
 
     return NextResponse.json({ ok: true, log });
   } catch (err) {
