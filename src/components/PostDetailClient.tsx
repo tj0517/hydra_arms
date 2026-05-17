@@ -3,6 +3,7 @@
 import Link from "next/link";
 import SubpageHero from "./SubpageHero";
 import PostBodyRenderer from "./PostBodyRenderer";
+import PostCard, { type PostCardData } from "./PostCard";
 
 export interface PostDetailData {
   _id: string;
@@ -22,9 +23,10 @@ interface Props {
   backHref: string;
   backLabel: string;
   video: string;
+  otherPosts?: PostCardData[];
 }
 
-export default function PostDetailClient({ post, backHref, backLabel, video }: Props) {
+export default function PostDetailClient({ post, backHref, backLabel, video, otherPosts }: Props) {
   const date = post.publishedAt
     ? new Date(post.publishedAt).toLocaleDateString("pl-PL", {
         year: "numeric",
@@ -80,6 +82,20 @@ export default function PostDetailClient({ post, backHref, backLabel, video }: P
           )}
         </div>
       </div>
+
+      {/* Other posts */}
+      {otherPosts && otherPosts.length > 0 && (
+        <section className="border-t border-white/10 px-[clamp(32px,5vw,64px)] pb-24 pt-12">
+          <p className="font-[var(--font-mono)] text-[10px] uppercase tracking-widest text-accent mb-6">
+            Inne {backLabel.toLowerCase()}
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px">
+            {otherPosts.map((p) => (
+              <PostCard key={p._id} post={p} />
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }

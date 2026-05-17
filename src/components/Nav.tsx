@@ -249,7 +249,7 @@ export default function Nav({ navLinks }: { navLinks?: { href: string; label: st
             : "py-6 bg-gradient-to-b from-bg/70 to-transparent"
         }`}
       >
-        <div className="max-w-[1400px] mx-auto px-8 md:px-16 flex justify-between items-center">
+        <div className="px-[clamp(32px,5vw,64px)] flex justify-between items-center">
           <span className="font-[var(--font-mono)] text-xl font-bold text-white tracking-[0.15em] z-[101]">
             HYDRA<span className="text-accent">.</span>ARMS
           </span>

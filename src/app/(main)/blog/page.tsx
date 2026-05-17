@@ -12,8 +12,16 @@ interface RawPost {
   publishedAt?: string
   coverImage?: object
   excerpt?: string
+  bodyExcerpt?: string
   tags?: string[]
   featured?: boolean
+}
+
+function resolveExcerpt(excerpt?: string, bodyExcerpt?: string): string | undefined {
+  if (excerpt) return excerpt
+  if (!bodyExcerpt) return undefined
+  const words = bodyExcerpt.trim().split(/\s+/)
+  return words.length > 30 ? words.slice(0, 30).join(' ') + '…' : bodyExcerpt.trim()
 }
 
 export default async function BlogPage() {
@@ -24,6 +32,7 @@ export default async function BlogPage() {
     posts = (raw ?? []).map((p) => ({
       ...p,
       coverImage: p.coverImage ? urlFor(p.coverImage).width(600).height(400).url() : undefined,
+      excerpt: resolveExcerpt(p.excerpt, p.bodyExcerpt),
       href: `/blog/${p.slug}`,
     }))
   } catch {

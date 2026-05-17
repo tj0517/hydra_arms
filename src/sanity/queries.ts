@@ -109,6 +109,7 @@ const postCardFields = `
   publishedAt,
   coverImage,
   excerpt,
+  "bodyExcerpt": pt::text(body[0..2]),
   tags,
   featured
 `
@@ -133,6 +134,18 @@ export const newsPostBySlugQuery = groq`*[_type == "newsPost" && slug.current ==
       }
     }
   }
+}`
+
+export const otherNewsPostsQuery = groq`*[_type == "newsPost" && slug.current != $slug] | order(publishedAt desc)[0..2] {
+  _id,
+  title,
+  "slug": slug.current,
+  publishedAt,
+  coverImage,
+  excerpt,
+  "bodyExcerpt": pt::text(body[0..2]),
+  tags,
+  featured
 }`
 
 export const blogPostBySlugQuery = groq`*[_type == "blogPost" && slug.current == $slug][0] {

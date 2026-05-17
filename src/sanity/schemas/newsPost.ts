@@ -28,9 +28,10 @@ export const newsPost = defineType({
     }),
     defineField({
       name: 'excerpt',
-      title: 'Zajawka',
+      title: 'Lead',
       type: 'text',
       rows: 3,
+      description: 'Jeśli puste, zajawka zostanie automatycznie pobrana z początku treści.',
       validation: (r) => r.max(300),
     }),
     defineField({
