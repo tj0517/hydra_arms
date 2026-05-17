@@ -60,21 +60,21 @@ const DEFAULT_FILARY: Filar[] = [
     tag: "B2G",
     title: "Zamówienia rządowe",
     desc: "Dostawy dla jednostek wojskowych, służb mundurowych i instytucji państwowych realizowane w ramach ścisłych procedur bezpieczeństwa i zamówień publicznych.",
-    img: "/img/tactical-gun-in-olive-glove-on-white-backdrop-2026-03-20-00-48-48-utc.jpg",
+    img: "/img/vest-blueprint.png",
     href: "/wspolpraca",
   },
   {
     tag: "B2B",
     title: "Kooperacja przemysłowa",
     desc: "Współpraca z partnerami przemysłowymi w zakresie prototypowania, produkcji seryjnej komponentów i integracji systemów obronnych na zamówienie.",
-    img: "/img/cnc-part.png",
+    img: "/img/cnc-drill-blueprint.png",
     href: "/wspolpraca",
   },
   {
     tag: "B2C",
     title: "Rynek cywilny",
     desc: "Dystrybucja profesjonalnych systemów broni strzeleckiej i amunicji dla uprawnionych odbiorców indywidualnych zgodnie z obowiązującymi regulacjami.",
-    img: "/img/high-powered-sporting-rifle-with-scope-and-bipod-2026-01-05-00-53-07-utc.jpg",
+    img: "/img/scope-blueprint.png",
     href: "/wspolpraca",
   },
 ];
@@ -560,7 +560,7 @@ export default function HomePageClient({
 {/* ─── 3 FILARY ─── */}
       <section>
         <SectionLabel label="//04 DYSTRYBUCJA" />
-        <ClientSegmentsGrid segments={filary} />
+        <ClientSegmentsGrid segments={filary} plain />
       </section>
 
       {/* ─── MAP SECTION ─── */}

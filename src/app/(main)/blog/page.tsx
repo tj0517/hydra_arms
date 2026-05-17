@@ -4,7 +4,6 @@ import { sanityFetch } from '@/sanity/client'
 import { blogPostsQuery } from '@/sanity/queries'
 import { urlFor } from '@/sanity/image'
 import type { PostCardData } from '@/components/PostCard'
-import { MOCK_BLOG } from '@/lib/mockPosts'
 
 interface RawPost {
   _id: string
@@ -36,9 +35,9 @@ export default async function BlogPage() {
       <SubpageHero
         subtitle="HYDRA ARMS / Blog"
         title="Blog"
-        video="/video/dark-terrain.mp4"
+        video="/video/aerial-view.mp4"
       />
-      <PostListClient posts={posts.length > 0 ? posts : MOCK_BLOG} />
+      <PostListClient posts={posts} />
     </main>
   )
 }

@@ -179,7 +179,7 @@ export default function UslugiPageClient({
             playsInline
             className="absolute inset-0 w-full h-full object-cover grayscale brightness-[0.35] contrast-[1.1] sepia-[0.15]"
           >
-            <source src="/video/dark-terrain.mp4" type="video/mp4" />
+            <source src="/video/aerial-view.mp4" type="video/mp4" />
           </video>
           <div className="absolute inset-0 bg-[#0a1a0a]/40 mix-blend-multiply z-[1]" />
           <div className="moving-grain !opacity-[0.08] z-[1]" />
@@ -226,7 +226,7 @@ export default function UslugiPageClient({
           </div>
         </div>
 
-        <ClientSegmentsGrid segments={CLIENT_SEGMENTS} topBorder />
+        <ClientSegmentsGrid segments={CLIENT_SEGMENTS} topBorder plain />
       </section>
 
       {/* ─── WSPÓŁPRACA CTA ─── */}

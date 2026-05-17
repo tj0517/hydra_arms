@@ -30,10 +30,16 @@ body {
   color: var(--color-text);
   font-family: var(--font-main);
   overflow-x: hidden;
+}
+
+body:not(:has([data-studio])) {
   cursor: none;
 }
 
-a, button, [role="button"], input[type="submit"] {
+body:not(:has([data-studio])) a,
+body:not(:has([data-studio])) button,
+body:not(:has([data-studio])) [role="button"],
+body:not(:has([data-studio])) input[type="submit"] {
   cursor: none;
 }
 

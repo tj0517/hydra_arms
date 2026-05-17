@@ -46,10 +46,8 @@ export default function PostDetailClient({ post, backHref, backLabel, video }: P
         video={video}
       />
 
-      {/* Content */}
-      <div className="px-[clamp(32px,5vw,64px)] pb-24">
-        {/* Tags + back link row */}
-        <div className="flex flex-wrap items-center gap-3 pt-8 pb-6 border-b border-white/10 mb-8">
+      {/* Tags + back link row */}
+      <div className="flex flex-wrap items-center gap-3 pt-8 pb-6 border-b border-white/10 px-[clamp(32px,5vw,64px)]">
           <Link
             href={backHref}
             className="font-[var(--font-mono)] text-[10px] uppercase tracking-widest text-text-dim hover:text-accent transition-colors"
@@ -68,9 +66,10 @@ export default function PostDetailClient({ post, backHref, backLabel, video }: P
               ))}
             </div>
           )}
-        </div>
+      </div>
 
-        {/* Portable Text body */}
+      {/* Content */}
+      <div className="px-[clamp(32px,5vw,64px)] pb-24 pt-8">
         <div className="max-w-[720px] mx-auto">
           {post.body && post.body.length > 0 ? (
             <PostBodyRenderer body={post.body} />

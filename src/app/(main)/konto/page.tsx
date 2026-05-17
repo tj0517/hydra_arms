@@ -55,7 +55,7 @@ export default async function KontoPage() {
         </div>
 
         {/* Quick tiles */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-white/5 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-white/5 mb-12">
           <Link
             href="/sklep"
             className="bg-bg-card px-6 py-5 group hover:bg-white/[0.03] transition-colors"
@@ -63,17 +63,39 @@ export default async function KontoPage() {
             <p className="font-[var(--font-mono)] text-[10px] text-accent tracking-[0.25em] mb-1">SKLEP</p>
             <p className="text-sm text-text-dim group-hover:text-white transition-colors">Kontynuuj zakupy</p>
           </Link>
-          <div className="bg-bg-card px-6 py-5">
-            <p className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-[0.25em] mb-1">PROFIL</p>
-            <p className="text-sm text-text-dim/50">Wkrótce dostępne</p>
-          </div>
+          <Link
+            href="/konto/zamowienia"
+            className="bg-bg-card px-6 py-5 group hover:bg-white/[0.03] transition-colors"
+          >
+            <p className="font-[var(--font-mono)] text-[10px] text-accent tracking-[0.25em] mb-1">ZAMÓWIENIA</p>
+            <p className="text-sm text-text-dim group-hover:text-white transition-colors">
+              {orders?.length ? `${orders.length} ostatnich` : 'Historia zamówień'}
+            </p>
+          </Link>
+          <Link
+            href="/konto/profil"
+            className="bg-bg-card px-6 py-5 group hover:bg-white/[0.03] transition-colors"
+          >
+            <p className="font-[var(--font-mono)] text-[10px] text-accent tracking-[0.25em] mb-1">PROFIL</p>
+            <p className="text-sm text-text-dim group-hover:text-white transition-colors">Dane i hasło</p>
+          </Link>
         </div>
 
         {/* Orders */}
         <section>
-          <h2 className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-[0.25em] uppercase border-b border-white/10 pb-3 mb-6">
-            Ostatnie zamówienia
-          </h2>
+          <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-6">
+            <h2 className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-[0.25em] uppercase">
+              Ostatnie zamówienia
+            </h2>
+            {orders && orders.length > 0 && (
+              <Link
+                href="/konto/zamowienia"
+                className="font-[var(--font-mono)] text-[10px] text-text-dim hover:text-accent transition-colors tracking-wider"
+              >
+                Zobacz wszystkie →
+              </Link>
+            )}
+          </div>
 
           {!orders?.length ? (
             <div className="py-12 text-center space-y-3">
@@ -89,7 +111,10 @@ export default async function KontoPage() {
             <ul className="space-y-2">
               {orders.map(order => (
                 <li key={order.id}>
-                  <div className="flex items-center justify-between px-5 py-4 border border-white/10">
+                  <Link
+                    href={`/konto/zamowienia/${order.id}`}
+                    className="flex items-center justify-between px-5 py-4 border border-white/10 hover:border-white/20 transition-colors group"
+                  >
                     <div>
                       <p className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-wider mb-1">
                         #{order.id.slice(0, 8).toUpperCase()}
@@ -98,15 +123,20 @@ export default async function KontoPage() {
                         {new Date(order.created_at).toLocaleDateString('pl-PL')}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <p className="font-[var(--font-mono)] text-sm text-accent">
-                        {order.total ? `${fmt(order.total)} PLN` : '—'}
-                      </p>
-                      <p className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-wider mt-0.5 uppercase">
-                        {STATUS_LABELS[order.status] ?? order.status}
-                      </p>
+                    <div className="text-right flex items-center gap-4">
+                      <div>
+                        <p className="font-[var(--font-mono)] text-sm text-accent">
+                          {order.total ? `${fmt(order.total)} PLN` : '—'}
+                        </p>
+                        <p className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-wider mt-0.5 uppercase">
+                          {STATUS_LABELS[order.status] ?? order.status}
+                        </p>
+                      </div>
+                      <span className="font-[var(--font-mono)] text-[10px] text-text-dim/40 group-hover:text-accent transition-colors">
+                        →
+                      </span>
                     </div>
-                  </div>
+                  </Link>
                 </li>
               ))}
             </ul>

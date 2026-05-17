@@ -4,7 +4,6 @@ import { sanityFetch } from '@/sanity/client'
 import { newsPostsQuery } from '@/sanity/queries'
 import { urlFor } from '@/sanity/image'
 import type { PostCardData } from '@/components/PostCard'
-import { MOCK_NEWS } from '@/lib/mockPosts'
 
 interface RawPost {
   _id: string
@@ -38,7 +37,7 @@ export default async function AktualnosciPage() {
         title="Aktualności"
         video="/video/aerial-view.mp4"
       />
-      <PostListClient posts={posts.length > 0 ? posts : MOCK_NEWS} />
+      <PostListClient posts={posts} />
     </main>
   )
 }

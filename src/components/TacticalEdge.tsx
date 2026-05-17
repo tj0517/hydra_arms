@@ -24,6 +24,8 @@ export interface TacticalEdgeProps {
   alt: string;
   /** Edge glow colour: "white" (default), "green" (site accent) or "blue" */
   glow?: "white" | "green" | "blue";
+  /** Show only the outer contour, suppressing interior detail */
+  contourOnly?: boolean;
   width?: number;
   height?: number;
   className?: string;
@@ -33,6 +35,7 @@ export default function TacticalEdge({
   src,
   alt,
   glow = "green",
+  contourOnly = false,
   width = 900,
   height = 600,
   className = "",
@@ -92,10 +95,15 @@ export default function TacticalEdge({
               result="grey"
             />
 
-            {/* 2. Dilate: expand bright pixels 1 px outward */}
+            {/* 1b. Pre-blur to kill interior texture (contourOnly) */}
+            {contourOnly && (
+              <feGaussianBlur in="grey" stdDeviation="4" result="grey" />
+            )}
+
+            {/* 2. Dilate: expand bright pixels outward */}
             <feMorphology
               in="grey"
-              operator="dilate" radius="1"
+              operator="dilate" radius={contourOnly ? 2 : 1}
               result="dilated"
             />
 
@@ -115,7 +123,7 @@ export default function TacticalEdge({
 
             {/* 5. Glow blur */}
             <feGaussianBlur
-              in="brightEdges" stdDeviation="3"
+              in="brightEdges" stdDeviation={contourOnly ? 2 : 3}
               result="glow"
             />
 
