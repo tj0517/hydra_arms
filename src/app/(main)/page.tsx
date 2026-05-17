@@ -7,9 +7,9 @@ import { urlFor } from '@/sanity/image'
 type SanityImage = any
 
 const filaryImgFallback: Record<string, string> = {
-  "B2G": "/img/tactical-gun-in-olive-glove-on-white-backdrop-2026-03-20-00-48-48-utc.jpg",
-  "B2B": "/img/cnc-part.png",
-  "B2C": "/img/high-powered-sporting-rifle-with-scope-and-bipod-2026-01-05-00-53-07-utc.jpg",
+  "B2G": "/img/vest-blueprint.png",
+  "B2B": "/img/cnc-drill-blueprint.png",
+  "B2C": "/img/scope-blueprint.png",
 }
 
 export default async function HomePage() {

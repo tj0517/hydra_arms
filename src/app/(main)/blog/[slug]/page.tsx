@@ -3,7 +3,6 @@ import PostDetailClient from '@/components/PostDetailClient'
 import { sanityFetch } from '@/sanity/client'
 import { blogPostBySlugQuery } from '@/sanity/queries'
 import { urlFor } from '@/sanity/image'
-import { MOCK_BLOG_DETAIL } from '@/lib/mockPosts'
 
 interface RawPost {
   _id: string
@@ -32,11 +31,7 @@ export default async function BlogDetailPage({
     raw = null
   }
 
-  if (!raw) {
-    const mock = MOCK_BLOG_DETAIL[slug]
-    if (!mock) notFound()
-    return <PostDetailClient post={mock} backHref="/blog" backLabel="Blog" video="/video/dark-terrain.mp4" />
-  }
+  if (!raw) notFound()
 
   const post = {
     ...raw,
@@ -48,7 +43,7 @@ export default async function BlogDetailPage({
       post={post}
       backHref="/blog"
       backLabel="Blog"
-      video="/video/dark-terrain.mp4"
+      video="/video/aerial-view.mp4"
     />
   )
 }

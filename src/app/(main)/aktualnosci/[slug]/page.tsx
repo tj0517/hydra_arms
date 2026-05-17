@@ -3,7 +3,6 @@ import PostDetailClient from '@/components/PostDetailClient'
 import { sanityFetch } from '@/sanity/client'
 import { newsPostBySlugQuery } from '@/sanity/queries'
 import { urlFor } from '@/sanity/image'
-import { MOCK_NEWS_DETAIL } from '@/lib/mockPosts'
 
 interface RawPost {
   _id: string
@@ -32,11 +31,7 @@ export default async function AktualnosciDetailPage({
     raw = null
   }
 
-  if (!raw) {
-    const mock = MOCK_NEWS_DETAIL[slug]
-    if (!mock) notFound()
-    return <PostDetailClient post={mock} backHref="/aktualnosci" backLabel="Aktualności" video="/video/aerial-view.mp4" />
-  }
+  if (!raw) notFound()
 
   const post = {
     ...raw,

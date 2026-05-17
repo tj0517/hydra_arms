@@ -8,7 +8,7 @@ export const client = projectId
       projectId,
       dataset,
       apiVersion: '2025-01-01',
-      useCdn: true,
+      useCdn: false,
     })
   : null
 

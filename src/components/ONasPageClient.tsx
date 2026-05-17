@@ -188,7 +188,7 @@ export default function ONasPageClient({
           </p>
         </div>
 
-        <ClientSegmentsGrid segments={CLIENT_SEGMENTS} topBorder />
+        <ClientSegmentsGrid segments={CLIENT_SEGMENTS} topBorder plain />
       </section>
 
       {/* ─── FUNDAMENTY NASZEJ DZIAŁALNOŚCI ─── */}

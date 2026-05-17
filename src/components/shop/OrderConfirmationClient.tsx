@@ -127,10 +127,16 @@ export default function OrderConfirmationClient({ orderId }: { orderId: string }
           </div>
         </section>
 
-        <div className="text-center pt-4">
+        <div className="flex items-center justify-center gap-4 pt-4 flex-wrap">
+          <Link
+            href="/konto/zamowienia"
+            className="border border-white/15 px-6 py-3.5 font-[var(--font-mono)] text-xs text-white/70 hover:border-accent hover:text-accent transition-colors tracking-[0.15em]"
+          >
+            MOJE ZAMÓWIENIA
+          </Link>
           <Link
             href="/sklep"
-            className="inline-block border border-white/15 px-8 py-3.5 font-[var(--font-mono)] text-xs text-white/70 hover:border-accent hover:text-accent transition-colors tracking-[0.2em]"
+            className="border border-white/15 px-6 py-3.5 font-[var(--font-mono)] text-xs text-white/70 hover:border-accent hover:text-accent transition-colors tracking-[0.15em]"
           >
             KONTYNUUJ ZAKUPY
           </Link>

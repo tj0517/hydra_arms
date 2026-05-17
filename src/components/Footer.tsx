@@ -7,6 +7,8 @@ const DEFAULT_NAV_LINKS = [
   { href: "/", label: "Start" },
   { href: "/uslugi", label: "Usługi" },
   { href: "/o-nas", label: "O nas" },
+  { href: "/aktualnosci", label: "Aktualności" },
+  { href: "/blog", label: "Blog" },
   { href: "/sklep", label: "Sklep" },
   { href: "/wspolpraca", label: "Współpraca" },
   { href: "/kontakt", label: "Kontakt" },

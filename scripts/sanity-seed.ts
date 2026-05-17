@@ -48,6 +48,8 @@ async function seed() {
       { _key: 'start', href: '/', label: 'Start' },
       { _key: 'uslugi', href: '/uslugi', label: 'Usługi' },
       { _key: 'onas', href: '/o-nas', label: 'O nas' },
+      { _key: 'aktualnosci', href: '/aktualnosci', label: 'Aktualności' },
+      { _key: 'blog', href: '/blog', label: 'Blog' },
       { _key: 'sklep', href: '/sklep', label: 'Sklep' },
       { _key: 'wspolpraca', href: '/wspolpraca', label: 'Współpraca' },
       { _key: 'kontakt', href: '/kontakt', label: 'Kontakt' },

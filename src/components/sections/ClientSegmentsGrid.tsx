@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import TacticalEdge from "@/components/TacticalEdge";
 import CornerCTA from "@/components/ui/CornerCTA";
 
@@ -17,30 +18,34 @@ export const CLIENT_SEGMENTS: Segment[] = [
     title: "Siły Zbrojne",
     desc: "Dostarczamy uzbrojenie i wyposażenie spełniające najwyższe standardy wojskowe, testowane w warunkach operacyjnych.",
     href: "/wspolpraca",
-    img: "/img/army-ranger-in-field-uniforms-2026-03-18-17-39-05-utc.jpg",
+    img: "/img/vest-blueprint.png",
   },
   {
     tag: "Formacje",
     title: "Służby mundurowe",
     desc: "Współpracujemy z policją, strażą graniczną i innymi formacjami mundurowymi, oferując dedykowane rozwiązania.",
     href: "/wspolpraca",
-    img: "/img/tactical-gun-in-olive-glove-on-white-backdrop-2026-03-20-00-48-48-utc.jpg",
+    img: "/img/scope-blueprint.png",
   },
   {
     tag: "B2B",
     title: "Przemysł B2B",
     desc: "Realizujemy zlecenia dla partnerów przemysłowych — od prototypowania po produkcję seryjną komponentów obronnych.",
     href: "/wspolpraca",
-    img: "/img/cnc-part.png",
+    img: "/img/cnc-drill-blueprint.png",
   },
 ];
 
 interface ClientSegmentsGridProps {
   segments: Segment[];
   topBorder?: boolean;
+  glow?: "white" | "green" | "blue";
+  plain?: boolean;
 }
 
-export default function ClientSegmentsGrid({ segments, topBorder = false }: ClientSegmentsGridProps) {
+export default function ClientSegmentsGrid({ segments, topBorder = false, glow = "green", plain = false }: ClientSegmentsGridProps) {
+  const tagClass = "font-[var(--font-mono)] text-[10px] tracking-[0.25em] text-accent/50 border border-accent/20 px-2.5 py-1 inline-block mb-5";
+
   return (
     <div
       className={`mx-[clamp(32px,5vw,64px)] grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3${topBorder ? " border-t border-white/[0.08]" : ""}`}
@@ -57,17 +62,14 @@ export default function ClientSegmentsGrid({ segments, topBorder = false }: Clie
           }`}
         >
           <div className="h-[260px] hidden md:block mb-8">
-            <TacticalEdge
-              src={seg.img}
-              alt={seg.title}
-              glow="green"
-              width={900}
-              height={450}
-              className="w-full h-full"
-            />
+            {plain ? (
+              <Image src={seg.img} alt={seg.title} width={900} height={450} className="w-full h-full object-contain" draggable={false} />
+            ) : (
+              <TacticalEdge src={seg.img} alt={seg.title} glow={glow} width={900} height={450} className="w-full h-full" />
+            )}
           </div>
           <div>
-            <div className="font-[var(--font-mono)] text-[10px] tracking-[0.25em] text-accent/50 border border-accent/20 px-2.5 py-1 inline-block mb-5">
+            <div className={tagClass}>
               {seg.tag}
             </div>
             <h3 className="text-[clamp(1.4rem,2vw,1.9rem)] font-normal text-text leading-[1.1] mb-4">
