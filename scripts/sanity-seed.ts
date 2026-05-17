@@ -64,7 +64,7 @@ async function seed() {
     hudLabel: '// HYDRA ARMS - PL-2026',
     aboutText:
       'Realizujemy krytyczne projekty z zakresu wytwarzania uzbrojenia oraz technologii dual-use. Łączymy rygorystyczne standardy NATO z precyzją nowoczesnych technologii tworząc innowacje. Prowadzimy również działalność handlową na rynku cywilnym i specjalnym.',
-    heroVideo: '/hero-overflow.mp4',
+    heroVideo: '/video/hero-overflow.mp4',
   })
   console.log('✅ homePage')
 

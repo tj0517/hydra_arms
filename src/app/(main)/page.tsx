@@ -48,11 +48,11 @@ export default async function HomePage() {
     <HomePageClient
       services={mappedServices}
       filary={mappedFilary}
-      heroTagline1={heroData?.heroTagline1}
-      heroTagline2={heroData?.heroTagline2}
-      hudLabel={heroData?.hudLabel}
-      aboutText={heroData?.aboutText}
-      heroVideo={heroData?.heroVideo}
+      heroTagline1={heroData?.heroTagline1 || undefined}
+      heroTagline2={heroData?.heroTagline2 || undefined}
+      hudLabel={heroData?.hudLabel || undefined}
+      aboutText={heroData?.aboutText || undefined}
+      heroVideo={heroData?.heroVideo || undefined}
     />
   )
 }
