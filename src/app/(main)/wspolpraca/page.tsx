@@ -1,4 +1,18 @@
+import type { Metadata } from 'next'
 import WspolpracaPageClient from '@/components/WspolpracaPageClient'
+
+export const metadata: Metadata = {
+  title: 'Współpraca',
+  description:
+    'Nawiąż strategiczne partnerstwo z HYDRA ARMS. Oferujemy przejrzyste warunki współpracy B2G i B2B w obszarze zaawansowanych rozwiązań obronnych.',
+  alternates: { canonical: '/wspolpraca' },
+  openGraph: {
+    title: 'Współpraca | HYDRA ARMS',
+    description:
+      'Nawiąż strategiczne partnerstwo z HYDRA ARMS. Oferujemy przejrzyste warunki współpracy B2G i B2B.',
+    url: '/wspolpraca',
+  },
+}
 import { sanityFetch } from '@/sanity/client'
 import { wspolpracaPageQuery } from '@/sanity/queries'
 

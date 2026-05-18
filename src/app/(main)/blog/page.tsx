@@ -1,8 +1,22 @@
+import type { Metadata } from 'next'
 import SubpageHero from '@/components/SubpageHero'
 import PostListClient from '@/components/PostListClient'
 import { sanityFetch } from '@/sanity/client'
 import { blogPostsQuery } from '@/sanity/queries'
 import { urlFor } from '@/sanity/image'
+
+export const metadata: Metadata = {
+  title: 'Blog',
+  description:
+    'Artykuły eksperckie HYDRA ARMS na temat inżynierii obronnej, technologii wojskowych i innowacji w sektorze bezpieczeństwa.',
+  alternates: { canonical: '/blog' },
+  openGraph: {
+    title: 'Blog | HYDRA ARMS',
+    description:
+      'Artykuły eksperckie HYDRA ARMS na temat inżynierii obronnej, technologii wojskowych i innowacji w sektorze bezpieczeństwa.',
+    url: '/blog',
+  },
+}
 import type { PostCardData } from '@/components/PostCard'
 
 interface RawPost {

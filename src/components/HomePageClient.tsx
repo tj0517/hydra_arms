@@ -357,6 +357,7 @@ export default function HomePageClient({
               {hudLabel}
             </span>
             <div>
+              <h1 className="sr-only">{heroTagline1} — {heroTagline2}</h1>
               <SplitText
                 as="p"
                 className="text-[clamp(1.5rem,4.76vw,72px)] font-normal text-text-dim leading-[1.2] md:leading-[76px] tracking-[-2px]"

@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import ProductDetailClient from '@/components/shop/ProductDetailClient';
 import { createPublicClient } from '@/lib/supabase/public';
@@ -30,6 +31,32 @@ async function fetchProduct(id: number): Promise<{ product: ShopProduct; categor
   return {
     product: productResult.data as ShopProduct,
     categories: (categoriesResult.data ?? []) as ShopCategory[],
+  };
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const productId = parseInt(id, 10);
+  if (isNaN(productId)) return {};
+  const data = await fetchProduct(productId);
+  if (!data) return {};
+  const { product } = data;
+  const image = product.images?.[0];
+  return {
+    title: product.name,
+    description: product.description
+      ? product.description.replace(/<[^>]+>/g, '').slice(0, 155)
+      : `${product.name} — dostępny w sklepie HYDRA ARMS.`,
+    alternates: { canonical: `/sklep/${id}` },
+    openGraph: {
+      title: product.name,
+      url: `/sklep/${id}`,
+      images: image ? [{ url: image, width: 800, height: 800, alt: product.name }] : undefined,
+    },
   };
 }
 

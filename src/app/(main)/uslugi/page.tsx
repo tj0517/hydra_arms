@@ -1,4 +1,18 @@
+import type { Metadata } from 'next'
 import UslugiPageClient from '@/components/UslugiPageClient'
+
+export const metadata: Metadata = {
+  title: 'Usługi',
+  description:
+    'Zaawansowane usługi inżynieryjne dla sektora obronnego: projektowanie, wytwarzanie, doradztwo i obrót uzbrojeniem. Sprawdź nasze kompetencje.',
+  alternates: { canonical: '/uslugi' },
+  openGraph: {
+    title: 'Usługi | HYDRA ARMS',
+    description:
+      'Zaawansowane usługi inżynieryjne dla sektora obronnego: projektowanie, wytwarzanie, doradztwo i obrót uzbrojeniem.',
+    url: '/uslugi',
+  },
+}
 import { sanityFetch } from '@/sanity/client'
 import { uslugiPageQuery } from '@/sanity/queries'
 import { urlFor } from '@/sanity/image'

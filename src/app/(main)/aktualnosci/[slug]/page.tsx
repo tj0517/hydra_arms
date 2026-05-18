@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import PostDetailClient from '@/components/PostDetailClient'
 import { sanityFetch } from '@/sanity/client'
@@ -35,6 +36,35 @@ function resolveExcerpt(excerpt?: string, bodyExcerpt?: string): string | undefi
   if (!bodyExcerpt) return undefined
   const words = bodyExcerpt.trim().split(/\s+/)
   return words.length > 30 ? words.slice(0, 30).join(' ') + '…' : bodyExcerpt.trim()
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const { slug } = await params
+  let raw: RawPost | null = null
+  try {
+    raw = await sanityFetch<RawPost>({ query: newsPostBySlugQuery, params: { slug } })
+  } catch {
+    raw = null
+  }
+  if (!raw) return {}
+  const ogImage = raw.coverImage ? urlFor(raw.coverImage).width(1200).height(630).url() : undefined
+  return {
+    title: raw.title,
+    description: raw.excerpt,
+    alternates: { canonical: `/aktualnosci/${slug}` },
+    openGraph: {
+      title: raw.title,
+      description: raw.excerpt,
+      url: `/aktualnosci/${slug}`,
+      type: 'article',
+      publishedTime: raw.publishedAt,
+      images: ogImage ? [{ url: ogImage, width: 1200, height: 630, alt: raw.title }] : undefined,
+    },
+  }
 }
 
 export default async function AktualnosciDetailPage({

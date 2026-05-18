@@ -1,7 +1,21 @@
+import type { Metadata } from 'next';
 import SubpageHero from '@/components/SubpageHero';
 import SklepClient from '@/components/shop/SklepClient';
 import { createPublicClient } from '@/lib/supabase/public';
 import type { ShopProduct, ShopCategory } from '@/lib/supabase/types';
+
+export const metadata: Metadata = {
+  title: 'Sklep',
+  description:
+    'Sklep HYDRA ARMS — sprzęt myśliwski, akcesoria taktyczne i wyposażenie obronne dostępne online. Sprawdź aktualną ofertę.',
+  alternates: { canonical: '/sklep' },
+  openGraph: {
+    title: 'Sklep | HYDRA ARMS',
+    description:
+      'Sklep HYDRA ARMS — sprzęt myśliwski, akcesoria taktyczne i wyposażenie obronne.',
+    url: '/sklep',
+  },
+};
 
 const PAGE_SIZE = 12;
 const INVENTORY_ID = 35743;

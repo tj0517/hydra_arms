@@ -1,4 +1,18 @@
+import type { Metadata } from 'next'
 import KontaktClient from "@/components/KontaktClient";
+
+export const metadata: Metadata = {
+  title: 'Kontakt',
+  description:
+    'Skontaktuj się z HYDRA ARMS. Dane kontaktowe, mapa dojazdu oraz formularz kontaktowy dla zapytań B2G, B2B i handlowych.',
+  alternates: { canonical: '/kontakt' },
+  openGraph: {
+    title: 'Kontakt | HYDRA ARMS',
+    description:
+      'Skontaktuj się z HYDRA ARMS. Dane kontaktowe i formularz dla zapytań B2G, B2B i handlowych.',
+    url: '/kontakt',
+  },
+}
 import { sanityFetch } from "@/sanity/client";
 import { siteSettingsQuery } from "@/sanity/queries";
 

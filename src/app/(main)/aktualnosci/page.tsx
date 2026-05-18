@@ -1,8 +1,22 @@
+import type { Metadata } from 'next'
 import SubpageHero from '@/components/SubpageHero'
 import PostListClient from '@/components/PostListClient'
 import { sanityFetch } from '@/sanity/client'
 import { newsPostsQuery } from '@/sanity/queries'
 import { urlFor } from '@/sanity/image'
+
+export const metadata: Metadata = {
+  title: 'Aktualności',
+  description:
+    'Najnowsze informacje, komunikaty i aktualności HYDRA ARMS — bądź na bieżąco z wydarzeniami w sektorze obronnym i naszymi działaniami.',
+  alternates: { canonical: '/aktualnosci' },
+  openGraph: {
+    title: 'Aktualności | HYDRA ARMS',
+    description:
+      'Najnowsze informacje, komunikaty i aktualności HYDRA ARMS.',
+    url: '/aktualnosci',
+  },
+}
 import type { PostCardData } from '@/components/PostCard'
 
 interface RawPost {

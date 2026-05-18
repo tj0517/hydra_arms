@@ -1,4 +1,18 @@
+import type { Metadata } from 'next'
 import ONasPageClient from '@/components/ONasPageClient'
+
+export const metadata: Metadata = {
+  title: 'O nas',
+  description:
+    'Poznaj HYDRA ARMS — interdyscyplinarny ośrodek inżynieryjny z misją dostarczania zaawansowanych rozwiązań dla sektora obronnego. Nasza historia, wartości i kompetencje.',
+  alternates: { canonical: '/o-nas' },
+  openGraph: {
+    title: 'O nas | HYDRA ARMS',
+    description:
+      'Poznaj HYDRA ARMS — interdyscyplinarny ośrodek inżynieryjny z misją dostarczania zaawansowanych rozwiązań dla sektora obronnego.',
+    url: '/o-nas',
+  },
+}
 import { sanityFetch } from '@/sanity/client'
 import { oNasPageQuery } from '@/sanity/queries'
 
