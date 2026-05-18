@@ -260,6 +260,7 @@ export default function HomePageClient({
             muted
             loop
             playsInline
+            poster="/video/hero-poster.jpg"
             className="absolute inset-0 w-full h-full object-cover grayscale contrast-[1.15] brightness-[0.5] sepia-[0.08]"
           >
             <source src={heroVideo} type="video/mp4" />

@@ -349,9 +349,7 @@ html.loading-active {
   overflow: hidden;
 }
 
-html.loading-active body > *:not(.ls) {
-  visibility: hidden;
-}
+/* content is painted beneath the solid-black .ls overlay — no visibility:hidden so LCP can be measured */
 
 .ls {
   position: fixed;

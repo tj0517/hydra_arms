@@ -68,6 +68,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pl">
+      <head>
+        {/* Preload hero poster so it paints before the loading screen finishes — drives LCP */}
+        <link rel="preload" as="image" href="/video/hero-poster.jpg" fetchPriority="high" />
+      </head>
       <body
         className={`${outfit.variable} ${jetbrainsMono.variable} antialiased`}
       >
