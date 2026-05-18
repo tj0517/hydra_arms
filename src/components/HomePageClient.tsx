@@ -1,19 +1,17 @@
 "use client";
 
 import { useRef, useEffect, useState } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { gsap } from "@/lib/gsap";
 import SplitText from "@/components/SplitText";
 import ScrollRevealText from "@/components/ScrollRevealText";
-import MilitaryMap from "@/components/MilitaryMap";
+import dynamic from "next/dynamic";
+const MilitaryMap = dynamic(() => import("@/components/MilitaryMap"), { ssr: false });
 import MapCrosshair from "@/components/MapCrosshair";
 import TypewriterTitle from "@/components/TypewriterTitle";
 import Image from "next/image";
 import CornerCTA from "@/components/ui/CornerCTA";
 import SectionLabel from "@/components/ui/SectionLabel";
 import ClientSegmentsGrid from "@/components/sections/ClientSegmentsGrid";
-
-gsap.registerPlugin(ScrollTrigger);
 
 /* ──────────── DATA ──────────── */
 
@@ -123,14 +121,7 @@ export default function HomePageClient({
   const servicesWrapRef = useRef<HTMLDivElement>(null);
   const serviceRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  useEffect(() => {
-    const tl = gsap.timeline({ delay: 0.2 });
-    tl.fromTo(
-      overlayRef.current,
-      { opacity: 1 },
-      { opacity: 0, duration: 1.2, ease: "power2.out" }
-    );
-  }, []);
+  // Overlay fades via CSS class `hero-overlay-fade` — no GSAP needed.
 
   /* ── Glitch on video loop — triggers before loop to hide the cut ── */
   useEffect(() => {
@@ -251,7 +242,7 @@ export default function HomePageClient({
     <main>
       {/* ─── HERO ─── */}
       <section ref={heroRef} className="relative h-[100dvh] overflow-hidden bg-bg cursor-none">
-        <div ref={overlayRef} className="absolute inset-0 bg-bg z-[15] pointer-events-none" />
+        <div ref={overlayRef} className="absolute inset-0 bg-bg z-[15] pointer-events-none hero-overlay-fade" />
 
         <div ref={beznazwyWrapperRef} className="absolute inset-0">
           <video
@@ -260,6 +251,7 @@ export default function HomePageClient({
             muted
             loop
             playsInline
+            preload="none"
             poster="/video/hero-poster.jpg"
             className="absolute inset-0 w-full h-full object-cover grayscale contrast-[1.15] brightness-[0.5] sepia-[0.08]"
           >
@@ -279,6 +271,7 @@ export default function HomePageClient({
             muted
             loop
             playsInline
+            preload="none"
             className="absolute inset-0 w-full h-full object-cover grayscale brightness-[0.55] contrast-[1.2]"
           >
             <source src={heroVideo} type="video/mp4" />
@@ -491,6 +484,7 @@ export default function HomePageClient({
           muted
           loop
           playsInline
+          preload="none"
           className="absolute inset-0 w-full h-full object-cover object-[center_20%] grayscale brightness-[0.5] contrast-[1.15] sepia-[0.15]"
         >
           <source src="/video/soldiers.mp4" type="video/mp4" />

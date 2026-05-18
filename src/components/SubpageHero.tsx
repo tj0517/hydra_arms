@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect } from "react";
-import gsap from "gsap";
+import { gsap } from "@/lib/gsap";
 import TypewriterTitle from "@/components/TypewriterTitle";
 
 interface SubpageHeroProps {
@@ -13,7 +13,6 @@ interface SubpageHeroProps {
 
 export default function SubpageHero({ subtitle, title, titleClass, video }: SubpageHeroProps) {
   const heroRef = useRef<HTMLElement>(null);
-  const overlayRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const pixCanvasRef = useRef<HTMLCanvasElement>(null);
   const crosshairRef = useRef<HTMLDivElement>(null);
@@ -21,15 +20,7 @@ export default function SubpageHero({ subtitle, title, titleClass, video }: Subp
   const lineXRef = useRef<HTMLDivElement>(null);
   const lineYRef = useRef<HTMLDivElement>(null);
 
-  /* ── Entrance overlay ── */
-  useEffect(() => {
-    const tl = gsap.timeline({ delay: 0.2 });
-    tl.fromTo(
-      overlayRef.current,
-      { opacity: 1 },
-      { opacity: 0, duration: 1.2, ease: "power2.out" }
-    );
-  }, []);
+  // Entrance overlay fades via CSS class `hero-overlay-fade`.
 
   /* ── Video playback + glitch on loop ── */
   useEffect(() => {
@@ -185,7 +176,7 @@ export default function SubpageHero({ subtitle, title, titleClass, video }: Subp
         muted
         loop
         playsInline
-        preload="auto"
+        preload="none"
         className="absolute inset-0 w-full h-full object-cover z-0"
       >
         <source src={video} type="video/mp4" />
@@ -252,7 +243,7 @@ export default function SubpageHero({ subtitle, title, titleClass, video }: Subp
       {/* Entrance overlay */}
       <div
         ref={overlayRef}
-        className="absolute inset-0 bg-bg z-[5] pointer-events-none"
+        className="absolute inset-0 bg-bg z-[5] pointer-events-none hero-overlay-fade"
       />
       <TypewriterTitle
         as="span"

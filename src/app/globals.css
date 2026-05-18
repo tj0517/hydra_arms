@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+@keyframes heroOverlayFade {
+  from { opacity: 1; }
+  to   { opacity: 0; pointer-events: none; }
+}
+.hero-overlay-fade {
+  animation: heroOverlayFade 1.2s 0.2s ease-out forwards;
+}
+
 @theme inline {
   --color-bg: #0A0A0B;
   --color-bg-light: #0A0A0A;
