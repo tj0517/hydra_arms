@@ -242,7 +242,6 @@ export default function SubpageHero({ subtitle, title, titleClass, video }: Subp
 
       {/* Entrance overlay */}
       <div
-        ref={overlayRef}
         className="absolute inset-0 bg-bg z-[5] pointer-events-none hero-overlay-fade"
       />
       <TypewriterTitle
