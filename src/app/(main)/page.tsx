@@ -7,7 +7,7 @@ import { urlFor } from '@/sanity/image'
 type SanityImage = any
 
 const filaryImgFallback: Record<string, string> = {
-  "B2G": "/img/vest-blueprint.png",
+  "B2G": "/img/drone-blueprint.png",
   "B2B": "/img/caliper-blueprint.png",
   "B2C": "/img/scope-blueprint.png",
 }

@@ -18,14 +18,14 @@ export const CLIENT_SEGMENTS: Segment[] = [
     title: "Siły Zbrojne",
     desc: "Dostarczamy uzbrojenie i wyposażenie spełniające najwyższe standardy wojskowe, testowane w warunkach operacyjnych.",
     href: "/wspolpraca",
-    img: "/img/vest-blueprint.png",
+    img: "/img/knife-blueprint.png",
   },
   {
     tag: "Formacje",
     title: "Służby mundurowe",
     desc: "Współpracujemy z policją, strażą graniczną i innymi formacjami mundurowymi, oferując dedykowane rozwiązania.",
     href: "/wspolpraca",
-    img: "/img/scope-blueprint.png",
+    img: "/img/vest-blueprint.png",
   },
   {
     tag: "B2B",
@@ -49,7 +49,7 @@ export const USLUGI_SEGMENTS: Segment[] = [
     title: "Służby mundurowe",
     desc: "Współpracujemy z policją, strażą graniczną i innymi formacjami mundurowymi, oferując dedykowane rozwiązania.",
     href: "/wspolpraca",
-    img: "/img/scope-blueprint.png",
+    img: "/img/flashlight-blueprint.png",
   },
   {
     tag: "B2B",

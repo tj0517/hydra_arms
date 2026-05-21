@@ -58,7 +58,7 @@ const DEFAULT_FILARY: Filar[] = [
     tag: "B2G",
     title: "Zamówienia rządowe",
     desc: "Dostawy dla jednostek wojskowych, służb mundurowych i instytucji państwowych realizowane w ramach ścisłych procedur bezpieczeństwa i zamówień publicznych.",
-    img: "/img/vest-blueprint.png",
+    img: "/img/drone-blueprint.png",
     href: "/wspolpraca",
   },
   {
