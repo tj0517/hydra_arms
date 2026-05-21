@@ -56,7 +56,7 @@ export const USLUGI_SEGMENTS: Segment[] = [
     title: "Przemysł B2B",
     desc: "Realizujemy zlecenia dla partnerów przemysłowych — od prototypowania po produkcję seryjną komponentów obronnych.",
     href: "/wspolpraca",
-    img: "/img/cnc-drill-blueprint.png",
+    img: "/img/gear-blueprint.png",
   },
 ];
 
