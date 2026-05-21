@@ -18,21 +18,21 @@ export const CLIENT_SEGMENTS: Segment[] = [
     title: "Siły Zbrojne",
     desc: "Dostarczamy uzbrojenie i wyposażenie spełniające najwyższe standardy wojskowe, testowane w warunkach operacyjnych.",
     href: "/wspolpraca",
-    img: "/img/knife-blueprint.png",
+    img: "/img/knife.png",
   },
   {
     tag: "Formacje",
     title: "Służby mundurowe",
     desc: "Współpracujemy z policją, strażą graniczną i innymi formacjami mundurowymi, oferując dedykowane rozwiązania.",
     href: "/wspolpraca",
-    img: "/img/vest-blueprint.png",
+    img: "/img/vest.png",
   },
   {
     tag: "B2B",
     title: "Przemysł B2B",
     desc: "Realizujemy zlecenia dla partnerów przemysłowych — od prototypowania po produkcję seryjną komponentów obronnych.",
     href: "/wspolpraca",
-    img: "/img/cnc-drill-blueprint.png",
+    img: "/img/cnc.png",
   },
 ];
 
@@ -42,21 +42,21 @@ export const USLUGI_SEGMENTS: Segment[] = [
     title: "Siły Zbrojne",
     desc: "Dostarczamy uzbrojenie i wyposażenie spełniające najwyższe standardy wojskowe, testowane w warunkach operacyjnych.",
     href: "/wspolpraca",
-    img: "/img/binoculars-blueprint.png",
+    img: "/img/binoculars.png",
   },
   {
     tag: "Formacje",
     title: "Służby mundurowe",
     desc: "Współpracujemy z policją, strażą graniczną i innymi formacjami mundurowymi, oferując dedykowane rozwiązania.",
     href: "/wspolpraca",
-    img: "/img/flashlight-blueprint.png",
+    img: "/img/flashlight.png",
   },
   {
     tag: "B2B",
     title: "Przemysł B2B",
     desc: "Realizujemy zlecenia dla partnerów przemysłowych — od prototypowania po produkcję seryjną komponentów obronnych.",
     href: "/wspolpraca",
-    img: "/img/gear-blueprint.png",
+    img: "/img/axis.png",
   },
 ];
 
