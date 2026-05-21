@@ -8,7 +8,7 @@ import TypewriterTitle from "@/components/TypewriterTitle";
 import CornerCTA from "@/components/ui/CornerCTA";
 import SectionLabel from "@/components/ui/SectionLabel";
 import IntroBlock from "@/components/sections/IntroBlock";
-import ClientSegmentsGrid, { CLIENT_SEGMENTS } from "@/components/sections/ClientSegmentsGrid";
+import ClientSegmentsGrid, { USLUGI_SEGMENTS } from "@/components/sections/ClientSegmentsGrid";
 
 
 /* ──────────── DATA ──────────── */
@@ -226,7 +226,7 @@ export default function UslugiPageClient({
           </div>
         </div>
 
-        <ClientSegmentsGrid segments={CLIENT_SEGMENTS} topBorder plain />
+        <ClientSegmentsGrid segments={USLUGI_SEGMENTS} topBorder plain />
       </section>
 
       {/* ─── WSPÓŁPRACA CTA ─── */}

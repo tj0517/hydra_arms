@@ -8,7 +8,7 @@ type SanityImage = any
 
 const filaryImgFallback: Record<string, string> = {
   "B2G": "/img/vest-blueprint.png",
-  "B2B": "/img/cnc-drill-blueprint.png",
+  "B2B": "/img/caliper-blueprint.png",
   "B2C": "/img/scope-blueprint.png",
 }
 
