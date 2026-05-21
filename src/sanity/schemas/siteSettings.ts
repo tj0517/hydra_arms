@@ -17,6 +17,13 @@ export const siteSettings = defineType({
     defineField({ name: 'instagramUrl', title: 'Instagram URL', type: 'url' }),
     defineField({ name: 'lat', title: 'Latitude', type: 'number' }),
     defineField({ name: 'lng', title: 'Longitude', type: 'number' }),
+    defineField({ name: 'krs', title: 'KRS', type: 'string' }),
+    defineField({ name: 'ncage', title: 'NCAGE', type: 'string' }),
+    defineField({ name: 'duns', title: 'D-U-N-S®', type: 'string' }),
+    defineField({ name: 'bdo', title: 'BDO', type: 'string' }),
+    defineField({ name: 'uei', title: 'UEI', type: 'string' }),
+    defineField({ name: 'adresSiedziby', title: 'Adres siedziby', type: 'text', rows: 3 }),
+    defineField({ name: 'adresSklep', title: 'Adres sklepu stacjonarnego', type: 'text', rows: 3 }),
   ],
   preview: { select: { title: 'companyName' } },
 })

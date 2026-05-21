@@ -31,9 +31,16 @@ async function seed() {
     _id: 'siteSettings',
     _type: 'siteSettings',
     companyName: 'HYDRA ARMS SP. Z O.O.',
-    nip: '000000000',
-    regon: '00000000',
-    koncesja: 'B-000/00',
+    nip: '6793302181',
+    regon: '528976880',
+    krs: '0001111593',
+    koncesja: 'B-117/2025',
+    ncage: '9CJ3H',
+    duns: '665007622',
+    bdo: '000654184',
+    uei: 'YUXMMDP8MNP4',
+    adresSiedziby: 'ul. Cechowa 44B\n30-614 Kraków',
+    adresSklep: 'ul. Gdańska 22\n31-411 Kraków',
     emailBiuro: 'biuro@hydraarms.pl',
     lat: 50.0647,
     lng: 19.945,
@@ -51,6 +58,7 @@ async function seed() {
       { _key: 'aktualnosci', href: '/aktualnosci', label: 'Aktualności' },
       { _key: 'blog', href: '/blog', label: 'Blog' },
       { _key: 'wspolpraca', href: '/wspolpraca', label: 'Współpraca' },
+      { _key: 'certyfikaty', href: '/certyfikaty', label: 'Certyfikaty' },
       { _key: 'kontakt', href: '/kontakt', label: 'Kontakt' },
     ],
   })
@@ -179,6 +187,19 @@ async function seed() {
     ],
   })
   console.log('✅ wspolpracaPage')
+
+  // ── Certyfikaty page ──────────────────────────────────────────
+  await client.createOrReplace({
+    _id: 'certyfikatyPage',
+    _type: 'certyfikatyPage',
+    introText: 'Działamy zgodnie z najwyższymi standardami jakości i bezpieczeństwa, potwierdzając nasze kompetencje certyfikatami oraz akredytacjami uznawanymi na rynku krajowym i międzynarodowym.',
+    certificates: [
+      { _key: 'cert1', name: 'PN-EN ISO 9001:2015-10', desc: 'System Zarządzania Jakością' },
+      { _key: 'cert2', name: 'AQAP 2110:2016', desc: 'Wymagania NATO dotyczące zapewnienia jakości przy projektowaniu, wytwarzaniu i przeprowadzaniu prób' },
+      { _key: 'cert3', name: 'Wewnętrzny System Kontroli', desc: '' },
+    ],
+  })
+  console.log('✅ certyfikatyPage')
 
   console.log('\n🎉 Seed complete! All documents created in Sanity.')
 }

@@ -20,6 +20,8 @@ export default async function MainLayout({
     const [settings, navData] = await Promise.all([
       sanityFetch<{
         companyName?: string; nip?: string; regon?: string; koncesja?: string;
+        krs?: string; ncage?: string; duns?: string; bdo?: string; uei?: string;
+        adresSiedziby?: string; adresSklep?: string;
         emailRD?: string; emailB2G?: string; emailHandel?: string; emailBiuro?: string;
         facebookUrl?: string; instagramUrl?: string; lat?: number; lng?: number;
       }>({ query: siteSettingsQuery }),

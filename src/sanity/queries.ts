@@ -92,7 +92,23 @@ export const siteSettingsQuery = groq`*[_type == "siteSettings"][0] {
   facebookUrl,
   instagramUrl,
   lat,
-  lng
+  lng,
+  krs,
+  ncage,
+  duns,
+  bdo,
+  uei,
+  adresSiedziby,
+  adresSklep
+}`
+
+export const certyfikatyPageQuery = groq`*[_type == "certyfikatyPage"][0] {
+  introText,
+  certificates[] {
+    name,
+    desc,
+    "fileUrl": file.asset->url
+  }
 }`
 
 export const navigationQuery = groq`*[_type == "navigation"][0] {

@@ -9,25 +9,45 @@ interface KontaktClientProps {
   nip?: string;
   regon?: string;
   koncesja?: string;
+  krs?: string;
+  ncage?: string;
+  duns?: string;
+  bdo?: string;
+  uei?: string;
+  adresSiedziby?: string;
+  adresSklep?: string;
   emailRD?: string;
   emailB2G?: string;
   emailHandel?: string;
   emailBiuro?: string;
   facebookUrl?: string;
   instagramUrl?: string;
+  certificates?: { name: string; desc?: string }[];
 }
 
 export default function KontaktClient({
   companyName = "HYDRA ARMS SP. Z O.O.",
-  nip = "000 000 00 00",
-  regon = "000000000",
-  koncesja = "B-000/00",
+  nip = "6793302181",
+  regon = "528976880",
+  koncesja = "B-117/2025",
+  krs = "0001111593",
+  ncage = "9CJ3H",
+  duns = "665007622",
+  bdo = "000654184",
+  uei = "YUXMMDP8MNP4",
+  adresSiedziby = "ul. Cechowa 44B\n30-614 Kraków",
+  adresSklep = "ul. Gdańska 22\n31-411 Kraków",
   emailRD = "research@hydra-arms.com",
   emailB2G = "gov@hydra-arms.com",
   emailHandel = "sprzedaz@hydra-arms.com",
   emailBiuro = "office@hydra-arms.com",
   facebookUrl = "#!",
   instagramUrl = "#!",
+  certificates = [
+    { name: "PN-EN ISO 9001:2015-10", desc: "System Zarządzania Jakością" },
+    { name: "AQAP 2110:2016", desc: "Wymagania NATO dotyczące zapewnienia jakości" },
+    { name: "Wewnętrzny System Kontroli", desc: "" },
+  ],
 }: KontaktClientProps) {
   const departments = [
     { key: "R&D", label: "R&D — Badania i Rozwój", email: emailRD },
@@ -113,11 +133,43 @@ export default function KontaktClient({
                     </div>
                     <div className="font-[var(--font-mono)] text-[13px] leading-[2.2] space-y-0">
                       <p className="text-white font-bold tracking-[0.15em]">{companyName}</p>
-                      <p className="text-text-dim"><span className="text-accent/50 w-24 inline-block">NIP</span><span className="text-accent/80">{nip}</span></p>
-                      <p className="text-text-dim"><span className="text-accent/50 w-24 inline-block">REGON</span><span className="text-accent/80">{regon}</span></p>
-                      <p className="text-text-dim"><span className="text-accent/50 w-24 inline-block">KONCESJA</span><span className="text-accent/80">MSWiA NR: {koncesja}</span></p>
+                      <p className="text-accent/40 text-[11px] whitespace-pre-line leading-[1.8] mt-1">{adresSiedziby}</p>
+                      <p className="text-accent/30 text-[11px]">Sklep: {adresSklep.split("\n").join(", ")}</p>
+                      <div className="border-t border-accent/10 my-2" />
+                      {([
+                        ["NIP", nip],
+                        ["REGON", regon],
+                        ["KRS", krs],
+                        ["KONCESJA", `MSWiA ${koncesja}`],
+                        ["NCAGE", ncage],
+                        ["D-U-N-S®", duns],
+                        ["BDO", bdo],
+                        ["UEI", uei],
+                      ] as [string, string][]).map(([label, value]) => (
+                        <p key={label} className="text-text-dim">
+                          <span className="text-accent/50 w-28 inline-block">{label}</span>
+                          <span className="text-accent/80">{value}</span>
+                        </p>
+                      ))}
                     </div>
                   </div>
+
+                  {/* Certificates */}
+                  {certificates.length > 0 && (
+                    <div>
+                      <div className="font-[var(--font-mono)] text-[12px] text-accent/50 mb-4">
+                        $ cat /etc/hydra/certifications.conf
+                      </div>
+                      <div className="font-[var(--font-mono)] text-[13px] leading-[2.2] space-y-0">
+                        {certificates.map((c) => (
+                          <p key={c.name} className="text-text-dim">
+                            <span className="text-accent/80">{c.name}</span>
+                            {c.desc ? <span className="text-accent/40 text-[11px]"> — {c.desc}</span> : null}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Department emails */}
                   <div>
@@ -133,19 +185,6 @@ export default function KontaktClient({
                           </a>
                         </p>
                       ))}
-                    </div>
-                  </div>
-
-                  {/* Security status */}
-                  <div>
-                    <div className="font-[var(--font-mono)] text-[12px] text-accent/50 mb-3">
-                      $ hydra --status
-                    </div>
-                    <div className="font-[var(--font-mono)] text-[12px] text-accent/30 leading-[2.2]">
-                      <div>SZYFROWANIE:  <span className="text-accent/60">AES-256</span></div>
-                      <div>PROTOKÓŁ:     <span className="text-accent/60">TLS 1.3</span></div>
-                      <div>STATUS:       <span className="text-accent">AKTYWNY</span> <span className="terminal-blink">█</span></div>
-                      <div>CZAS REAKCJI: <span className="text-accent/60">24-48h</span></div>
                     </div>
                   </div>
 

@@ -8,6 +8,7 @@ import { wspolpracaPage } from './wspolpracaPage'
 import { navigation } from './navigation'
 import { newsPost } from './newsPost'
 import { blogPost } from './blogPost'
+import { certyfikatyPage } from './certyfikatyPage'
 
 export const schemaTypes = [
   siteSettings,
@@ -20,4 +21,5 @@ export const schemaTypes = [
   navigation,
   newsPost,
   blogPost,
+  certyfikatyPage,
 ]

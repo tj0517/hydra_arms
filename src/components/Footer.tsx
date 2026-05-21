@@ -18,6 +18,13 @@ type SiteSettings = {
   nip?: string;
   regon?: string;
   koncesja?: string;
+  krs?: string;
+  ncage?: string;
+  duns?: string;
+  bdo?: string;
+  uei?: string;
+  adresSiedziby?: string;
+  adresSklep?: string;
   facebookUrl?: string;
   instagramUrl?: string;
   emailBiuro?: string;
@@ -32,9 +39,16 @@ export default function Footer({
 } = {}) {
   const links = navLinks?.length ? navLinks : DEFAULT_NAV_LINKS;
   const company = siteSettings?.companyName ?? "HYDRA ARMS SP. Z O.O.";
-  const nip = siteSettings?.nip ?? "000000000";
-  const regon = siteSettings?.regon ?? "00000000";
-  const koncesja = siteSettings?.koncesja ?? "B-000/00";
+  const nip = siteSettings?.nip ?? "6793302181";
+  const regon = siteSettings?.regon ?? "528976880";
+  const koncesja = siteSettings?.koncesja ?? "B-117/2025";
+  const krs = siteSettings?.krs ?? "0001111593";
+  const ncage = siteSettings?.ncage ?? "9CJ3H";
+  const duns = siteSettings?.duns ?? "665007622";
+  const bdo = siteSettings?.bdo ?? "000654184";
+  const uei = siteSettings?.uei ?? "YUXMMDP8MNP4";
+  const adresSiedziby = siteSettings?.adresSiedziby ?? "ul. Cechowa 44B\n30-614 Kraków";
+  const adresSklep = siteSettings?.adresSklep ?? "ul. Gdańska 22\n31-411 Kraków";
   const fbUrl = siteSettings?.facebookUrl ?? "#!";
   const igUrl = siteSettings?.instagramUrl ?? "#!";
   const emailBiuro = siteSettings?.emailBiuro ?? "kontakt@hydraarms.pl";
@@ -92,10 +106,18 @@ export default function Footer({
               HYDRA<span className="text-accent footer-dot-pulse">.</span>ARMS
             </div>
             <div className="font-[var(--font-mono)] text-sm text-text-dim leading-relaxed space-y-1">
-              <p>{company}</p>
+              <p className="text-white font-semibold">{company}</p>
+              <p className="whitespace-pre-line text-xs mt-2">{adresSiedziby}</p>
+              <p className="text-xs text-text-dim/60 mt-1">Sklep: {adresSklep.split("\n").join(", ")}</p>
+              <div className="border-t border-white/5 my-3" />
               <p>NIP: [ {nip} ]</p>
               <p>REGON: [ {regon} ]</p>
-              <p>KONCESJA MSWiA NR: [ {koncesja} ]</p>
+              <p>KRS: [ {krs} ]</p>
+              <p>KONCESJA MSWiA: [ {koncesja} ]</p>
+              <p>NCAGE: [ {ncage} ]</p>
+              <p>D-U-N-S®: [ {duns} ]</p>
+              <p>BDO: [ {bdo} ]</p>
+              <p>UEI: [ {uei} ]</p>
             </div>
           </div>
 
