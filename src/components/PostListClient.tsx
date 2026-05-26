@@ -47,7 +47,7 @@ export default function PostListClient({ posts }: Props) {
     <section className="px-[clamp(32px,5vw,64px)] py-16">
       <div
         ref={gridRef}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px border border-white/10"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"
       >
         {posts.map((post) => (
           <PostCard key={post._id} post={post} />

@@ -3,8 +3,8 @@ import CornerCTA from "@/components/ui/CornerCTA";
 
 interface IntroBlockProps {
   text: string;
-  ctaHref: string;
-  ctaLabel: string;
+  ctaHref?: string;
+  ctaLabel?: string;
   borderBottom?: boolean;
   py?: string;
 }
@@ -25,9 +25,11 @@ export default function IntroBlock({
         className="text-[1.4rem] md:text-[3.2vw] font-medium text-text-dim leading-[1.3] md:leading-[1.1] tracking-[-0.48px] text-justify"
         indent={2}
       />
-      <div className="flex justify-end mt-11">
-        <CornerCTA href={ctaHref} label={ctaLabel} />
-      </div>
+      {ctaHref && ctaLabel && (
+        <div className="flex justify-end mt-11">
+          <CornerCTA href={ctaHref} label={ctaLabel} />
+        </div>
+      )}
     </section>
   );
 }

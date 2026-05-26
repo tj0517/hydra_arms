@@ -9,9 +9,11 @@ const MilitaryMap = dynamic(() => import("@/components/MilitaryMap"), { ssr: fal
 import MapCrosshair from "@/components/MapCrosshair";
 import TypewriterTitle from "@/components/TypewriterTitle";
 import Image from "next/image";
+import Link from "next/link";
 import CornerCTA from "@/components/ui/CornerCTA";
 import SectionLabel from "@/components/ui/SectionLabel";
 import ClientSegmentsGrid from "@/components/sections/ClientSegmentsGrid";
+import PostCard, { type PostCardData } from "@/components/PostCard";
 
 /* ──────────── DATA ──────────── */
 
@@ -58,14 +60,14 @@ const DEFAULT_FILARY: Filar[] = [
     tag: "B2G",
     title: "Zamówienia rządowe",
     desc: "Dostawy dla jednostek wojskowych, służb mundurowych i instytucji państwowych realizowane w ramach ścisłych procedur bezpieczeństwa i zamówień publicznych.",
-    img: "/img/cnc.png",
+    img: "/img/vest.png",
     href: "/wspolpraca",
   },
   {
     tag: "B2B",
     title: "Kooperacja przemysłowa",
     desc: "Współpraca z partnerami przemysłowymi w zakresie prototypowania, produkcji seryjnej komponentów i integracji systemów obronnych na zamówienie.",
-    img: "/img/vest.png",
+    img: "/img/cnc.png",
     href: "/wspolpraca",
   },
   {
@@ -91,6 +93,8 @@ interface HomePageClientProps {
   hudLabel?: string
   aboutText?: string
   heroVideo?: string
+  recentNews?: PostCardData[]
+  recentBlog?: PostCardData[]
 }
 
 /* ──────────── PAGE ──────────── */
@@ -103,6 +107,8 @@ export default function HomePageClient({
   hudLabel = DEFAULT_HUD_LABEL,
   aboutText = DEFAULT_ABOUT_TEXT,
   heroVideo = DEFAULT_HERO_VIDEO,
+  recentNews = [],
+  recentBlog = [],
 }: HomePageClientProps = {}) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLElement>(null);
@@ -391,11 +397,12 @@ export default function HomePageClient({
             >
               <div className="grid grid-cols-1 md:grid-cols-[0.75fr_1fr] min-h-screen bg-bg">
                 {/* Left — image with military overlay */}
-                <div className="relative min-h-[300px] md:min-h-0 overflow-hidden">
+                <div className="relative min-h-[300px] md:min-h-0 md:h-screen overflow-hidden">
                   <Image
                     src={service.img}
                     alt={service.title}
                     fill
+                    sizes="(max-width: 768px) 100vw, 75vw"
                     className="object-cover grayscale brightness-[0.45] contrast-[1.1] sepia-[0.15]"
                   />
                   <div className="absolute inset-0 bg-[#0a1a0a]/40 mix-blend-multiply" />
@@ -408,9 +415,6 @@ export default function HomePageClient({
                     }}
                   />
                   <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(5,5,5,0.6)_100%)]" />
-                  <div className="absolute bottom-8 left-8 font-[var(--font-mono)] text-[11px] text-accent/40 tracking-[0.2em]">
-                    {service.id}/{String(services.length).padStart(2, "0")}
-                  </div>
                 </div>
 
                 {/* Right — content */}
@@ -465,7 +469,7 @@ export default function HomePageClient({
       {/* ─── DESCRIPTION SECTION ─── */}
       <section>
         <SectionLabel label="//02 O NAS" />
-        <div className="pt-12 md:pt-20 pb-0 px-[clamp(32px,5vw,64px)]">
+        <div className="pt-12 md:pt-20 pb-12 md:pb-20 px-[clamp(32px,5vw,64px)]">
           <ScrollRevealText
             text={aboutText}
             className="text-[clamp(1.4rem,3.17vw,48px)] font-light text-text-dim leading-[1.35] md:leading-[53px] tracking-[-0.48px] text-justify"
@@ -476,6 +480,26 @@ export default function HomePageClient({
           </div>
         </div>
       </section>
+
+      {/* ─── AKTUALNOŚCI — 3 LATEST ─── */}
+      {recentNews.length > 0 && (
+        <section className="border-t border-white/[0.08]">
+          <SectionLabel label="//03 AKTUALNOŚCI" />
+          <div className="px-[clamp(32px,5vw,64px)] pt-12 md:pt-16 pb-14 md:pb-20">
+            <div className="flex items-end justify-between mb-8 md:mb-12">
+              <h2 className="text-[clamp(1.4rem,3.5vw,52px)] font-normal text-white leading-[1.1] tracking-[-0.5px]">
+                Aktualności
+              </h2>
+              <CornerCTA href="/aktualnosci" label="Wszystkie aktualności →" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+              {recentNews.map((post) => (
+                <PostCard key={post._id} post={post} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ─── VIDEO SECTION ─── */}
       <div ref={videoSectionRef} className="h-[280px] sm:h-[380px] md:h-[549px] bg-bg relative overflow-hidden">
@@ -525,7 +549,7 @@ export default function HomePageClient({
 
       {/* ─── POTENCJAŁ I OPOWIEDZIALNOŚĆ ─── */}
       <section>
-        <SectionLabel label="//03 POTENCJAŁ" />
+        <SectionLabel label="//04 POTENCJAŁ" />
         <div className="pt-12 md:pt-16 px-[clamp(32px,5vw,64px)]">
           <TypewriterTitle
             as="h2"
@@ -536,18 +560,18 @@ export default function HomePageClient({
           </TypewriterTitle>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mt-8 pb-0 md:gap-16 md:mt-16 md:pb-4">
             <div>
-              <p className="text-text-dim text-[15px] md:text-[18px] font-normal leading-[1.7] md:leading-[30px]">
+              <p className="text-text-dim text-[15px] md:text-[18px] font-normal leading-[1.7] md:leading-[30px] text-justify">
                 HYDRA ARMS to krakowski ośrodek kompetencyjny dedykowany dla sektora
                 Security & Defense. Specjalizujemy się w wytwarzaniu zaawansowanych
                 komponentów o wysokim stopniu skomplikowania.
               </p>
             </div>
             <div className="hidden md:flex items-start justify-end">
-              <div className="w-[100px] h-[100px] border border-white/10 flex items-center justify-center">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-text-dim">
+              <Link href="/o-nas" className="group w-[100px] h-[100px] border border-white/10 hover:border-accent/40 flex items-center justify-center transition-all duration-300">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-text-dim group-hover:text-accent transition-colors duration-300">
                   <path d="M7 17L17 7M17 7H7M17 7V17" />
                 </svg>
-              </div>
+              </Link>
             </div>
           </div>
         </div>
@@ -555,7 +579,7 @@ export default function HomePageClient({
 
 {/* ─── 3 FILARY ─── */}
       <section>
-        <SectionLabel label="//04 DYSTRYBUCJA" />
+        <SectionLabel label="//05 DYSTRYBUCJA" />
         <ClientSegmentsGrid segments={filary} plain />
       </section>
 
@@ -580,16 +604,15 @@ export default function HomePageClient({
               </h3>
 
               <div className="font-[var(--font-mono)] text-[16px] tracking-[0.8px] leading-[24px] text-text-dim space-y-0">
-                <p>[<span className="text-accent">→</span>]  Kraków, Polska</p>
-                <p>[<span className="text-accent">→</span>]  50°04&apos;N  019°57&apos;E</p>
-                <p>[<span className="text-accent">→</span>]  Droga krajowa S7</p>
-                <p>[<span className="text-accent">→</span>]  Trasa północ–południe</p>
+                <p>[<span className="text-accent">→</span>]  ul. Gdańska 22</p>
+                <p>[<span className="text-accent">→</span>]  31-411 Kraków, Polska</p>
+                <p>[<span className="text-accent">→</span>]  50°04&apos;33&quot;N  019°56&apos;39&quot;E</p>
                 <p>[<span className="text-accent">→</span>]  Punkt handlowo-biurowy</p>
               </div>
 
               <div className="mt-8">
                 <CornerCTA
-                  href="https://maps.google.com/?q=50.06,19.94"
+                  href="https://maps.google.com/?q=50.0758,19.9441"
                   label="Wyznacz Trasę →"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -604,8 +627,8 @@ export default function HomePageClient({
       <div className="block md:hidden border-b border-white/[0.08] px-8 py-6">
         <h3 className="text-text-dim text-[18px] font-medium mb-3">HYDRA ARMS SP. Z O.O.</h3>
         <div className="font-[var(--font-mono)] text-[13px] tracking-[0.5px] leading-[2] text-text-dim">
-          <p>[<span className="text-accent">→</span>] Kraków, Polska</p>
-          <p>[<span className="text-accent">→</span>] 50°04&apos;N  019°57&apos;E</p>
+          <p>[<span className="text-accent">→</span>] ul. Gdańska 22, 31-411 Kraków</p>
+          <p>[<span className="text-accent">→</span>] 50°04&apos;33&quot;N  019°56&apos;39&quot;E</p>
         </div>
         <div className="relative px-6 py-1.5 inline-flex items-center w-fit mt-4">
           <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
@@ -613,7 +636,7 @@ export default function HomePageClient({
           <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
           <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
           <a
-            href="https://maps.google.com/?q=50.06,19.94"
+            href="https://maps.google.com/?q=50.0758,19.9441"
             target="_blank"
             rel="noopener noreferrer"
             className="font-[var(--font-mono)] text-[13px] text-accent tracking-[0.5px] hover:text-white transition-colors duration-300"
@@ -622,6 +645,26 @@ export default function HomePageClient({
           </a>
         </div>
       </div>
+
+      {/* ─── BLOG — 3 LATEST ─── */}
+      {recentBlog.length > 0 && (
+        <section className="border-t border-white/[0.08]">
+          <SectionLabel label="//06 BLOG" />
+          <div className="px-[clamp(32px,5vw,64px)] pt-12 md:pt-16 pb-14 md:pb-20">
+            <div className="flex items-end justify-between mb-8 md:mb-12">
+              <h2 className="text-[clamp(1.4rem,3.5vw,52px)] font-normal text-white leading-[1.1] tracking-[-0.5px]">
+                Blog
+              </h2>
+              <CornerCTA href="/blog" label="Wszystkie wpisy →" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+              {recentBlog.map((post) => (
+                <PostCard key={post._id} post={post} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ─── KONTAKT — TERMINAL ─── */}
       <section className="border-t border-white/[0.25] px-[clamp(32px,5vw,64px)] py-20 md:py-16">
@@ -675,19 +718,19 @@ export default function HomePageClient({
                   <div className="font-[var(--font-mono)] text-[13px] leading-[2.2] space-y-0">
                     <p className="text-text-dim">
                       <span className="text-accent/50">R&D</span>{" "}
-                      <span className="text-accent">research@hydra-arms.com</span>
+                      <span className="text-accent">rd@hydraarms.com</span>
                     </p>
                     <p className="text-text-dim">
                       <span className="text-accent/50">B2G</span>{" "}
-                      <span className="text-accent">gov@hydra-arms.com</span>
+                      <span className="text-accent">b2g@hydraarms.com</span>
                     </p>
                     <p className="text-text-dim">
                       <span className="text-accent/50">HANDEL</span>{" "}
-                      <span className="text-accent">sprzedaz@hydra-arms.com</span>
+                      <span className="text-accent">handel@hydraarms.com</span>
                     </p>
                     <p className="text-text-dim">
                       <span className="text-accent/50">BIURO</span>{" "}
-                      <span className="text-accent">office@hydra-arms.com</span>
+                      <span className="text-accent">biuro@hydraarms.com</span>
                     </p>
                   </div>
 
@@ -709,13 +752,23 @@ export default function HomePageClient({
                     $ hydra --wyslij-wiadomosc
                   </div>
                   <form className="space-y-4">
-                    <div className="flex items-center gap-2">
-                      <span className="font-[var(--font-mono)] text-[13px] text-accent/50 shrink-0">&gt;</span>
-                      <input
-                        type="text"
-                        placeholder="IMIĘ"
-                        className="w-full bg-transparent text-accent font-[var(--font-mono)] text-[13px] tracking-[0.5px] focus:outline-none placeholder:text-accent/20 caret-accent"
-                      />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex items-center gap-2">
+                        <span className="font-[var(--font-mono)] text-[13px] text-accent/50 shrink-0">&gt;</span>
+                        <input
+                          type="text"
+                          placeholder="IMIĘ"
+                          className="w-full bg-transparent text-accent font-[var(--font-mono)] text-[13px] tracking-[0.5px] focus:outline-none placeholder:text-accent/20 caret-accent"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-[var(--font-mono)] text-[13px] text-accent/50 shrink-0">&gt;</span>
+                        <input
+                          type="text"
+                          placeholder="NAZWISKO"
+                          className="w-full bg-transparent text-accent font-[var(--font-mono)] text-[13px] tracking-[0.5px] focus:outline-none placeholder:text-accent/20 caret-accent"
+                        />
+                      </div>
                     </div>
                     <div className="border-t border-accent/5" />
                     <div className="flex items-center gap-2">
@@ -723,6 +776,15 @@ export default function HomePageClient({
                       <input
                         type="email"
                         placeholder="EMAIL"
+                        className="w-full bg-transparent text-accent font-[var(--font-mono)] text-[13px] tracking-[0.5px] focus:outline-none placeholder:text-accent/20 caret-accent"
+                      />
+                    </div>
+                    <div className="border-t border-accent/5" />
+                    <div className="flex items-center gap-2">
+                      <span className="font-[var(--font-mono)] text-[13px] text-accent/50 shrink-0">&gt;</span>
+                      <input
+                        type="text"
+                        placeholder="FIRMA / INSTYTUCJA (opcjonalne)"
                         className="w-full bg-transparent text-accent font-[var(--font-mono)] text-[13px] tracking-[0.5px] focus:outline-none placeholder:text-accent/20 caret-accent"
                       />
                     </div>

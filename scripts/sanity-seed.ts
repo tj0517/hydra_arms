@@ -41,7 +41,10 @@ async function seed() {
     uei: 'YUXMMDP8MNP4',
     adresSiedziby: 'ul. Cechowa 44B\n30-614 Kraków',
     adresSklep: 'ul. Gdańska 22\n31-411 Kraków',
-    emailBiuro: 'biuro@hydraarms.pl',
+    emailRD: 'rd@hydraarms.com',
+    emailB2G: 'b2g@hydraarms.com',
+    emailHandel: 'handel@hydraarms.com',
+    emailBiuro: 'biuro@hydraarms.com',
     lat: 50.0647,
     lng: 19.945,
   })
@@ -52,13 +55,10 @@ async function seed() {
     _id: 'navigation',
     _type: 'navigation',
     links: [
-      { _key: 'start', href: '/', label: 'Start' },
       { _key: 'uslugi', href: '/uslugi', label: 'Usługi' },
       { _key: 'onas', href: '/o-nas', label: 'O nas' },
-      { _key: 'aktualnosci', href: '/aktualnosci', label: 'Aktualności' },
-      { _key: 'blog', href: '/blog', label: 'Blog' },
       { _key: 'wspolpraca', href: '/wspolpraca', label: 'Współpraca' },
-      { _key: 'certyfikaty', href: '/certyfikaty', label: 'Certyfikaty' },
+      { _key: 'blog', href: '/blog', label: 'Blog' },
       { _key: 'kontakt', href: '/kontakt', label: 'Kontakt' },
     ],
   })

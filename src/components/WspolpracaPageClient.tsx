@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState } from "react";
 import gsap from "gsap";
-import AnimateIn from "@/components/AnimateIn";
+import Link from "next/link";
 import TypewriterTitle from "@/components/TypewriterTitle";
 import DrawReveal from "@/components/DrawReveal";
 import MissionBriefing from "@/components/MissionBriefing";
@@ -18,11 +18,11 @@ type KorzyscTab = { id: string; label: string; title: string; desc: string }
 type EthicsItem = { title: string; desc: string }
 
 const DEFAULT_FUNDAMENTY: FundamentItem[] = [
-  { id: "01", title: "Interdyscyplinarne badania i rozwój", desc: "Nasze projekty badawcze łączą wiele dziedzin nauki." },
-  { id: "02", title: "Transparentność operacyjna", desc: "Działamy w ścisłej zgodności z krajowymi i międzynarodowymi procedurami kontroli obrotu specjalnego." },
-  { id: "03", title: "Nowoczesne materiały", desc: "Od wysokogatunkowych stopów metali, przez zaawansowane tworzywa sztuczne, aż po kompozyty nowej generacji." },
-  { id: "04", title: "Inżynieria precyzyjna", desc: "Dysponujemy zapleczem technologicznym zdolnym do realizacji złożonych zadań produkcyjnych i prototypowych." },
-  { id: "05", title: "Wszechstronność projektowa", desc: "Tworzymy koncepcje dla różnych rodzajów uzbrojenia." },
+  { id: "01", title: "Interdyscyplinarne badania i rozwój", desc: "Łączymy kompetencje inżynierów mechaników, metalurgów i specjalistów ds. balistyki — tworząc środowisko zdolne do rozwiązywania problemów przekraczających granice pojedynczej dyscypliny naukowej." },
+  { id: "02", title: "Transparentność operacyjna", desc: "Każdy etap projektowania i wytwarzania dokumentujemy zgodnie z wymogami AQAP i krajowych regulacji koncesyjnych. Klient zawsze wie, na którym etapie procesu się znajdujemy." },
+  { id: "03", title: "Nowoczesne materiały", desc: "Selekcja materiałów to element projektu, nie dodatek. Dobieramy stopy, polimery i kompozyty pod kątem konkretnych wymagań wytrzymałościowych, masowych i balistycznych." },
+  { id: "04", title: "Inżynieria precyzyjna", desc: "Nasze centra obróbcze CNC i linia kontroli CMM pozwalają utrzymywać tolerancje wymagane przez wojskowe normy wymiarowe przy pełnej powtarzalności seryjnej." },
+  { id: "05", title: "Wszechstronność projektowa", desc: "Projektujemy systemy ręczne, montowane na platformach oraz stacjonarne. Każdy wariant przechodzi pełen cykl walidacji funkcjonalnej przed przekazaniem do produkcji." },
 ];
 
 const DEFAULT_KORZYSCI_TABS: KorzyscTab[] = [
@@ -216,7 +216,7 @@ export default function WspolpracaPageClient({
 
       {/* ─── PARTNERSTWA STRATEGICZNE ─── */}
       <section className="border-t border-b border-white/5">
-        <div className="px-[clamp(32px,5vw,64px)] pt-16">
+        <div className="pt-12 md:pt-16 px-[clamp(32px,5vw,64px)]">
           <TypewriterTitle
             as="h2"
             className="text-[clamp(1.75rem,9.26vw,140px)] font-medium text-white leading-[1.05] tracking-[-0.5px] md:tracking-[-2px] uppercase"
@@ -225,28 +225,25 @@ export default function WspolpracaPageClient({
             PARTNERSTWA STRATEGICZNE
           </TypewriterTitle>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8 pb-8 md:gap-16 md:mt-16 md:pb-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mt-8 pb-0 md:gap-16 md:mt-16 md:pb-4">
             <div>
-              <AnimateIn delay={0.1}>
-                <p className="text-text-dim text-[15px] md:text-[18px] font-normal leading-[1.7] md:leading-[30px] text-justify">
-                  Nasza wizja współpracy z sektorem publicznym i służbami mundurowymi
-                  opiera się na dostarczaniu rozwiązań wyprzedzających współczesne
-                  wyzwania operacyjne. Poprzez integrację kompetencji R&D z potrzebami
-                  jednostek liniowych, tworzymy fundament pod długofalowe programy
-                  modernizacyjne.
-                </p>
-              </AnimateIn>
+              <p className="text-text-dim text-[15px] md:text-[18px] font-normal leading-[1.7] md:leading-[30px] text-justify">
+                Nasza wizja współpracy z sektorem publicznym i służbami mundurowymi
+                opiera się na dostarczaniu rozwiązań wyprzedzających współczesne
+                wyzwania operacyjne. Poprzez integrację kompetencji R&D z potrzebami
+                jednostek liniowych, tworzymy fundament pod długofalowe programy
+                modernizacyjne.
+              </p>
             </div>
             <div className="hidden md:flex items-start justify-end">
-              <a href="#" className="w-[100px] h-[100px] border border-white/10 flex items-center justify-center hover:border-accent/40 transition-colors duration-300">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-text-dim">
+              <Link href="/kontakt" className="group w-[100px] h-[100px] border border-white/10 hover:border-accent/40 flex items-center justify-center transition-all duration-300">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-text-dim group-hover:text-accent transition-colors duration-300">
                   <path d="M7 17L17 7M17 7H7M17 7V17" />
                 </svg>
-              </a>
+              </Link>
             </div>
           </div>
         </div>
-
       </section>
 
       {/* ─── KLUCZOWE KORZYŚCI ─── */}
@@ -328,14 +325,19 @@ export default function WspolpracaPageClient({
 
         {/* Right */}
         <div className="pt-10 md:pt-16 pb-16 px-[clamp(32px,5vw,64px)]">
-          <div className="flex flex-col gap-9">
+          <div className="border border-white/[0.08]">
             {ethicsItems.map((item, i) => (
-              <DrawReveal
+              <div
                 key={i}
-                title={item.title}
-                desc={item.desc}
-                delay={i * 0.2}
-              />
+                className={`px-8 pt-8${i < ethicsItems.length - 1 ? " border-b border-white/[0.08]" : ""}`}
+              >
+                <DrawReveal
+                  title={item.title}
+                  desc={item.desc}
+                  delay={i * 0.2}
+                  noLine
+                />
+              </div>
             ))}
           </div>
         </div>

@@ -138,6 +138,14 @@ export const blogPostsQuery = groq`*[_type == "blogPost"] | order(publishedAt de
   ${postCardFields}
 }`
 
+export const latestNewsQuery = groq`*[_type == "newsPost"] | order(publishedAt desc)[0..2] {
+  ${postCardFields}
+}`
+
+export const latestBlogQuery = groq`*[_type == "blogPost"] | order(publishedAt desc)[0..2] {
+  ${postCardFields}
+}`
+
 export const newsPostBySlugQuery = groq`*[_type == "newsPost" && slug.current == $slug][0] {
   ${postCardFields},
   body[] {

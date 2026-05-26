@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Outfit, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import CookiesBanner from "@/components/CookiesBanner";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -80,6 +81,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
         />
         {children}
+        <CookiesBanner />
       </body>
     </html>
   );

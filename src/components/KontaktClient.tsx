@@ -22,6 +22,7 @@ interface KontaktClientProps {
   emailBiuro?: string;
   facebookUrl?: string;
   instagramUrl?: string;
+  linkedinUrl?: string;
   certificates?: { name: string; desc?: string }[];
 }
 
@@ -37,12 +38,13 @@ export default function KontaktClient({
   uei = "YUXMMDP8MNP4",
   adresSiedziby = "ul. Cechowa 44B\n30-614 Kraków",
   adresSklep = "ul. Gdańska 22\n31-411 Kraków",
-  emailRD = "research@hydra-arms.com",
-  emailB2G = "gov@hydra-arms.com",
-  emailHandel = "sprzedaz@hydra-arms.com",
-  emailBiuro = "office@hydra-arms.com",
+  emailRD = "rd@hydraarms.com",
+  emailB2G = "b2g@hydraarms.com",
+  emailHandel = "handel@hydraarms.com",
+  emailBiuro = "biuro@hydraarms.com",
   facebookUrl = "#!",
   instagramUrl = "#!",
+  linkedinUrl = "#!",
   certificates = [
     { name: "PN-EN ISO 9001:2015-10", desc: "System Zarządzania Jakością" },
     { name: "AQAP 2110:2016", desc: "Wymagania NATO dotyczące zapewnienia jakości" },
@@ -198,7 +200,7 @@ export default function KontaktClient({
                         href={facebookUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group w-10 h-10 border border-white/10 flex items-center justify-center text-text-dim hover:text-accent hover:border-accent/30 transition-all duration-300 relative overflow-hidden"
+                        className="group w-10 h-10 border border-accent/30 flex items-center justify-center text-accent hover:text-white hover:border-accent transition-all duration-300 relative overflow-hidden"
                         aria-label="Facebook"
                       >
                         <div className="absolute inset-0 bg-accent/5 scale-0 group-hover:scale-100 transition-transform duration-300 origin-center" />
@@ -210,7 +212,7 @@ export default function KontaktClient({
                         href={instagramUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group w-10 h-10 border border-white/10 flex items-center justify-center text-text-dim hover:text-accent hover:border-accent/30 transition-all duration-300 relative overflow-hidden"
+                        className="group w-10 h-10 border border-accent/30 flex items-center justify-center text-accent hover:text-white hover:border-accent transition-all duration-300 relative overflow-hidden"
                         aria-label="Instagram"
                       >
                         <div className="absolute inset-0 bg-accent/5 scale-0 group-hover:scale-100 transition-transform duration-300 origin-center" />
@@ -219,8 +221,20 @@ export default function KontaktClient({
                         </svg>
                       </a>
                       <a
+                        href={linkedinUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group w-10 h-10 border border-accent/30 flex items-center justify-center text-accent hover:text-white hover:border-accent transition-all duration-300 relative overflow-hidden"
+                        aria-label="LinkedIn"
+                      >
+                        <div className="absolute inset-0 bg-accent/5 scale-0 group-hover:scale-100 transition-transform duration-300 origin-center" />
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="relative z-[1]">
+                          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                        </svg>
+                      </a>
+                      <a
                         href={`mailto:${emailBiuro}`}
-                        className="group w-10 h-10 border border-white/10 flex items-center justify-center text-text-dim hover:text-accent hover:border-accent/30 transition-all duration-300 relative overflow-hidden"
+                        className="group w-10 h-10 border border-accent/30 flex items-center justify-center text-accent hover:text-white hover:border-accent transition-all duration-300 relative overflow-hidden"
                         aria-label="Email"
                       >
                         <div className="absolute inset-0 bg-accent/5 scale-0 group-hover:scale-100 transition-transform duration-300 origin-center" />

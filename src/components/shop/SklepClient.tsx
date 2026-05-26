@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import type { ShopProduct, ShopCategory } from '@/lib/supabase/types';
 import ProductCard from './ProductCard';
 import CartDrawer from './CartDrawer';
 import { useCart } from './CartProvider';
+import { createClient } from '@/lib/supabase/client';
 
 interface SklepClientProps {
   products: ShopProduct[];
@@ -46,6 +48,14 @@ export default function SklepClient({
   const { itemCount, openCart } = useCart();
   const [search, setSearch] = useState('');
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data: { session } }) => setLoggedIn(!!session?.user));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => setLoggedIn(!!session?.user));
+    return () => subscription.unsubscribe();
+  }, []);
   const [expanded, setExpanded] = useState<Set<number>>(() => {
     if (!currentCategoryId) return new Set<number>();
     const parent = categories.find(c => c.id === currentCategoryId && !c.parent_id);
@@ -196,6 +206,14 @@ export default function SklepClient({
                 >×</button>
               )}
             </div>
+
+            {/* Account */}
+            <Link
+              href="/konto"
+              className="border border-white/15 px-3 py-2 font-[var(--font-mono)] text-[10px] text-text-dim hover:border-accent/40 hover:text-accent transition-colors tracking-widest"
+            >
+              {loggedIn ? '[ KONTO ]' : '[ ZALOGUJ ]'}
+            </Link>
 
             {/* Cart */}
             <button

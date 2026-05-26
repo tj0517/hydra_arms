@@ -61,9 +61,10 @@ interface DrawRevealProps {
   title: string;
   desc: string;
   delay?: number;
+  noLine?: boolean;
 }
 
-export default function DrawReveal({ title, desc, delay = 0 }: DrawRevealProps) {
+export default function DrawReveal({ title, desc, delay = 0, noLine = false }: DrawRevealProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [borderActive, setBorderActive] = useState(false);
   const [textActive, setTextActive] = useState(false);
@@ -97,7 +98,7 @@ export default function DrawReveal({ title, desc, delay = 0 }: DrawRevealProps) 
   return (
     <div ref={ref}>
       <div
-        className={`draw-reveal-border pb-6${borderActive ? " active" : ""}`}
+        className={`${noLine ? "" : `draw-reveal-border${borderActive ? " active" : ""}`} pb-6`}
       >
         <h3 className="text-white text-[20px] md:text-[28px] font-medium leading-[1.25] md:leading-[34px] mb-4">
           {textActive ? (
