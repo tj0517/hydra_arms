@@ -8,9 +8,9 @@ import type { PostCardData } from '@/components/PostCard'
 type SanityImage = any
 
 const filaryImgFallback: Record<string, string> = {
-  "B2G": "/img/cnc.png",
-  "B2B": "/img/vest.png",
-  "B2C": "/img/binoculars.png",
+  "B2G": "/img/draws/vest.png",
+  "B2B": "/img/draws/cnc.png",
+  "B2C": "/img/draws/binoculars.png",
 }
 
 interface RawPost {
