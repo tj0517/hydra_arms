@@ -1,14 +1,12 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
-import gsap from "gsap";
 import SubpageHero from "@/components/SubpageHero";
-import TypewriterTitle from "@/components/TypewriterTitle";
-
 import CornerCTA from "@/components/ui/CornerCTA";
-import SectionLabel from "@/components/ui/SectionLabel";
 import IntroBlock from "@/components/sections/IntroBlock";
 import ClientSegmentsGrid, { USLUGI_SEGMENTS } from "@/components/sections/ClientSegmentsGrid";
+import TabPanel from "@/components/sections/TabPanel";
+import TagBullets from "@/components/sections/TagBullets";
+import TitleLeadSection from "@/components/sections/TitleLeadSection";
 
 
 /* ──────────── DATA ──────────── */
@@ -74,20 +72,6 @@ export default function UslugiPageClient({
   introText = DEFAULT_INTRO_TEXT,
   competencies = DEFAULT_COMPETENCIES,
 }: UslugiPageClientProps = {}) {
-  const [activeTab, setActiveTab] = useState(0);
-  const contentRef = useRef<HTMLDivElement>(null);
-
-  // Animate content on tab change
-  useEffect(() => {
-    if (!contentRef.current) return;
-    gsap.fromTo(
-      contentRef.current,
-      { opacity: 0, y: 15 },
-      { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }
-    );
-  }, [activeTab]);
-
-  const active = competencies[activeTab];
 
   return (
     <main>
@@ -111,64 +95,31 @@ export default function UslugiPageClient({
           </h2>
         </div>
 
-        {/* Tab navigation */}
-        <div className="flex gap-4 sm:gap-6 px-[clamp(32px,5vw,64px)] py-3.5 border-b border-white/10 overflow-x-auto scrollbar-hide">
-          {competencies.map((comp, i) => (
-            <button
-              key={comp.id}
-              onClick={() => setActiveTab(i)}
-              className={`font-[var(--font-mono)] text-[12px] sm:text-[14px] tracking-[1.12px] transition-colors duration-300 whitespace-nowrap shrink-0 ${
-                activeTab === i
-                  ? "text-text"
-                  : "text-text-dim hover:text-text"
-              }`}
-            >
-              <span className="text-text-dim">[</span>
-              <span className={activeTab === i ? "text-accent" : ""}> {comp.tab} </span>
-              <span className="text-text-dim">]</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Active tab content */}
-        <div>
-          <div ref={contentRef} className="px-[clamp(32px,5vw,80px)] pt-10 pb-2 relative z-10">
-            {/* Counter */}
-            <div className="mb-9">
-              <div className="border border-text/50 px-2 py-1 inline-block">
-                <span className="font-[var(--font-mono)] text-[18px]">
-                  <span className="text-accent">{active.id}</span>
-                  <span className="text-white/30">/{String(competencies.length).padStart(2, "0")}</span>
-                </span>
-              </div>
-            </div>
-
-            {/* Title + description */}
-            <h3 className="text-[clamp(1.5rem,3.17vw,48px)] font-normal text-white leading-[1.15] md:leading-[53px] tracking-[-0.48px] mb-6">
-              {active.title}
-            </h3>
-            <p className="text-[15px] md:text-[18px] font-light text-text-dim leading-[1.7] md:leading-[23px] max-w-[749px] mb-8 text-justify">
-              {active.desc}
-            </p>
-
-            {/* Tags */}
-            <div className="flex gap-2.5 items-center py-2.5 flex-wrap mb-8">
-              {active.tags.map((tag, ti) => (
-                <span key={ti} className="flex items-center gap-2.5">
-                  <span className="font-[var(--font-mono)] text-[13px] md:text-[20px] text-accent/70 md:text-accent tracking-[0.2px]">
-                    {tag}
-                  </span>
-                  <span className="w-[4px] h-[4px] md:w-[5px] md:h-[5px] bg-[#d9d9d9]/50 md:bg-[#d9d9d9]" />
-                </span>
-              ))}
-            </div>
-
-            {/* CTA */}
-            <div className="flex justify-end">
-              <CornerCTA href="#" label={active.cta} />
-            </div>
-          </div>
-        </div>
+        <TabPanel
+          tabs={competencies.map((c) => ({ id: c.id, label: c.tab }))}
+          contentPb="pb-2"
+          contentBorder={false}
+          contentClassName="relative z-10"
+        >
+          {(activeId) => {
+            const comp = competencies.find((c) => c.id === activeId)
+            if (!comp) return null
+            return (
+              <>
+                <h3 className="text-[clamp(1.5rem,3.17vw,48px)] font-normal text-white leading-[1.15] md:leading-[53px] tracking-[-0.48px] mb-6">
+                  {comp.title}
+                </h3>
+                <p className="text-[15px] md:text-[18px] font-light text-text-dim leading-[1.7] md:leading-[23px] max-w-[749px] mb-8 text-justify">
+                  {comp.desc}
+                </p>
+                <TagBullets tags={comp.tags} className="mb-8" />
+                <div className="flex justify-end">
+                  <CornerCTA href="#" label={comp.cta} />
+                </div>
+              </>
+            )
+          }}
+        </TabPanel>
 
         {/* Full-width video */}
         <div className="relative h-[300px] sm:h-[460px] md:h-[680px] overflow-hidden -mt-16">
@@ -197,37 +148,17 @@ export default function UslugiPageClient({
       </section>
 
       {/* ─── DLA KOGO PRACUJEMY ─── */}
-      <section className="border-b border-white/10">
-        <SectionLabel label="//05 KLIENCI" />
-
-        {/* Title + description */}
-        <div className="pt-8 md:pt-16 px-[clamp(32px,5vw,64px)]">
-          <TypewriterTitle
-            as="h2"
-            className="text-[clamp(1.75rem,9.26vw,140px)] font-medium text-white leading-[1.05] tracking-[-0.5px] md:tracking-[-2px] uppercase"
-            speed={60}
-          >
-            Dla kogo pracujemy
-          </TypewriterTitle>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8 pb-8 md:gap-16 md:mt-16 md:pb-16">
-            <div>
-              <p className="text-text-dim text-[15px] md:text-[18px] font-normal leading-[1.7] md:leading-[30px] text-justify">
-                Swoje usługi kierujemy do szerokiego spektrum odbiorców — od jednostek wojskowych i policyjnych,
-                przez instytucje badawcze, aż po partnerów przemysłowych w modelu B2B.
-              </p>
-            </div>
-            <div className="hidden md:flex items-start justify-end">
-              <div className="w-[100px] h-[100px] border border-white/10 flex items-center justify-center">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-text-dim">
-                  <path d="M7 17L17 7M17 7H7M17 7V17" />
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-
+      <TitleLeadSection
+        sectionLabel="//05 KLIENCI"
+        title="Dla kogo pracujemy"
+        body="Swoje usługi kierujemy do szerokiego spektrum odbiorców — od jednostek wojskowych i policyjnych, przez instytucje badawcze, aż po partnerów przemysłowych w modelu B2B."
+        sectionClassName="border-b border-white/10"
+        pt="pt-8 md:pt-16"
+        bodyGridCols="md:grid-cols-2"
+        bodyPb="pb-8 md:pb-16"
+      >
         <ClientSegmentsGrid segments={USLUGI_SEGMENTS} topBorder plain />
-      </section>
+      </TitleLeadSection>
 
       {/* ─── WSPÓŁPRACA CTA ─── */}
       <IntroBlock

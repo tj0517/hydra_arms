@@ -50,6 +50,9 @@ export function getMockResponse(method: string, params: Record<string, unknown>)
       return { status: 'SUCCESS', products: result };
     }
 
+    case 'addOrder':
+      return { status: 'SUCCESS', order_id: Math.floor(Math.random() * 900000) + 100000 };
+
     default:
       return { status: 'ERROR', error_code: 'METHOD_NOT_FOUND', error_message: `Mock: unknown method ${method}` };
   }

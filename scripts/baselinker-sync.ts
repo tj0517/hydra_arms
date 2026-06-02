@@ -9,17 +9,19 @@
 import * as path from 'path';
 import * as dotenv from 'dotenv';
 
-dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+dotenv.config({ path: path.resolve(process.cwd(), '.env.local'), override: true });
 
 import { createClient } from '@supabase/supabase-js';
 import {
-  INVENTORY_ID,
   getCategories,
   getProductsList,
   getProductsData,
   getPrice,
   getWarehouseStock,
 } from '../src/lib/baselinker/client';
+
+// Read after dotenv so ESM hoisting doesn't freeze the value
+const INVENTORY_ID = parseInt(process.env.BASELINKER_INVENTORY_ID ?? '35743', 10);
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -77,6 +79,13 @@ async function syncProducts() {
 
     const rows = Object.entries(details).map(([idStr, p]) => {
       const id = parseInt(idStr, 10);
+      const tags: string[] = p.tags ?? [];
+      const product_type = tags.includes('age_restricted')
+        ? 'age_restricted'
+        : tags.includes('pickup_only')
+        ? 'pickup_only'
+        : 'standard';
+
       return {
         id,
         inventory_id: INVENTORY_ID,
@@ -91,8 +100,7 @@ async function syncProducts() {
         weight: p.weight ?? null,
         category_id: p.category_id || null,
         images: p.images && Object.keys(p.images).length > 0 ? p.images : null,
-        // product_type is intentionally omitted — DB default 'standard' on insert,
-        // and onConflict excludes it so manual classifications are never overwritten
+        product_type,
         is_active: true,
         synced_at: new Date().toISOString(),
       };
@@ -114,7 +122,7 @@ async function syncProducts() {
     updated = data?.length ?? 0;
   }
 
-  console.log(`\n  done — ${added} products synced (upserted), product_type preserved`);
+  console.log(`\n  done — ${added} products synced (product_type derived from BL tags)`);
 }
 
 async function main() {

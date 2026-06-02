@@ -47,9 +47,10 @@ export default function AsciiHelicopter() {
       sCtx.clearRect(0, 0, cols, rows);
 
       const imgAspect = img.width / img.height;
-      const dw = cols;
-      const dh = (cols / imgAspect) * (cw / ch);
-      const dx = -Math.floor(cols * 0.02);
+      const pad = Math.round(16 / cw);
+      const dw = cols - pad * 2;
+      const dh = (dw / imgAspect) * (cw / ch);
+      const dx = pad;
       const dy = Math.floor((rows - dh) / 2);
       sCtx.drawImage(img, 0, 0, img.width, img.height, dx, dy, dw, dh);
 
@@ -115,12 +116,12 @@ export default function AsciiHelicopter() {
       }
       ctx.globalAlpha = 1;
     };
-    img.src = "/img/plane.png";
+    img.src = "/img/heli.png";
 
   }, []);
 
   return (
-    <section ref={sectionRef} className="relative h-screen bg-bg overflow-hidden mt-[clamp(2px,12px,64px)] border-t border-white/10">
+    <section ref={sectionRef} className="relative h-screen bg-bg overflow-hidden border-t border-white/10">
       <div className="ls-scanlines" />
       <canvas
         ref={canvasRef}

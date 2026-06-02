@@ -2,14 +2,17 @@
 
 import { useRef, useEffect, useState } from "react";
 import gsap from "gsap";
-import Link from "next/link";
 import TypewriterTitle from "@/components/TypewriterTitle";
 import DrawReveal from "@/components/DrawReveal";
+import AnimateIn from "@/components/AnimateIn";
 import MissionBriefing from "@/components/MissionBriefing";
 import SubpageHero from "@/components/SubpageHero";
 import TacticalGrid from "@/components/TacticalGrid";
 import CornerCTA from "@/components/ui/CornerCTA";
 import IntroBlock from "@/components/sections/IntroBlock";
+import TabPanel from "@/components/sections/TabPanel";
+import TwoColSection from "@/components/sections/TwoColSection";
+import TitleLeadSection from "@/components/sections/TitleLeadSection";
 
 /* ──────────── DEFAULTS ──────────── */
 
@@ -58,13 +61,10 @@ export default function WspolpracaPageClient({
   korzysciTabs = DEFAULT_KORZYSCI_TABS,
   ethicsItems = DEFAULT_ETHICS_ITEMS,
 }: WspolpracaPageClientProps = {}) {
-  const [activeTab, setActiveTab] = useState(korzysciTabs[0]?.id ?? "suwer");
   const [fundPage, setFundPage] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
-  const activeIndex = korzysciTabs.findIndex((t) => t.id === activeTab);
   const fundMaxPage = Math.ceil(fundamenty.length / 2) - 1;
 
-  const contentRef = useRef<HTMLDivElement>(null);
   const fundRef = useRef<HTMLDivElement>(null);
   const autoPlayRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -81,15 +81,6 @@ export default function WspolpracaPageClient({
     return () => { if (autoPlayRef.current) clearInterval(autoPlayRef.current); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isHovered, fundMaxPage]);
-
-  useEffect(() => {
-    if (!contentRef.current) return;
-    gsap.fromTo(
-      contentRef.current,
-      { opacity: 0, y: 15 },
-      { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }
-    );
-  }, [activeTab]);
 
   useEffect(() => {
     if (!fundRef.current) return;
@@ -215,36 +206,12 @@ export default function WspolpracaPageClient({
       />
 
       {/* ─── PARTNERSTWA STRATEGICZNE ─── */}
-      <section className="border-t border-b border-white/5">
-        <div className="pt-12 md:pt-16 px-[clamp(32px,5vw,64px)]">
-          <TypewriterTitle
-            as="h2"
-            className="text-[clamp(1.75rem,9.26vw,140px)] font-medium text-white leading-[1.05] tracking-[-0.5px] md:tracking-[-2px] uppercase"
-            speed={60}
-          >
-            PARTNERSTWA STRATEGICZNE
-          </TypewriterTitle>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mt-8 pb-0 md:gap-16 md:mt-16 md:pb-4">
-            <div>
-              <p className="text-text-dim text-[15px] md:text-[18px] font-normal leading-[1.7] md:leading-[30px] text-justify">
-                Nasza wizja współpracy z sektorem publicznym i służbami mundurowymi
-                opiera się na dostarczaniu rozwiązań wyprzedzających współczesne
-                wyzwania operacyjne. Poprzez integrację kompetencji R&D z potrzebami
-                jednostek liniowych, tworzymy fundament pod długofalowe programy
-                modernizacyjne.
-              </p>
-            </div>
-            <div className="hidden md:flex items-start justify-end">
-              <Link href="/kontakt" className="group w-[100px] h-[100px] border border-white/10 hover:border-accent/40 flex items-center justify-center transition-all duration-300">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-text-dim group-hover:text-accent transition-colors duration-300">
-                  <path d="M7 17L17 7M17 7H7M17 7V17" />
-                </svg>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+      <TitleLeadSection
+        title="PARTNERSTWA STRATEGICZNE"
+        body="Nasza wizja współpracy z sektorem publicznym i służbami mundurowymi opiera się na dostarczaniu rozwiązań wyprzedzających współczesne wyzwania operacyjne. Poprzez integrację kompetencji R&D z potrzebami jednostek liniowych, tworzymy fundament pod długofalowe programy modernizacyjne."
+        ctaHref="/kontakt"
+        sectionClassName="border-t border-b border-white/5"
+      />
 
       {/* ─── KLUCZOWE KORZYŚCI ─── */}
       <section>
@@ -257,60 +224,31 @@ export default function WspolpracaPageClient({
             Kluczowe korzyści
           </TypewriterTitle>
         </div>
-
-        {/* Tabs */}
-        <div className="flex gap-4 sm:gap-6 px-[clamp(32px,5vw,64px)] py-3.5 border-b border-white/10 overflow-x-auto scrollbar-hide">
-          {korzysciTabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`font-[var(--font-mono)] text-[12px] sm:text-[14px] tracking-[1.12px] transition-colors duration-300 whitespace-nowrap shrink-0 ${
-                activeTab === tab.id
-                  ? "text-text"
-                  : "text-text-dim hover:text-text"
-              }`}
-            >
-              <span className="text-text-dim">[</span>
-              <span className={activeTab === tab.id ? "text-accent" : ""}> {tab.label} </span>
-              <span className="text-text-dim">]</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Content */}
-        <div className="border-b border-white/10">
-          <div ref={contentRef} className="px-[clamp(32px,5vw,80px)] pt-10 pb-16">
-            <div className="mb-9">
-              <div className="border border-text/50 px-2 py-1 inline-block">
-                <span className="font-[var(--font-mono)] text-[18px]">
-                  <span className="text-accent">
-                    {String(activeIndex + 1).padStart(2, "0")}
-                  </span>
-                  <span className="text-white/30">
-                    /{String(korzysciTabs.length).padStart(2, "0")}
-                  </span>
-                </span>
-              </div>
-            </div>
-
-            <h3 className="text-white text-[clamp(1.5rem,3.17vw,48px)] font-normal leading-[1.15] md:leading-[53px] tracking-[-0.48px] mb-6 max-w-[600px]">
-              {korzysciTabs.find((t) => t.id === activeTab)?.title}
-            </h3>
-            <p className="text-text-dim text-[15px] md:text-[18px] font-normal leading-[1.7] md:leading-[30px] max-w-[750px] text-justify">
-              {korzysciTabs.find((t) => t.id === activeTab)?.desc}
-            </p>
-
-            <div className="flex justify-end mt-8 md:mt-16">
-              <CornerCTA href="#" label="Napisz do nas" />
-            </div>
-          </div>
-        </div>
+        <TabPanel tabs={korzysciTabs.map((t) => ({ id: t.id, label: t.label }))}>
+          {(activeId) => {
+            const tab = korzysciTabs.find((t) => t.id === activeId)
+            return (
+              <>
+                <h3 className="text-white text-[clamp(1.5rem,3.17vw,48px)] font-normal leading-[1.15] md:leading-[53px] tracking-[-0.48px] mb-6 max-w-[600px]">
+                  {tab?.title}
+                </h3>
+                <p className="text-text-dim text-[15px] md:text-[18px] font-normal leading-[1.7] md:leading-[30px] max-w-[750px] text-justify">
+                  {tab?.desc}
+                </p>
+                <div className="flex justify-end mt-8 md:mt-16">
+                  <CornerCTA href="#" label="Napisz do nas" />
+                </div>
+              </>
+            )
+          }}
+        </TabPanel>
       </section>
 
       {/* ─── ETHICS SECTION ─── */}
-      <section className="grid grid-cols-1 md:grid-cols-2">
-        {/* Left */}
-        <div className="px-[clamp(32px,5vw,64px)] pt-20 pb-8 md:pb-16 flex flex-col h-full border-b md:border-b-0">
+      <TwoColSection
+        leftClassName="px-[clamp(32px,5vw,64px)] pt-10 md:pt-16 flex flex-col h-full border-b md:border-b-0"
+        rightClassName="md:border-l border-white/[0.08] flex flex-col h-full min-w-0 overflow-hidden"
+        left={<>
           <TypewriterTitle
             as="h2"
             className="text-[clamp(1.5rem,3.17vw,48px)] font-normal text-white leading-[1.15] md:leading-[53px] tracking-[-0.48px]"
@@ -321,27 +259,20 @@ export default function WspolpracaPageClient({
           <div className="mt-6 md:mt-auto">
             <MissionBriefing />
           </div>
-        </div>
-
-        {/* Right */}
-        <div className="pt-10 md:pt-16 pb-16 px-[clamp(32px,5vw,64px)]">
-          <div className="border border-white/[0.08]">
-            {ethicsItems.map((item, i) => (
-              <div
-                key={i}
-                className={`px-8 pt-8${i < ethicsItems.length - 1 ? " border-b border-white/[0.08]" : ""}`}
-              >
-                <DrawReveal
-                  title={item.title}
-                  desc={item.desc}
-                  delay={i * 0.2}
-                  noLine
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+        </>}
+        right={<>
+          {ethicsItems.map((item, i) => (
+            <div key={i} className="flex-1 relative">
+              {i < ethicsItems.length - 1 && (
+                <div className="absolute bottom-0 left-0 right-4 md:right-8 h-px bg-white/[0.08]" />
+              )}
+              <AnimateIn delay={i * 0.2} y={10} className="h-full flex flex-col justify-center px-[clamp(32px,5vw,64px)] py-7 md:py-9">
+                <DrawReveal title={item.title} desc={item.desc} noLine />
+              </AnimateIn>
+            </div>
+          ))}
+        </>}
+      />
     </main>
   );
 }

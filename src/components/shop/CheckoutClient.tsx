@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCart } from './CartProvider'
 import Link from 'next/link'
 import { analyzeCart } from '@/lib/shop/cartAnalysis'
+import { createClient } from '@/lib/supabase/client'
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
@@ -29,6 +30,23 @@ export default function CheckoutClient() {
     city: '',
     zip: '',
   })
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return
+      const m = user.user_metadata ?? {}
+      const fullName: string = m.full_name ?? m.name ?? ''
+      const parts = fullName.trim().split(' ')
+      setForm(prev => ({
+        ...prev,
+        email: user.email ?? prev.email,
+        firstName: m.first_name ?? m.given_name ?? parts[0] ?? prev.firstName,
+        lastName: m.last_name ?? m.family_name ?? parts.slice(1).join(' ') ?? prev.lastName,
+        phone: m.phone ?? prev.phone,
+      }))
+    })
+  }, [])
 
   function updateField(field: keyof typeof form, value: string) {
     setForm(prev => ({ ...prev, [field]: value }))
@@ -130,8 +148,16 @@ export default function CheckoutClient() {
           </div>
         )}
 
-        <div className={`flex items-center gap-3 border px-4 py-3 mb-6 ${analysis.fast ? 'border-green-500/20 bg-green-500/5' : 'border-yellow-500/20 bg-yellow-500/5'}`}>
-          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${analysis.fast ? 'bg-green-400' : 'bg-yellow-400'}`} />
+        <div className={`flex items-center gap-3 border px-4 py-3 mb-6 ${
+          analysis.pickup
+            ? 'border-blue-500/20 bg-blue-500/5'
+            : analysis.fast
+            ? 'border-green-500/20 bg-green-500/5'
+            : 'border-yellow-500/20 bg-yellow-500/5'
+        }`}>
+          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+            analysis.pickup ? 'bg-blue-400' : analysis.fast ? 'bg-green-400' : 'bg-yellow-400'
+          }`} />
           <div className="space-y-0.5">
             <p className="font-[var(--font-mono)] text-[10px] text-white tracking-widest uppercase">{analysis.label}</p>
             <p className="font-[var(--font-mono)] text-[9px] text-text-dim tracking-wider">{analysis.timing}</p>
@@ -155,16 +181,30 @@ export default function CheckoutClient() {
               </div>
             </section>
 
-            <section className="space-y-5">
-              <h2 className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-[0.25em] uppercase border-b border-white/10 pb-3">
-                Adres dostawy
-              </h2>
-              <Field label="Ulica i numer" value={form.street} onChange={v => updateField('street', v)} required />
-              <div className="grid grid-cols-1 sm:grid-cols-[1fr_160px] gap-4">
-                <Field label="Miasto" value={form.city} onChange={v => updateField('city', v)} required />
-                <Field label="Kod pocztowy" value={form.zip} onChange={v => updateField('zip', v)} required placeholder="00-000" />
-              </div>
-            </section>
+            {analysis.pickup ? (
+              <section className="space-y-5">
+                <h2 className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-[0.25em] uppercase border-b border-white/10 pb-3">
+                  Odbiór osobisty
+                </h2>
+                <div className="border border-blue-500/20 bg-blue-500/5 px-5 py-4 space-y-2">
+                  <p className="font-[var(--font-mono)] text-xs text-blue-300 tracking-wider">ODBIÓR W SIEDZIBIE HYDRA ARMS</p>
+                  <p className="text-sm text-text-dim">
+                    Zamówienie zostanie przygotowane do odbioru osobistego. Skontaktujemy się z Tobą telefonicznie lub mailowo w celu ustalenia terminu.
+                  </p>
+                </div>
+              </section>
+            ) : (
+              <section className="space-y-5">
+                <h2 className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-[0.25em] uppercase border-b border-white/10 pb-3">
+                  Adres dostawy
+                </h2>
+                <Field label="Ulica i numer" value={form.street} onChange={v => updateField('street', v)} required />
+                <div className="grid grid-cols-1 sm:grid-cols-[1fr_160px] gap-4">
+                  <Field label="Miasto" value={form.city} onChange={v => updateField('city', v)} required />
+                  <Field label="Kod pocztowy" value={form.zip} onChange={v => updateField('zip', v)} required placeholder="00-000" />
+                </div>
+              </section>
+            )}
 
             <section className="space-y-5">
               <h2 className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-[0.25em] uppercase border-b border-white/10 pb-3">

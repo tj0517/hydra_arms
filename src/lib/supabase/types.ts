@@ -1,6 +1,6 @@
 export type ProductType = 'standard' | 'age_restricted' | 'pickup_only';
 export type SourceWarehouse = 'H1' | 'H2' | 'own';
-export type FulfillmentRoute = 'direct_H1' | 'direct_H2' | 'consolidated';
+export type FulfillmentRoute = 'direct_H1' | 'direct_H2' | 'consolidated' | 'pickup';
 
 export interface Database {
   public: {

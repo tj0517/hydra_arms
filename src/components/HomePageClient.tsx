@@ -7,13 +7,13 @@ import ScrollRevealText from "@/components/ScrollRevealText";
 import dynamic from "next/dynamic";
 const MilitaryMap = dynamic(() => import("@/components/MilitaryMap"), { ssr: false });
 import MapCrosshair from "@/components/MapCrosshair";
-import TypewriterTitle from "@/components/TypewriterTitle";
 import Image from "next/image";
-import Link from "next/link";
 import CornerCTA from "@/components/ui/CornerCTA";
 import SectionLabel from "@/components/ui/SectionLabel";
 import ClientSegmentsGrid from "@/components/sections/ClientSegmentsGrid";
 import PostCard, { type PostCardData } from "@/components/PostCard";
+import TagBullets from "@/components/sections/TagBullets";
+import TitleLeadSection from "@/components/sections/TitleLeadSection";
 
 /* ──────────── DATA ──────────── */
 
@@ -128,6 +128,24 @@ export default function HomePageClient({
   const serviceRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   // Overlay fades via CSS class `hero-overlay-fade` — no GSAP needed.
+
+  const NL_SEGMENTS = [
+    { id: "aktualnosci", label: "AKTUALNOŚCI" },
+    { id: "blog",        label: "BLOG"         },
+    { id: "b2g",         label: "B2G"          },
+    { id: "b2b",         label: "B2B"          },
+    { id: "sklep",       label: "SKLEP"        },
+  ];
+  const [nlSelected, setNlSelected] = useState<Set<string>>(new Set(["aktualnosci"]));
+  const [nlEmail, setNlEmail]       = useState("");
+  const [nlStatus, setNlStatus]     = useState<"idle" | "ok">("idle");
+  const toggleNl = (id: string) =>
+    setNlSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const handleNlSubmit = () => {
+    if (!nlEmail || nlSelected.size === 0) return;
+    setNlStatus("ok");
+    setNlEmail("");
+  };
 
   /* ── Glitch on video loop — triggers before loop to hide the cut ── */
   useEffect(() => {
@@ -444,18 +462,7 @@ export default function HomePageClient({
                     </p>
 
                     {/* Tags */}
-                    <div className="flex gap-2.5 items-center py-2.5 flex-wrap mb-8">
-                      {service.tags.map((tag, ti) => (
-                        <span key={ti} className="flex items-center gap-2.5">
-                          <span className="font-[var(--font-mono)] text-[13px] md:text-[20px] text-accent/70 md:text-accent tracking-[0.2px]">
-                            {tag}
-                          </span>
-                          {ti < service.tags.length - 1 && (
-                            <span className="w-[4px] h-[4px] md:w-[5px] md:h-[5px] bg-[#d9d9d9]/50 md:bg-[#d9d9d9]" />
-                          )}
-                        </span>
-                      ))}
-                    </div>
+                    <TagBullets tags={service.tags} className="mb-8" />
 
                     <CornerCTA href="/uslugi" label="Szczegóły →" />
                   </div>
@@ -548,34 +555,12 @@ export default function HomePageClient({
       </div>
 
       {/* ─── POTENCJAŁ I OPOWIEDZIALNOŚĆ ─── */}
-      <section>
-        <SectionLabel label="//04 POTENCJAŁ" />
-        <div className="pt-12 md:pt-16 px-[clamp(32px,5vw,64px)]">
-          <TypewriterTitle
-            as="h2"
-            className="text-[clamp(1.75rem,9.26vw,140px)] font-medium text-white leading-[1.05] tracking-[-0.5px] md:tracking-[-2px] uppercase"
-            speed={60}
-          >
-            POTENCJAŁ I OPOWIEDZIALNOŚĆ
-          </TypewriterTitle>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mt-8 pb-0 md:gap-16 md:mt-16 md:pb-4">
-            <div>
-              <p className="text-text-dim text-[15px] md:text-[18px] font-normal leading-[1.7] md:leading-[30px] text-justify">
-                HYDRA ARMS to krakowski ośrodek kompetencyjny dedykowany dla sektora
-                Security & Defense. Specjalizujemy się w wytwarzaniu zaawansowanych
-                komponentów o wysokim stopniu skomplikowania.
-              </p>
-            </div>
-            <div className="hidden md:flex items-start justify-end">
-              <Link href="/o-nas" className="group w-[100px] h-[100px] border border-white/10 hover:border-accent/40 flex items-center justify-center transition-all duration-300">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-text-dim group-hover:text-accent transition-colors duration-300">
-                  <path d="M7 17L17 7M17 7H7M17 7V17" />
-                </svg>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+      <TitleLeadSection
+        sectionLabel="//04 POTENCJAŁ"
+        title="POTENCJAŁ I OPOWIEDZIALNOŚĆ"
+        body="HYDRA ARMS to krakowski ośrodek kompetencyjny dedykowany dla sektora Security & Defense. Specjalizujemy się w wytwarzaniu zaawansowanych komponentów o wysokim stopniu skomplikowania."
+        ctaHref="/o-nas"
+      />
 
 {/* ─── 3 FILARY ─── */}
       <section>
@@ -807,6 +792,54 @@ export default function HomePageClient({
                       />
                     </div>
                     <div className="border-t border-accent/5" />
+                    {/* ─── Newsletter opt-in ─── */}
+                    <div className="border border-accent/10 bg-accent/[0.02] p-4 space-y-3">
+                      <div className="font-[var(--font-mono)] text-[10px] text-accent/40 tracking-[0.2em]">
+                        // SUBSKRYBUJ — KANAŁ INFORMACYJNY
+                      </div>
+                      <div className="flex flex-wrap gap-x-5 gap-y-2">
+                        {NL_SEGMENTS.map((seg) => {
+                          const on = nlSelected.has(seg.id);
+                          return (
+                            <label key={seg.id} className="flex items-center gap-2 cursor-pointer group select-none">
+                              <span className="relative w-[11px] h-[11px] shrink-0">
+                                <input type="checkbox" checked={on} onChange={() => toggleNl(seg.id)} className="sr-only" />
+                                <span className={`absolute inset-0 border transition-colors duration-150 ${on ? "border-accent" : "border-white/20 group-hover:border-accent/40"}`} />
+                                {on && <span className="absolute inset-[2px] bg-accent" />}
+                              </span>
+                              <span className={`font-[var(--font-mono)] text-[11px] tracking-[0.1em] transition-colors duration-150 ${on ? "text-accent" : "text-text-dim group-hover:text-white/60"}`}>
+                                {seg.label}
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                      {nlStatus === "ok" ? (
+                        <p className="font-[var(--font-mono)] text-[11px] text-accent tracking-[0.12em] uppercase">
+                          <span className="terminal-blink">█</span>{" "}ZAPISANO — POTWIERDZENIE ZOSTANIE WYSŁANE
+                        </p>
+                      ) : (
+                        <div className="flex items-stretch">
+                          <div className="flex items-center gap-2 flex-1 border border-white/10 hover:border-accent/30 focus-within:border-accent/50 transition-colors duration-200 px-3 py-2">
+                            <span className="font-[var(--font-mono)] text-[12px] text-accent/40 shrink-0 leading-none">&gt;</span>
+                            <input
+                              type="email"
+                              value={nlEmail}
+                              onChange={(e) => setNlEmail(e.target.value)}
+                              placeholder="EMAIL@DOMENA.PL"
+                              className="w-full bg-transparent font-[var(--font-mono)] text-[12px] text-accent tracking-[0.05em] focus:outline-none placeholder:text-accent/20 caret-accent"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleNlSubmit}
+                            className="font-[var(--font-mono)] text-[11px] tracking-[0.18em] uppercase text-bg bg-accent hover:bg-accent/80 transition-colors duration-200 px-5 whitespace-nowrap"
+                          >
+                            ZAPISZ
+                          </button>
+                        </div>
+                      )}
+                    </div>
                     <div className="flex items-start gap-2 mt-2">
                       <label className="mt-0.5 shrink-0 w-3.5 h-3.5 relative cursor-pointer block">
                         <input type="checkbox" className="sr-only peer" />

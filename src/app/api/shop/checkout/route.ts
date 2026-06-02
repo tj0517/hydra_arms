@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
+import { addOrder } from '@/lib/baselinker/client'
 
 interface CheckoutItem {
   product_id: number
@@ -19,7 +20,7 @@ interface CheckoutBody {
     zip: string
   }
   idempotency_key?: string
-  fulfillment_route?: 'direct_H1' | 'direct_H2' | 'consolidated'
+  fulfillment_route?: 'direct_H1' | 'direct_H2' | 'consolidated' | 'pickup'
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -34,7 +35,13 @@ export async function POST(req: NextRequest) {
     }
 
     const s = body.shipping
-    if (!s?.email || !s?.firstName || !s?.lastName || !s?.street || !s?.city || !s?.zip) {
+    const isPickup = body.fulfillment_route === 'pickup'
+
+    if (!s?.email || !s?.firstName || !s?.lastName) {
+      return NextResponse.json({ error: 'Brakuje wymaganych danych kontaktowych' }, { status: 400 })
+    }
+
+    if (!isPickup && (!s?.street || !s?.city || !s?.zip)) {
       return NextResponse.json({ error: 'Brakuje wymaganych danych adresowych' }, { status: 400 })
     }
 
@@ -42,7 +49,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Nieprawidłowy adres email' }, { status: 400 })
     }
 
-    if (!ZIP_RE.test(s.zip)) {
+    if (!isPickup && !ZIP_RE.test(s.zip)) {
       return NextResponse.json({ error: 'Nieprawidłowy kod pocztowy (format: 00-000)' }, { status: 400 })
     }
 
@@ -87,6 +94,9 @@ export async function POST(req: NextRequest) {
       const product = productMap.get(item.product_id)
       if (!product) {
         return NextResponse.json({ error: `Produkt ${item.product_id} nie istnieje lub jest nieaktywny` }, { status: 400 })
+      }
+      if (product.product_type !== 'standard' && !isPickup) {
+        return NextResponse.json({ error: `Produkt "${product.name}" jest dostępny wyłącznie do odbioru osobistego` }, { status: 400 })
       }
       if (product.stock < item.quantity) {
         return NextResponse.json({ error: `Niewystarczający stan magazynowy: ${product.name}` }, { status: 400 })
@@ -179,6 +189,51 @@ export async function POST(req: NextRequest) {
           .eq('id', item.product_id)
       }
       return NextResponse.json({ error: 'Nie udało się zapisać pozycji zamówienia' }, { status: 500 })
+    }
+
+    // Push to BaseLinker — non-fatal: checkout succeeds even if BL is unreachable
+    try {
+      const blOrderId = await addOrder({
+        order_status_id: parseInt(process.env.BASELINKER_ORDER_STATUS_ID ?? '0', 10),
+        currency: 'PLN',
+        payment_method: 'Przelew',
+        payment_method_cod: 0,
+        paid: 1,
+        user_login: s.email,
+        phone: s.phone || '',
+        email: s.email,
+        delivery_method: isPickup ? 'Odbiór osobisty' : 'Kurier',
+        delivery_price: 0,
+        delivery_fullname: `${s.firstName} ${s.lastName}`,
+        delivery_address: s.street,
+        delivery_city: s.city,
+        delivery_postcode: s.zip,
+        delivery_country_code: 'PL',
+        products: body.items.map(item => {
+          const product = productMap.get(item.product_id)!
+          return {
+            storage: 'db' as const,
+            storage_id: 0,
+            product_id: String(item.product_id),
+            variant_id: 0,
+            name: product.name,
+            sku: product.sku ?? '',
+            ean: product.ean ?? '',
+            quantity: item.quantity,
+            price_brutto: product.price ?? 0,
+            tax_rate: product.tax_rate ?? 23,
+          }
+        }),
+      })
+
+      await supabase
+        .from('orders')
+        .update({ baselinker_order_id: blOrderId })
+        .eq('id', order.id)
+
+      console.log(`[checkout] BL order created: ${blOrderId} → Supabase order: ${order.id}`)
+    } catch (err) {
+      console.error('[checkout] BaseLinker push failed (non-fatal):', err)
     }
 
     const res = NextResponse.json({

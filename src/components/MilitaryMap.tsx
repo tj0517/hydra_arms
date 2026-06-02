@@ -4,8 +4,8 @@ import { useRef, useEffect, useCallback } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
-const STORE_LOCATION: [number, number] = [19.9441, 50.0758];
-const DESKTOP_CENTER: [number, number] = [20.07, 50.0758];
+const STORE_LOCATION: [number, number] = [19.958771349421124, 50.08282775184839];
+const DESKTOP_CENTER: [number, number] = [20.07, 50.08282775184839];
 
 function getCenter(): [number, number] {
   if (typeof window === "undefined") return DESKTOP_CENTER;

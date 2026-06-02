@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*!?";
 
@@ -85,6 +86,15 @@ export default function Nav({ navLinks }: { navLinks?: { href: string; label: st
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
+  const isShop = pathname.startsWith('/sklep');
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data: { session } }) => setLoggedIn(!!session?.user));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setLoggedIn(!!s?.user));
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
@@ -118,9 +128,45 @@ export default function Nav({ navLinks }: { navLinks?: { href: string; label: st
             {links.map((item) => (
               <ScrambleNavLink key={item.href} href={item.href} label={item.label} active={pathname === item.href} />
             ))}
-            <li>
-              <ScrambleButton href="/sklep" label="Sklep" />
-            </li>
+            {isShop ? (
+              loggedIn ? (
+                <li>
+                  <Link
+                    href="/konto"
+                    className="font-[var(--font-mono)] text-xs uppercase tracking-[0.15em] text-text-dim hover:text-white transition-colors duration-300"
+                  >
+                    <span className="text-text-dim">[</span>{' '}
+                    <span className="text-accent">Konto</span>{' '}
+                    <span className="text-text-dim">]</span>
+                  </Link>
+                </li>
+              ) : (
+                <>
+                  <li>
+                    <Link
+                      href="/logowanie"
+                      className="font-[var(--font-mono)] text-xs uppercase tracking-[0.15em] text-text-dim hover:text-white transition-colors duration-300"
+                    >
+                      <span className="text-text-dim">[</span>{' '}
+                      <span className="text-accent">Zaloguj</span>{' '}
+                      <span className="text-text-dim">]</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/rejestracja"
+                      className="font-[var(--font-mono)] text-xs uppercase tracking-[0.15em] text-text-dim hover:text-white transition-colors duration-300"
+                    >
+                      <span className="text-text-dim">[</span>{' '}
+                      <span className="text-accent">Zarejestruj</span>{' '}
+                      <span className="text-text-dim">]</span>
+                    </Link>
+                  </li>
+                </>
+              )
+            ) : (
+              <li><ScrambleButton href="/sklep" label="Sklep" /></li>
+            )}
           </ul>
 
           {/* Mobile burger */}
@@ -162,12 +208,38 @@ export default function Nav({ navLinks }: { navLinks?: { href: string; label: st
             {link.label}
           </Link>
         ))}
-        <Link
-          href="/sklep"
-          className="font-[var(--font-mono)] text-2xl uppercase tracking-[0.2em] transition-colors duration-300 text-text-dim hover:text-white"
-        >
-          <span className="text-text-dim">[</span> <span className="text-accent">Sklep</span> <span className="text-text-dim">]</span>
-        </Link>
+        {isShop ? (
+          loggedIn ? (
+            <Link
+              href="/konto"
+              className="font-[var(--font-mono)] text-2xl uppercase tracking-[0.2em] transition-colors duration-300 text-text-dim hover:text-white"
+            >
+              <span className="text-text-dim">[</span> <span className="text-accent">Konto</span> <span className="text-text-dim">]</span>
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/logowanie"
+                className="font-[var(--font-mono)] text-2xl uppercase tracking-[0.2em] transition-colors duration-300 text-text-dim hover:text-white"
+              >
+                <span className="text-text-dim">[</span> <span className="text-accent">Zaloguj</span> <span className="text-text-dim">]</span>
+              </Link>
+              <Link
+                href="/rejestracja"
+                className="font-[var(--font-mono)] text-2xl uppercase tracking-[0.2em] transition-colors duration-300 text-text-dim hover:text-white"
+              >
+                <span className="text-text-dim">[</span> <span className="text-accent">Zarejestruj</span> <span className="text-text-dim">]</span>
+              </Link>
+            </>
+          )
+        ) : (
+          <Link
+            href="/sklep"
+            className="font-[var(--font-mono)] text-2xl uppercase tracking-[0.2em] transition-colors duration-300 text-text-dim hover:text-white"
+          >
+            <span className="text-text-dim">[</span> <span className="text-accent">Sklep</span> <span className="text-text-dim">]</span>
+          </Link>
+        )}
       </div>
     </>
   );

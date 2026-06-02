@@ -98,7 +98,7 @@ export default function DrawReveal({ title, desc, delay = 0, noLine = false }: D
   return (
     <div ref={ref}>
       <div
-        className={`${noLine ? "" : `draw-reveal-border${borderActive ? " active" : ""}`} pb-6`}
+        className={`${noLine ? "" : `draw-reveal-border${borderActive ? " active" : ""}`}`}
       >
         <h3 className="text-white text-[20px] md:text-[28px] font-medium leading-[1.25] md:leading-[34px] mb-4">
           {textActive ? (
@@ -107,18 +107,18 @@ export default function DrawReveal({ title, desc, delay = 0, noLine = false }: D
             <span className="invisible">{title}</span>
           )}
         </h3>
-        <p className="text-text-dim text-[15px] md:text-[18px] font-normal leading-[1.7] md:leading-[30px] max-w-[535px] text-justify">
+        <p className="text-text-dim text-[15px] md:text-[18px] font-normal leading-[1.7] md:leading-[30px] text-justify">
           {desc.split(" ").map((word, i) => (
             <span
               key={i}
-              className="inline-block transition-opacity duration-300"
+              className="inline transition-opacity duration-300"
               style={{
                 opacity: textActive ? 1 : 0,
                 transitionDelay: textActive ? `${i * 60}ms` : "0ms",
               }}
             >
               {word}
-              {i < desc.split(" ").length - 1 ? "\u00A0" : ""}
+              {i < desc.split(" ").length - 1 ? " " : ""}
             </span>
           ))}
         </p>

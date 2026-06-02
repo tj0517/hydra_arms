@@ -9,9 +9,10 @@ import SubpageHero from "@/components/SubpageHero";
 import TacticalReadout from "@/components/TacticalReadout";
 
 import CornerCTA from "@/components/ui/CornerCTA";
-import SectionLabel from "@/components/ui/SectionLabel";
 import IntroBlock from "@/components/sections/IntroBlock";
 import ClientSegmentsGrid, { CLIENT_SEGMENTS } from "@/components/sections/ClientSegmentsGrid";
+import TwoColSection from "@/components/sections/TwoColSection";
+import TitleLeadSection from "@/components/sections/TitleLeadSection";
 
 
 /* ──────────── DEFAULTS ──────────── */
@@ -106,9 +107,10 @@ export default function ONasPageClient({
       />
 
       {/* ─── MISSION SECTION ─── */}
-      <section className="grid grid-cols-1 md:grid-cols-2">
-        {/* Left */}
-        <div className="px-[clamp(32px,5vw,64px)] pt-12 md:pt-20 pb-4 flex flex-col h-full border-b md:border-b-0">
+      <TwoColSection
+        leftClassName="px-[clamp(32px,5vw,64px)] pt-12 md:pt-20 pb-4 flex flex-col h-full border-b md:border-b-0"
+        rightClassName="md:border-l border-white/[0.08] flex flex-col h-full"
+        left={<>
           <TypewriterTitle
             as="h2"
             className="text-[clamp(1.5rem,3.17vw,48px)] font-normal text-white leading-[1.15] md:leading-[53px] tracking-[-0.48px]"
@@ -119,26 +121,25 @@ export default function ONasPageClient({
           <div className="mt-6 md:mt-auto flex-1 flex items-end">
             <TacticalReadout />
           </div>
-        </div>
-
-        {/* Right */}
-        <div className="pt-12 md:pt-20 pb-4 px-[clamp(32px,5vw,64px)]">
-          <div className="border border-white/[0.08]">
-            {missionItems.map((item, i) => (
-              <AnimateIn key={i} delay={i * 0.15} y={10}>
-                <div className={`px-6 md:px-8 py-6 md:py-8${i < missionItems.length - 1 ? " border-b border-white/[0.08]" : ""}`}>
-                  <h3 className="text-white text-[19px] md:text-[24px] font-medium leading-[1.25] md:leading-[30px] mb-3">
-                    {item.title}
-                  </h3>
-                  <p className="text-text-dim text-[14px] md:text-[16px] font-normal leading-[1.7] text-justify">
-                    {item.desc}
-                  </p>
-                </div>
+        </>}
+        right={<>
+          {missionItems.map((item, i) => (
+            <div key={i} className="flex-1 relative">
+              {i < missionItems.length - 1 && (
+                <div className="absolute bottom-0 left-0 right-4 md:right-8 h-px bg-white/[0.08]" />
+              )}
+              <AnimateIn delay={i * 0.15} y={10} className="h-full flex flex-col justify-center px-[clamp(32px,5vw,64px)] py-10 md:py-12">
+                <h3 className="text-white text-[19px] md:text-[24px] font-medium leading-[1.25] md:leading-[30px] mb-3">
+                  {item.title}
+                </h3>
+                <p className="text-text-dim text-[14px] md:text-[16px] font-normal leading-[1.7] text-justify">
+                  {item.desc}
+                </p>
               </AnimateIn>
-            ))}
-          </div>
-        </div>
-      </section>
+            </div>
+          ))}
+        </>}
+      />
 
       {/* ─── ASCII PLANE ─── */}
       <AsciiHelicopter />
@@ -179,26 +180,17 @@ export default function ONasPageClient({
       </section>
 
       {/* ─── DLA KOGO PRACUJEMY ─── */}
-      <section className="relative border-b border-white/10">
-        <SectionLabel label="//04 KLIENCI" />
-
-        <div className="px-[clamp(32px,5vw,64px)] pt-16 pb-10">
-          <TypewriterTitle
-            as="h2"
-            className="text-[clamp(1.75rem,9.26vw,140px)] font-medium text-white leading-[1.05] tracking-[-0.5px] md:tracking-[-2px] uppercase"
-            speed={60}
-          >
-            Dla kogo pracujemy
-          </TypewriterTitle>
-          <p className="text-text-dim text-[15px] md:text-[18px] font-normal leading-[1.7] md:leading-[30px] max-w-[700px] mt-6 text-justify">
-            Swoje usługi kierujemy do szerokiego spektrum odbiorców — od
-            jednostek wojskowych i policyjnych, przez instytucje badawcze, aż
-            po partnerów przemysłowych w modelu B2B.
-          </p>
-        </div>
-
+      <TitleLeadSection
+        sectionLabel="//04 KLIENCI"
+        title="Dla kogo pracujemy"
+        body="Swoje usługi kierujemy do szerokiego spektrum odbiorców — od jednostek wojskowych i policyjnych, przez instytucje badawcze, aż po partnerów przemysłowych w modelu B2B."
+        sectionClassName="relative border-b border-white/10"
+        pt="pt-16"
+        bodyGridCols="md:grid-cols-2"
+        bodyPb="pb-10"
+      >
         <ClientSegmentsGrid segments={CLIENT_SEGMENTS} topBorder plain />
-      </section>
+      </TitleLeadSection>
 
       {/* ─── FUNDAMENTY NASZEJ DZIAŁALNOŚCI ─── */}
       <section className="grid grid-cols-1 md:grid-cols-[0.6fr_1fr]">

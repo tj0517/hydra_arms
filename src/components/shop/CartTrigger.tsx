@@ -1,12 +1,15 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { useCart } from './CartProvider';
 
-/** Floating cart button — visible site-wide when cart has items */
+/** Floating cart button — always visible on shop pages, elsewhere only when cart has items */
 export default function CartTrigger() {
   const { itemCount, openCart } = useCart();
+  const pathname = usePathname();
+  const isShop = pathname.startsWith('/sklep');
 
-  if (itemCount === 0) return null;
+  if (!isShop && itemCount === 0) return null;
 
   return (
     <button

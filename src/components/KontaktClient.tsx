@@ -64,6 +64,24 @@ export default function KontaktClient({
   const [dept, setDept] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
+  const NL_SEGMENTS = [
+    { id: "aktualnosci", label: "AKTUALNOŚCI" },
+    { id: "blog",        label: "BLOG"         },
+    { id: "b2g",         label: "B2G"          },
+    { id: "b2b",         label: "B2B"          },
+    { id: "sklep",       label: "SKLEP"        },
+  ];
+  const [nlSelected, setNlSelected] = useState<Set<string>>(new Set(["aktualnosci"]));
+  const [nlEmail, setNlEmail]       = useState("");
+  const [nlStatus, setNlStatus]     = useState<"idle" | "ok">("idle");
+  const toggleNl = (id: string) =>
+    setNlSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const handleNlSubmit = () => {
+    if (!nlEmail || nlSelected.size === 0) return;
+    setNlStatus("ok");
+    setNlEmail("");
+  };
+
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) setFiles(Array.from(e.target.files));
   };
@@ -337,6 +355,55 @@ export default function KontaktClient({
                         <div className="font-[var(--font-mono)] text-[10px] text-accent/20 mt-1 ml-5">PDF, DOC, JPG, PNG, ZIP — maks. 10 MB łącznie</div>
                       </div>
                       <div className="border-t border-accent/5" />
+
+                      {/* ─── Newsletter opt-in ─── */}
+                      <div className="border border-accent/10 bg-accent/[0.02] p-4 space-y-3">
+                        <div className="font-[var(--font-mono)] text-[10px] text-accent/40 tracking-[0.2em]">
+                          // SUBSKRYBUJ — KANAŁ INFORMACYJNY
+                        </div>
+                        <div className="flex flex-wrap gap-x-5 gap-y-2">
+                          {NL_SEGMENTS.map((seg) => {
+                            const on = nlSelected.has(seg.id);
+                            return (
+                              <label key={seg.id} className="flex items-center gap-2 cursor-pointer group select-none">
+                                <span className="relative w-[11px] h-[11px] shrink-0">
+                                  <input type="checkbox" checked={on} onChange={() => toggleNl(seg.id)} className="sr-only" />
+                                  <span className={`absolute inset-0 border transition-colors duration-150 ${on ? "border-accent" : "border-white/20 group-hover:border-accent/40"}`} />
+                                  {on && <span className="absolute inset-[2px] bg-accent" />}
+                                </span>
+                                <span className={`font-[var(--font-mono)] text-[11px] tracking-[0.1em] transition-colors duration-150 ${on ? "text-accent" : "text-text-dim group-hover:text-white/60"}`}>
+                                  {seg.label}
+                                </span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                        {nlStatus === "ok" ? (
+                          <p className="font-[var(--font-mono)] text-[11px] text-accent tracking-[0.12em] uppercase">
+                            <span className="terminal-blink">█</span>{" "}ZAPISANO — POTWIERDZENIE ZOSTANIE WYSŁANE
+                          </p>
+                        ) : (
+                          <div className="flex items-stretch">
+                            <div className="flex items-center gap-2 flex-1 border border-white/10 hover:border-accent/30 focus-within:border-accent/50 transition-colors duration-200 px-3 py-2">
+                              <span className="font-[var(--font-mono)] text-[12px] text-accent/40 shrink-0 leading-none">&gt;</span>
+                              <input
+                                type="email"
+                                value={nlEmail}
+                                onChange={(e) => setNlEmail(e.target.value)}
+                                placeholder="EMAIL@DOMENA.PL"
+                                className="w-full bg-transparent font-[var(--font-mono)] text-[12px] text-accent tracking-[0.05em] focus:outline-none placeholder:text-accent/20 caret-accent"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={handleNlSubmit}
+                              className="font-[var(--font-mono)] text-[11px] tracking-[0.18em] uppercase text-bg bg-accent hover:bg-accent/80 transition-colors duration-200 px-5 whitespace-nowrap"
+                            >
+                              ZAPISZ
+                            </button>
+                          </div>
+                        )}
+                      </div>
 
                       <div className="flex items-start gap-2 mt-2">
                         <label className="mt-0.5 shrink-0 w-3.5 h-3.5 relative cursor-pointer block">

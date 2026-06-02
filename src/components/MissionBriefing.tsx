@@ -3,25 +3,16 @@
 import { useRef, useEffect, useState } from "react";
 
 const termLines = [
-  { delay: 0.3, text: "> INICJALIZACJA PROTOKOŁU...", type: "dim" },
-  { delay: 0.8, text: "> ŁADOWANIE PARAMETRÓW MISJI...", type: "dim" },
+  { delay: 0.3, text: "  KONCESJA MSWiA", type: "label" },
+  { delay: 0.3, text: "  Wytwarzanie / Obrót .............. AKTYWNA", type: "value" },
+  { delay: 0.8, text: "", type: "spacer" },
+  { delay: 0.9, text: "  REJESTR NATO CAGE", type: "label" },
+  { delay: 0.9, text: "  Dostawca kodyfikacyjny ........... ZWERYFIKOWANY", type: "value" },
   { delay: 1.4, text: "", type: "spacer" },
-  { delay: 1.5, text: "  KONCESJA MSWiA", type: "label" },
-  { delay: 1.5, text: "  Wytwarzanie / Obrót .............. AKTYWNA", type: "value" },
+  { delay: 1.5, text: "  ZGODNOŚĆ NORMATYWNA", type: "label" },
+  { delay: 1.5, text: "  STANAG / MIL-STD ................. POTWIERDZONA", type: "value" },
   { delay: 2.0, text: "", type: "spacer" },
-  { delay: 2.1, text: "  REJESTR NATO CAGE", type: "label" },
-  { delay: 2.1, text: "  Dostawca kodyfikacyjny ........... ZWERYFIKOWANY", type: "value" },
-  { delay: 2.6, text: "", type: "spacer" },
-  { delay: 2.7, text: "  ZGODNOŚĆ NORMATYWNA", type: "label" },
-  { delay: 2.7, text: "  STANAG / MIL-STD ................. POTWIERDZONA", type: "value" },
-  { delay: 3.2, text: "", type: "spacer" },
-  { delay: 3.3, text: "  SEKTOR OPERACYJNY", type: "label" },
-  { delay: 3.3, text: "  Kraków, Małopolska ............... 50°03'N 19°56'E", type: "value" },
-  { delay: 3.8, text: "", type: "spacer" },
-  { delay: 3.9, text: "  ZDOLNOŚĆ PRODUKCYJNA", type: "label" },
-  { delay: 3.9, text: "  Prototypowanie / Seria ........... GOTOWOŚĆ", type: "value" },
-  { delay: 4.4, text: "", type: "spacer" },
-  { delay: 4.5, text: "> STATUS OPERACYJNY .................. GOTOWY", type: "final" },
+  { delay: 2.1, text: "> STATUS OPERACYJNY .................. GOTOWY", type: "final" },
 ];
 
 export default function MissionBriefing() {

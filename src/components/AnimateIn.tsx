@@ -28,7 +28,7 @@ export default function AnimateIn({
   useEffect(() => {
     if (!ref.current) return;
 
-    gsap.fromTo(
+    const anim = gsap.fromTo(
       ref.current,
       { opacity: 0, y, x },
       {
@@ -47,7 +47,8 @@ export default function AnimateIn({
     );
 
     return () => {
-      ScrollTrigger.getAll().forEach((t) => t.kill());
+      anim.scrollTrigger?.kill();
+      anim.kill();
     };
   }, [y, x, duration, delay, once]);
 
