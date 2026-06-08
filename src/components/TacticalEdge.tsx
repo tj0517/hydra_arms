@@ -16,7 +16,7 @@
  * the dark container background show through.
  */
 
-import { useId } from "react";
+import React, { useId } from "react";
 import Image from "next/image";
 
 export interface TacticalEdgeProps {
@@ -29,6 +29,7 @@ export interface TacticalEdgeProps {
   width?: number;
   height?: number;
   className?: string;
+  style?: React.CSSProperties;
 }
 
 export default function TacticalEdge({
@@ -39,6 +40,7 @@ export default function TacticalEdge({
   width = 900,
   height = 600,
   className = "",
+  style,
 }: TacticalEdgeProps) {
 
   /* Unique filter ID — multiple instances on one page won't clash */
@@ -66,7 +68,7 @@ export default function TacticalEdge({
       : "8 0 0 0 0  8 0 0 0 0  8 0 0 0 0  20 20 20 0 -0.4";
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative ${className}`} style={style}>
       {/* ── SVG filter definition (invisible, 0×0) ─────────────────── */}
       <svg
         width="0" height="0"

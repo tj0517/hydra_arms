@@ -83,7 +83,7 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
     <nav className="space-y-0.5">
       <button
         onClick={() => selectCategory(null)}
-        className={`w-full flex items-center justify-between px-3 py-2 font-[var(--font-mono)] text-[10px] tracking-[0.18em] transition-colors text-left ${
+        className={`w-full flex items-center justify-between px-3 py-3 font-[var(--font-mono)] text-xs tracking-[0.18em] transition-colors text-left ${
           selectedCategory === null ? 'text-accent' : 'text-text-dim hover:text-white'
         }`}
       >
@@ -91,7 +91,7 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
           {selectedCategory === null && <span className="text-accent">▸</span>}
           WSZYSTKIE PRODUKTY
         </span>
-        <span className="text-white/25 text-[9px]">{products.length}</span>
+        <span className="text-white/25 text-[10px]">{products.length}</span>
       </button>
 
       <div className="h-px bg-white/5 my-1" />
@@ -107,7 +107,7 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
             <div className="flex items-center">
               <button
                 onClick={() => selectCategory(parent.id)}
-                className={`flex-1 text-left px-3 py-2 font-[var(--font-mono)] text-[10px] tracking-[0.15em] transition-colors ${
+                className={`flex-1 text-left px-3 py-2.5 font-[var(--font-mono)] text-xs tracking-[0.15em] transition-colors ${
                   isHighlighted ? 'text-accent' : 'text-text-dim hover:text-white'
                 }`}
               >
@@ -133,7 +133,7 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
                   <button
                     key={child.id}
                     onClick={() => selectCategory(child.id)}
-                    className={`w-full text-left px-3 py-1.5 font-[var(--font-mono)] text-[9px] tracking-[0.15em] transition-colors ${
+                    className={`w-full text-left px-3 py-2 font-[var(--font-mono)] text-[11px] tracking-[0.15em] transition-colors ${
                       selectedCategory === child.id ? 'text-accent' : 'text-text-dim/70 hover:text-white'
                     }`}
                   >
@@ -175,7 +175,7 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
               value={search}
               onChange={e => { setSearch(e.target.value); setPage(1); }}
               placeholder="SZUKAJ..."
-              className="bg-transparent border border-white/15 px-3 py-2 font-[var(--font-mono)] text-[10px] text-white placeholder-text-dim/40 tracking-widest focus:outline-none focus:border-accent/40 transition-colors w-32 sm:w-40 md:w-56"
+              className="bg-transparent border border-white/15 px-3 py-2.5 font-[var(--font-mono)] text-xs text-white placeholder-text-dim/40 tracking-widest focus:outline-none focus:border-accent/40 transition-colors w-36 sm:w-48 md:w-64"
             />
             {search && (
               <button
@@ -189,10 +189,10 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
         <div className="flex gap-10">
 
           {/* Sidebar — desktop */}
-          <aside className="hidden md:block w-52 flex-shrink-0">
+          <aside className="hidden md:block w-60 flex-shrink-0">
             <div className="sticky top-24 space-y-3">
               <div className="pb-2 border-b border-white/8">
-                <span className="font-[var(--font-mono)] text-[9px] text-text-dim/60 tracking-[0.25em] uppercase">Kategorie</span>
+                <span className="font-[var(--font-mono)] text-[11px] text-text-dim/60 tracking-[0.25em] uppercase">Kategorie</span>
               </div>
               {CategoryNav}
             </div>
@@ -227,7 +227,7 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
                   {paginated.map(p => (
                     <ProductCard key={p.id} product={p} categories={categories} />
                   ))}

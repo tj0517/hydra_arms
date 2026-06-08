@@ -13,18 +13,6 @@ interface ProductCardProps {
 const fmt = (n: number) =>
   new Intl.NumberFormat('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
 
-function Crosshair() {
-  return (
-    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" className="text-white/10">
-      <circle cx="24" cy="24" r="18" stroke="currentColor" strokeWidth="0.75"/>
-      <circle cx="24" cy="24" r="3" stroke="currentColor" strokeWidth="0.75"/>
-      <line x1="2" y1="24" x2="16" y2="24" stroke="currentColor" strokeWidth="0.75"/>
-      <line x1="32" y1="24" x2="46" y2="24" stroke="currentColor" strokeWidth="0.75"/>
-      <line x1="24" y1="2" x2="24" y2="16" stroke="currentColor" strokeWidth="0.75"/>
-      <line x1="24" y1="32" x2="24" y2="46" stroke="currentColor" strokeWidth="0.75"/>
-    </svg>
-  );
-}
 
 export default function ProductCard({ product, categories }: ProductCardProps) {
   const { addItem } = useCart();
@@ -81,9 +69,7 @@ export default function ProductCard({ product, categories }: ProductCardProps) {
               onError={() => setImgError(true)}
             />
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Crosshair />
-            </div>
+            <img src={`/img/service-0${(product.id % 4) + 1}.jpg`} alt="" className="w-full h-full object-cover" />
           )}
 
           {/* Out of stock overlay */}

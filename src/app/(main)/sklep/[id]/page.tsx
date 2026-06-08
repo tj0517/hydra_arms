@@ -6,31 +6,43 @@ import type { ShopProduct, ShopCategory } from '@/lib/supabase/types';
 
 const INVENTORY_ID = 35743;
 
-async function fetchProduct(id: number): Promise<{ product: ShopProduct; categories: ShopCategory[] } | null> {
+async function fetchProduct(id: number): Promise<{ product: ShopProduct; categories: ShopCategory[]; related: ShopProduct[] } | null> {
   const sb = createPublicClient();
   if (!sb) return null;
 
   const [productResult, categoriesResult] = await Promise.all([
-    sb
-      .from('shop_products')
-      .select('*')
-      .eq('id', id)
-      .eq('is_active', true)
-      .limit(1)
-      .single(),
-    sb
-      .from('shop_categories')
-      .select('*')
-      .eq('inventory_id', INVENTORY_ID)
-      .order('name', { ascending: true })
-      .limit(200),
+    sb.from('shop_products').select('*').eq('id', id).eq('is_active', true).limit(1).single(),
+    sb.from('shop_categories').select('*').eq('inventory_id', INVENTORY_ID).order('name', { ascending: true }).limit(200),
   ]);
 
   if (!productResult.data) return null;
 
+  const product = productResult.data as ShopProduct;
+
+  let { data: related } = await sb
+    .from('shop_products')
+    .select('*')
+    .eq('category_id', product.category_id)
+    .eq('is_active', true)
+    .neq('id', id)
+    .order('name', { ascending: true })
+    .limit(4);
+
+  if (!related?.length) {
+    const { data: fallback } = await sb
+      .from('shop_products')
+      .select('*')
+      .eq('is_active', true)
+      .neq('id', id)
+      .order('name', { ascending: true })
+      .limit(4);
+    related = fallback;
+  }
+
   return {
-    product: productResult.data as ShopProduct,
+    product,
     categories: (categoriesResult.data ?? []) as ShopCategory[],
+    related: (related ?? []) as ShopProduct[],
   };
 }
 
@@ -74,7 +86,7 @@ export default async function ProductPage({
 
   return (
     <main>
-      <ProductDetailClient product={data.product} categories={data.categories} />
+      <ProductDetailClient product={data.product} categories={data.categories} related={data.related} />
     </main>
   );
 }

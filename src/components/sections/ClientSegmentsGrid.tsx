@@ -10,6 +10,8 @@ export interface Segment {
   desc: string;
   img: string;
   href: string;
+  imgClass?: string;
+  imgStyle?: React.CSSProperties;
 }
 
 export const CLIENT_SEGMENTS: Segment[] = [
@@ -19,6 +21,7 @@ export const CLIENT_SEGMENTS: Segment[] = [
     desc: "Dostarczamy uzbrojenie i wyposażenie spełniające najwyższe standardy wojskowe, testowane w warunkach operacyjnych.",
     href: "/wspolpraca",
     img: "/img/draws/drone.png",
+    imgStyle: { filter: "brightness(1.5)" },
   },
   {
     tag: "Formacje",
@@ -39,7 +42,7 @@ export const CLIENT_SEGMENTS: Segment[] = [
     title: "Rynek cywilny",
     desc: "Dystrybucja broni strzeleckiej i amunicji dla uprawnionych odbiorców indywidualnych — myśliwych, kolekcjonerów i sportowców.",
     href: "/wspolpraca",
-    img: "/img/draws/scope.png",
+    img: "/img/draws/binoculars.png",
   },
 ];
 
@@ -105,9 +108,9 @@ export default function ClientSegmentsGrid({ segments, topBorder = false, glow =
         >
           <div className="h-[260px] hidden md:block mb-8">
             {plain ? (
-              <Image src={seg.img} alt={seg.title} width={900} height={450} className="w-full h-full object-contain" draggable={false} />
+              <Image src={seg.img} alt={seg.title} width={900} height={450} className={`w-full h-full object-contain ${seg.imgClass ?? ''}`} style={seg.imgStyle} draggable={false} />
             ) : (
-              <TacticalEdge src={seg.img} alt={seg.title} glow={glow} width={900} height={450} className="w-full h-full" />
+              <TacticalEdge src={seg.img} alt={seg.title} glow={glow} width={900} height={450} className={`w-full h-full ${seg.imgClass ?? ''}`} style={seg.imgStyle} />
             )}
           </div>
           <div className="flex flex-col flex-1">

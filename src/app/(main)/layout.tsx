@@ -1,6 +1,6 @@
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import NewsletterBar from "@/components/NewsletterBar";
+import NewsletterBarConditional from "@/components/NewsletterBarConditional";
 import SmoothScroll from "@/components/SmoothScroll";
 import LoadingScreen from "@/components/LoadingScreen";
 import GlobalCursor from "@/components/GlobalCursor";
@@ -41,7 +41,7 @@ export default async function MainLayout({
       <GlobalCursor />
       <Nav navLinks={navLinks} />
       {children}
-      <NewsletterBar />
+      <NewsletterBarConditional />
       <Footer navLinks={navLinks} siteSettings={siteSettings} />
       <CartTrigger />
     </CartProvider>

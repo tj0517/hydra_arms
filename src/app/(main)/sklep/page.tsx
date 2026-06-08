@@ -1,22 +1,47 @@
 import type { Metadata } from 'next';
 import SubpageHero from '@/components/SubpageHero';
+import SklepClient from '@/components/shop/SklepClient';
+import { createPublicClient } from '@/lib/supabase/public';
+import type { ShopProduct, ShopCategory } from '@/lib/supabase/types';
+
+const INVENTORY_ID = 35743;
 
 export const metadata: Metadata = {
   title: 'Sklep',
   alternates: { canonical: '/sklep' },
 };
 
-export default function SklepPage() {
+async function fetchShopData(): Promise<{ products: ShopProduct[]; categories: ShopCategory[] }> {
+  const sb = createPublicClient();
+  if (!sb) return { products: [], categories: [] };
+
+  const [productsResult, categoriesResult] = await Promise.all([
+    sb
+      .from('shop_products')
+      .select('*')
+      .eq('is_active', true)
+      .order('name', { ascending: true }),
+    sb
+      .from('shop_categories')
+      .select('*')
+      .eq('inventory_id', INVENTORY_ID)
+      .order('name', { ascending: true })
+      .limit(200),
+  ]);
+
+  return {
+    products: (productsResult.data ?? []) as ShopProduct[],
+    categories: (categoriesResult.data ?? []) as ShopCategory[],
+  };
+}
+
+export default async function SklepPage() {
+  const { products, categories } = await fetchShopData();
+
   return (
     <main>
       <SubpageHero subtitle="HYDRA ARMS / Sklep" title="Sklep" video="/video/hero-video.mp4" />
-      <section className="border-t border-white/[0.25] px-[clamp(24px,5vw,64px)] py-28 flex flex-col items-center justify-center gap-4">
-        <span className="font-[var(--font-mono)] text-[11px] text-accent/50 tracking-[0.25em] uppercase">// STATUS</span>
-        <p className="font-[var(--font-mono)] text-[clamp(1.2rem,3vw,2rem)] text-white tracking-[0.1em] uppercase">
-          W trakcie realizacji
-        </p>
-        <span className="terminal-blink text-accent text-xl">█</span>
-      </section>
+      <SklepClient products={products} categories={categories} />
     </main>
   );
 }

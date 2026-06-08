@@ -7,9 +7,12 @@ import type { ShopProduct, ShopCategory } from '@/lib/supabase/types';
 import { useCart } from './CartProvider';
 import CartDrawer from './CartDrawer';
 
+import ProductCard from './ProductCard';
+
 interface Props {
   product: ShopProduct;
   categories: ShopCategory[];
+  related: ShopProduct[];
 }
 
 const fmt = (n: number) =>
@@ -26,25 +29,9 @@ function sanitizeHtml(html: string): string {
   return DOMPurify.sanitize(decoded, { ALLOWED_TAGS: ['p', 'br', 'b', 'strong', 'i', 'em', 'ul', 'ol', 'li', 'span', 'h2', 'h3', 'h4', 'table', 'tr', 'td', 'th', 'tbody', 'thead'] });
 }
 
-function CrosshairPlaceholder({ size = 64 }: { size?: number }) {
-  const r = size * 0.44;
-  const r2 = size * 0.08;
-  const gap = size * 0.12;
-  const c = size / 2;
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} fill="none" className="text-white/10">
-      <circle cx={c} cy={c} r={r} stroke="currentColor" strokeWidth="0.75"/>
-      <circle cx={c} cy={c} r={r2} stroke="currentColor" strokeWidth="0.75"/>
-      <line x1={gap} y1={c} x2={c - r2 - 4} y2={c} stroke="currentColor" strokeWidth="0.75"/>
-      <line x1={c + r2 + 4} y1={c} x2={size - gap} y2={c} stroke="currentColor" strokeWidth="0.75"/>
-      <line x1={c} y1={gap} x2={c} y2={c - r2 - 4} stroke="currentColor" strokeWidth="0.75"/>
-      <line x1={c} y1={c + r2 + 4} x2={c} y2={size - gap} stroke="currentColor" strokeWidth="0.75"/>
-    </svg>
-  );
-}
 
-export default function ProductDetailClient({ product, categories }: Props) {
-  const { addItem, openCart, itemCount } = useCart();
+export default function ProductDetailClient({ product, categories, related }: Props) {
+  const { addItem, openCart } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [activeImg, setActiveImg] = useState(0);
   const [adding, setAdding] = useState(false);
@@ -72,41 +59,18 @@ export default function ProductDetailClient({ product, categories }: Props) {
     <>
       <CartDrawer />
 
-      {/* Cart trigger in top-right when items */}
-      {itemCount > 0 && (
-        <button
-          onClick={openCart}
-          className="fixed top-24 right-6 z-[500] flex items-center gap-2 border border-accent/40 px-3 py-2 font-[var(--font-mono)] text-[10px] text-accent tracking-widest hover:bg-accent/5 transition-colors bg-bg"
-        >
-          KOSZYK
-          <span className="w-4 h-4 bg-accent text-black text-[9px] font-bold flex items-center justify-center rounded-full">{itemCount}</span>
-        </button>
-      )}
 
-      <div className="max-w-[1300px] mx-auto px-6 md:px-10 py-12">
+      <div className="max-w-[1300px] mx-auto px-6 md:px-10 pt-32 pb-16">
 
-        {/* Breadcrumb */}
-        <nav className="flex items-center flex-wrap gap-x-2 gap-y-1 mb-10 font-[var(--font-mono)] text-[9px] text-text-dim tracking-[0.2em] uppercase">
-          <Link href="/sklep" className="hover:text-accent transition-colors">Sklep</Link>
-          {parentCategory && (
-            <>
-              <span className="text-white/15">/</span>
-              <Link href={`/sklep?cat=${parentCategory.id}`} className="hover:text-accent transition-colors">
-                {parentCategory.name}
-              </Link>
-            </>
-          )}
-          {category && (
-            <>
-              <span className="text-white/15">/</span>
-              <Link href={`/sklep?cat=${category.id}`} className="hover:text-accent transition-colors">
-                {category.name}
-              </Link>
-            </>
-          )}
-          <span className="text-white/15">/</span>
-          <span className="text-white/50 normal-case truncate max-w-[240px]">{product.name}</span>
-        </nav>
+        {/* Back button */}
+        <div className="mb-10">
+          <Link
+            href="/sklep"
+            className="font-[var(--font-mono)] text-[11px] text-text-dim hover:text-accent transition-colors tracking-[0.2em] uppercase border border-white/10 hover:border-accent/30 px-4 py-2 inline-flex items-center"
+          >
+            ← Powrót do sklepu
+          </Link>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16">
 
@@ -123,9 +87,7 @@ export default function ProductDetailClient({ product, categories }: Props) {
                   onError={() => handleImgError(activeImg)}
                 />
               ) : (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <CrosshairPlaceholder size={80} />
-                </div>
+                <img src={`/img/service-0${(product.id % 4) + 1}.jpg`} alt="" className="absolute inset-0 w-full h-full object-cover" />
               )}
 
               {/* SKU watermark */}
@@ -139,28 +101,25 @@ export default function ProductDetailClient({ product, categories }: Props) {
             {/* Thumbnails */}
             {images.length > 1 && (
               <div className="flex gap-2 flex-wrap">
-                {images.slice(0, 6).map((img, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setActiveImg(i)}
-                    className={`w-14 h-14 border overflow-hidden transition-colors ${
-                      i === activeImg ? 'border-accent' : 'border-white/10 hover:border-white/25'
-                    }`}
-                  >
-                    {!imgErrors.has(i) ? (
+                {images.slice(0, 6).map((img, i) => {
+                  if (imgErrors.has(i)) return null;
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => setActiveImg(i)}
+                      className={`w-14 h-14 border overflow-hidden transition-colors ${
+                        i === activeImg ? 'border-accent' : 'border-white/10 hover:border-white/25'
+                      }`}
+                    >
                       <img
                         src={img}
                         alt=""
                         className="w-full h-full object-cover"
                         onError={() => handleImgError(i)}
                       />
-                    ) : (
-                      <div className="w-full h-full bg-bg-card flex items-center justify-center">
-                        <CrosshairPlaceholder size={24} />
-                      </div>
-                    )}
-                  </button>
-                ))}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -173,14 +132,14 @@ export default function ProductDetailClient({ product, categories }: Props) {
               {category && (
                 <Link
                   href={`/sklep?cat=${category.id}`}
-                  className="font-[var(--font-mono)] text-[9px] text-text-dim tracking-[0.22em] uppercase hover:text-accent transition-colors"
+                  className="font-[var(--font-mono)] text-[11px] text-text-dim tracking-[0.22em] uppercase hover:text-accent transition-colors"
                 >
                   {parentCategory ? `${parentCategory.name} · ` : ''}{category.name}
                 </Link>
               )}
-              <h1 className="text-2xl md:text-3xl font-semibold text-white leading-tight">{product.name}</h1>
+              <h1 className="text-3xl md:text-4xl font-semibold text-white leading-tight">{product.name}</h1>
               {product.sku && (
-                <p className="font-[var(--font-mono)] text-[9px] text-text-dim/60 tracking-[0.22em]">
+                <p className="font-[var(--font-mono)] text-[11px] text-text-dim/60 tracking-[0.22em]">
                   SKU: {product.sku}{product.ean ? ` · EAN: ${product.ean}` : ''}
                 </p>
               )}
@@ -188,12 +147,12 @@ export default function ProductDetailClient({ product, categories }: Props) {
 
             {/* Price */}
             <div className="py-4 border-t border-b border-white/8 flex items-end gap-3">
-              <span className="font-[var(--font-mono)] text-3xl text-accent leading-none">
+              <span className="font-[var(--font-mono)] text-4xl text-accent leading-none">
                 {fmt(product.price ?? 0)}
               </span>
-              <span className="font-[var(--font-mono)] text-sm text-text-dim mb-0.5">PLN</span>
+              <span className="font-[var(--font-mono)] text-base text-text-dim mb-0.5">PLN</span>
               {product.tax_rate ? (
-                <span className="font-[var(--font-mono)] text-[9px] text-text-dim/60 tracking-wider mb-0.5">
+                <span className="font-[var(--font-mono)] text-[11px] text-text-dim/60 tracking-wider mb-0.5">
                   brutto (VAT {product.tax_rate}%)
                 </span>
               ) : null}
@@ -202,7 +161,7 @@ export default function ProductDetailClient({ product, categories }: Props) {
             {/* Stock */}
             <div className="flex items-center gap-2">
               <span className={`w-2 h-2 rounded-full flex-shrink-0 ${!outOfStock ? 'bg-accent' : 'bg-white/15'}`} />
-              <span className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-[0.18em]">
+              <span className="font-[var(--font-mono)] text-xs text-text-dim tracking-[0.18em]">
                 {!outOfStock ? `W MAGAZYNIE · ${product.stock} SZT. DOSTĘPNYCH` : 'PRODUKT NIEDOSTĘPNY'}
               </span>
             </div>
@@ -210,14 +169,14 @@ export default function ProductDetailClient({ product, categories }: Props) {
             {/* Type warnings */}
             {product.product_type === 'age_restricted' && (
               <div className="border border-accent/30 bg-accent/5 px-4 py-3">
-                <p className="font-[var(--font-mono)] text-[10px] text-accent tracking-widest">
+                <p className="font-[var(--font-mono)] text-xs text-accent tracking-widest">
                   ⚠ PRODUKT PRZEZNACZONY DLA OSÓB PEŁNOLETNICH (18+)
                 </p>
               </div>
             )}
             {product.product_type === 'pickup_only' && (
               <div className="border border-white/15 bg-white/3 px-4 py-3">
-                <p className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-widest">
+                <p className="font-[var(--font-mono)] text-xs text-text-dim tracking-widest">
                   ⚠ PRODUKT DOSTĘPNY WYŁĄCZNIE DO ODBIORU OSOBISTEGO
                 </p>
               </div>
@@ -226,7 +185,7 @@ export default function ProductDetailClient({ product, categories }: Props) {
             {/* Quantity + Add */}
             <div className="space-y-3 pt-1">
               <div className="flex items-center gap-4">
-                <span className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-[0.2em] w-14">ILOŚĆ</span>
+                <span className="font-[var(--font-mono)] text-xs text-text-dim tracking-[0.2em] w-14">ILOŚĆ</span>
                 <div className="flex items-stretch border border-white/15">
                   <button
                     onClick={() => setQuantity(q => Math.max(1, q - 1))}
@@ -242,7 +201,7 @@ export default function ProductDetailClient({ product, categories }: Props) {
                     className="w-10 h-10 flex items-center justify-center text-text-dim hover:text-accent transition-colors font-[var(--font-mono)] border-l border-white/15 disabled:opacity-30"
                   >+</button>
                 </div>
-                <span className="font-[var(--font-mono)] text-xs text-text-dim">
+                <span className="font-[var(--font-mono)] text-sm text-text-dim">
                   = {fmt((product.price ?? 0) * quantity)} PLN
                 </span>
               </div>
@@ -262,20 +221,68 @@ export default function ProductDetailClient({ product, categories }: Props) {
               </button>
             </div>
 
-            {/* Features table */}
+          </div>
+        </div>
+
+        {/* Photo showcase */}
+        {images.filter((_, i) => !imgErrors.has(i)).length > 1 && (
+          <div className="mt-16 pt-10 border-t border-white/8">
+            <div className="pb-4 mb-6 border-b border-white/8">
+              <span className="font-[var(--font-mono)] text-[11px] text-text-dim/60 tracking-[0.25em] uppercase">Zdjęcia produktu</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {images.map((img, i) => {
+                if (imgErrors.has(i)) return null;
+                return (
+                  <button
+                    key={i}
+                    onClick={() => { setActiveImg(i); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    className={`w-14 h-14 bg-bg-card border overflow-hidden flex-shrink-0 transition-colors ${
+                      i === activeImg ? 'border-accent' : 'border-white/10 hover:border-white/25'
+                    }`}
+                  >
+                    <img
+                      src={img}
+                      alt={`${product.name} — zdjęcie ${i + 1}`}
+                      className="w-full h-full object-contain p-1"
+                      onError={() => handleImgError(i)}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Dane techniczne + Opis — two columns */}
+        {(product.features && Object.keys(product.features).length > 0) || product.description ? (
+          <div className="mt-16 pt-10 border-t border-white/8 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
+
+            {product.description && (
+              <div>
+                <div className="pb-4 mb-6 border-b border-white/8">
+                  <span className="font-[var(--font-mono)] text-xs text-text-dim/60 tracking-[0.25em] uppercase">Opis produktu</span>
+                </div>
+                <div
+                  className="shop-description text-text-dim text-base leading-relaxed space-y-4"
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(product.description) }}
+                />
+              </div>
+            )}
+
             {product.features && Object.keys(product.features).length > 0 && (
-              <div className="pt-2 space-y-2">
-                <div className="pb-2 border-b border-white/8">
-                  <span className="font-[var(--font-mono)] text-[9px] text-text-dim/60 tracking-[0.25em] uppercase">Dane techniczne</span>
+              <div>
+                <div className="pb-4 mb-6 border-b border-white/8">
+                  <span className="font-[var(--font-mono)] text-xs text-text-dim/60 tracking-[0.25em] uppercase">Dane techniczne</span>
                 </div>
                 <table className="w-full">
                   <tbody>
                     {Object.entries(product.features).map(([k, v]) => (
                       <tr key={k} className="border-b border-white/5 last:border-0">
-                        <td className="py-2 pr-4 font-[var(--font-mono)] text-[9px] text-text-dim tracking-wider align-top w-2/5">
+                        <td className="py-3 pr-6 font-[var(--font-mono)] text-sm text-text-dim tracking-wider align-top w-2/5">
                           {k}
                         </td>
-                        <td className="py-2 font-[var(--font-mono)] text-[9px] text-white/80">
+                        <td className="py-3 text-sm text-white/80">
                           {v}
                         </td>
                       </tr>
@@ -284,19 +291,23 @@ export default function ProductDetailClient({ product, categories }: Props) {
                 </table>
               </div>
             )}
-          </div>
-        </div>
 
-        {/* Description */}
-        {product.description && (
+          </div>
+        ) : null}
+
+        {/* Related products */}
+        {related.length > 0 && (
           <div className="mt-16 pt-10 border-t border-white/8">
             <div className="pb-4 mb-8 border-b border-white/8">
-              <span className="font-[var(--font-mono)] text-[9px] text-text-dim/60 tracking-[0.25em] uppercase">Opis produktu</span>
+              <span className="font-[var(--font-mono)] text-xs text-text-dim/60 tracking-[0.25em] uppercase">
+                {category ? `Więcej z kategorii: ${category.name}` : 'Inne produkty'}
+              </span>
             </div>
-            <div
-              className="shop-description text-text-dim text-sm leading-relaxed max-w-3xl space-y-4"
-              dangerouslySetInnerHTML={{ __html: sanitizeHtml(product.description) }}
-            />
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
+              {related.map(p => (
+                <ProductCard key={p.id} product={p} categories={categories} />
+              ))}
+            </div>
           </div>
         )}
       </div>

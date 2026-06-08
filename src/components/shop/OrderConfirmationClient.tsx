@@ -12,7 +12,7 @@ interface OrderData {
   items: {
     quantity: number
     unit_price: number
-    product_snapshot: { name?: string; sku?: string } | null
+    product_snapshot: { name?: string; sku?: string; images?: Record<string, string> } | null
   }[]
 }
 
@@ -87,19 +87,32 @@ export default function OrderConfirmationClient({ orderId }: { orderId: string }
           <div className="px-6 py-4">
             <h2 className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-[0.25em] uppercase">Produkty</h2>
           </div>
-          {order.items.map((item, i) => (
-            <div key={i} className="px-6 py-3 flex justify-between items-center gap-4">
-              <div className="min-w-0">
-                <p className="text-sm text-white leading-snug truncate">{item.product_snapshot?.name || 'Produkt'}</p>
-                <p className="font-[var(--font-mono)] text-[10px] text-text-dim mt-0.5">
-                  {item.quantity} × {fmt(item.unit_price)} PLN
+          {order.items.map((item, i) => {
+            const imgUrl = item.product_snapshot?.images
+              ? Object.values(item.product_snapshot.images)[0]
+              : null
+            return (
+              <div key={i} className="px-6 py-3 flex items-center gap-4">
+                <div className="w-12 h-12 flex-shrink-0 overflow-hidden border border-white/10">
+                  <img
+                    src={imgUrl || `/img/service-0${(i % 4) + 1}.jpg`}
+                    alt=""
+                    className="w-full h-full object-cover"
+                    onError={e => { (e.target as HTMLImageElement).src = `/img/service-0${(i % 4) + 1}.jpg` }}
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm text-white leading-snug truncate">{item.product_snapshot?.name || 'Produkt'}</p>
+                  <p className="font-[var(--font-mono)] text-[10px] text-text-dim mt-0.5">
+                    {item.quantity} × {fmt(item.unit_price)} PLN
+                  </p>
+                </div>
+                <p className="font-[var(--font-mono)] text-sm text-accent whitespace-nowrap">
+                  {fmt(item.unit_price * item.quantity)} PLN
                 </p>
               </div>
-              <p className="font-[var(--font-mono)] text-sm text-accent whitespace-nowrap">
-                {fmt(item.unit_price * item.quantity)} PLN
-              </p>
-            </div>
-          ))}
+            )
+          })}
           <div className="px-6 py-4 flex justify-between items-center">
             <span className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-widest uppercase">Razem</span>
             <span className="font-[var(--font-mono)] text-xl text-accent">{fmt(order.total ?? 0)} PLN</span>

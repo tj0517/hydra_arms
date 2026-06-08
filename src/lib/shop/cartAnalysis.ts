@@ -6,20 +6,24 @@ export interface CartAnalysis {
   timing: string
   fast: boolean
   pickup: boolean
+  isMixed: boolean
 }
 
 export function analyzeCart(
   items: { product: { source_warehouse: string | null; product_type: string } }[]
 ): CartAnalysis {
   const hasRestricted = items.some(i => i.product.product_type !== 'standard')
+  const hasStandard = items.some(i => i.product.product_type === 'standard')
+  const isMixed = hasRestricted && hasStandard
 
   if (hasRestricted) {
     return {
       route: 'pickup',
-      label: 'Odbiór osobisty — wymagany dla części produktów',
+      label: isMixed ? 'Część produktów wymaga odbioru osobistego' : 'Odbiór osobisty — wymagany dla części produktów',
       timing: 'Do uzgodnienia',
       fast: false,
       pickup: true,
+      isMixed,
     }
   }
 
@@ -30,15 +34,15 @@ export function analyzeCart(
   if (sources.size === 1) {
     const src = [...sources][0]
     if (src === 'H1')
-      return { route: 'direct_H1', label: 'Hurtownia 1 — dostawa bezpośrednia', timing: 'Szybko', fast: true, pickup: false }
+      return { route: 'direct_H1', label: 'Hurtownia 1 — dostawa bezpośrednia', timing: 'Szybko', fast: true, pickup: false, isMixed: false }
     if (src === 'H2')
-      return { route: 'direct_H2', label: 'Hurtownia 2 — dostawa bezpośrednia', timing: 'Szybko', fast: true, pickup: false }
+      return { route: 'direct_H2', label: 'Hurtownia 2 — dostawa bezpośrednia', timing: 'Szybko', fast: true, pickup: false, isMixed: false }
   }
 
   // Multiple different known warehouses → consolidation needed
   if (sources.size > 1)
-    return { route: 'consolidated', label: 'Magazyn własny — konsolidacja', timing: 'Dłuższy czas', fast: false, pickup: false }
+    return { route: 'consolidated', label: 'Magazyn własny — konsolidacja', timing: 'Dłuższy czas', fast: false, pickup: false, isMixed: false }
 
   // No warehouse data set yet — default to standard delivery
-  return { route: 'consolidated', label: 'Dostawa kurierska', timing: 'Standardowy czas dostawy', fast: true, pickup: false }
+  return { route: 'consolidated', label: 'Dostawa kurierska', timing: 'Standardowy czas dostawy', fast: true, pickup: false, isMixed: false }
 }
