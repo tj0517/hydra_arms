@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 
@@ -33,17 +32,15 @@ export default async function OrderDetailPage({
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/konto/login')
 
-  const admin = createAdminClient()
-
-  const { data: order } = await admin
+  const { data: order } = await supabase
     .from('orders')
     .select('id, status, total, shipping_address, fulfillment_route, created_at, user_id')
     .eq('id', id)
     .single()
 
-  if (!order || order.user_id !== user.id) notFound()
+  if (!order) notFound()
 
-  const { data: items } = await admin
+  const { data: items } = await supabase
     .from('order_items')
     .select('quantity, unit_price, product_snapshot, product_id')
     .eq('order_id', id)

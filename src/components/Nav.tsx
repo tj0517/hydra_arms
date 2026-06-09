@@ -144,7 +144,7 @@ export default function Nav({ navLinks }: { navLinks?: { href: string; label: st
                 <>
                   <li>
                     <Link
-                      href="/logowanie"
+                      href="/konto/login"
                       className="font-[var(--font-mono)] text-xs uppercase tracking-[0.15em] text-text-dim hover:text-white transition-colors duration-300"
                     >
                       <span className="text-text-dim">[</span>{' '}
@@ -154,7 +154,7 @@ export default function Nav({ navLinks }: { navLinks?: { href: string; label: st
                   </li>
                   <li>
                     <Link
-                      href="/rejestracja"
+                      href="/konto/rejestracja"
                       className="font-[var(--font-mono)] text-xs uppercase tracking-[0.15em] text-text-dim hover:text-white transition-colors duration-300"
                     >
                       <span className="text-text-dim">[</span>{' '}
@@ -219,13 +219,13 @@ export default function Nav({ navLinks }: { navLinks?: { href: string; label: st
           ) : (
             <>
               <Link
-                href="/logowanie"
+                href="/konto/login"
                 className="font-[var(--font-mono)] text-2xl uppercase tracking-[0.2em] transition-colors duration-300 text-text-dim hover:text-white"
               >
                 <span className="text-text-dim">[</span> <span className="text-accent">Zaloguj</span> <span className="text-text-dim">]</span>
               </Link>
               <Link
-                href="/rejestracja"
+                href="/konto/rejestracja"
                 className="font-[var(--font-mono)] text-2xl uppercase tracking-[0.2em] transition-colors duration-300 text-text-dim hover:text-white"
               >
                 <span className="text-text-dim">[</span> <span className="text-accent">Zarejestruj</span> <span className="text-text-dim">]</span>
