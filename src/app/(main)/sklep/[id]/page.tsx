@@ -22,7 +22,7 @@ async function fetchProduct(id: number): Promise<{ product: ShopProduct; categor
   let { data: related } = await sb
     .from('shop_products')
     .select('*')
-    .eq('category_id', product.category_id)
+    .eq('category_id', product.category_id ?? -1)
     .eq('is_active', true)
     .neq('id', id)
     .order('name', { ascending: true })
