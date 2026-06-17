@@ -77,9 +77,6 @@ export default function OrderConfirmationClient({ orderId }: { orderId: string }
           <p className="font-[var(--font-mono)] text-xs text-text-dim tracking-[0.15em]">
             Nr zamówienia: <span className="text-accent">{order.id.slice(0, 8).toUpperCase()}</span>
           </p>
-          <p className="font-[var(--font-mono)] text-[10px] text-accent/70 tracking-widest uppercase">
-            Płatność zasymulowana — automatycznie zaakceptowana
-          </p>
         </div>
 
         {/* Order details */}

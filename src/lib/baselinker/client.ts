@@ -1,4 +1,4 @@
-import type { BLInventory, BLCategory, BLProduct, BLProductDetail } from './types';
+import type { BLInventory, BLCategory, BLProduct, BLProductDetail, BLOrderStatus, BLOrder } from './types';
 import { getMockResponse } from './fixtures/index';
 
 const API_URL = 'https://api.baselinker.com/connector.php';
@@ -118,4 +118,22 @@ export interface BLAddOrderParams {
 export async function addOrder(params: BLAddOrderParams): Promise<number> {
   const data = await blCall('addOrder', params as unknown as Record<string, unknown>) as { order_id: number };
   return data.order_id;
+}
+
+export async function getOrderStatusList(): Promise<BLOrderStatus[]> {
+  const data = await blCall('getOrderStatusList') as { statuses: BLOrderStatus[] };
+  return data.statuses ?? [];
+}
+
+export async function getOrders(params?: {
+  status_id?: number;
+  date_from?: number;
+  page?: number;
+}): Promise<{ orders: BLOrder[]; hasMore: boolean }> {
+  const data = await blCall('getOrders', {
+    get_unconfirmed_orders: true,
+    ...params,
+  }) as { orders: Record<string, BLOrder> };
+  const orders = Object.values(data.orders ?? {});
+  return { orders, hasMore: orders.length === 100 };
 }

@@ -1,0 +1,4 @@
+ALTER TABLE orders
+  ADD COLUMN IF NOT EXISTS tracking_number TEXT,
+  ADD COLUMN IF NOT EXISTS shipping_carrier TEXT,
+  ADD COLUMN IF NOT EXISTS bl_status_id INTEGER;

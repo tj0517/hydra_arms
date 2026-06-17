@@ -31,8 +31,9 @@ export interface Database {
       };
       shop_products: {
         Row: {
+          // ── Core (existing) ──────────────────────────────────────────────
           id: number;
-          inventory_id: number;
+          inventory_id: number | null;          // null for XML-sourced products
           sku: string | null;
           ean: string | null;
           name: string;
@@ -49,10 +50,40 @@ export interface Database {
           is_active: boolean;
           synced_at: string | null;
           updated_at: string;
+          // ── Source tracking (migration 004) ──────────────────────────────
+          connector: string | null;             // 'baselinker' | 'kolba' | 'sharg' | 'spechurt'
+          connector_product_id: string | null;  // their ID in their system
+          connector_sku: string | null;         // their SKU
+          primary_source: string | null;
+          // ── Compliance (migration 004) ───────────────────────────────────
+          age_min: number;                      // 0 = no restriction, 18, 21
+          requires_license: boolean;
+          license_category: string | null;      // 'B', 'PAE', etc.
+          delivery_allowed: boolean;
+          // ── Sync control (migration 004) ─────────────────────────────────
+          sync_locked_fields: string[];         // fields sync cannot overwrite
+          // ── Admin / review (migration 004) ──────────────────────────────
+          review_flags: Array<{ reason: string; detail: string }> | null;
+          completeness_score: number;
+          notes_internal: string | null;
+          // ── Pricing additions (migration 004) ───────────────────────────
+          price_purchase: number | null;        // what we pay the supplier
+          price_compare: number | null;         // struck-through "was" price
+          // ── Display (migration 004) ──────────────────────────────────────
+          slug: string | null;
+          short_description: string | null;
+          is_featured: boolean;
+          badge: string | null;
+          availability_status: string;
+          meta_title: string | null;
+          meta_description: string | null;
+          // ── Shipping (migration 004) ─────────────────────────────────────
+          dimensions: { l: number; w: number; h: number } | null;
+          shipping_class: string;
         };
         Insert: {
           id: number;
-          inventory_id: number;
+          inventory_id?: number | null;
           sku?: string | null;
           ean?: string | null;
           name: string;
@@ -69,10 +100,33 @@ export interface Database {
           is_active?: boolean;
           synced_at?: string | null;
           updated_at?: string;
+          connector?: string | null;
+          connector_product_id?: string | null;
+          connector_sku?: string | null;
+          primary_source?: string | null;
+          age_min?: number;
+          requires_license?: boolean;
+          license_category?: string | null;
+          delivery_allowed?: boolean;
+          sync_locked_fields?: string[];
+          review_flags?: Array<{ reason: string; detail: string }> | null;
+          completeness_score?: number;
+          notes_internal?: string | null;
+          price_purchase?: number | null;
+          price_compare?: number | null;
+          slug?: string | null;
+          short_description?: string | null;
+          is_featured?: boolean;
+          badge?: string | null;
+          availability_status?: string;
+          meta_title?: string | null;
+          meta_description?: string | null;
+          dimensions?: { l: number; w: number; h: number } | null;
+          shipping_class?: string;
         };
         Update: {
           id?: number;
-          inventory_id?: number;
+          inventory_id?: number | null;
           sku?: string | null;
           ean?: string | null;
           name?: string;
@@ -89,6 +143,29 @@ export interface Database {
           is_active?: boolean;
           synced_at?: string | null;
           updated_at?: string;
+          connector?: string | null;
+          connector_product_id?: string | null;
+          connector_sku?: string | null;
+          primary_source?: string | null;
+          age_min?: number;
+          requires_license?: boolean;
+          license_category?: string | null;
+          delivery_allowed?: boolean;
+          sync_locked_fields?: string[];
+          review_flags?: Array<{ reason: string; detail: string }> | null;
+          completeness_score?: number;
+          notes_internal?: string | null;
+          price_purchase?: number | null;
+          price_compare?: number | null;
+          slug?: string | null;
+          short_description?: string | null;
+          is_featured?: boolean;
+          badge?: string | null;
+          availability_status?: string;
+          meta_title?: string | null;
+          meta_description?: string | null;
+          dimensions?: { l: number; w: number; h: number } | null;
+          shipping_class?: string;
         };
         Relationships: [];
       };
@@ -159,6 +236,9 @@ export interface Database {
           shipping_address: Record<string, unknown> | null;
           total: number | null;
           fulfillment_route: FulfillmentRoute | null;
+          tracking_number: string | null;
+          shipping_carrier: string | null;
+          bl_status_id: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -171,6 +251,9 @@ export interface Database {
           shipping_address?: Record<string, unknown> | null;
           total?: number | null;
           fulfillment_route?: FulfillmentRoute | null;
+          tracking_number?: string | null;
+          shipping_carrier?: string | null;
+          bl_status_id?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -183,6 +266,9 @@ export interface Database {
           shipping_address?: Record<string, unknown> | null;
           total?: number | null;
           fulfillment_route?: FulfillmentRoute | null;
+          tracking_number?: string | null;
+          shipping_carrier?: string | null;
+          bl_status_id?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -218,9 +304,71 @@ export interface Database {
         };
         Relationships: [];
       };
+      source_connectors: {
+        Row: {
+          id: string;
+          name: string;
+          display_name: string | null;
+          xml_url: string;
+          auth_type: string;
+          auth_config: Record<string, unknown>;
+          charset: string;
+          feed_type: string;
+          extra_config: Record<string, unknown>;
+          sync_schedule: string;
+          is_active: boolean;
+          last_synced_at: string | null;
+          last_sync_status: string;
+          last_sync_stats: Record<string, unknown>;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          display_name?: string | null;
+          xml_url: string;
+          auth_type?: string;
+          auth_config?: Record<string, unknown>;
+          charset?: string;
+          feed_type?: string;
+          extra_config?: Record<string, unknown>;
+          sync_schedule?: string;
+          is_active?: boolean;
+          last_synced_at?: string | null;
+          last_sync_status?: string;
+          last_sync_stats?: Record<string, unknown>;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          display_name?: string | null;
+          xml_url?: string;
+          auth_type?: string;
+          auth_config?: Record<string, unknown>;
+          charset?: string;
+          feed_type?: string;
+          extra_config?: Record<string, unknown>;
+          sync_schedule?: string;
+          is_active?: boolean;
+          last_synced_at?: string | null;
+          last_sync_status?: string;
+          last_sync_stats?: Record<string, unknown>;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      next_xml_product_id: {
+        Args: Record<string, never>;
+        Returns: number;
+      };
+    };
     Enums: {
       product_type: ProductType;
     };

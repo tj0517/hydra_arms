@@ -32,6 +32,39 @@ export interface BLProduct {
   prices: Record<string, number>;
 }
 
+export interface BLOrderStatus {
+  id: number;
+  name: string;
+  name_for_customer: string;
+  color: string;
+}
+
+export interface BLOrderItem {
+  order_product_id: number;
+  product_id: string;
+  name: string;
+  sku: string;
+  ean: string;
+  quantity: number;
+  price_brutto: number;
+  tax_rate: number;
+}
+
+export interface BLOrder {
+  order_id: number;
+  order_status_id: number;
+  date_add: number;
+  delivery_fullname: string;
+  delivery_address: string;
+  delivery_city: string;
+  delivery_postcode: string;
+  email: string;
+  phone: string;
+  delivery_tracking_number: string;
+  delivery_package_module: string;
+  products: BLOrderItem[];
+}
+
 /** Full product detail from getInventoryProductsData */
 export interface BLProductDetail {
   is_bundle: boolean;

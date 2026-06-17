@@ -34,7 +34,7 @@ export default async function OrderDetailPage({
 
   const { data: order } = await supabase
     .from('orders')
-    .select('id, status, total, shipping_address, fulfillment_route, created_at, user_id')
+    .select('id, status, total, shipping_address, fulfillment_route, tracking_number, shipping_carrier, bl_status_id, created_at, user_id')
     .eq('id', id)
     .single()
 
@@ -98,6 +98,82 @@ export default async function OrderDetailPage({
             </p>
           </div>
         </div>
+
+        {/* Status timeline / cancelled banner */}
+        {order.status === 'cancelled' ? (
+          <div className="border border-red-400/30 bg-red-400/5 px-6 py-4">
+            <p className="font-[var(--font-mono)] text-[10px] text-red-400 tracking-[0.25em] uppercase">
+              Zamówienie anulowane
+            </p>
+          </div>
+        ) : (
+          <div className="border border-white/10 px-6 py-5">
+            {(() => {
+              const STEPS = ['pending', 'paid', 'shipped', 'delivered'] as const
+              const LABELS: Record<string, string> = {
+                pending: 'Złożone',
+                paid: 'Opłacone',
+                shipped: 'Wysłane',
+                delivered: 'Dostarczone',
+              }
+              const currentIdx = STEPS.indexOf(order.status as typeof STEPS[number])
+              return (
+                <div className="flex items-center gap-0">
+                  {STEPS.map((step, i) => {
+                    const done = i <= currentIdx
+                    const active = i === currentIdx
+                    return (
+                      <div key={step} className="flex items-center flex-1 last:flex-none">
+                        <div className="flex flex-col items-center gap-1.5">
+                          <div
+                            className={`w-2.5 h-2.5 rounded-full border transition-colors ${
+                              active
+                                ? 'bg-accent border-accent'
+                                : done
+                                ? 'bg-accent/50 border-accent/50'
+                                : 'bg-transparent border-white/20'
+                            }`}
+                          />
+                          <span
+                            className={`font-[var(--font-mono)] text-[9px] tracking-wider whitespace-nowrap ${
+                              active ? 'text-accent' : done ? 'text-white/50' : 'text-text-dim/40'
+                            }`}
+                          >
+                            {LABELS[step]}
+                          </span>
+                        </div>
+                        {i < STEPS.length - 1 && (
+                          <div
+                            className={`flex-1 h-px mx-2 mb-3 ${i < currentIdx ? 'bg-accent/40' : 'bg-white/10'}`}
+                          />
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            })()}
+          </div>
+        )}
+
+        {/* Tracking block */}
+        {order.tracking_number && (
+          <section className="border border-white/10 px-6 py-5">
+            <h2 className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-[0.25em] uppercase mb-3">
+              Śledzenie przesyłki
+            </h2>
+            <div className="flex items-center gap-3 flex-wrap">
+              {order.shipping_carrier && (
+                <span className="font-[var(--font-mono)] text-[10px] text-accent/80 tracking-wider border border-accent/30 px-2 py-0.5">
+                  {order.shipping_carrier}
+                </span>
+              )}
+              <span className="font-[var(--font-mono)] text-sm text-white tracking-wide">
+                {order.tracking_number}
+              </span>
+            </div>
+          </section>
+        )}
 
         {/* Items */}
         <section className="border border-white/10 divide-y divide-white/10">
