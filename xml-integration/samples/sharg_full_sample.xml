@@ -1,0 +1,514 @@
+<?xml version="1.0" encoding="utf-8"?>
+<offer xmlns:iof="http://www.iai-shop.com/developers/iof.phtml" xmlns:iaiext="http://www.iai-shop.com/developers/iof/extensions.phtml" file_format="IOF" generated="2026-06-15 23:07:12" expires="2026-06-16 23:07:12" version="3.0" extensions="yes">
+  <products xmlns:iaiext="http://www.iai-shop.com/developers/iof/extensions.phtml" currency="PLN" iof_translation_generated="yes" language="pol">
+  <product id="100554" currency="PLN" code_on_card="659-11.5 RF DS3 G" producer_code_standard="GTIN13" type="regular" vat="23.0" site="3">
+      <producer id="1407245692" name="Otto Herder Solingen"/>
+      <category id="1214554007" name="Uroda/Manicure i Pedicure/Akcesoria do manicure i pedicure"/>
+      <category_idosell id="4711" path="Zdrowie i uroda &gt; Higiena osobista &gt; Kosmetyki &gt; Akcesoria kosmetyczne &gt; Akcesoria do paznokci"/>
+      <unit id="0" name="szt."/>
+      <warranty id="1" type="seller" period="24" name="Warunki Gwarancji"/>
+      <card url="https://hurt.sharg.pl/product-pol-100554-Cazki-do-skorek-6mm-Herder-Solingen-11-5cm-satin-gold-659-11-5-RF-DS3-G.html"/>
+      <description><name xml:lang="eng"><![CDATA[Cążki do skórek 6mm Herder Solingen 11.5cm satin-gold (659-11.5 RF DS3 G)]]></name><![CDATA[
+]]><name xml:lang="pol"><![CDATA[Cążki do skórek 6mm Herder Solingen 11.5cm satin-gold (659-11.5 RF DS3 G)]]></name><![CDATA[
+]]></description>
+      <images iaiext:external="yes"/>
+      <sizes iaiext:group_name="Grupa rozmiaru uniwersalnego" iaiext:group_id="-1" iaiext:sizeList="full">
+        <size id="uniw" name="pozostałe" panel_name="uniw" code="100554-uniw" weight="0" iaiext:weight_net="0" code_producer="5905247629906" iaiext:code_external="000139" iaiext:priority="0">
+          <price gross="78" net="63.41"/>
+          <srp gross="78" net="63.41"/>
+          <strikethrough_wholesale_price gross="49" net="39.84"/>
+        </size>
+      </sizes>
+      <price gross="78" net="63.41"/>
+      <srp gross="78" net="63.41"/>
+      <strikethrough_wholesale_price gross="49" net="39.84"/>
+      <iaiext:price_retail_dynamic>
+        <iaiext:site id="3" size_id="0" gross="0" net="0"/>
+      </iaiext:price_retail_dynamic>
+      <iaiext:omnibus_price_retail>
+        <iaiext:site id="3" size_id="0" gross="0" net="0" new_price="false"/>
+      </iaiext:omnibus_price_retail>
+      <iaiext:omnibus_price_wholesale>
+        <iaiext:site id="3" size_id="0" gross="0" net="0" new_price="false"/>
+      </iaiext:omnibus_price_wholesale>
+      <iaiext:sell_by>
+        <iaiext:retail quantity="0"/>
+        <iaiext:wholesale quantity="0"/>
+      </iaiext:sell_by>
+      <iaiext:inwrapper quantity="1"/>
+      <iaiext:subscriptions_settings>
+        <iaiext:site id="" enabled="false" units_number_retail="" units_number_wholesale="">
+          <days_in_period/>
+        </iaiext:site>
+      </iaiext:subscriptions_settings>
+      <iaiext:responsible_entity/>
+      <iaiext:services_descriptions/>
+    </product>
+    <product id="100556" currency="PLN" code_on_card="658-10 RF CH" producer_code_standard="GTIN13" type="regular" vat="23.0" site="3">
+      <producer id="1407245692" name="Otto Herder Solingen"/>
+      <category id="1214554007" name="Uroda/Manicure i Pedicure/Akcesoria do manicure i pedicure"/>
+      <category_idosell id="4711" path="Zdrowie i uroda &gt; Higiena osobista &gt; Kosmetyki &gt; Akcesoria kosmetyczne &gt; Akcesoria do paznokci"/>
+      <unit id="0" name="szt."/>
+      <warranty id="1" type="seller" period="24" name="Warunki Gwarancji"/>
+      <card url="https://hurt.sharg.pl/product-pol-100556-Cegi-do-paznokci-boczne-Herder-Solingen-Nierdzewne-100mm-658-10-RF-CH.html"/>
+      <description><name xml:lang="eng"><![CDATA[Herder Solingen Manicure Nail Clipper Stainless Lap-Jointed 100mm (658-10 RF CH)]]></name><![CDATA[
+]]><name xml:lang="pol"><![CDATA[Cęgi do paznokci boczne Herder Solingen Nierdzewne 100mm (658-10 RF CH)]]></name><![CDATA[
+]]><long_desc xml:lang="pol"><![CDATA[<p style="text-align: justify;"><strong>658-10 RF CH</strong> - profesjonalne satynowane, boczne cęgi do pedicure <span>niemieckiej firmy </span><strong>Otto Herder<span> </span></strong><span>z</span><strong><span> </span>Solingen. </strong>Przeznaczone do skracania paznokci. <span>Wykonane z wysokiej jakości antyalergicznej, kutej na gorąco hartowanej stali nierdzewnej / chirurgicznej (stosowanej przy produkcji narzędzi chirurgicznych). Wyposażone w </span><span>sprężynę drucianą</span><span>. </span>Cążki nadają się do sterylizacji w autoklawie. <span>Wykończenie </span><strong>satin finish.</strong><span> </span>Made in <strong>Germany.</strong></p>
+<p style="text-align: justify;"><strong>Ostrze</strong> - boczne <span>o profilu wygiętym, długości <strong>17 mm</strong><span> </span></span>umożliwia łatwe i precyzyjne skracanie twardych, <span>zrogowaciałych </span>paznokci u stóp. Wygięte ostrza tnące cążek przylegają do siebie na całej długości.</p>
+<p style="text-align: justify;"><strong>Ramiona</strong> - ergonomiczne, wykonane z moletowanej stali, nie wyślizgują się z dłoni, a pewny, mocny uchwyt ułatwia precyzyjne wykonywanie zabiegu. Solidna konstrukcja łączenia ramion.</p>
+<p><strong>Dane techniczne:</strong><br />Numer produktu: 658-10 RF CH<br />Rodzaj stali: Stainless Steel<br />Wykończenie: Satin Finish<br />Długość całkowita: 100 mm / 3.94"<br />Długość ostrza: 17 mm / 0.67"<br />Profil ostrza: grzbiet zaokrąglony łukiem w kierunku szpica<br />Sposób montażu: nitowane (lap-jointed) <br />Sprężyna: Druciana<br />Ramiona: Checkered (moletowane)<br />Waga: 51 g / 1.80 oz<br />Etui: Tak<br />Dezynfekcja / Sterylizacja: Tak<br />Producent: Otto Herder, Solingen Germany</p>
+<p style="text-align: justify;">Opracowanie: firma<strong> Sharg®</strong></p>]]></long_desc><![CDATA[
+]]><short_desc xml:lang="pol"><![CDATA[658-10 RF CH profesjonalne 100mm boczne cęgi do pedicure 100mm firmy Otto Herder z Solingen do obcinania twardych zrogowaciałych paznokci. Wykonane z wysokiej jakości antyalergicznej kutej na gorąco hartowanej stali nierdzewnej. Nadają się do sterylizacji]]></short_desc><![CDATA[
+]]></description>
+      <images iaiext:external="yes">
+        <large>
+          <image changed="2025-02-28 09:55:20" hash="7d8d558828577530a46fdd91a76fcfad" iaiext:priority="1" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/8017e6b48bf1b68abba18db34944a67b/100556_3.jpg" iaiext:key="8017e6b48bf1b68abba18db34944a67b"/>
+          <image changed="2025-02-28 09:55:20" hash="5c84e3cf852bb97d2b7c63f6db4134dd" iaiext:priority="2" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/360c5d32dbcef089e5e50d5c505fc750/100556_4.jpg" iaiext:key="360c5d32dbcef089e5e50d5c505fc750"/>
+          <image changed="2025-02-28 09:55:20" hash="c059d6b0698befccff6dce8ab4ec47c1" iaiext:priority="3" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/f25089e91dc929d5df70e200538cb53d/100556_1.jpg" iaiext:key="f25089e91dc929d5df70e200538cb53d"/>
+          <image changed="2025-02-28 09:55:20" hash="bceb22900ab9615186f281b4c4353232" iaiext:priority="4" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/c248f436bf4cc67b531a8eae9eefc62d/100556_2.jpg" iaiext:key="c248f436bf4cc67b531a8eae9eefc62d"/>
+        </large>
+        <iaiext:originals>
+          <iaiext:image changed="2025-02-28 09:55:20" hash="7d8d558828577530a46fdd91a76fcfad" iaiext:priority="1" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/2463b2ae54584a49018f1fbf16b51b22/100556_3.jpg" iaiext:key="2463b2ae54584a49018f1fbf16b51b22"/>
+          <iaiext:image changed="2025-02-28 09:55:20" hash="5c84e3cf852bb97d2b7c63f6db4134dd" iaiext:priority="2" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/54f6df66762352ab6605c26ca78965f4/100556_4.jpg" iaiext:key="54f6df66762352ab6605c26ca78965f4"/>
+          <iaiext:image changed="2025-02-28 09:55:20" hash="c059d6b0698befccff6dce8ab4ec47c1" iaiext:priority="3" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/60f580b8e0a43a50d4ad4e7f7f90779c/100556_1.jpg" iaiext:key="60f580b8e0a43a50d4ad4e7f7f90779c"/>
+          <iaiext:image changed="2025-02-28 09:55:20" hash="bceb22900ab9615186f281b4c4353232" iaiext:priority="4" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/99d6d057a8a634209c3a82adfd1205d3/100556_2.jpg" iaiext:key="99d6d057a8a634209c3a82adfd1205d3"/>
+        </iaiext:originals>
+        <iaiext:medium>
+          <image changed="2025-02-28 09:55:20" hash="7d8d558828577530a46fdd91a76fcfad" iaiext:priority="1" height="449" width="449" url="https://hurt.sharg.pl/hpeciai/d26a45edccbc98c4630b06636b05ccf2/100556_3.jpg" iaiext:key="d26a45edccbc98c4630b06636b05ccf2"/>
+          <image changed="2025-02-28 09:55:20" hash="5c84e3cf852bb97d2b7c63f6db4134dd" iaiext:priority="2" height="449" width="449" url="https://hurt.sharg.pl/hpeciai/ec8ae4baceba82547e0f3ec4d3f9ad7c/100556_4.jpg" iaiext:key="ec8ae4baceba82547e0f3ec4d3f9ad7c"/>
+          <image changed="2025-02-28 09:55:20" hash="c059d6b0698befccff6dce8ab4ec47c1" iaiext:priority="3" height="449" width="449" url="https://hurt.sharg.pl/hpeciai/8fb00f8ba4218a3be707a043f40af6fd/100556_1.jpg" iaiext:key="8fb00f8ba4218a3be707a043f40af6fd"/>
+          <image changed="2025-02-28 09:55:20" hash="bceb22900ab9615186f281b4c4353232" iaiext:priority="4" height="449" width="449" url="https://hurt.sharg.pl/hpeciai/78ea875c4ed412fed04966e726cc1677/100556_2.jpg" iaiext:key="78ea875c4ed412fed04966e726cc1677"/>
+        </iaiext:medium>
+        <iaiext:small>
+          <image changed="2025-02-28 09:55:20" hash="7d8d558828577530a46fdd91a76fcfad" iaiext:priority="1" height="108" width="108" url="https://hurt.sharg.pl/hpeciai/a27e6a5795543657e0de4e8f17d8d5e5/100556_3.jpg" iaiext:key="a27e6a5795543657e0de4e8f17d8d5e5"/>
+          <image changed="2025-02-28 09:55:20" hash="5c84e3cf852bb97d2b7c63f6db4134dd" iaiext:priority="2" height="108" width="108" url="https://hurt.sharg.pl/hpeciai/e3ed677244b4fa77d76f2842fbe67155/100556_4.jpg" iaiext:key="e3ed677244b4fa77d76f2842fbe67155"/>
+          <image changed="2025-02-28 09:55:20" hash="c059d6b0698befccff6dce8ab4ec47c1" iaiext:priority="3" height="108" width="108" url="https://hurt.sharg.pl/hpeciai/070b9d57360da78063161b1e93cc3213/100556_1.jpg" iaiext:key="070b9d57360da78063161b1e93cc3213"/>
+          <image changed="2025-02-28 09:55:20" hash="bceb22900ab9615186f281b4c4353232" iaiext:priority="4" height="108" width="108" url="https://hurt.sharg.pl/hpeciai/0da320aad25b852d1609ba32d72d1911/100556_2.jpg" iaiext:key="0da320aad25b852d1609ba32d72d1911"/>
+        </iaiext:small>
+        <icons>
+          <icon changed="2025-02-28 09:55:21" hash="1a7e1d67b54ece91e5ef0e50191ead00" height="270" width="270" url="https://hurt.sharg.pl/hpeciai/fba767f890a5685ccfa9ebd252a1470b/100556.jpg" iaiext:key="fba767f890a5685ccfa9ebd252a1470b" iaiext:url_originals="https://hurt.sharg.pl/hpeciai/1fe654cb23ae954b502f0b8f96ae0e6e/100556.jpg" iaiext:key_originals="1fe654cb23ae954b502f0b8f96ae0e6e" iaiext:height_small="250" iaiext:width_small="250" iaiext:url_small="https://hurt.sharg.pl/hpeciai/b6b79dfd1f6978f200d354b6ac433227/100556.jpg" iaiext:key_small="b6b79dfd1f6978f200d354b6ac433227"/>
+          <group_icon changed="2025-02-28 09:55:21" hash="1a7e1d67b54ece91e5ef0e50191ead00" iaiext:priority="0" height="50" width="50" url="https://hurt.sharg.pl/hpeciai/2e99ff20cad1b30bdaebe74ad303f332/100556.jpg" iaiext:key="2e99ff20cad1b30bdaebe74ad303f332" iaiext:url_originals="https://hurt.sharg.pl/hpeciai/2d5d9e69c570ef83bd1cb170370d7877/100556.jpg" iaiext:key_originals="2d5d9e69c570ef83bd1cb170370d7877" iaiext:height_small="50" iaiext:width_small="50" iaiext:url_small="https://hurt.sharg.pl/hpeciai/2e99ff20cad1b30bdaebe74ad303f332/100556.jpg" iaiext:key_small="2e99ff20cad1b30bdaebe74ad303f332"/>
+        </icons>
+      </images>
+      <sizes iaiext:group_name="Grupa rozmiaru uniwersalnego" iaiext:group_id="-1" iaiext:sizeList="full">
+        <size id="uniw" name="pozostałe" panel_name="uniw" code="100556-uniw" weight="57" iaiext:weight_net="57" code_producer="5905247629425" iaiext:code_external="000140" iaiext:priority="0">
+          <price gross="68" net="55.28"/>
+          <srp gross="68" net="55.28"/>
+          <strikethrough_wholesale_price gross="33.6" net="27.32"/>
+        </size>
+      </sizes>
+      <price gross="68" net="55.28"/>
+      <srp gross="68" net="55.28"/>
+      <strikethrough_wholesale_price gross="33.6" net="27.32"/>
+      <iaiext:price_retail_dynamic>
+        <iaiext:site id="3" size_id="0" gross="0" net="0"/>
+      </iaiext:price_retail_dynamic>
+      <iaiext:omnibus_price_retail>
+        <iaiext:site id="3" size_id="0" gross="0" net="0" new_price="false"/>
+      </iaiext:omnibus_price_retail>
+      <iaiext:omnibus_price_wholesale>
+        <iaiext:site id="3" size_id="0" gross="0" net="0" new_price="false"/>
+      </iaiext:omnibus_price_wholesale>
+      <iaiext:sell_by>
+        <iaiext:retail quantity="1"/>
+        <iaiext:wholesale quantity="1"/>
+      </iaiext:sell_by>
+      <iaiext:inwrapper quantity="1"/>
+      <iaiext:subscriptions_settings>
+        <iaiext:site id="" enabled="false" units_number_retail="" units_number_wholesale="">
+          <days_in_period/>
+        </iaiext:site>
+      </iaiext:subscriptions_settings>
+      <iaiext:responsible_entity/>
+      <iaiext:services_descriptions/>
+    </product>
+    <product id="100571" currency="PLN" code_on_card="002730 (C05) (C06)" producer_code_standard="GTIN13" type="regular" vat="23.0" site="3">
+      <producer id="1407235242" name="Everts Solingen"/>
+      <category id="1214554007" name="Uroda/Manicure i Pedicure/Akcesoria do manicure i pedicure"/>
+      <category_idosell id="4711" path="Zdrowie i uroda &gt; Higiena osobista &gt; Kosmetyki &gt; Akcesoria kosmetyczne &gt; Akcesoria do paznokci"/>
+      <unit id="0" name="szt."/>
+      <warranty id="1" type="seller" period="24" name="Warunki Gwarancji"/>
+      <card url="https://hurt.sharg.pl/product-pol-100571-Obcinacze-do-paznokci-Everts-Solingen-Chrom-55mm-12szt-002730.html"/>
+      <description><name xml:lang="eng"><![CDATA[Everts Solingen Nail Clippers Chrome 55mm 12pcs (002730)]]></name><![CDATA[
+]]><name xml:lang="pol"><![CDATA[Obcinacze do paznokci Everts Solingen Chrom 55mm 12szt (002730)]]></name><![CDATA[
+]]><long_desc xml:lang="eng"><![CDATA[<h2>Nail Clippers by Everts Solingen: Precision and Elegance Combined</h2>
+<p>When contemplating the ideal nail clippers, what comes to mind? Precision? Comfort? Perhaps durability? With Everts Solingen clippers, you no longer need to compromise between these qualities.</p>
+<h3>Why Opt for Everts Solingen Clippers?</h3>
+<ol>
+  <li><strong>German Craftsmanship</strong>: Manufactured by the renowned Everts Solingen, these clippers ensure the highest quality in craftsmanship.</li>
+  <li><strong>Precise Cutting</strong>: Thanks to the curved blade, each cut is exact and precise, enabling the perfect trimming of nails.</li>
+  <li><strong>Years of Durability</strong>: Crafted from carbon steel and coated with nickel, these clippers are not only elegant but also exceptionally durable.</li>
+  <li><strong>Comfortable in Use</strong>: Classic handles make them remarkably comfortable to use, even for extended periods.</li>
+</ol>
+<p><strong>Don't wait, care for your nails with class!</strong><br />Invest in the Everts Solingen nail clipper set and experience the difference. Attend to your nails with the precision and elegance they deserve.</p>
+<h3>Technical Specifications:</h3>
+<ul>
+  <li>Product Number: 002730</li>
+  <li>Total Length: 55 mm</li>
+  <li>Material: Carbon Steel</li>
+  <li>Finish: Nickel</li>
+  <li>Disinfection: No</li>
+</ul>
+<p><em>Developed by: Sharg&reg; Company</em></p>
+<p><strong>Order today and see for yourself!</strong></p>]]></long_desc><![CDATA[
+]]><long_desc xml:lang="pol"><![CDATA[<h2>Obcinacze do Paznokci Everts Solingen: Precyzja i Elegancja w Jednym</h2>
+<p>Kiedy myślisz o idealnych obcinaczkach do paznokci, co przychodzi Ci na myśl? Precyzja? Wygoda? A może trwałość? Dzięki obcinaczkom Everts Solingen, nie musisz wybierać między jednym a drugim.</p>
+<h3>Dlaczego warto wybrać obcinaczki Everts Solingen?</h3>
+<ol>
+<li><strong>Niemiecka jakość</strong>: Wyprodukowane przez renomowaną firmę Everts Solingen, te obcinaczki gwarantują najwyższą jakość wykonania.</li>
+<li><strong>Precyzyjne cięcie</strong>: Dzięki zagiętemu ostrzu, każde cięcie jest dokładne i precyzyjne, pozwalając na idealne przycięcie paznokci.</li>
+<li><strong>Trwałość na lata</strong>: Wykonane ze stali węglowej i pokryte niklem, te obcinaczki są nie tylko eleganckie, ale także niezwykle trwałe.</li>
+<li><strong>Wygodne w użyciu</strong>: Klasyczne uchwyty sprawiają, że są one niezwykle wygodne w użyciu, nawet przez dłuższy czas.</li>
+</ol>
+<p><strong>Nie czekaj, dbaj o swoje paznokcie z klasą!</strong><br />Zainwestuj w zestaw obcinaczek do paznokci Everts Solingen i doświadcz r&oacute;żnicy. Zadbaj o swoje paznokcie z precyzją i elegancją, jakiej zasługują.</p>
+<h3>Dane Techniczne:</h3>
+<ul>
+<li>Numer produktu: 002730</li>
+<li>Długość całkowita: 55 mm</li>
+<li>Materiał: stal węglowa</li>
+<li>Wykończenie: Nikiel</li>
+<li>Dezynfekcja: Nie</li>
+</ul>
+<p><em>Opracowanie: firma Sharg&reg;</em></p>
+<p><strong>Zam&oacute;w już dziś i przekonaj się sam!</strong></p>]]></long_desc><![CDATA[
+]]><short_desc xml:lang="eng"><![CDATA[Nail clippers with a chain from the German company Everts Solingen, set of 12 pcs. A curved blade facilitates precise treatment. Comfortable classic handles. Made of carbon steel.]]></short_desc><![CDATA[
+]]><short_desc xml:lang="pol"><![CDATA[Obcinacze do paznokci z łańcuszkiem niemieckiej firmy Everts Solingen, komplet 12 szt. Zagięte ostrze ułatwia precyzyjne wykonanie zabiegu. Wygodne klasyczne uchwyty. Wykonany ze stali węglowej, niklowany...]]></short_desc><![CDATA[
+]]></description>
+      <images iaiext:external="yes">
+        <large>
+          <image changed="2025-02-28 09:55:20" hash="ebb42cafb18f0a79d135f09f766bc05d" iaiext:priority="1" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/d515782f6a0b63d990d7b0223fc4510b/100571_1.jpg" iaiext:key="d515782f6a0b63d990d7b0223fc4510b"/>
+          <image changed="2025-02-28 09:55:20" hash="2e631721af13c98c7b862f9daacd3ae8" iaiext:priority="2" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/c4faf92551e343337317679da8c7107c/100571_2.jpg" iaiext:key="c4faf92551e343337317679da8c7107c"/>
+          <image changed="2025-02-28 09:55:20" hash="b8b405e5b8aa9852a844997fe1313649" iaiext:priority="3" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/9cc84235545dc85b8e3dd19507e67620/100571_3.jpg" iaiext:key="9cc84235545dc85b8e3dd19507e67620"/>
+          <image changed="2025-02-28 09:55:20" hash="ce9067057cbf9f6042b2d40920b49e5c" iaiext:priority="4" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/c83c11b7e833649b2d70e43a459b5243/100571_4.jpg" iaiext:key="c83c11b7e833649b2d70e43a459b5243"/>
+        </large>
+        <iaiext:originals>
+          <iaiext:image changed="2025-02-28 09:55:20" hash="ebb42cafb18f0a79d135f09f766bc05d" iaiext:priority="1" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/2c5689202e124a64c0298062114f2db5/100571_1.jpg" iaiext:key="2c5689202e124a64c0298062114f2db5"/>
+          <iaiext:image changed="2025-02-28 09:55:20" hash="2e631721af13c98c7b862f9daacd3ae8" iaiext:priority="2" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/b273efabb7ae972d940ceb8a90a1e558/100571_2.jpg" iaiext:key="b273efabb7ae972d940ceb8a90a1e558"/>
+          <iaiext:image changed="2025-02-28 09:55:20" hash="b8b405e5b8aa9852a844997fe1313649" iaiext:priority="3" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/9c08f2b35fb964c1ba18b34408004f76/100571_3.jpg" iaiext:key="9c08f2b35fb964c1ba18b34408004f76"/>
+          <iaiext:image changed="2025-02-28 09:55:20" hash="ce9067057cbf9f6042b2d40920b49e5c" iaiext:priority="4" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/2315e897c0a2c603a64832993770c28b/100571_4.jpg" iaiext:key="2315e897c0a2c603a64832993770c28b"/>
+        </iaiext:originals>
+        <iaiext:medium>
+          <image changed="2025-02-28 09:55:20" hash="ebb42cafb18f0a79d135f09f766bc05d" iaiext:priority="1" height="449" width="449" url="https://hurt.sharg.pl/hpeciai/6d3d98c687b18f2d10f60f793f3250fb/100571_1.jpg" iaiext:key="6d3d98c687b18f2d10f60f793f3250fb"/>
+          <image changed="2025-02-28 09:55:20" hash="2e631721af13c98c7b862f9daacd3ae8" iaiext:priority="2" height="449" width="449" url="https://hurt.sharg.pl/hpeciai/d586c831bdb4b6440239be47930c70ab/100571_2.jpg" iaiext:key="d586c831bdb4b6440239be47930c70ab"/>
+          <image changed="2025-02-28 09:55:20" hash="b8b405e5b8aa9852a844997fe1313649" iaiext:priority="3" height="449" width="449" url="https://hurt.sharg.pl/hpeciai/1a131127263ddf881b44e42a2285e724/100571_3.jpg" iaiext:key="1a131127263ddf881b44e42a2285e724"/>
+          <image changed="2025-02-28 09:55:20" hash="ce9067057cbf9f6042b2d40920b49e5c" iaiext:priority="4" height="449" width="449" url="https://hurt.sharg.pl/hpeciai/63ea2f0f93bec1a73955e723d51cb797/100571_4.jpg" iaiext:key="63ea2f0f93bec1a73955e723d51cb797"/>
+        </iaiext:medium>
+        <iaiext:small>
+          <image changed="2025-02-28 09:55:20" hash="ebb42cafb18f0a79d135f09f766bc05d" iaiext:priority="1" height="108" width="108" url="https://hurt.sharg.pl/hpeciai/3c7b4c25bbf1bf7eee9c0a5ada977228/100571_1.jpg" iaiext:key="3c7b4c25bbf1bf7eee9c0a5ada977228"/>
+          <image changed="2025-02-28 09:55:20" hash="2e631721af13c98c7b862f9daacd3ae8" iaiext:priority="2" height="108" width="108" url="https://hurt.sharg.pl/hpeciai/e1dd43f05a196ce3357bf40a9dd18e87/100571_2.jpg" iaiext:key="e1dd43f05a196ce3357bf40a9dd18e87"/>
+          <image changed="2025-02-28 09:55:20" hash="b8b405e5b8aa9852a844997fe1313649" iaiext:priority="3" height="108" width="108" url="https://hurt.sharg.pl/hpeciai/f5cc9bdec658d14dd485a76d36bd5d01/100571_3.jpg" iaiext:key="f5cc9bdec658d14dd485a76d36bd5d01"/>
+          <image changed="2025-02-28 09:55:20" hash="ce9067057cbf9f6042b2d40920b49e5c" iaiext:priority="4" height="108" width="108" url="https://hurt.sharg.pl/hpeciai/2720c05ea500cb5e3abfef7b03ca68b5/100571_4.jpg" iaiext:key="2720c05ea500cb5e3abfef7b03ca68b5"/>
+        </iaiext:small>
+        <icons>
+          <icon changed="2025-02-28 09:55:21" hash="9e9056eefa67128a2faa10f9bdf5d335" height="270" width="270" url="https://hurt.sharg.pl/hpeciai/a3d4838a81e72fc4812043c57978385d/100571.jpg" iaiext:key="a3d4838a81e72fc4812043c57978385d" iaiext:url_originals="https://hurt.sharg.pl/hpeciai/0d72241b186bd927a2accb7da2421399/100571.jpg" iaiext:key_originals="0d72241b186bd927a2accb7da2421399" iaiext:height_small="250" iaiext:width_small="250" iaiext:url_small="https://hurt.sharg.pl/hpeciai/8c69b4234b039320d8d8b5066918a8b5/100571.jpg" iaiext:key_small="8c69b4234b039320d8d8b5066918a8b5"/>
+          <group_icon changed="2025-02-28 09:55:21" hash="9e9056eefa67128a2faa10f9bdf5d335" iaiext:priority="0" height="50" width="50" url="https://hurt.sharg.pl/hpeciai/ab4e4c17d9db06f232a8e4057407e2a3/100571.jpg" iaiext:key="ab4e4c17d9db06f232a8e4057407e2a3" iaiext:url_originals="https://hurt.sharg.pl/hpeciai/41c88cdad57ed839afd6b8ed96e1655c/100571.jpg" iaiext:key_originals="41c88cdad57ed839afd6b8ed96e1655c" iaiext:height_small="50" iaiext:width_small="50" iaiext:url_small="https://hurt.sharg.pl/hpeciai/ab4e4c17d9db06f232a8e4057407e2a3/100571.jpg" iaiext:key_small="ab4e4c17d9db06f232a8e4057407e2a3"/>
+        </icons>
+      </images>
+      <sizes iaiext:group_name="Grupa rozmiaru uniwersalnego" iaiext:group_id="-1" iaiext:sizeList="full">
+        <size id="uniw" name="pozostałe" panel_name="uniw" code="100571-uniw" weight="1000" iaiext:weight_net="1000" code_producer="5905247620859" iaiext:code_external="000151" iaiext:priority="0">
+          <price gross="60" net="48.78"/>
+          <srp gross="60" net="48.78"/>
+          <strikethrough_wholesale_price gross="42" net="34.15"/>
+          <stock id="1" quantity="24" available_stock_quantity="24" stock_quantity="24.000"/>
+        </size>
+      </sizes>
+      <price gross="60" net="48.78"/>
+      <srp gross="60" net="48.78"/>
+      <strikethrough_wholesale_price gross="42" net="34.15"/>
+      <iaiext:price_retail_dynamic>
+        <iaiext:site id="3" size_id="0" gross="0" net="0"/>
+      </iaiext:price_retail_dynamic>
+      <iaiext:omnibus_price_retail>
+        <iaiext:site id="3" size_id="0" gross="0" net="0" new_price="false"/>
+      </iaiext:omnibus_price_retail>
+      <iaiext:omnibus_price_wholesale>
+        <iaiext:site id="3" size_id="0" gross="35.71" net="29.03" new_price="false"/>
+      </iaiext:omnibus_price_wholesale>
+      <iaiext:sell_by>
+        <iaiext:retail quantity="1"/>
+        <iaiext:wholesale quantity="1"/>
+      </iaiext:sell_by>
+      <iaiext:inwrapper quantity="1"/>
+      <iaiext:subscriptions_settings>
+        <iaiext:site id="" enabled="false" units_number_retail="" units_number_wholesale="">
+          <days_in_period/>
+        </iaiext:site>
+      </iaiext:subscriptions_settings>
+      <iaiext:responsible_entity/>
+      <iaiext:services_descriptions/>
+    </product>
+    <product id="100573" currency="PLN" code_on_card="226N 3 (C09)" producer_code_standard="GTIN13" type="regular" vat="23.0" site="3">
+      <producer id="1407245692" name="Otto Herder Solingen"/>
+      <category id="1214554007" name="Uroda/Manicure i Pedicure/Akcesoria do manicure i pedicure"/>
+      <category_idosell id="4711" path="Zdrowie i uroda &gt; Higiena osobista &gt; Kosmetyki &gt; Akcesoria kosmetyczne &gt; Akcesoria do paznokci"/>
+      <unit id="0" name="szt."/>
+      <warranty id="1" type="seller" period="24" name="Warunki Gwarancji"/>
+      <card url="https://hurt.sharg.pl/product-pol-100573-Penseta-Herder-Solingen-Skosna-Slant-Niklowana-75mm-226N-3.html"/>
+      <description><name xml:lang="pol"><![CDATA[Penseta Herder Solingen Skośna / Slant, Niklowana 75mm (226N 3)]]></name><![CDATA[
+]]><long_desc xml:lang="pol"><![CDATA[<p style="margin: 0pt; text-align: justify;"><strong>226N,</strong> <strong>skośna</strong> (slant) penseta o długości <span><strong>3"</strong> </span>niemieckiej firmy <strong>Otto Herder</strong><strong>. </strong>Niklowana, wykonana ze stali węglowej. Made in<strong> Germany.</strong></p>
+<p>Opracowanie: firma<strong> Sharg®</strong></p>]]></long_desc><![CDATA[
+]]><short_desc xml:lang="pol"><![CDATA[226N, skośna (slant) penseta o długości 3" niemieckiej firmy Otto Herder. Niklowana, wykonana ze stali węglowej. Made in Germany...]]></short_desc><![CDATA[
+]]></description>
+      <images iaiext:external="yes">
+        <large>
+          <image changed="2025-02-28 09:55:20" hash="47b1442d57e70492230c017e5e6d4210" iaiext:priority="1" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/8f7efc1780e83d4ff0ac0c2bbe6700af/100573_1.jpg" iaiext:key="8f7efc1780e83d4ff0ac0c2bbe6700af"/>
+          <image changed="2025-02-28 09:55:20" hash="d18482665e61b1291649a9525a190499" iaiext:priority="2" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/264b0a12fae0ac8f5719c962722b3fe4/100573_4.jpg" iaiext:key="264b0a12fae0ac8f5719c962722b3fe4"/>
+          <image changed="2025-02-28 09:55:20" hash="88ac9867b09488fd3980e38e1b74361c" iaiext:priority="3" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/16251e64303462fe7b537877f1502a28/100573_3.jpg" iaiext:key="16251e64303462fe7b537877f1502a28"/>
+          <image changed="2025-02-28 09:55:20" hash="4491db8e411de3875d24f690fbd07c1d" iaiext:priority="4" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/da55a5fd65dcfdaca9b74f221c6591bc/100573_2.jpg" iaiext:key="da55a5fd65dcfdaca9b74f221c6591bc"/>
+        </large>
+        <iaiext:originals>
+          <iaiext:image changed="2025-02-28 09:55:20" hash="47b1442d57e70492230c017e5e6d4210" iaiext:priority="1" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/0fd56c18870a0a376d0d10a86f681451/100573_1.jpg" iaiext:key="0fd56c18870a0a376d0d10a86f681451"/>
+          <iaiext:image changed="2025-02-28 09:55:20" hash="d18482665e61b1291649a9525a190499" iaiext:priority="2" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/8fd2b512891905de572c06149aee666e/100573_4.jpg" iaiext:key="8fd2b512891905de572c06149aee666e"/>
+          <iaiext:image changed="2025-02-28 09:55:20" hash="88ac9867b09488fd3980e38e1b74361c" iaiext:priority="3" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/6954655e0fa3ef546d51c431154ff633/100573_3.jpg" iaiext:key="6954655e0fa3ef546d51c431154ff633"/>
+          <iaiext:image changed="2025-02-28 09:55:20" hash="4491db8e411de3875d24f690fbd07c1d" iaiext:priority="4" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/71cb2cb10f9fc210f3fdb3a3f2a930a7/100573_2.jpg" iaiext:key="71cb2cb10f9fc210f3fdb3a3f2a930a7"/>
+        </iaiext:originals>
+        <iaiext:medium>
+          <image changed="2025-02-28 09:55:20" hash="47b1442d57e70492230c017e5e6d4210" iaiext:priority="1" height="449" width="449" url="https://hurt.sharg.pl/hpeciai/2c10777b3870413864cba0793a10ce35/100573_1.jpg" iaiext:key="2c10777b3870413864cba0793a10ce35"/>
+          <image changed="2025-02-28 09:55:20" hash="d18482665e61b1291649a9525a190499" iaiext:priority="2" height="449" width="449" url="https://hurt.sharg.pl/hpeciai/84988a7be31aa551bf16a29b25a47c84/100573_4.jpg" iaiext:key="84988a7be31aa551bf16a29b25a47c84"/>
+          <image changed="2025-02-28 09:55:20" hash="88ac9867b09488fd3980e38e1b74361c" iaiext:priority="3" height="449" width="449" url="https://hurt.sharg.pl/hpeciai/e7e343d732e7ffa340876a5b79a889d5/100573_3.jpg" iaiext:key="e7e343d732e7ffa340876a5b79a889d5"/>
+          <image changed="2025-02-28 09:55:20" hash="4491db8e411de3875d24f690fbd07c1d" iaiext:priority="4" height="449" width="449" url="https://hurt.sharg.pl/hpeciai/16817f8e42332baea51ef7bcd53d7037/100573_2.jpg" iaiext:key="16817f8e42332baea51ef7bcd53d7037"/>
+        </iaiext:medium>
+        <iaiext:small>
+          <image changed="2025-02-28 09:55:20" hash="47b1442d57e70492230c017e5e6d4210" iaiext:priority="1" height="108" width="108" url="https://hurt.sharg.pl/hpeciai/be11e6162af0d112dc194537c0df3cfd/100573_1.jpg" iaiext:key="be11e6162af0d112dc194537c0df3cfd"/>
+          <image changed="2025-02-28 09:55:20" hash="d18482665e61b1291649a9525a190499" iaiext:priority="2" height="108" width="108" url="https://hurt.sharg.pl/hpeciai/08215fd9e1fed851a991a68a5a420df2/100573_4.jpg" iaiext:key="08215fd9e1fed851a991a68a5a420df2"/>
+          <image changed="2025-02-28 09:55:20" hash="88ac9867b09488fd3980e38e1b74361c" iaiext:priority="3" height="108" width="108" url="https://hurt.sharg.pl/hpeciai/b4c1db3766fb318cd28887f11f147c5e/100573_3.jpg" iaiext:key="b4c1db3766fb318cd28887f11f147c5e"/>
+          <image changed="2025-02-28 09:55:20" hash="4491db8e411de3875d24f690fbd07c1d" iaiext:priority="4" height="108" width="108" url="https://hurt.sharg.pl/hpeciai/a68fd5904b88bca065c6fd2ab44886bb/100573_2.jpg" iaiext:key="a68fd5904b88bca065c6fd2ab44886bb"/>
+        </iaiext:small>
+        <icons>
+          <icon changed="2025-02-28 09:55:21" hash="da646ebd0292ae20b4b57f75def24cc6" height="270" width="270" url="https://hurt.sharg.pl/hpeciai/e2ec60dfd27e5098290207c17542b72f/100573.jpg" iaiext:key="e2ec60dfd27e5098290207c17542b72f" iaiext:url_originals="https://hurt.sharg.pl/hpeciai/f6f5fa7cfa47e98199b9ca893a735488/100573.jpg" iaiext:key_originals="f6f5fa7cfa47e98199b9ca893a735488" iaiext:height_small="250" iaiext:width_small="250" iaiext:url_small="https://hurt.sharg.pl/hpeciai/ca961395d54ad62a992d50cec755ef6d/100573.jpg" iaiext:key_small="ca961395d54ad62a992d50cec755ef6d"/>
+          <group_icon changed="2025-02-28 09:55:21" hash="da646ebd0292ae20b4b57f75def24cc6" iaiext:priority="0" height="50" width="50" url="https://hurt.sharg.pl/hpeciai/1fb96dcdd79210fbddab0ecdc1862004/100573.jpg" iaiext:key="1fb96dcdd79210fbddab0ecdc1862004" iaiext:url_originals="https://hurt.sharg.pl/hpeciai/4b6dc97c8f24a466f9e2e0e6238ff31b/100573.jpg" iaiext:key_originals="4b6dc97c8f24a466f9e2e0e6238ff31b" iaiext:height_small="50" iaiext:width_small="50" iaiext:url_small="https://hurt.sharg.pl/hpeciai/1fb96dcdd79210fbddab0ecdc1862004/100573.jpg" iaiext:key_small="1fb96dcdd79210fbddab0ecdc1862004"/>
+        </icons>
+      </images>
+      <parameters>
+        <parameter type="parameter" id="1089" priority="0" distinction="n" group_distinction="n" hide="y" auction_template_hide="y" context_id="CONTEXT_BOOK_PUBLICATION_DATE" name="WEW-Translate">
+          <value id="1090" priority="0" name="PZ EN"/>
+        </parameter>
+      </parameters>
+      <sizes iaiext:group_name="Grupa rozmiaru uniwersalnego" iaiext:group_id="-1" iaiext:sizeList="full">
+        <size id="uniw" name="pozostałe" panel_name="uniw" code="100573-uniw" weight="11" iaiext:weight_net="7" code_producer="5905247628473" iaiext:code_external="000153" iaiext:priority="0">
+          <price gross="8" net="6.5"/>
+          <srp gross="8" net="6.5"/>
+        </size>
+      </sizes>
+      <price gross="8" net="6.5"/>
+      <srp gross="8" net="6.5"/>
+      <iaiext:price_retail_dynamic>
+        <iaiext:site id="3" size_id="0" gross="0" net="0"/>
+      </iaiext:price_retail_dynamic>
+      <iaiext:omnibus_price_retail>
+        <iaiext:site id="3" size_id="0" gross="0" net="0" new_price="false"/>
+      </iaiext:omnibus_price_retail>
+      <iaiext:omnibus_price_wholesale>
+        <iaiext:site id="3" size_id="0" gross="0" net="0" new_price="false"/>
+      </iaiext:omnibus_price_wholesale>
+      <iaiext:sell_by>
+        <iaiext:retail quantity="1"/>
+        <iaiext:wholesale quantity="1"/>
+      </iaiext:sell_by>
+      <iaiext:inwrapper quantity="1"/>
+      <iaiext:subscriptions_settings>
+        <iaiext:site id="" enabled="false" units_number_retail="" units_number_wholesale="">
+          <days_in_period/>
+        </iaiext:site>
+      </iaiext:subscriptions_settings>
+      <iaiext:responsible_entity/>
+      <iaiext:services_descriptions/>
+    </product>
+    <product id="100575" currency="PLN" code_on_card="207N ST 3 1/2 (C09)" producer_code_standard="GTIN13" type="regular" vat="23.0" site="3">
+      <producer id="1407245692" name="Otto Herder Solingen"/>
+      <category id="1214554007" name="Uroda/Manicure i Pedicure/Akcesoria do manicure i pedicure"/>
+      <category_idosell id="4711" path="Zdrowie i uroda &gt; Higiena osobista &gt; Kosmetyki &gt; Akcesoria kosmetyczne &gt; Akcesoria do paznokci"/>
+      <unit id="0" name="szt."/>
+      <warranty id="1" type="seller" period="24" name="Warunki Gwarancji"/>
+      <card url="https://hurt.sharg.pl/product-pol-100575-Penseta-Filax-Solingen-Skosna-Slant-Niklowana-90mm-207N-ST-3-1-2.html"/>
+      <description><name xml:lang="eng"><![CDATA[Filax Solingen tweezers / Slant tweezers, Nickel plated 90mm (207N ST 3 1/2)]]></name><![CDATA[
+]]><name xml:lang="pol"><![CDATA[Penseta Filax Solingen Skośna / Slant, Niklowana 90mm (207N ST 3 1/2)]]></name><![CDATA[
+]]><long_desc xml:lang="eng"><![CDATA[<p><strong>207N</strong>, <strong>Filax Solingen</strong> slant tweezers<strong> 3 ½”</strong>, German company <strong>Otto Herder</strong>. Made of carbon steel. Made in <strong>Germany</strong>.</p>
+<p>Created by: <strong>Sharg®</strong> Company</p>]]></long_desc><![CDATA[
+]]><long_desc xml:lang="pol"><![CDATA[<p style="text-align: justify;"><strong>207N,</strong> penseta <strong>skośna</strong> (slant) <strong>Filax Solingen </strong>o długości <span><strong>3 ½",</strong> </span>niemieckiej firmy <strong>Otto Herder</strong><strong>. </strong>Wykonana ze stali węglowej. Made in<strong> Germany.</strong></p>
+<p>Opracowanie: firma<strong> Sharg®</strong></p>]]></long_desc><![CDATA[
+]]><short_desc xml:lang="eng"><![CDATA[207N, Filax Solingen 3 ½” slant tweezers, German company Otto Herder. Made of carbon steel. Made in Germany.]]></short_desc><![CDATA[
+]]><short_desc xml:lang="pol"><![CDATA[207N, penseta skośna (slant) Filax Solingen o długości 3 ½", niemieckiej firmy Otto Herder. Wykonana ze stali węglowej. Made in Germany...]]></short_desc><![CDATA[
+]]></description>
+      <images iaiext:external="yes">
+        <large>
+          <image changed="2025-02-28 09:55:20" hash="388d9c570fb3de0dfd4598d40c44bcee" iaiext:priority="1" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/38b939bc3e285b760086c9ae119f4921/100575_3.jpg" iaiext:key="38b939bc3e285b760086c9ae119f4921"/>
+          <image changed="2025-02-28 09:55:20" hash="b2428f574b8e44ac71e569c4a467c6cc" iaiext:priority="2" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/db51be78be68dee8c9a063deedb21cbd/100575_4.jpg" iaiext:key="db51be78be68dee8c9a063deedb21cbd"/>
+          <image changed="2025-02-28 09:55:20" hash="b2d3279edbf52fb39bc6f07895fe0337" iaiext:priority="3" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/5e7e9438e1ab8c6cb5df96cdf7475a4d/100575_2.jpg" iaiext:key="5e7e9438e1ab8c6cb5df96cdf7475a4d"/>
+          <image changed="2025-02-28 09:55:20" hash="fc5c96a1187cef54e9e6eff92d0a34fe" iaiext:priority="4" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/77d0810e98e8323d5d04744849d6df7f/100575_1.jpg" iaiext:key="77d0810e98e8323d5d04744849d6df7f"/>
+        </large>
+        <iaiext:originals>
+          <iaiext:image changed="2025-02-28 09:55:20" hash="388d9c570fb3de0dfd4598d40c44bcee" iaiext:priority="1" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/942982f7e17c2f01e68f8f4f8ae86f19/100575_3.jpg" iaiext:key="942982f7e17c2f01e68f8f4f8ae86f19"/>
+          <iaiext:image changed="2025-02-28 09:55:20" hash="b2428f574b8e44ac71e569c4a467c6cc" iaiext:priority="2" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/0f03aef203cd0f650acca9daf0dde717/100575_4.jpg" iaiext:key="0f03aef203cd0f650acca9daf0dde717"/>
+          <iaiext:image changed="2025-02-28 09:55:20" hash="b2d3279edbf52fb39bc6f07895fe0337" iaiext:priority="3" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/28627914d35adb0ff7d1456bf9a4c9ae/100575_2.jpg" iaiext:key="28627914d35adb0ff7d1456bf9a4c9ae"/>
+          <iaiext:image changed="2025-02-28 09:55:20" hash="fc5c96a1187cef54e9e6eff92d0a34fe" iaiext:priority="4" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/01ee7645cff8e0d1e09d82de82ec281c/100575_1.jpg" iaiext:key="01ee7645cff8e0d1e09d82de82ec281c"/>
+        </iaiext:originals>
+        <iaiext:medium>
+          <image changed="2025-02-28 09:55:20" hash="388d9c570fb3de0dfd4598d40c44bcee" iaiext:priority="1" height="449" width="449" url="https://hurt.sharg.pl/hpeciai/336aa7e3190fc736daed8c3a422cf6cc/100575_3.jpg" iaiext:key="336aa7e3190fc736daed8c3a422cf6cc"/>
+          <image changed="2025-02-28 09:55:20" hash="b2428f574b8e44ac71e569c4a467c6cc" iaiext:priority="2" height="449" width="449" url="https://hurt.sharg.pl/hpeciai/43083ebe95cc11ee6e028937913492ab/100575_4.jpg" iaiext:key="43083ebe95cc11ee6e028937913492ab"/>
+          <image changed="2025-02-28 09:55:20" hash="b2d3279edbf52fb39bc6f07895fe0337" iaiext:priority="3" height="449" width="449" url="https://hurt.sharg.pl/hpeciai/22b2719263205288a37e5eb82a09595e/100575_2.jpg" iaiext:key="22b2719263205288a37e5eb82a09595e"/>
+          <image changed="2025-02-28 09:55:20" hash="fc5c96a1187cef54e9e6eff92d0a34fe" iaiext:priority="4" height="449" width="449" url="https://hurt.sharg.pl/hpeciai/1a4cf76b2612dc5ed194aaf327ba9413/100575_1.jpg" iaiext:key="1a4cf76b2612dc5ed194aaf327ba9413"/>
+        </iaiext:medium>
+        <iaiext:small>
+          <image changed="2025-02-28 09:55:20" hash="388d9c570fb3de0dfd4598d40c44bcee" iaiext:priority="1" height="108" width="108" url="https://hurt.sharg.pl/hpeciai/999ca6f469a0aa5ba657b18a608dffc8/100575_3.jpg" iaiext:key="999ca6f469a0aa5ba657b18a608dffc8"/>
+          <image changed="2025-02-28 09:55:20" hash="b2428f574b8e44ac71e569c4a467c6cc" iaiext:priority="2" height="108" width="108" url="https://hurt.sharg.pl/hpeciai/6fe012dfb87d12385480a29c7485d588/100575_4.jpg" iaiext:key="6fe012dfb87d12385480a29c7485d588"/>
+          <image changed="2025-02-28 09:55:20" hash="b2d3279edbf52fb39bc6f07895fe0337" iaiext:priority="3" height="108" width="108" url="https://hurt.sharg.pl/hpeciai/66331c2cb944decde5ec0cf3cfe60eb1/100575_2.jpg" iaiext:key="66331c2cb944decde5ec0cf3cfe60eb1"/>
+          <image changed="2025-02-28 09:55:20" hash="fc5c96a1187cef54e9e6eff92d0a34fe" iaiext:priority="4" height="108" width="108" url="https://hurt.sharg.pl/hpeciai/c3b773ccb8167b95c894d66d2a14ed3b/100575_1.jpg" iaiext:key="c3b773ccb8167b95c894d66d2a14ed3b"/>
+        </iaiext:small>
+        <icons>
+          <icon changed="2025-02-28 09:55:21" hash="5c5933e4cdd472e2393d9bde9b68b600" height="270" width="270" url="https://hurt.sharg.pl/hpeciai/ff668ca1206e729da3d38b184e64c103/100575.jpg" iaiext:key="ff668ca1206e729da3d38b184e64c103" iaiext:url_originals="https://hurt.sharg.pl/hpeciai/99cd83a8509a5bb8f3c6858d67c48468/100575.jpg" iaiext:key_originals="99cd83a8509a5bb8f3c6858d67c48468" iaiext:height_small="250" iaiext:width_small="250" iaiext:url_small="https://hurt.sharg.pl/hpeciai/af584830aa2ab2c9c6c8c0360be2edc3/100575.jpg" iaiext:key_small="af584830aa2ab2c9c6c8c0360be2edc3"/>
+          <group_icon changed="2025-02-28 09:55:21" hash="5c5933e4cdd472e2393d9bde9b68b600" iaiext:priority="0" height="50" width="50" url="https://hurt.sharg.pl/hpeciai/5766d06f9970af392cdc7a3f2abafde5/100575.jpg" iaiext:key="5766d06f9970af392cdc7a3f2abafde5" iaiext:url_originals="https://hurt.sharg.pl/hpeciai/6e43979a9657031ce1451289d85e0836/100575.jpg" iaiext:key_originals="6e43979a9657031ce1451289d85e0836" iaiext:height_small="50" iaiext:width_small="50" iaiext:url_small="https://hurt.sharg.pl/hpeciai/5766d06f9970af392cdc7a3f2abafde5/100575.jpg" iaiext:key_small="5766d06f9970af392cdc7a3f2abafde5"/>
+        </icons>
+      </images>
+      <parameters>
+        <parameter type="parameter" id="1089" priority="0" distinction="n" group_distinction="n" hide="y" auction_template_hide="y" context_id="CONTEXT_BOOK_PUBLICATION_DATE" name="WEW-Translate">
+          <value id="1090" priority="0" name="PZ EN"/>
+        </parameter>
+      </parameters>
+      <sizes iaiext:group_name="Grupa rozmiaru uniwersalnego" iaiext:group_id="-1" iaiext:sizeList="full">
+        <size id="uniw" name="pozostałe" panel_name="uniw" code="100575-uniw" weight="14" iaiext:weight_net="10" code_producer="5905247628787" iaiext:code_external="000155" iaiext:priority="0">
+          <price gross="13" net="10.57"/>
+          <srp gross="13" net="10.57"/>
+        </size>
+      </sizes>
+      <price gross="13" net="10.57"/>
+      <srp gross="13" net="10.57"/>
+      <iaiext:price_retail_dynamic>
+        <iaiext:site id="3" size_id="0" gross="0" net="0"/>
+      </iaiext:price_retail_dynamic>
+      <iaiext:omnibus_price_retail>
+        <iaiext:site id="3" size_id="0" gross="0" net="0" new_price="false"/>
+      </iaiext:omnibus_price_retail>
+      <iaiext:omnibus_price_wholesale>
+        <iaiext:site id="3" size_id="0" gross="0" net="0" new_price="false"/>
+      </iaiext:omnibus_price_wholesale>
+      <iaiext:sell_by>
+        <iaiext:retail quantity="1"/>
+        <iaiext:wholesale quantity="1"/>
+      </iaiext:sell_by>
+      <iaiext:inwrapper quantity="1"/>
+      <iaiext:subscriptions_settings>
+        <iaiext:site id="" enabled="false" units_number_retail="" units_number_wholesale="">
+          <days_in_period/>
+        </iaiext:site>
+      </iaiext:subscriptions_settings>
+      <iaiext:responsible_entity/>
+      <iaiext:services_descriptions/>
+    </product>
+    <product id="100578" currency="PLN" code_on_card="213G CU 3 (C09)" producer_code_standard="GTIN13" type="regular" vat="23.0" site="3">
+      <producer id="1407245692" name="Otto Herder Solingen"/>
+      <category id="1214554007" name="Uroda/Manicure i Pedicure/Akcesoria do manicure i pedicure"/>
+      <category_idosell id="4711" path="Zdrowie i uroda &gt; Higiena osobista &gt; Kosmetyki &gt; Akcesoria kosmetyczne &gt; Akcesoria do paznokci"/>
+      <unit id="0" name="szt."/>
+      <warranty id="1" type="seller" period="24" name="Warunki Gwarancji"/>
+      <card url="https://hurt.sharg.pl/product-pol-100578-Penseta-Filax-Solingen-Zagieta-Curved-Zlocona-75mm-213G-CU-3.html"/>
+      <description><name xml:lang="eng"><![CDATA[Penseta O. Herder Haczyk / Curved Solingen Classic mater Stal Węglowa gold N CheckHandl 3" 000/08 - 213G CH CU 3]]></name><![CDATA[
+]]><name xml:lang="pol"><![CDATA[Penseta Filax Solingen Zagięta / Curved, Złocona 75mm (213G CU 3)]]></name><![CDATA[
+]]><long_desc xml:lang="pol"><![CDATA[<p style="text-align: justify;"><strong>213G</strong> (Gold), <strong>Filax Solingen,</strong> penseta <strong>zagięta</strong> (curved) o długości <span><strong>3",</strong> </span>niemieckiej firmy <strong>Otto Herder</strong><strong>. </strong>Złocona, wykonana ze stali węglowej. Made in<strong> Germany.</strong></p>
+<p>Opracowanie: firma<strong> Sharg®</strong></p>]]></long_desc><![CDATA[
+]]><short_desc xml:lang="pol"><![CDATA[213G (Gold), Filax Solingen, penseta zagięta (curved) o długości 3", niemieckiej firmy Otto Herder. Złocona, wykonana ze stali węglowej. Made in Germany...]]></short_desc><![CDATA[
+]]></description>
+      <images iaiext:external="yes">
+        <large>
+          <image changed="2025-02-28 09:55:20" hash="e091f0d4de3fa6d81099425d4441c8b5" iaiext:priority="1" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/14d3e52e96207fb750ae13659d333e8e/100578_1.jpg" iaiext:key="14d3e52e96207fb750ae13659d333e8e"/>
+          <image changed="2025-02-28 09:55:20" hash="8aa731471e3eb9a88251e8406ee99484" iaiext:priority="2" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/255d3e7af8f2fa8b31947fb965899c47/100578_4.jpg" iaiext:key="255d3e7af8f2fa8b31947fb965899c47"/>
+          <image changed="2025-02-28 09:55:20" hash="cff22a1f7cd623e3dabba62cd2206bd8" iaiext:priority="3" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/209529b811dfc90716df9f4abaac6dff/100578_3.jpg" iaiext:key="209529b811dfc90716df9f4abaac6dff"/>
+          <image changed="2025-02-28 09:55:20" hash="e5c592fc28d306b7ad671255bd271e15" iaiext:priority="4" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/593504f83c86fab8e765b02d154f8306/100578_2.jpg" iaiext:key="593504f83c86fab8e765b02d154f8306"/>
+        </large>
+        <iaiext:originals>
+          <iaiext:image changed="2025-02-28 09:55:20" hash="e091f0d4de3fa6d81099425d4441c8b5" iaiext:priority="1" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/7bafde6991c56341175119a488a90867/100578_1.jpg" iaiext:key="7bafde6991c56341175119a488a90867"/>
+          <iaiext:image changed="2025-02-28 09:55:20" hash="8aa731471e3eb9a88251e8406ee99484" iaiext:priority="2" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/b3047088fc55485127218f3af55f5d25/100578_4.jpg" iaiext:key="b3047088fc55485127218f3af55f5d25"/>
+          <iaiext:image changed="2025-02-28 09:55:20" hash="cff22a1f7cd623e3dabba62cd2206bd8" iaiext:priority="3" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/a7a007d4e31ed61459b5fa4599d623bc/100578_3.jpg" iaiext:key="a7a007d4e31ed61459b5fa4599d623bc"/>
+          <iaiext:image changed="2025-02-28 09:55:20" hash="e5c592fc28d306b7ad671255bd271e15" iaiext:priority="4" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/5978c59705fe71590d81c84e9ebc6059/100578_2.jpg" iaiext:key="5978c59705fe71590d81c84e9ebc6059"/>
+        </iaiext:originals>
+        <iaiext:medium>
+          <image changed="2025-02-28 09:55:20" hash="e091f0d4de3fa6d81099425d4441c8b5" iaiext:priority="1" height="449" width="449" url="https://hurt.sharg.pl/hpeciai/f930ef6b7b7dfd06af8b98b84bec25ab/100578_1.jpg" iaiext:key="f930ef6b7b7dfd06af8b98b84bec25ab"/>
+          <image changed="2025-02-28 09:55:20" hash="8aa731471e3eb9a88251e8406ee99484" iaiext:priority="2" height="449" width="449" url="https://hurt.sharg.pl/hpeciai/49e8aeb4d504519c39c6ad4b749fac7c/100578_4.jpg" iaiext:key="49e8aeb4d504519c39c6ad4b749fac7c"/>
+          <image changed="2025-02-28 09:55:20" hash="cff22a1f7cd623e3dabba62cd2206bd8" iaiext:priority="3" height="449" width="449" url="https://hurt.sharg.pl/hpeciai/31325319eb33d93ef280f567ae67598a/100578_3.jpg" iaiext:key="31325319eb33d93ef280f567ae67598a"/>
+          <image changed="2025-02-28 09:55:20" hash="e5c592fc28d306b7ad671255bd271e15" iaiext:priority="4" height="449" width="449" url="https://hurt.sharg.pl/hpeciai/20418729bbe34a8c38b5570fbdb13989/100578_2.jpg" iaiext:key="20418729bbe34a8c38b5570fbdb13989"/>
+        </iaiext:medium>
+        <iaiext:small>
+          <image changed="2025-02-28 09:55:20" hash="e091f0d4de3fa6d81099425d4441c8b5" iaiext:priority="1" height="108" width="108" url="https://hurt.sharg.pl/hpeciai/c6d572acc466403de7a98b9c4b7794b3/100578_1.jpg" iaiext:key="c6d572acc466403de7a98b9c4b7794b3"/>
+          <image changed="2025-02-28 09:55:20" hash="8aa731471e3eb9a88251e8406ee99484" iaiext:priority="2" height="108" width="108" url="https://hurt.sharg.pl/hpeciai/1ccb021e5280db6f63f41b9b2c1fc714/100578_4.jpg" iaiext:key="1ccb021e5280db6f63f41b9b2c1fc714"/>
+          <image changed="2025-02-28 09:55:20" hash="cff22a1f7cd623e3dabba62cd2206bd8" iaiext:priority="3" height="108" width="108" url="https://hurt.sharg.pl/hpeciai/761003595e554709b3424a17763264d5/100578_3.jpg" iaiext:key="761003595e554709b3424a17763264d5"/>
+          <image changed="2025-02-28 09:55:20" hash="e5c592fc28d306b7ad671255bd271e15" iaiext:priority="4" height="108" width="108" url="https://hurt.sharg.pl/hpeciai/89a22a355757ea7562cd0699e44f57a3/100578_2.jpg" iaiext:key="89a22a355757ea7562cd0699e44f57a3"/>
+        </iaiext:small>
+        <icons>
+          <icon changed="2025-02-28 09:55:21" hash="d7859a56c3ba5e0d4b2b8be883e15196" height="270" width="270" url="https://hurt.sharg.pl/hpeciai/46682d26ebc91a66f9e5d4e6a538b5d5/100578.jpg" iaiext:key="46682d26ebc91a66f9e5d4e6a538b5d5" iaiext:url_originals="https://hurt.sharg.pl/hpeciai/3deb3a5e1ae2749e7b0f63a0d7919e37/100578.jpg" iaiext:key_originals="3deb3a5e1ae2749e7b0f63a0d7919e37" iaiext:height_small="250" iaiext:width_small="250" iaiext:url_small="https://hurt.sharg.pl/hpeciai/fb2b5a301b2600e478eb86be5ad04d09/100578.jpg" iaiext:key_small="fb2b5a301b2600e478eb86be5ad04d09"/>
+          <group_icon changed="2025-02-28 09:55:21" hash="d7859a56c3ba5e0d4b2b8be883e15196" iaiext:priority="0" height="50" width="50" url="https://hurt.sharg.pl/hpeciai/43fbc740db1420190ca7984b5ab21dd0/100578.jpg" iaiext:key="43fbc740db1420190ca7984b5ab21dd0" iaiext:url_originals="https://hurt.sharg.pl/hpeciai/ac8847261b89907866fcf5e8184b7eeb/100578.jpg" iaiext:key_originals="ac8847261b89907866fcf5e8184b7eeb" iaiext:height_small="50" iaiext:width_small="50" iaiext:url_small="https://hurt.sharg.pl/hpeciai/43fbc740db1420190ca7984b5ab21dd0/100578.jpg" iaiext:key_small="43fbc740db1420190ca7984b5ab21dd0"/>
+        </icons>
+      </images>
+      <sizes iaiext:group_name="Grupa rozmiaru uniwersalnego" iaiext:group_id="-1" iaiext:sizeList="full">
+        <size id="uniw" name="pozostałe" panel_name="uniw" code="100578-uniw" weight="11" iaiext:weight_net="7" code_producer="5905247628763" iaiext:code_external="000158" iaiext:priority="0">
+          <price gross="18" net="14.63"/>
+          <srp gross="18" net="14.63"/>
+        </size>
+      </sizes>
+      <price gross="18" net="14.63"/>
+      <srp gross="18" net="14.63"/>
+      <iaiext:price_retail_dynamic>
+        <iaiext:site id="3" size_id="0" gross="0" net="0"/>
+      </iaiext:price_retail_dynamic>
+      <iaiext:omnibus_price_retail>
+        <iaiext:site id="3" size_id="0" gross="0" net="0" new_price="false"/>
+      </iaiext:omnibus_price_retail>
+      <iaiext:omnibus_price_wholesale>
+        <iaiext:site id="3" size_id="0" gross="11.97" net="9.73" new_price="false"/>
+      </iaiext:omnibus_price_wholesale>
+      <iaiext:sell_by>
+        <iaiext:retail quantity="1"/>
+        <iaiext:wholesale quantity="1"/>
+      </iaiext:sell_by>
+      <iaiext:inwrapper quantity="1"/>
+      <iaiext:subscriptions_settings>
+        <iaiext:site id="" enabled="false" units_number_retail="" units_number_wholesale="">
+          <days_in_period/>
+        </iaiext:site>
+      </iaiext:subscriptions_settings>
+      <iaiext:responsible_entity/>
+      <iaiext:services_descriptions/>
+    </product>
+    <product id="100581" currency="PLN" code_on_card="218G CU 3 (C09)" producer_code_standard="GTIN13" type="regular" vat="23.0" site="3">
+      <producer id="1407245692" name="Otto Herder Solingen"/>
+      <category id="1214554007" name="Uroda/Manicure i Pedicure/Akcesoria do manicure i pedicure"/>
+      <category_idosell id="4711" path="Zdrowie i uroda &gt; Higiena osobista &gt; Kosmetyki &gt; Akcesoria kosmetyczne &gt; Akcesoria do paznokci"/>
+      <unit id="0" name="szt."/>
+      <warranty id="1" type="seller" period="24" name="Warunki Gwarancji"/>
+      <card url="https://hurt.sharg.pl/product-pol-100581-Penseta-Herbertz-Solingen-Zagieta-Curved-Zlocona-75mm-218G-CU-3.html"/>
+      <description><name xml:lang="eng"><![CDATA[Penseta O. Herder Haczyk / Curved Solingen Classic mater Stal Węglowa gold N 3" 000/08 - 218G CU 3]]></name><![CDATA[
+]]><name xml:lang="pol"><![CDATA[Penseta Herbertz Solingen Zagięta / Curved, Złocona 75mm (218G CU 3)]]></name><![CDATA[
+]]><long_desc xml:lang="pol"><![CDATA[<p style="margin: 0pt; text-align: justify;"><strong>218G</strong> (Gold), profesjonalna <strong>zagięta</strong> (curved) penseta o długości <span><strong>3",</strong> </span>niemieckiej firmy <strong>Otto Herder</strong> z <strong>Solingen. </strong>Złocona, wykonana ze stali węglowej. Made in<strong> Germany.</strong></p>
+<p>Opracowanie: firma<strong> Sharg®</strong></p>]]></long_desc><![CDATA[
+]]><short_desc xml:lang="pol"><![CDATA[218G (Gold), profesjonalna zagięta (curved) penseta o długości 3", niemieckiej firmy Otto Herder z Solingen. Złocona, wykonana ze stali węglowej. Made in Germany...]]></short_desc><![CDATA[
+]]></description>
+      <images iaiext:external="yes">
+        <large>
+          <image changed="2025-02-28 09:55:20" hash="7ff19f11775ac03c30455642c88eb677" iaiext:priority="1" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/6ce6484cd1802aaac7c4e38a27ab6be5/100581_1.jpg" iaiext:key="6ce6484cd1802aaac7c4e38a27ab6be5"/>
+          <image changed="2025-02-28 09:55:20" hash="9669cefd46aa99ac1eb291b83b54ad93" iaiext:priority="2" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/45b0208913f46ef1db61699805f1d413/100581_3.jpg" iaiext:key="45b0208913f46ef1db61699805f1d413"/>
+          <image changed="2025-02-28 09:55:20" hash="56a7b145eb34d838abcea128a2f377ad" iaiext:priority="3" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/72e861c22d40968a9b6eef49a954107a/100581_2.jpg" iaiext:key="72e861c22d40968a9b6eef49a954107a"/>
+          <image changed="2025-02-28 09:55:20" hash="714f50859f7337e2e9b30450e2443ee5" iaiext:priority="4" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/ccc69e6b9349cddbbc9f2aad50abf123/100581_4.jpg" iaiext:key="ccc69e6b9349cddbbc9f2aad50abf123"/>
+        </large>
+        <iaiext:originals>
+          <iaiext:image changed="2025-02-28 09:55:20" hash="7ff19f11775ac03c30455642c88eb677" iaiext:priority="1" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/550e88a363b82715a43b49aacc9b57f2/100581_1.jpg" iaiext:key="550e88a363b82715a43b49aacc9b57f2"/>
+          <iaiext:image changed="2025-02-28 09:55:20" hash="9669cefd46aa99ac1eb291b83b54ad93" iaiext:priority="2" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/b57c6759227de9c46e261017aeffb848/100581_3.jpg" iaiext:key="b57c6759227de9c46e261017aeffb848"/>
+          <iaiext:image changed="2025-02-28 09:55:20" hash="56a7b145eb34d838abcea128a2f377ad" iaiext:priority="3" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/8c94893ba6554a52a7bcfcb4b4b57b9f/100581_2.jpg" iaiext:key="8c94893ba6554a52a7bcfcb4b4b57b9f"/>
+          <iaiext:image changed="2025-02-28 09:55:20" hash="714f50859f7337e2e9b30450e2443ee5" iaiext:priority="4" height="1200" width="1200" url="https://hurt.sharg.pl/hpeciai/c92fb5e8ab767250ed190e235ec85205/100581_4.jpg" iaiext:key="c92fb5e8ab767250ed190e235ec85205"/>
+        </iaiext:originals>
+        <iaiext:medium>
+          <image changed="2025-02-28 09:55:20" hash="7ff19f11775ac03c30455642c88eb677" iaiext:priority="1" height="449" width="449" url="https://hurt.sharg.pl/hpeciai/eb3079c2da21e4e0a9559b2cf1cee3d9/100581_1.jpg" iaiext:key="eb3079c2da21e4e0a9559b2cf1cee3d9"/>
+          <image changed="2025-02-28 09:55:20" hash="9669cefd46aa99ac1eb291b83b54ad93" iaiext:priority="2" height="449" width="449" url="https://hurt.sharg.pl/hpeciai/babb587e2e0f1eb9331af4549caa5183/100581_3.jpg" iaiext:key="babb587e2e0f1eb9331af4549caa5183"/>
+          <image changed="2025-02-28 09:55:20" hash="56a7b145eb34d838abcea128a2f377ad" iaiext:priority="3" height="449" width="449" url="https://hurt.sharg.pl/hpeciai/bd0ba33b206ab21a8f49875f7d526e4e/100581_2.jpg" iaiext:key="bd0ba33b206ab21a8f49875f7d526e4e"/>
+          <image changed="2025-02-28 09:55:20" hash="714f50859f7337e2e9b30450e2443ee5" iaiext:priority="4" height="449" width="449" url="https://hurt.sharg.pl/hpeciai/523ace4a072398ec6146ae0829cfccdd/100581_4.jpg" iaiext:key="523ace4a072398ec6146ae0829cfccdd"/>
+        </iaiext:medium>
+        <iaiext:small>
+          <image changed="2025-02-28 09:55:20" hash="7ff19f11775ac03c30455642c88eb677" iaiext:priority="1" height="108" width="108" url="https://hurt.sharg.pl/hpeciai/71e3455912a0781b45dd9e6fbf2d69af/100581_1.jpg" iaiext:key="71e3455912a0781b45dd9e6fbf2d69af"/>
+          <image changed="2025-02-28 09:55:20" hash="9669cefd46aa99ac1eb291b83b54ad93" iaiext:priority="2" height="108" width="108" url="https://hurt.sharg.pl/hpeciai/7e7b9a4a68b74298206ae6d399f732b2/100581_3.jpg" iaiext:key="7e7b9a4a68b74298206ae6d399f732b2"/>
+          <image changed="2025-02-28 09:55:20" hash="56a7b145eb34d838abcea128a2f377ad" iaiext:priority="3" height="108" width="108" url="https://hurt.sharg.pl/hpeciai/0d33e9162dadfbb70096b9482ab2ff77/100581_2.jpg" iaiext:key="0d33e9162dadfbb70096b9482ab2ff77"/>
+          <image changed="2025-02-28 09:55:20" hash="714f50859f7337e2e9b30450e2443ee5" iaiext:priority="4" height="108" width="108" url="https://hurt.sharg.pl/hpeciai/527564c3bf426f44108195889e26249f/100581_4.jpg" iaiext:key="527564c3bf426f44108195889e26249f"/>
+        </iaiext:small>
+        <icons>
+          <icon changed="2025-02-28 09:55:21" hash="be461286433b50490d1b9240188144f8" height="270" width="270" url="https://hurt.sharg.pl/hpeciai/b8760784379605a405f5ddbd2f34efe6/100581.jpg" iaiext:key="b8760784379605a405f5ddbd2f34efe6" iaiext:url_originals="https://hurt.sharg.pl/hpeciai/98e3c058c9a4d6b0a2b7b03b7a770589/100581.jpg" iaiext:key_originals="98e3c058c9a4d6b0a2b7b03b7a770589" iaiext:height_small="250" iaiext:width_small="250" iaiext:url_small="https://hurt.sharg.pl/hpeciai/598ddb87b53fb097789150167898d8dc/100581.jpg" iaiext:key_small="598ddb87b53fb097789150167898d8dc"/>
+          <group_icon changed="2025-02-28 09:55:21" hash="be461286433b50490d1b9240188144f8" iaiext:priority="0" height="50" width="50" url="https://hurt.sharg.pl/hpeciai/1d60bc2a7e71f939fbd0084520fd5653/100581.jpg" iaiext:key="1d60bc2a7e71f939fbd0084520fd5653" iaiext:url_originals="https://hurt.sharg.pl/hpeciai/1e41ffae99b41476fe96333c56d4de65/100581.jpg" iaiext:key_originals="1e41ffae99b41476fe96333c56d4de65" iaiext:height_small="50" iaiext:width_small="50" iaiext:url_small="https://hurt.sharg.pl/hpeciai/1d60bc2a7e71f939fbd0084520fd5653/100581.jpg" iaiext:key_small="1d60bc2a7e71f939fbd0084520fd5653"/>
+        </icons>
+      </images>
+      <sizes iaiext:group_name="Grupa rozmiaru u

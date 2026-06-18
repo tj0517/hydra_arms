@@ -47,6 +47,7 @@ export default function TitleLeadSection({
             {ctaHref ? (
               <Link
                 href={ctaHref}
+                aria-label="Zobacz więcej"
                 className="group w-[100px] h-[100px] border border-white/10 hover:border-accent/40 flex items-center justify-center transition-all duration-300"
               >
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-text-dim group-hover:text-accent transition-colors duration-300">

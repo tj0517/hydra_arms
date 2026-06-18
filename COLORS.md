@@ -48,7 +48,28 @@ Akcenty / UI    →  --color-accent   (#13FF15)
 
 ## Typografia
 
-| Zmienna | Źródło | Zastosowanie |
-|---|---|---|
-| `--font-main` | Outfit (Google Fonts) | Podstawowy krój pisma — nagłówki, teksty ciągłe |
-| `--font-mono` | JetBrains Mono (Google Fonts) | Krój monospace — terminal, ekran ładowania, kody |
+Fonty ładowane przez `next/font/google` w `src/app/layout.tsx`, eksponowane jako zmienne CSS w `@theme inline` (`globals.css`).
+
+### Kroje pisma
+
+| Zmienna CSS | Font | Źródło | Grubości |
+|---|---|---|---|
+| `--font-main` | **Outfit** | Google Fonts | 300, 400, 500, 600, 700 |
+| `--font-mono` | **JetBrains Mono** | Google Fonts | 400, 700 |
+
+### Zastosowanie
+
+| Zmienna | Gdzie używane |
+|---|---|
+| `--font-main` | Domyślny font całej strony (`body`), nagłówki, przyciski, nawigacja, opisy produktów (`.shop-description`) |
+| `--font-mono` | Ekran ładowania (`.ls`), etykiety terminala, tagi kodu, elementy UI o charakterze technicznym |
+
+### Zmienne pomocnicze (Next.js → CSS)
+
+```
+next/font/google → CSS variable  → Tailwind alias
+Outfit           → --font-outfit  → --font-main
+JetBrains_Mono   → --font-jetbrains-mono → --font-mono
+```
+
+> Fonty są dołączane do klasy `<body>` jako `outfit.variable` i `jetbrainsMono.variable` w `src/app/layout.tsx:77`.

@@ -63,7 +63,7 @@ export default function TabPanel({
             <div className="border border-text/50 px-2 py-1 inline-block">
               <span className="font-[var(--font-mono)] text-[18px]">
                 <span className="text-accent">{String(activeIndex + 1).padStart(2, "0")}</span>
-                <span className="text-white/30">/{String(tabs.length).padStart(2, "0")}</span>
+                <span className="text-white/50">/{String(tabs.length).padStart(2, "0")}</span>
               </span>
             </div>
           </div>

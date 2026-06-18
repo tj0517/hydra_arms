@@ -85,7 +85,7 @@ interface ClientSegmentsGridProps {
 }
 
 export default function ClientSegmentsGrid({ segments, topBorder = false, glow = "green", plain = false }: ClientSegmentsGridProps) {
-  const tagClass = "font-[var(--font-mono)] text-[10px] tracking-[0.25em] text-accent/50 border border-accent/20 px-2.5 py-1 inline-block mb-5 w-fit";
+  const tagClass = "font-[var(--font-mono)] text-[10px] tracking-[0.25em] text-accent/70 border border-accent/20 px-2.5 py-1 inline-block mb-5 w-fit";
   const cols = segments.length === 4 ? "md:grid-cols-4" : "md:grid-cols-3";
   const inter = segments.length === 4 ? "md:px-8" : "md:px-10";
   const interL = segments.length === 4 ? "md:pl-8" : "md:pl-10";

@@ -129,6 +129,18 @@ export default function HomePageClient({
 
   // Overlay fades via CSS class `hero-overlay-fade` — no GSAP needed.
 
+  const mapSectionRef = useRef<HTMLDivElement>(null);
+  const [mapVisible, setMapVisible] = useState(false);
+  useEffect(() => {
+    const el = mapSectionRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) { setMapVisible(true); obs.disconnect(); }
+    }, { rootMargin: "300px" });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
   const NL_SEGMENTS = [
     { id: "aktualnosci", label: "AKTUALNOŚCI" },
     { id: "blog",        label: "BLOG"         },
@@ -449,7 +461,7 @@ export default function HomePageClient({
                         <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
                         <span className="text-[16px] md:text-[18px]">
                           <span className="text-accent">{service.id}</span>
-                          <span className="text-white/30">/{String(services.length).padStart(2, "0")}</span>
+                          <span className="text-white/50">/{String(services.length).padStart(2, "0")}</span>
                         </span>
                       </div>
                     </div>
@@ -570,8 +582,8 @@ export default function HomePageClient({
 
       {/* ─── MAP SECTION ─── */}
       <section>
-        <div className="h-[300px] sm:h-[400px] md:h-[542px] bg-[#080808] relative overflow-hidden border-t border-white/[0.25]">
-          <MilitaryMap />
+        <div ref={mapSectionRef} className="h-[300px] sm:h-[400px] md:h-[542px] bg-[#080808] relative overflow-hidden border-t border-white/[0.25]">
+          {mapVisible && <MilitaryMap />}
 
           {/* HUD crosshair cursor */}
           <MapCrosshair />
@@ -841,7 +853,7 @@ export default function HomePageClient({
                       )}
                     </div>
                     <div className="flex items-start gap-2 mt-2">
-                      <label className="mt-0.5 shrink-0 w-3.5 h-3.5 relative cursor-pointer block">
+                      <label className="mt-0.5 shrink-0 w-3.5 h-3.5 relative cursor-pointer block" aria-label="Zgoda na przetwarzanie danych osobowych">
                         <input type="checkbox" className="sr-only peer" />
                         <span className="absolute inset-0 border border-accent/50 peer-checked:border-accent transition-colors duration-150" />
                         <span className="absolute inset-[3px] bg-accent scale-0 peer-checked:scale-100 transition-transform duration-150" />

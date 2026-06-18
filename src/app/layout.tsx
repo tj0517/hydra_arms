@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Outfit, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import CookiesBanner from "@/components/CookiesBanner";
+import CookiesBanner from "@/components/CookiesBannerLazy";
 
 const outfit = Outfit({
   variable: "--font-outfit",

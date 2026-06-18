@@ -1,0 +1,1171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<offer file_format="IOF" version="3.0" generated_by="IdoSell" generated="2026-06-16 15:01:41" expires="2026-06-17 15:01:41" xmlns:iof="http://www.iai-shop.com/developers/iof.phtml" xmlns:iaiext="http://www.iai-shop.com/developers/iof/extensions.phtml">
+<products currency="PLN">
+	<product id="100571" vat="23.0">
+		<price gross="60.00" net="48.78"/>
+		<srp gross="60.00" net="48.78"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247620859"  iaiext:code_external="000151"  code="100571-0"  weight="1000"  iaiext:weight_net="1000" >
+			<stock id="1" quantity="24"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100581" vat="23.0">
+		<price gross="28.00" net="22.76"/>
+		<srp gross="28.00" net="22.76"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247628701"  iaiext:code_external="000161"  code="100581-0"  weight="13"  iaiext:weight_net="8" >
+			<stock id="1" quantity="19"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100593" vat="23.0">
+		<price gross="68.00" net="55.28"/>
+		<srp gross="68.00" net="55.28"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247628985"  iaiext:code_external="000173"  code="100593-0"  weight="28"  iaiext:weight_net="28" >
+			<stock id="1" quantity="13"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100617" vat="23.0">
+		<price gross="16.00" net="13.01"/>
+		<srp gross="16.00" net="13.01"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247628046"  iaiext:code_external="000200"  code="100617-0"  weight="23"  iaiext:weight_net="18" >
+			<stock id="1" quantity="5"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100627" vat="23.0">
+		<price gross="28.00" net="22.76"/>
+		<srp gross="28.00" net="22.76"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247620514"  iaiext:code_external="000381"  code="100627-0"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="6"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100635" vat="23.0">
+		<price gross="308.00" net="250.41"/>
+		<srp gross="308.00" net="250.41"/>
+		<sizes>
+			<size id="10"  name="38&quot;/34&quot;" panel_name="38&quot;/34&quot;" code_producer="870699002858"  iaiext:code_external="001148"  code="100635-10"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="37"  name="36&quot;/34&quot;" panel_name="36&quot;/34&quot;" code_producer="870699002841"  iaiext:code_external="001147"  code="100635-37"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="42"  name="28&quot;/30&quot;" panel_name="28&quot;/30&quot;" code_producer="794691323356"  iaiext:code_external="001144"  code="100635-42"  weight="850"  iaiext:weight_net="850" >
+			<stock id="1" quantity="0"/>
+			</size>
+			<size id="45"  name="30&quot;/32&quot;" panel_name="30&quot;/32&quot;" code_producer="5905247600196"  iaiext:code_external="001145"  code="100635-45"  weight="0"  iaiext:weight_net="0" >
+			</size>
+			<size id="46"  name="36/36" panel_name="36&quot;/36&quot;" code_producer="794691064334"  iaiext:code_external="001461"  code="100635-46"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="48"  name="40&quot;/32&quot;" panel_name="40&quot;/32&quot;" code_producer="5905247600189"  iaiext:code_external="001566"  code="100635-48"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="52"  name="36&quot;/30&quot;" panel_name="36&quot;/30&quot;" code_producer="870699002667"  iaiext:code_external="001146"  code="100635-52"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="54"  name="32&quot;/36&quot;" panel_name="32&quot;/36&quot;" code_producer="870699002919"  iaiext:code_external="001856"  code="100635-54"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="55"  name="42&quot;/30&quot;" panel_name="42&quot;/30&quot;" code_producer="5905247600172"  iaiext:code_external="002049"  code="100635-55"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="56"  name="42&quot;/36&quot;" panel_name="42&quot;/36&quot;" code_producer="5905247600165"  iaiext:code_external="002030"  code="100635-56"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="57"  name="44&quot;/32&quot;" panel_name="44&quot;/32&quot;" code_producer="5905247600141"  iaiext:code_external="001150"  code="100635-57"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="58"  name="30&quot;/U" panel_name="30&quot;/U" code_producer="870699003961"  iaiext:code_external="001536"  code="100635-58"  weight="850"  iaiext:weight_net="850" >
+			<stock id="1" quantity="4"/>
+			</size>
+			<size id="59"  name="34&quot;/U" panel_name="34&quot;/U" code_producer="7069900398"  iaiext:code_external="006475"  code="100635-59"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="60"  name="36&quot;/U" panel_name="36&quot;/U" code_producer="794691150648"  iaiext:code_external="000521"  code="100635-60"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="61"  name="38&quot;/U" panel_name="38&quot;/U" code_producer="870699004005"  iaiext:code_external="001537"  code="100635-61"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="62"  name="42&quot;/U" panel_name="42&quot;/U" code_producer="5905247600158"  iaiext:code_external="001538"  code="100635-62"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="64"  name="42&quot;/34&quot;" panel_name="42&quot;/34&quot;" code_producer="794691323691"  iaiext:code_external="001149"  code="100635-64"  weight="0"  iaiext:weight_net="0" >
+				<price gross="308.00" net="250.41"/>
+				<srp gross="308.00" net="250.41"/>
+			</size>
+			<size id="350"  name="44&quot;/34&quot;" panel_name="44&quot;/34&quot;" code_producer="870699002889"  iaiext:code_external="001151"  code="100635-350"  weight="0"  iaiext:weight_net="0" >
+			</size>
+		</sizes>
+	</product>
+	<product id="100668" vat="23.0">
+		<price gross="128.00" net="104.07"/>
+		<srp gross="128.00" net="104.07"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247624475"  iaiext:code_external="000609"  code="100668-0"  weight="107"  iaiext:weight_net="107" >
+			<stock id="1" quantity="2"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100669" vat="23.0">
+		<price gross="148.00" net="120.33"/>
+		<srp gross="148.00" net="120.33"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247624444"  iaiext:code_external="000610"  code="100669-0"  weight="141"  iaiext:weight_net="141" >
+			<stock id="1" quantity="3"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100677" vat="23.0">
+		<price gross="148.00" net="120.33"/>
+		<srp gross="148.00" net="120.33"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="4001833040085"  iaiext:code_external="000617"  code="100677-0"  weight="245"  iaiext:weight_net="206" >
+			<stock id="1" quantity="682"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100678" vat="23.0">
+		<price gross="178.00" net="144.72"/>
+		<srp gross="178.00" net="144.72"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="4001833088490"  iaiext:code_external="000618"  code="100678-0"  weight="245"  iaiext:weight_net="202" >
+			<stock id="1" quantity="210"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100685" vat="23.0">
+		<price gross="188.00" net="152.85"/>
+		<srp gross="188.00" net="152.85"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="4001833071591"  iaiext:code_external="000630"  code="100685-0"  weight="231"  iaiext:weight_net="148" >
+			<stock id="1" quantity="34"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100712" vat="23.0">
+		<price gross="158.00" net="128.46"/>
+		<srp gross="158.00" net="128.46"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247625083"  iaiext:code_external="000709"  code="100712-0"  weight="167"  iaiext:weight_net="167" >
+			<stock id="1" quantity="1"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100713" vat="23.0">
+		<price gross="178.00" net="144.72"/>
+		<srp gross="178.00" net="144.72"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247625052"  iaiext:code_external="000710"  code="100713-0"  weight="167"  iaiext:weight_net="167" >
+			<stock id="1" quantity="1"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100720" vat="23.0">
+		<price gross="248.00" net="201.63"/>
+		<srp gross="248.00" net="201.63"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="8436013872518"  iaiext:code_external="000716"  code="100720-0"  weight="453"  iaiext:weight_net="353" >
+			<stock id="1" quantity="3"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100722" vat="23.0">
+		<price gross="268.00" net="217.89"/>
+		<srp gross="268.00" net="217.89"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="8436013872532"  iaiext:code_external="000718"  code="100722-0"  weight="475"  iaiext:weight_net="375" >
+			<stock id="1" quantity="3"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100723" vat="23.0">
+		<price gross="278.00" net="226.02"/>
+		<srp gross="278.00" net="226.02"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="8436013872549"  iaiext:code_external="000719"  code="100723-0"  weight="490"  iaiext:weight_net="390" >
+			<stock id="1" quantity="2"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100724" vat="23.0">
+		<price gross="678.00" net="551.22"/>
+		<srp gross="678.00" net="551.22"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="8436013872754"  iaiext:code_external="000723"  code="100724-0"  weight="540"  iaiext:weight_net="440" >
+			<stock id="1" quantity="7"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100730" vat="23.0">
+		<price gross="308.00" net="250.41"/>
+		<srp gross="308.00" net="250.41"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="8436013873058"  iaiext:code_external="000729"  code="100730-0"  weight="453"  iaiext:weight_net="353" >
+			<stock id="1" quantity="5"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100731" vat="23.0">
+		<price gross="248.00" net="201.63"/>
+		<srp gross="248.00" net="201.63"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="8436013873065"  iaiext:code_external="000730"  code="100731-0"  weight="572"  iaiext:weight_net="355" >
+			<stock id="1" quantity="2"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100732" vat="23.0">
+		<price gross="318.00" net="258.54"/>
+		<srp gross="318.00" net="258.54"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="8436013873072"  iaiext:code_external="000731"  code="100732-0"  weight="570"  iaiext:weight_net="448" >
+			<stock id="1" quantity="5"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100733" vat="23.0">
+		<price gross="248.00" net="201.63"/>
+		<srp gross="248.00" net="201.63"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="8436013873089"  iaiext:code_external="000732"  code="100733-0"  weight="456"  iaiext:weight_net="356" >
+			<stock id="1" quantity="3"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100734" vat="23.0">
+		<price gross="328.00" net="266.67"/>
+		<srp gross="328.00" net="266.67"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="8436013873096"  iaiext:code_external="000733"  code="100734-0"  weight="391"  iaiext:weight_net="491" >
+			<stock id="1" quantity="7"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100735" vat="23.0">
+		<price gross="278.00" net="226.02"/>
+		<srp gross="278.00" net="226.02"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="8436013873102"  iaiext:code_external="000734"  code="100735-0"  weight="498"  iaiext:weight_net="398" >
+			<stock id="1" quantity="2"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100738" vat="23.0">
+		<price gross="358.00" net="291.06"/>
+		<srp gross="358.00" net="291.06"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="8436013873331"  iaiext:code_external="000739"  code="100738-0"  weight="575"  iaiext:weight_net="460" >
+			<stock id="1" quantity="2"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100745" vat="23.0">
+		<price gross="128.00" net="104.07"/>
+		<srp gross="128.00" net="104.07"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247624963"  iaiext:code_external="000745"  code="100745-0"  weight="98"  iaiext:weight_net="98" >
+			<stock id="1" quantity="34"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100747" vat="23.0">
+		<price gross="158.00" net="128.46"/>
+		<srp gross="158.00" net="128.46"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247624710"  iaiext:code_external="000746"  code="100747-0"  weight="126"  iaiext:weight_net="126" >
+			<stock id="1" quantity="4"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100753" vat="23.0">
+		<price gross="618.00" net="502.44"/>
+		<srp gross="618.00" net="502.44"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="716104650019"  iaiext:code_external="000818"  code="100753-0"  weight="210"  iaiext:weight_net="85" >
+			<stock id="1" quantity="2"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100757" vat="23.0">
+		<price gross="108.00" net="87.80"/>
+		<srp gross="108.00" net="87.8"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="4018330111071"  iaiext:code_external="000826"  code="100757-0"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="5"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100762" vat="23.0">
+		<price gross="63.00" net="51.22"/>
+		<srp gross="63.00" net="51.22"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="027925190067"  iaiext:code_external="000831"  code="100762-0"  weight="168"  iaiext:weight_net="132" >
+			<stock id="1" quantity="6"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100768" vat="23.0">
+		<price gross="128.00" net="104.07"/>
+		<srp gross="128.00" net="104.07"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="027925012680"  iaiext:code_external="000837"  code="100768-0"  weight="192"  iaiext:weight_net="132" >
+			<stock id="1" quantity="40"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100772" vat="23.0">
+		<price gross="168.00" net="136.59"/>
+		<srp gross="168.00" net="136.59"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="4001833025549"  iaiext:code_external="000843"  code="100772-0"  weight="162"  iaiext:weight_net="162" >
+			<stock id="1" quantity="3"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100775" vat="23.0">
+		<price gross="88.00" net="71.54"/>
+		<srp gross="88.00" net="71.54"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="4001833025167"  iaiext:code_external="000846"  code="100775-0"  weight="43"  iaiext:weight_net="43" >
+			<stock id="1" quantity="13"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100781" vat="23.0">
+		<price gross="423.00" net="343.90"/>
+		<srp gross="423.00" net="343.9"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="716104640102"  iaiext:code_external="000854"  code="100781-0"  weight="600"  iaiext:weight_net="210" >
+			<stock id="1" quantity="12"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100793" vat="23.0">
+		<price gross="33.00" net="26.83"/>
+		<srp gross="33.00" net="26.83"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247647351"  iaiext:code_external="000876"  code="100793-0"  weight="25"  iaiext:weight_net="20" >
+			<stock id="1" quantity="8"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100794" vat="23.0">
+		<price gross="33.00" net="26.83"/>
+		<srp gross="33.00" net="26.83"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247647573"  iaiext:code_external="000877"  code="100794-0"  weight="27"  iaiext:weight_net="27" >
+			<stock id="1" quantity="10"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100795" vat="23.0">
+		<price gross="33.00" net="26.83"/>
+		<srp gross="33.00" net="26.83"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247647344"  iaiext:code_external="000878"  code="100795-0"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="1"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100797" vat="23.0">
+		<price gross="33.00" net="26.83"/>
+		<srp gross="33.00" net="26.83"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247647610"  iaiext:code_external="000880"  code="100797-0"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="1"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100798" vat="23.0">
+		<price gross="33.00" net="26.83"/>
+		<srp gross="33.00" net="26.83"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247647542"  iaiext:code_external="000881"  code="100798-0"  weight="29"  iaiext:weight_net="18" >
+			<stock id="1" quantity="2"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100805" vat="23.0">
+		<price gross="38.00" net="30.89"/>
+		<srp gross="38.00" net="30.89"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247647481"  iaiext:code_external="000888"  code="100805-0"  weight="22"  iaiext:weight_net="22" >
+			<stock id="1" quantity="18"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100806" vat="23.0">
+		<price gross="38.00" net="30.89"/>
+		<srp gross="38.00" net="30.89"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247647696"  iaiext:code_external="000889"  code="100806-0"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="28"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100807" vat="23.0">
+		<price gross="38.00" net="30.89"/>
+		<srp gross="38.00" net="30.89"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247647689"  iaiext:code_external="000890"  code="100807-0"  weight="21"  iaiext:weight_net="21" >
+			<stock id="1" quantity="29"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100808" vat="23.0">
+		<price gross="38.00" net="30.89"/>
+		<srp gross="38.00" net="30.89"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247647672"  iaiext:code_external="000891"  code="100808-0"  weight="27"  iaiext:weight_net="17" >
+			<stock id="1" quantity="38"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100810" vat="23.0">
+		<price gross="33.00" net="26.83"/>
+		<srp gross="33.00" net="26.83"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247647658"  iaiext:code_external="000893"  code="100810-0"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="45"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100811" vat="23.0">
+		<price gross="38.00" net="30.89"/>
+		<srp gross="38.00" net="30.89"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247647702"  iaiext:code_external="000894"  code="100811-0"  weight="21"  iaiext:weight_net="21" >
+			<stock id="1" quantity="18"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100812" vat="23.0">
+		<price gross="28.00" net="22.76"/>
+		<srp gross="28.00" net="22.76"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247647412"  iaiext:code_external="000895"  code="100812-0"  weight="25"  iaiext:weight_net="25" >
+			<stock id="1" quantity="4"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100813" vat="23.0">
+		<price gross="38.00" net="30.89"/>
+		<srp gross="38.00" net="30.89"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247647597"  iaiext:code_external="000896"  code="100813-0"  weight="26"  iaiext:weight_net="26" >
+			<stock id="1" quantity="16"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100815" vat="23.0">
+		<price gross="28.00" net="22.76"/>
+		<srp gross="28.00" net="22.76"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247647634"  iaiext:code_external="000898"  code="100815-0"  weight="29"  iaiext:weight_net="29" >
+			<stock id="1" quantity="28"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100816" vat="23.0">
+		<price gross="28.00" net="22.76"/>
+		<srp gross="28.00" net="22.76"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247647726"  iaiext:code_external="000899"  code="100816-0"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="24"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100818" vat="23.0">
+		<price gross="7.00" net="5.69"/>
+		<srp gross="7.00" net="5.69"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247647511"  iaiext:code_external="000901"  code="100818-0"  weight="6"  iaiext:weight_net="6" >
+			<stock id="1" quantity="36"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100819" vat="23.0">
+		<price gross="8.00" net="6.50"/>
+		<srp gross="8.00" net="6.5"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247647498"  iaiext:code_external="000902"  code="100819-0"  weight="8"  iaiext:weight_net="8" >
+			<stock id="1" quantity="42"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100820" vat="23.0">
+		<price gross="9.00" net="7.32"/>
+		<srp gross="9.00" net="7.32"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247647467"  iaiext:code_external="000903"  code="100820-0"  weight="10"  iaiext:weight_net="10" >
+			<stock id="1" quantity="67"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100821" vat="23.0">
+		<price gross="10.00" net="8.13"/>
+		<srp gross="10.00" net="8.13"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247647443"  iaiext:code_external="000904"  code="100821-0"  weight="10"  iaiext:weight_net="10" >
+			<stock id="1" quantity="54"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100828" vat="23.0">
+		<price gross="10.00" net="8.13"/>
+		<srp gross="10.00" net="8.13"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247647320"  iaiext:code_external="000911"  code="100828-0"  weight="30"  iaiext:weight_net="30" >
+			<stock id="1" quantity="212"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100831" vat="23.0">
+		<price gross="78.00" net="63.41"/>
+		<srp gross="78.00" net="63.41"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="4005788007094"  iaiext:code_external="000914"  code="100831-0"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="127"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100835" vat="23.0">
+		<price gross="18.00" net="14.63"/>
+		<srp gross="18.00" net="14.63"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247620552"  iaiext:code_external="000918"  code="100835-0"  weight="1000"  iaiext:weight_net="1000" >
+			<stock id="1" quantity="8"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100843" vat="23.0">
+		<price gross="38.00" net="30.89"/>
+		<srp gross="38.00" net="30.89"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="4005788747808"  iaiext:code_external="000925"  code="100843-0"  weight="1000"  iaiext:weight_net="1000" >
+			<stock id="1" quantity="9"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100888" vat="23.0">
+		<price gross="28.00" net="22.76"/>
+		<srp gross="28.00" net="22.76"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="4001833010422"  iaiext:code_external="000971"  code="100888-0"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="10"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100954" vat="23.0">
+		<price gross="188.00" net="152.85"/>
+		<srp gross="188.00" net="152.85"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="844802025836"  iaiext:code_external="001091"  code="100954-0"  weight="1000"  iaiext:weight_net="1000" >
+			<stock id="1" quantity="29"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100972" vat="23.0">
+		<price gross="584.20" net="474.96"/>
+		<srp gross="584.20" net="474.96"/>
+		<sizes>
+			<size id="221"  name="52" panel_name="52" code_producer="5905247651556"  iaiext:code_external="001112"  code="100972-221"  weight="0"  iaiext:weight_net="0" >
+			</size>
+			<size id="223"  name="54" panel_name="54" code_producer="5905247651549"  iaiext:code_external="001113"  code="100972-223"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="1"/>
+			</size>
+			<size id="225"  name="56" panel_name="56" code_producer="5905247651532"  iaiext:code_external="005384"  code="100972-225"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="2"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100976" vat="23.0">
+		<price gross="388.70" net="316.02"/>
+		<srp gross="388.70" net="316.02"/>
+		<sizes>
+			<size id="221"  name="52" panel_name="52" code_producer="5905247651501"  iaiext:code_external="001117"  code="100976-221"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="1"/>
+			</size>
+			<size id="223"  name="54" panel_name="54" code_producer="5905247651495"  iaiext:code_external="001118"  code="100976-223"  weight="0"  iaiext:weight_net="0" >
+			</size>
+		</sizes>
+	</product>
+	<product id="100979" vat="23.0">
+		<price gross="417.45" net="339.39"/>
+		<srp gross="417.45" net="339.39"/>
+		<sizes>
+			<size id="223"  name="54" panel_name="54" code_producer="5905247651471"  iaiext:code_external="001120"  code="100979-223"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="2"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100983" vat="23.0">
+		<price gross="894.70" net="727.40"/>
+		<srp gross="894.70" net="727.4"/>
+		<sizes>
+			<size id="221"  name="52" panel_name="52" code_producer="5905247651617"  iaiext:code_external="001124"  code="100983-221"  weight="0"  iaiext:weight_net="0" >
+			</size>
+			<size id="223"  name="54" panel_name="54" code_producer="5905247651600"  iaiext:code_external="001125"  code="100983-223"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="3"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100988" vat="23.0">
+		<price gross="906.20" net="736.75"/>
+		<srp gross="906.20" net="736.75"/>
+		<strikethrough_retail_price gross="906.20" net="736.75"/>
+		<sizes>
+			<size id="221"  name="52" panel_name="52" code_producer="5905247651563"  iaiext:code_external="001129"  code="100988-221"  weight="0"  iaiext:weight_net="0" >
+			</size>
+			<size id="223"  name="54" panel_name="54" code_producer="5707335016359"  iaiext:code_external="001130"  code="100988-223"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="1"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="100996" vat="23.0">
+		<price gross="308.00" net="250.41"/>
+		<srp gross="308.00" net="250.41"/>
+		<sizes>
+			<size id="11"  name="30&quot;/30&quot;" panel_name="30&quot;/30&quot;" code_producer="870699002186"  iaiext:code_external="001139"  code="100996-11"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="13"  name="34&quot;/34&quot;" panel_name="34&quot;/34&quot;" code_producer="877069900238"  iaiext:code_external="001142"  code="100996-13"  weight="0"  iaiext:weight_net="0" >
+			</size>
+			<size id="42"  name="28&quot;/30&quot;" panel_name="28&quot;/30&quot;" code_producer="844802018326"  iaiext:code_external="001138"  code="100996-42"  weight="850"  iaiext:weight_net="850" >
+			<stock id="1" quantity="0"/>
+			</size>
+			<size id="44"  name="42&quot;/32&quot;" panel_name="42&quot;/32&quot;" code_producer="870699002339"  iaiext:code_external="001143"  code="100996-44"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="45"  name="30&quot;/32&quot;" panel_name="30&quot;/32&quot;" code_producer="870699002278"  iaiext:code_external="001140"  code="100996-45"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="49"  name="28&quot;/32&quot;" panel_name="28&quot;/32&quot;" code_producer="844802018333"  iaiext:code_external="001860"  code="100996-49"  weight="850"  iaiext:weight_net="850" >
+			<stock id="1" quantity="1"/>
+			</size>
+			<size id="50"  name="30&quot;/34&quot;" panel_name="30&quot;/34&quot;" code_producer="870699002360"  iaiext:code_external="002124"  code="100996-50"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="51"  name="32&quot;/30&quot;" panel_name="32&quot;/30&quot;" code_producer="5905247600226"  iaiext:code_external="001141"  code="100996-51"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="52"  name="36&quot;/30&quot;" panel_name="36&quot;/30&quot;" code_producer="5905247600219"  iaiext:code_external="001932"  code="100996-52"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="53"  name="40&quot;/36&quot;" panel_name="40&quot;/36&quot;" code_producer="794691323325"  iaiext:code_external="002057"  code="100996-53"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="350"  name="44&quot;/34&quot;" panel_name="44&quot;/34&quot;" code="100996-350"  weight="0"  iaiext:weight_net="0" >
+			</size>
+		</sizes>
+	</product>
+	<product id="101006" vat="23.0">
+		<price gross="308.00" net="250.41"/>
+		<srp gross="308.00" net="250.41"/>
+		<sizes>
+			<size id="10"  name="38&quot;/34&quot;" panel_name="38&quot;/34&quot;" code_producer="794691099329"  iaiext:code_external="001158"  code="101006-10"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="11"  name="30&quot;/30&quot;" panel_name="30&quot;/30&quot;" code_producer="794691098926"  iaiext:code_external="001153"  code="101006-11"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="37"  name="36&quot;/34&quot;" panel_name="36&quot;/34&quot;" code_producer="870699003206"  iaiext:code_external="001155"  code="101006-37"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="40"  name="38&quot;/32&quot;" panel_name="38&quot;/32&quot;" code_producer="870699003121"  iaiext:code_external="001157"  code="101006-40"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="42"  name="28&quot;/30&quot;" panel_name="28&quot;/30&quot;" code_producer="794691098919"  iaiext:code_external="001152"  code="101006-42"  weight="850"  iaiext:weight_net="850" >
+			<stock id="1" quantity="1"/>
+			</size>
+			<size id="45"  name="30&quot;/32&quot;" panel_name="30&quot;/32&quot;" code="101006-45"  weight="0"  iaiext:weight_net="0" >
+			</size>
+			<size id="47"  name="38&quot;/30&quot;" panel_name="38&quot;/30&quot;" code_producer="870699003039"  iaiext:code_external="001156"  code="101006-47"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="48"  name="40&quot;/32&quot;" panel_name="40&quot;/32&quot;" code_producer="870699003138"  iaiext:code_external="001159"  code="101006-48"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="50"  name="30&quot;/34&quot;" panel_name="30&quot;/34&quot;" code_producer="870699003176"  iaiext:code_external="001154"  code="101006-50"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="51"  name="32&quot;/30&quot;" panel_name="32&quot;/30&quot;" code_producer="794691098933"  iaiext:code_external="001462"  code="101006-51"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="55"  name="42&quot;/30&quot;" panel_name="42&quot;/30&quot;" code_producer="794691098988"  iaiext:code_external="002091"  code="101006-55"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="350"  name="44&quot;/34&quot;" panel_name="44&quot;/34&quot;" code="101006-350"  weight="0"  iaiext:weight_net="0" >
+			</size>
+		</sizes>
+	</product>
+	<product id="101014" vat="23.0">
+		<price gross="532.45" net="432.89"/>
+		<srp gross="532.45" net="432.89"/>
+		<sizes>
+			<size id="223"  name="54" panel_name="54" code_producer="5905247651440"  iaiext:code_external="001160"  code="101014-223"  weight="0"  iaiext:weight_net="0" >
+			</size>
+			<size id="225"  name="56" panel_name="56" code_producer="5905247651433"  iaiext:code_external="001161"  code="101014-225"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="1"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="101017" vat="23.0">
+		<price gross="233.45" net="189.80"/>
+		<srp gross="233.45" net="189.8"/>
+		<sizes>
+			<size id="221"  name="52" panel_name="52" code_producer="5905247651419"  iaiext:code_external="001163"  code="101017-221"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="1"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="101097" vat="23.0">
+		<price gross="178.00" net="144.72"/>
+		<srp gross="178.00" net="144.72"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247662965"  iaiext:code_external="001248"  code="101097-0"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="1"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="101188" vat="23.0">
+		<price gross="388.00" net="315.45"/>
+		<srp gross="388.00" net="315.45"/>
+		<sizes>
+			<size id="3"  name="S" panel_name="s" code_producer="844802027335"  iaiext:code_external="001444"  code="101188-3"  weight="1000"  iaiext:weight_net="1000" >
+			<stock id="1" quantity="2"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="101208" vat="23.0">
+		<price gross="268.00" net="217.89"/>
+		<srp gross="268.00" net="217.89"/>
+		<strikethrough_retail_price gross="268.00" net="217.89"/>
+		<sizes>
+			<size id="5"  name="L" panel_name="l" code_producer="5905247600462"  iaiext:code_external="001466"  code="101208-5"  weight="1000"  iaiext:weight_net="1000" >
+			</size>
+			<size id="6"  name="XL" panel_name="xl" code_producer="844802014786"  iaiext:code_external="001467"  code="101208-6"  weight="1000"  iaiext:weight_net="1000" >
+			</size>
+			<size id="7"  name="XXL" panel_name="xxl" code_producer="844802014793"  iaiext:code_external="001468"  code="101208-7"  weight="1000"  iaiext:weight_net="1000" >
+			<stock id="1" quantity="1"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="101216" vat="23.0">
+		<price gross="168.00" net="136.59"/>
+		<srp gross="168.00" net="136.59"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="4001833025433"  iaiext:code_external="001482"  code="101216-0"  weight="445"  iaiext:weight_net="445" >
+			<stock id="1" quantity="1"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="101218" vat="23.0">
+		<price gross="388.00" net="315.45"/>
+		<srp gross="388.00" net="315.45"/>
+		<sizes>
+			<size id="2"  name="XS" panel_name="xs" code_producer="844802027250"  iaiext:code_external="002516"  code="101218-2"  weight="1000"  iaiext:weight_net="1000" >
+			<stock id="1" quantity="1"/>
+			</size>
+			<size id="3"  name="S" panel_name="s" code_producer="844802027267"  iaiext:code_external="001492"  code="101218-3"  weight="1000"  iaiext:weight_net="1000" >
+			<stock id="1" quantity="1"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="101281" vat="23.0">
+		<price gross="668.00" net="543.09"/>
+		<srp gross="668.00" net="543.09"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="8436013871429"  iaiext:code_external="001613"  code="101281-0"  weight="665"  iaiext:weight_net="515" >
+			<stock id="1" quantity="1"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="101282" vat="23.0">
+		<price gross="358.00" net="291.06"/>
+		<srp gross="358.00" net="291.06"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="8436013872198"  iaiext:code_external="001615"  code="101282-0"  weight="545"  iaiext:weight_net="429" >
+			<stock id="1" quantity="4"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="101283" vat="23.0">
+		<price gross="298.00" net="242.28"/>
+		<srp gross="298.00" net="242.28"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="8436013872938"  iaiext:code_external="001616"  code="101283-0"  weight="210"  iaiext:weight_net="152" >
+			<stock id="1" quantity="5"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="101286" vat="23.0">
+		<price gross="258.00" net="209.76"/>
+		<srp gross="258.00" net="209.76"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="8436013871696"  iaiext:code_external="001619"  code="101286-0"  weight="205"  iaiext:weight_net="105" >
+			<stock id="1" quantity="9"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="101287" vat="23.0">
+		<price gross="258.00" net="209.76"/>
+		<srp gross="258.00" net="209.76"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="8436013871467"  iaiext:code_external="001620"  code="101287-0"  weight="205"  iaiext:weight_net="105" >
+			<stock id="1" quantity="4"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="101288" vat="23.0">
+		<price gross="598.00" net="486.18"/>
+		<srp gross="598.00" net="486.18"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="8436013874574"  iaiext:code_external="001621"  code="101288-0"  weight="309"  iaiext:weight_net="209" >
+			<stock id="1" quantity="2"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="101290" vat="23.0">
+		<price gross="498.00" net="404.88"/>
+		<srp gross="498.00" net="404.88"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="8436013874567"  iaiext:code_external="001622"  code="101290-0"  weight="292"  iaiext:weight_net="192" >
+			<stock id="1" quantity="4"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="101363" vat="23.0">
+		<price gross="31660.00" net="25739.84"/>
+		<srp gross="31660.00" net="25739.84"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247600608"  iaiext:code_external="001792"  code="101363-0"  weight="1000"  iaiext:weight_net="1000" >
+			<stock id="1" quantity="1"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="101406" vat="23.0">
+		<price gross="278.00" net="226.02"/>
+		<srp gross="278.00" net="226.02"/>
+		<strikethrough_retail_price gross="278.00" net="226.02"/>
+		<sizes>
+			<size id="3"  name="S" panel_name="s" code_producer="844802031493"  iaiext:code_external="001857"  code="101406-3"  weight="1000"  iaiext:weight_net="1000" >
+			<stock id="1" quantity="2"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="101416" vat="23.0">
+		<price gross="20.00" net="16.26"/>
+		<srp gross="20.00" net="16.26"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247628800"  iaiext:code_external="001903"  code="101416-0"  weight="11"  iaiext:weight_net="9" >
+			<stock id="1" quantity="250"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="101452" vat="23.0">
+		<price gross="108.00" net="87.80"/>
+		<srp gross="108.00" net="87.8"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247607102"  iaiext:code_external="001940"  code="101452-0"  weight="180"  iaiext:weight_net="180" >
+			<stock id="1" quantity="3"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="101455" vat="23.0">
+		<price gross="420.00" net="341.46"/>
+		<srp gross="420.00" net="341.46"/>
+		<sizes>
+			<size id="282"  name="UK 7.5M" panel_name="UK 7.5M" code_producer="5905247659132"  iaiext:code_external="001943"  code="101455-282"  weight="0"  iaiext:weight_net="0" >
+			</size>
+			<size id="284"  name="UK 8.5M" panel_name="UK 8.5M" code_producer="5060093110067"  iaiext:code_external="002065"  code="101455-284"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="2"/>
+			</size>
+			<size id="286"  name="UK 9.5M" panel_name="UK 9.5M" code_producer="5060093110081"  iaiext:code_external="001950"  code="101455-286"  weight="0"  iaiext:weight_net="0" >
+			</size>
+			<size id="288"  name="UK 10.5M" panel_name="UK 10.5M" code_producer="5060093110104"  iaiext:code_external="002067"  code="101455-288"  weight="0"  iaiext:weight_net="0" >
+			</size>
+			<size id="290"  name="UK 11.5M" panel_name="UK 11.5M" code_producer="5060093110128"  iaiext:code_external="002069"  code="101455-290"  weight="0"  iaiext:weight_net="0" >
+			</size>
+			<size id="292"  name="UK 12.5M" panel_name="UK 12.5M" code_producer="5060093110142"  iaiext:code_external="002102"  code="101455-292"  weight="0"  iaiext:weight_net="0" >
+			</size>
+			<size id="306"  name="UK 8.0M" panel_name="UK 8.0M" code_producer="5060093110050"  iaiext:code_external="001948"  code="101455-306"  weight="0"  iaiext:weight_net="0" >
+			</size>
+			<size id="307"  name="UK 9.0M" panel_name="UK 9.0M" code_producer="5060093110074"  iaiext:code_external="001949"  code="101455-307"  weight="0"  iaiext:weight_net="0" >
+			</size>
+			<size id="308"  name="UK 10.0M" panel_name="UK 10.0M" code_producer="5060093110098"  iaiext:code_external="002066"  code="101455-308"  weight="0"  iaiext:weight_net="0" >
+			</size>
+			<size id="309"  name="UK 11.0M" panel_name="UK 11.0M" code_producer="5060093110111"  iaiext:code_external="002068"  code="101455-309"  weight="0"  iaiext:weight_net="0" >
+			</size>
+			<size id="312"  name="UK 7.0M" panel_name="UK 7.0M" code_producer="5060093110036"  iaiext:code_external="002115"  code="101455-312"  weight="0"  iaiext:weight_net="0" >
+			</size>
+			<size id="313"  name="UK 12.0M" panel_name="UK 12.0M" code_producer="5060093110135"  iaiext:code_external="002101"  code="101455-313"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="1"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="101457" vat="23.0">
+		<price gross="398.00" net="323.58"/>
+		<srp gross="398.00" net="323.58"/>
+		<sizes>
+			<size id="282"  name="UK 7.5M" panel_name="UK 7.5M" code_producer="5905247659118"  iaiext:code_external="001945"  code="101457-282"  weight="0"  iaiext:weight_net="0" >
+			</size>
+			<size id="284"  name="UK 8.5M" panel_name="UK 8.5M" code_producer="5060093111514"  iaiext:code_external="002103"  code="101457-284"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="1"/>
+			</size>
+			<size id="286"  name="UK 9.5M" panel_name="UK 9.5M" code_producer="5060093111538"  iaiext:code_external="001955"  code="101457-286"  weight="0"  iaiext:weight_net="0" >
+			</size>
+			<size id="288"  name="UK 10.5M" panel_name="UK 10.5M" code_producer="5060093111552"  iaiext:code_external="002105"  code="101457-288"  weight="0"  iaiext:weight_net="0" >
+			</size>
+			<size id="290"  name="UK 11.5M" panel_name="UK 11.5M" code_producer="5060093111576"  iaiext:code_external="002110"  code="101457-290"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="0"/>
+			</size>
+			<size id="306"  name="UK 8.0M" panel_name="UK 8.0M" code_producer="5905247659101"  iaiext:code_external="001953"  code="101457-306"  weight="0"  iaiext:weight_net="0" >
+			</size>
+			<size id="307"  name="UK 9.0M" panel_name="UK 9.0M" code_producer="5060093111521"  iaiext:code_external="001954"  code="101457-307"  weight="0"  iaiext:weight_net="0" >
+			</size>
+			<size id="308"  name="UK 10.0M" panel_name="UK 10.0M" code_producer="5060093111545"  iaiext:code_external="002104"  code="101457-308"  weight="0"  iaiext:weight_net="0" >
+			</size>
+		</sizes>
+	</product>
+	<product id="101538" vat="23.0">
+		<price gross="188.00" net="152.85"/>
+		<srp gross="188.00" net="152.85"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="4001833081453"  iaiext:code_external="002033"  code="101538-0"  weight="309"  iaiext:weight_net="190" >
+			<stock id="1" quantity="44"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="101544" vat="23.0">
+		<price gross="228.00" net="185.37"/>
+		<srp gross="228.00" net="185.37"/>
+		<sizes>
+			<size id="15"  name="30" panel_name="30" code_producer="870699004234"  iaiext:code_external="001131"  code="101544-15"  weight="1000"  iaiext:weight_net="1000" >
+			<stock id="1" quantity="3"/>
+			</size>
+			<size id="70"  name="32" panel_name="32" code_producer="870699004241"  iaiext:code_external="001417"  code="101544-70"  weight="1000"  iaiext:weight_net="1000" >
+			</size>
+			<size id="213"  name="42" panel_name="42" code_producer="870699004296"  iaiext:code_external="002051"  code="101544-213"  weight="1000"  iaiext:weight_net="1000" >
+			</size>
+		</sizes>
+	</product>
+	<product id="101562" vat="23.0">
+		<price gross="398.00" net="323.58"/>
+		<srp gross="398.00" net="323.58"/>
+		<sizes>
+			<size id="277"  name="UK 4.5M" panel_name="UK 4.5M" code_producer="5060093110548"  iaiext:code_external="002072"  code="101562-277"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="2"/>
+			</size>
+			<size id="298"  name="UK 6.5M" panel_name="UK 6.5M" code_producer="5060093110586"  iaiext:code_external="002370"  code="101562-298"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="2"/>
+			</size>
+			<size id="306"  name="UK 8.0M" panel_name="UK 8.0M" code_producer="5060093110616"  iaiext:code_external="002200"  code="101562-306"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="0"/>
+			</size>
+			<size id="310"  name="UK 5.0M" panel_name="UK 5.0M" code_producer="5060093110555"  iaiext:code_external="002106"  code="101562-310"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="1"/>
+			</size>
+			<size id="311"  name="UK 6.0M" panel_name="UK 6.0M" code_producer="5060093110579"  iaiext:code_external="002108"  code="101562-311"  weight="0"  iaiext:weight_net="0" >
+			</size>
+			<size id="312"  name="UK 7.0M" panel_name="UK 7.0M" code_producer="5060093110593"  iaiext:code_external="002371"  code="101562-312"  weight="0"  iaiext:weight_net="0" >
+			</size>
+		</sizes>
+	</product>
+	<product id="101563" vat="23.0">
+		<price gross="398.00" net="323.58"/>
+		<srp gross="398.00" net="323.58"/>
+		<sizes>
+			<size id="277"  name="UK 4.5M" panel_name="UK 4.5M" code_producer="5060093112986"  iaiext:code_external="002073"  code="101563-277"  weight="0"  iaiext:weight_net="0" >
+			</size>
+			<size id="279"  name="UK 5.5M" panel_name="UK 5.5M" code_producer="5060093113006"  iaiext:code_external="002075"  code="101563-279"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="3"/>
+			</size>
+			<size id="282"  name="UK 7.5M" panel_name="UK 7.5M" code_producer="5060093113044"  iaiext:code_external="002111"  code="101563-282"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="1"/>
+			</size>
+			<size id="284"  name="UK 8.5M" panel_name="UK 8.5M" code_producer="5060093113068"  iaiext:code_external="002113"  code="101563-284"  weight="0"  iaiext:weight_net="0" >
+			</size>
+			<size id="298"  name="UK 6.5M" panel_name="UK 6.5M" code_producer="5060093113020"  iaiext:code_external="002077"  code="101563-298"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="2"/>
+			</size>
+			<size id="306"  name="UK 8.0M" panel_name="UK 8.0M" code_producer="5060093113051"  iaiext:code_external="002112"  code="101563-306"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="1"/>
+			</size>
+			<size id="310"  name="UK 5.0M" panel_name="UK 5.0M" code_producer="5060093112993"  iaiext:code_external="002074"  code="101563-310"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="1"/>
+			</size>
+			<size id="311"  name="UK 6.0M" panel_name="UK 6.0M" code_producer="5060093113013"  iaiext:code_external="002076"  code="101563-311"  weight="0"  iaiext:weight_net="0" >
+			</size>
+			<size id="312"  name="UK 7.0M" panel_name="UK 7.0M" code_producer="5060093113037"  iaiext:code_external="002109"  code="101563-312"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="1"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="101568" vat="23.0">
+		<price gross="398.00" net="323.58"/>
+		<srp gross="398.00" net="323.58"/>
+		<sizes>
+			<size id="279"  name="UK 5.5M" panel_name="UK 5.5M" code_producer="5060093110562"  iaiext:code_external="002114"  code="101568-279"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="1"/>
+			</size>
+			<size id="306"  name="UK 8.0M" panel_name="UK 8.0M" code_producer="5060093112061"  iaiext:code_external="002079"  code="101568-306"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="1"/>
+			</size>
+			<size id="310"  name="UK 5.0M" panel_name="UK 5.0M" code_producer="5060093111668"  iaiext:code_external="002078"  code="101568-310"  weight="0"  iaiext:weight_net="0" >
+			</size>
+			<size id="311"  name="UK 6.0M" panel_name="UK 6.0M" code_producer="5060093112023"  iaiext:code_external="002196"  code="101568-311"  weight="0"  iaiext:weight_net="0" >
+			</size>
+			<size id="312"  name="UK 7.0M" panel_name="UK 7.0M" code_producer="5060093112047"  iaiext:code_external="002197"  code="101568-312"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="0"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="101570" vat="23.0">
+		<price gross="398.00" net="323.58"/>
+		<srp gross="398.00" net="323.58"/>
+		<sizes>
+			<size id="323"  name="UK 4.5W" panel_name="UK 4.5W" code_producer="5060093112214"  iaiext:code_external="002080"  code="101570-323"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="1"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="101571" vat="23.0">
+		<price gross="398.00" net="323.58"/>
+		<srp gross="398.00" net="323.58"/>
+		<sizes>
+			<size id="277"  name="UK 4.5M" panel_name="UK 4.5M" code_producer="5060093110654"  iaiext:code_external="002081"  code="101571-277"  weight="0"  iaiext:weight_net="0" >
+				<price gross="393.00" net="319.51"/>
+				<srp gross="393.00" net="319.51"/>
+			<stock id="1" quantity="0"/>
+			</size>
+			<size id="279"  name="UK 5.5M" panel_name="UK 5.5M" code_producer="5060093110678"  iaiext:code_external="002083"  code="101571-279"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="1"/>
+			</size>
+			<size id="282"  name="UK 7.5M" panel_name="UK 7.5M" code_producer="5905247659057"  iaiext:code_external="002249"  code="101571-282"  weight="0"  iaiext:weight_net="0" >
+			</size>
+			<size id="298"  name="UK 6.5M" panel_name="UK 6.5M" code_producer="5060093110692"  iaiext:code_external="002084"  code="101571-298"  weight="0"  iaiext:weight_net="0" >
+				<price gross="393.00" net="319.51"/>
+				<srp gross="393.00" net="319.51"/>
+			</size>
+			<size id="310"  name="UK 5.0M" panel_name="UK 5.0M" code_producer="5060093110661"  iaiext:code_external="002082"  code="101571-310"  weight="0"  iaiext:weight_net="0" >
+			</size>
+		</sizes>
+	</product>
+	<product id="101617" vat="23.0">
+		<price gross="128.00" net="104.07"/>
+		<srp gross="128.00" net="104.07"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="4001833068102"  iaiext:code_external="002130"  code="101617-0"  weight="146"  iaiext:weight_net="104" >
+			<stock id="1" quantity="1"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="101653" vat="23.0">
+		<price gross="198.00" net="160.98"/>
+		<srp gross="198.00" net="160.98"/>
+		<sizes>
+			<size id="3"  name="S" panel_name="s" code_producer="648018050350"  iaiext:code_external="002329"  code="101653-3"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="1"/>
+			</size>
+			<size id="4"  name="M" panel_name="m" code="101653-4"  weight="0"  iaiext:weight_net="0" >
+			</size>
+			<size id="5"  name="L" panel_name="l" code_producer="648018050374"  iaiext:code_external="002173"  code="101653-5"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="14"/>
+			</size>
+			<size id="6"  name="XL" panel_name="xl" code_producer="648018050381"  iaiext:code_external="002174"  code="101653-6"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="10"/>
+			</size>
+			<size id="7"  name="XXL" panel_name="xxl" code_producer="648018050398"  iaiext:code_external="002328"  code="101653-7"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="1"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="101657" vat="23.0">
+		<price gross="368.00" net="299.19"/>
+		<srp gross="368.00" net="299.19"/>
+		<sizes>
+			<size id="10"  name="38&quot;/34&quot;" panel_name="38&quot;/34&quot;" code_producer="648018051043"  iaiext:code_external="002179"  code="101657-10"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="11"  name="30&quot;/30&quot;" panel_name="30&quot;/30&quot;" code_producer="648018050862"  iaiext:code_external="002331"  code="101657-11"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="40"  name="38&quot;/32&quot;" panel_name="38&quot;/32&quot;" code_producer="648018051036"  iaiext:code_external="002178"  code="101657-40"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="41"  name="32&quot;/32&quot;" panel_name="32&quot;/32&quot;" code_producer="648018050916"  iaiext:code_external="002177"  code="101657-41"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="42"  name="28&quot;/30&quot;" panel_name="28&quot;/30&quot;" code_producer="648018050824"  iaiext:code_external="003024"  code="101657-42"  weight="850"  iaiext:weight_net="850" >
+			<stock id="1" quantity="1"/>
+			</size>
+			<size id="44"  name="42&quot;/32&quot;" panel_name="42&quot;/32&quot;" code_producer="648018051111"  iaiext:code_external="002333"  code="101657-44"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="45"  name="30&quot;/32&quot;" panel_name="30&quot;/32&quot;" code_producer="648018050879"  iaiext:code_external="002332"  code="101657-45"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="49"  name="28&quot;/32&quot;" panel_name="28&quot;/32&quot;" code_producer="648018050831"  iaiext:code_external="003025"  code="101657-49"  weight="850"  iaiext:weight_net="850" >
+			<stock id="1" quantity="4"/>
+			</size>
+			<size id="50"  name="30&quot;/34&quot;" panel_name="30&quot;/34&quot;" code_producer="648018050886"  iaiext:code_external="003026"  code="101657-50"  weight="850"  iaiext:weight_net="850" >
+			<stock id="1" quantity="4"/>
+			</size>
+			<size id="52"  name="36&quot;/30&quot;" panel_name="36&quot;/30&quot;" code_producer="648018050985"  iaiext:code_external="002668"  code="101657-52"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="55"  name="42&quot;/30&quot;" panel_name="42&quot;/30&quot;" code_producer="648018051104"  iaiext:code_external="002961"  code="101657-55"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="56"  name="42&quot;/36&quot;" panel_name="42&quot;/36&quot;" code_producer="648018051135"  iaiext:code_external="007486"  code="101657-56"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="57"  name="44&quot;/32&quot;" panel_name="44&quot;/32&quot;" code_producer="648018051159"  iaiext:code_external="002618"  code="101657-57"  weight="850"  iaiext:weight_net="850" >
+			<stock id="1" quantity="0"/>
+			</size>
+			<size id="64"  name="42&quot;/34&quot;" panel_name="42&quot;/34&quot;" code="101657-64"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="66"  name="40&quot;/30&quot;" panel_name="40&quot;/30&quot;" code_producer="648018051067"  iaiext:code_external="003094"  code="101657-66"  weight="850"  iaiext:weight_net="850" >
+			</size>
+			<size id="68"  name="30&quot;/36&quot;" panel_name="30&quot;/36&quot;" code_producer="648018050893"  iaiext:code_external="003093"  code="101657-68"  weight="850"  iaiext:weight_net="850" >
+			<stock id="1" quantity="1"/>
+			</size>
+			<size id="69"  name="28&quot;/34&quot;" panel_name="28&quot;/34&quot;" code_producer="648018050848"  iaiext:code_external="003092"  code="101657-69"  weight="850"  iaiext:weight_net="850" >
+			<stock id="1" quantity="2"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="101664" vat="23.0">
+		<price gross="318.00" net="258.54"/>
+		<srp gross="318.00" net="258.54"/>
+		<sizes>
+			<size id="3"  name="S" panel_name="s" code_producer="648018052392"  iaiext:code_external="002728"  code="101664-3"  weight="700"  iaiext:weight_net="700" >
+			</size>
+			<size id="4"  name="M" panel_name="m" code_producer="648018052408"  iaiext:code_external="002121"  code="101664-4"  weight="700"  iaiext:weight_net="700" >
+			</size>
+			<size id="5"  name="L" panel_name="l" code_producer="648018052415"  iaiext:code_external="002184"  code="101664-5"  weight="700"  iaiext:weight_net="700" >
+			</size>
+			<size id="6"  name="XL" panel_name="xl" code_producer="648018052422"  iaiext:code_external="002185"  code="101664-6"  weight="700"  iaiext:weight_net="700" >
+			<stock id="1" quantity="33"/>
+			</size>
+			<size id="7"  name="XXL" panel_name="xxl" code_producer="648018052439"  iaiext:code_external="002349"  code="101664-7"  weight="700"  iaiext:weight_net="700" >
+			</size>
+			<size id="8"  name="XXXL" panel_name="xxxl" code="101664-8"  weight="0"  iaiext:weight_net="0" >
+			</size>
+		</sizes>
+	</product>
+	<product id="101711" vat="23.0">
+		<price gross="148.00" net="120.33"/>
+		<srp gross="148.00" net="120.33"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247625281"  iaiext:code_external="002251"  code="101711-0"  weight="120"  iaiext:weight_net="120" >
+			<stock id="1" quantity="2"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="101718" vat="23.0">
+		<price gross="228.00" net="185.37"/>
+		<srp gross="228.00" net="185.37"/>
+		<sizes>
+			<size id="3"  name="S" panel_name="s" code_producer="844802045087"  iaiext:code_external="002294"  code="101718-3"  weight="1000"  iaiext:weight_net="1000" >
+			<stock id="1" quantity="1"/>
+			</size>
+			<size id="5"  name="L" panel_name="l" code_producer="844802045100"  iaiext:code_external="002258"  code="101718-5"  weight="165"  iaiext:weight_net="165" >
+				<price gross="228.00" net="185.37"/>
+				<srp gross="228.00" net="185.37"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="101728" vat="23.0">
+		<price gross="48.00" net="39.02"/>
+		<srp gross="48.00" net="39.02"/>
+		<sizes>
+			<size id="0"  name="pozostałe" panel_name="uniw" code_producer="5905247630889"  iaiext:code_external="002292"  code="101728-0"  weight="0"  iaiext:weight_net="0" >
+			<stock id="1" quantity="2"/>
+			</size>
+		</sizes>
+	</product>
+	<product id="101738" vat="23.0">
+		<price gross="228.00" net="185.37"/>
+		<srp gross="228.00" net="185.37"/>
+		<sizes>
+			<size id="15"  name="30" panel_name="30" code_producer="844802139700"  iaiext:code_external="002015"  code="101738-15"  weight="1000"  iaiext:weight_net="1000" >
+			<stock id="1" quantity="2"/>
+			</size>
+			<size id="17"  name="28" panel_name="Spodnie 28" code_producer="844802139694"  iaiext:code_external="002518"  code="101738-17"  weight="1000"  iaiext:weight_net="1000" >
+			<stock id="1" quantity="1"/>
+			</size>
+			<size id="70"  name="32" panel_name="32" code_producer="844802139717"  iaiext:code_external="002016"  code="101738-70"  weight="1000"  iaiext:weight_net="1000" >
+			</size>
+			<si
