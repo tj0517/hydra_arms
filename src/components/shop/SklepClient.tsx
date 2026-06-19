@@ -234,8 +234,6 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
               setOnlyInStock(false);
               setPriceMin('');
               setPriceMax('');
-              setAgeFilter('all');
-              setOnlyNoLicense(false);
             }}
             className="font-[var(--font-mono)] text-[9px] text-text-dim/50 hover:text-accent transition-colors tracking-widest"
           >
