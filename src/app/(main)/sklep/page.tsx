@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import SubpageHero from '@/components/SubpageHero';
 import SklepClient from '@/components/shop/SklepClient';
+import ShopLanding from '@/components/shop/ShopLanding';
 import { createPublicClient } from '@/lib/supabase/public';
 import type { ShopProduct, ShopCategory } from '@/lib/supabase/types';
-
-const INVENTORY_ID = 35743;
 
 export const metadata: Metadata = {
   title: 'Sklep',
@@ -24,9 +24,8 @@ async function fetchShopData(): Promise<{ products: ShopProduct[]; categories: S
     sb
       .from('shop_categories')
       .select('*')
-      .eq('inventory_id', INVENTORY_ID)
       .order('name', { ascending: true })
-      .limit(200),
+      .limit(500),
   ]);
 
   return {
@@ -41,7 +40,17 @@ export default async function SklepPage() {
   return (
     <main>
       <SubpageHero subtitle="HYDRA ARMS / Sklep" title="Sklep" video="/video/hero-video.mp4" />
-      <SklepClient products={products} categories={categories} />
+      <ShopLanding products={products} categories={categories} />
+      <div id="catalog" className="max-w-[1400px] mx-auto px-6 md:px-10 scroll-mt-20">
+        <div className="flex items-center gap-4 py-4">
+          <div className="h-px flex-1 bg-white/5" />
+          <span className="font-[var(--font-mono)] text-[9px] text-white/20 tracking-[0.4em]">KATALOG PRODUKTÓW</span>
+          <div className="h-px flex-1 bg-white/5" />
+        </div>
+      </div>
+      <Suspense fallback={null}>
+        <SklepClient products={products} categories={categories} />
+      </Suspense>
     </main>
   );
 }

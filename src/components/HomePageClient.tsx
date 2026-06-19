@@ -124,6 +124,7 @@ export default function HomePageClient({
   const glitchOverlayRef = useRef<HTMLDivElement>(null);
   const overflowVideoInnerRef = useRef<HTMLVideoElement>(null);
   const videoSectionRef = useRef<HTMLDivElement>(null);
+  const soldierVideoRef = useRef<HTMLVideoElement>(null);
   const servicesWrapRef = useRef<HTMLDivElement>(null);
   const serviceRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -138,6 +139,31 @@ export default function HomePageClient({
       if (entry.isIntersecting) { setMapVisible(true); obs.disconnect(); }
     }, { rootMargin: "300px" });
     obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  const [videoSectionLoaded, setVideoSectionLoaded] = useState(false);
+  useEffect(() => {
+    const el = videoSectionRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) { setVideoSectionLoaded(true); obs.disconnect(); }
+    }, { rootMargin: "200px" });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const vid = soldierVideoRef.current;
+    if (!vid) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) vid.play().catch(() => {});
+        else vid.pause();
+      },
+      { threshold: 0 }
+    );
+    obs.observe(vid);
     return () => obs.disconnect();
   }, []);
 
@@ -523,6 +549,7 @@ export default function HomePageClient({
       {/* ─── VIDEO SECTION ─── */}
       <div ref={videoSectionRef} className="h-[280px] sm:h-[380px] md:h-[549px] bg-bg relative overflow-hidden">
         <video
+          ref={soldierVideoRef}
           autoPlay
           muted
           loop
@@ -530,7 +557,7 @@ export default function HomePageClient({
           preload="none"
           className="absolute inset-0 w-full h-full object-cover object-[center_20%] grayscale brightness-[0.5] contrast-[1.15] sepia-[0.15]"
         >
-          <source src="/video/soldiers.mp4" type="video/mp4" />
+          {videoSectionLoaded && <source src="/video/soldiers.mp4" type="video/mp4" />}
         </video>
         {/* Dark green tint */}
         <div className="absolute inset-0 bg-[#0a1a0a]/30 mix-blend-multiply z-[1]" />

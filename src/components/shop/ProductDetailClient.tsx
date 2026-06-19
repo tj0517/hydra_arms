@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import DOMPurify from 'isomorphic-dompurify';
 import type { ShopProduct, ShopCategory } from '@/lib/supabase/types';
@@ -79,15 +80,23 @@ export default function ProductDetailClient({ product, categories, related }: Pr
             {/* Main image */}
             <div className="aspect-square bg-bg-card border border-white/10 relative overflow-hidden group">
               {hasValidImg(activeImg) ? (
-                <img
+                <Image
                   key={activeImg}
                   src={images[activeImg]}
                   alt={product.name}
-                  className="w-full h-full object-contain p-6 transition-opacity duration-200"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="object-contain p-6 transition-opacity duration-200"
                   onError={() => handleImgError(activeImg)}
                 />
               ) : (
-                <img src={`/img/service-0${(product.id % 4) + 1}.jpg`} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                <Image
+                  src={`/img/service-0${(product.id % 4) + 1}.jpg`}
+                  alt=""
+                  fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="object-cover"
+                />
               )}
 
               {/* SKU watermark */}
@@ -224,76 +233,44 @@ export default function ProductDetailClient({ product, categories, related }: Pr
           </div>
         </div>
 
-        {/* Photo showcase */}
-        {images.filter((_, i) => !imgErrors.has(i)).length > 1 && (
-          <div className="mt-16 pt-10 border-t border-white/8">
-            <div className="pb-4 mb-6 border-b border-white/8">
-              <span className="font-[var(--font-mono)] text-[11px] text-text-dim/60 tracking-[0.25em] uppercase">Zdjęcia produktu</span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {images.map((img, i) => {
-                if (imgErrors.has(i)) return null;
-                return (
-                  <button
-                    key={i}
-                    onClick={() => { setActiveImg(i); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                    className={`w-14 h-14 bg-bg-card border overflow-hidden flex-shrink-0 transition-colors ${
-                      i === activeImg ? 'border-accent' : 'border-white/10 hover:border-white/25'
-                    }`}
-                  >
-                    <img
-                      src={img}
-                      alt={`${product.name} — zdjęcie ${i + 1}`}
-                      className="w-full h-full object-contain p-1"
-                      onError={() => handleImgError(i)}
-                    />
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Dane techniczne + Opis — two columns */}
-        {(product.features && Object.keys(product.features).length > 0) || product.description ? (
-          <div className="mt-16 pt-10 border-t border-white/8 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
-
-            {product.description && (
-              <div>
-                <div className="pb-4 mb-6 border-b border-white/8">
-                  <span className="font-[var(--font-mono)] text-xs text-text-dim/60 tracking-[0.25em] uppercase">Opis produktu</span>
+        {/* Opis + Dane techniczne — side by side when both present */}
+        {(() => {
+          const hasDesc = !!product.description;
+          const hasFeat = !!(product.features && Object.keys(product.features).length > 0);
+          if (!hasDesc && !hasFeat) return null;
+          return (
+            <div className={`mt-16 pt-10 border-t border-white/8 grid grid-cols-1 gap-12 ${hasDesc && hasFeat ? 'md:grid-cols-2 md:gap-16' : ''}`}>
+              {hasDesc && (
+                <div>
+                  <div className="pb-4 mb-6 border-b border-white/8">
+                    <span className="font-[var(--font-mono)] text-xs text-text-dim/60 tracking-[0.25em] uppercase">Opis produktu</span>
+                  </div>
+                  <div
+                    className="shop-description text-text-dim text-base leading-relaxed space-y-4"
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(product.description!) }}
+                  />
                 </div>
-                <div
-                  className="shop-description text-text-dim text-base leading-relaxed space-y-4"
-                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(product.description) }}
-                />
-              </div>
-            )}
-
-            {product.features && Object.keys(product.features).length > 0 && (
-              <div>
-                <div className="pb-4 mb-6 border-b border-white/8">
-                  <span className="font-[var(--font-mono)] text-xs text-text-dim/60 tracking-[0.25em] uppercase">Dane techniczne</span>
+              )}
+              {hasFeat && (
+                <div>
+                  <div className="pb-4 mb-6 border-b border-white/8">
+                    <span className="font-[var(--font-mono)] text-xs text-text-dim/60 tracking-[0.25em] uppercase">Dane techniczne</span>
+                  </div>
+                  <table className="w-full">
+                    <tbody>
+                      {Object.entries(product.features!).map(([k, v]) => (
+                        <tr key={k} className="border-b border-white/5 last:border-0">
+                          <td className="py-3 pr-6 font-[var(--font-mono)] text-sm text-text-dim tracking-wider align-top w-2/5">{k}</td>
+                          <td className="py-3 text-sm text-white/80">{v}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-                <table className="w-full">
-                  <tbody>
-                    {Object.entries(product.features).map(([k, v]) => (
-                      <tr key={k} className="border-b border-white/5 last:border-0">
-                        <td className="py-3 pr-6 font-[var(--font-mono)] text-sm text-text-dim tracking-wider align-top w-2/5">
-                          {k}
-                        </td>
-                        <td className="py-3 text-sm text-white/80">
-                          {v}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-          </div>
-        ) : null}
+              )}
+            </div>
+          );
+        })()}
 
         {/* Related products */}
         {related.length > 0 && (

@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import type { ShopProduct, ShopCategory } from '@/lib/supabase/types';
 import { useCart } from './CartProvider';
 
@@ -62,14 +63,22 @@ export default function ProductCard({ product, categories }: ProductCardProps) {
         {/* Image */}
         <div className="relative aspect-[4/3] bg-[#111] overflow-hidden">
           {imageUrl && !imgError ? (
-            <img
+            <Image
               src={imageUrl}
               alt={product.name}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
               onError={() => setImgError(true)}
             />
           ) : (
-            <img src={`/img/service-0${(product.id % 4) + 1}.jpg`} alt="" className="w-full h-full object-cover" />
+            <Image
+              src={`/img/service-0${(product.id % 4) + 1}.jpg`}
+              alt=""
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              className="object-cover"
+            />
           )}
 
           {/* Out of stock overlay */}

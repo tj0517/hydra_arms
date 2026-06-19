@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 
 type CookiePrefs = {
@@ -12,28 +12,20 @@ type CookiePrefs = {
 const STORAGE_KEY = "hydra_cookie_consent";
 
 export default function CookiesBanner() {
-  const [visible, setVisible] = useState(false);
   const [prefs, setPrefs] = useState<CookiePrefs>({
     necessary: true,
     analytics: false,
     marketing: false,
   });
 
-  useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) setVisible(true);
-  }, []);
-
   const save = (p: CookiePrefs) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(p));
-    setVisible(false);
+    document.documentElement.setAttribute("data-cookies-ok", "1");
   };
 
   const acceptAll = () => save({ necessary: true, analytics: true, marketing: true });
   const saveSelected = () => save(prefs);
   const rejectAll = () => save({ necessary: true, analytics: false, marketing: false });
-
-  if (!visible) return null;
 
   const toggleRow = (key: keyof CookiePrefs) => {
     if (key === "necessary") return;
@@ -61,7 +53,7 @@ export default function CookiesBanner() {
 
   return (
     /* Backdrop */
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4">
+    <div className="cookies-banner fixed inset-0 z-[9999] flex items-center justify-center px-4">
       {/* dim overlay — max ~15% opacity */}
       <div className="absolute inset-0 bg-black/[0.55]" />
 

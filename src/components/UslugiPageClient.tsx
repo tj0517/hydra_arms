@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useEffect, useState } from "react";
 import SubpageHero from "@/components/SubpageHero";
 import CornerCTA from "@/components/ui/CornerCTA";
 import IntroBlock from "@/components/sections/IntroBlock";
@@ -72,6 +73,34 @@ export default function UslugiPageClient({
   introText = DEFAULT_INTRO_TEXT,
   competencies = DEFAULT_COMPETENCIES,
 }: UslugiPageClientProps = {}) {
+  const aerialRef = useRef<HTMLDivElement>(null);
+  const aerialVideoRef = useRef<HTMLVideoElement>(null);
+  const [aerialLoaded, setAerialLoaded] = useState(false);
+
+  useEffect(() => {
+    const el = aerialRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setAerialLoaded(true); obs.disconnect(); } },
+      { rootMargin: "200px" }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const vid = aerialVideoRef.current;
+    if (!vid) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) vid.play().catch(() => {});
+        else vid.pause();
+      },
+      { threshold: 0 }
+    );
+    obs.observe(vid);
+    return () => obs.disconnect();
+  }, []);
 
   return (
     <main>
@@ -122,15 +151,16 @@ export default function UslugiPageClient({
         </TabPanel>
 
         {/* Full-width video */}
-        <div className="relative h-[300px] sm:h-[460px] md:h-[680px] overflow-hidden -mt-16">
+        <div ref={aerialRef} className="relative h-[300px] sm:h-[460px] md:h-[680px] overflow-hidden -mt-16">
           <video
+            ref={aerialVideoRef}
             autoPlay
             muted
             loop
             playsInline
             className="absolute inset-0 w-full h-full object-cover grayscale brightness-[0.35] contrast-[1.1] sepia-[0.15]"
           >
-            <source src="/video/aerial-view.mp4" type="video/mp4" />
+            {aerialLoaded && <source src="/video/aerial-view.mp4" type="video/mp4" />}
           </video>
           <div className="absolute inset-0 bg-[#0a1a0a]/40 mix-blend-multiply z-[1]" />
           <div className="moving-grain !opacity-[0.08] z-[1]" />

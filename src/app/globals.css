@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Cookie banner: hidden for returning visitors via inline-script attribute set before paint */
+html[data-cookies-ok] .cookies-banner {
+  display: none;
+}
+
 @keyframes heroOverlayFade {
   from { opacity: 1; }
   to   { opacity: 0; pointer-events: none; }

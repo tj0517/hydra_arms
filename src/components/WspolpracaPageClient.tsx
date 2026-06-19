@@ -67,6 +67,9 @@ export default function WspolpracaPageClient({
 
   const fundRef = useRef<HTMLDivElement>(null);
   const autoPlayRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const aerialRef = useRef<HTMLDivElement>(null);
+  const aerialVideoRef = useRef<HTMLVideoElement>(null);
+  const [aerialLoaded, setAerialLoaded] = useState(false);
 
   const resetAutoPlay = () => {
     if (autoPlayRef.current) clearInterval(autoPlayRef.current);
@@ -81,6 +84,31 @@ export default function WspolpracaPageClient({
     return () => { if (autoPlayRef.current) clearInterval(autoPlayRef.current); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isHovered, fundMaxPage]);
+
+  useEffect(() => {
+    const el = aerialRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setAerialLoaded(true); obs.disconnect(); } },
+      { rootMargin: "200px" }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const vid = aerialVideoRef.current;
+    if (!vid) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) vid.play().catch(() => {});
+        else vid.pause();
+      },
+      { threshold: 0 }
+    );
+    obs.observe(vid);
+    return () => obs.disconnect();
+  }, []);
 
   useEffect(() => {
     if (!fundRef.current) return;
@@ -171,16 +199,17 @@ export default function WspolpracaPageClient({
       </section>
 
       {/* ─── TACTICAL GRID BREAK ─── */}
-      <div className="h-[280px] sm:h-[380px] md:h-[549px] bg-[#060806] relative overflow-hidden">
+      <div ref={aerialRef} className="h-[280px] sm:h-[380px] md:h-[549px] bg-[#060806] relative overflow-hidden">
         {/* Background video */}
         <video
+          ref={aerialVideoRef}
           autoPlay
           muted
           loop
           playsInline
           className="absolute inset-0 w-full h-full object-cover opacity-30 grayscale brightness-[0.6] z-0"
         >
-          <source src="/video/aerial-view.mp4" type="video/mp4" />
+          {aerialLoaded && <source src="/video/aerial-view.mp4" type="video/mp4" />}
         </video>
         <div className="absolute inset-0 z-[1]">
           <TacticalGrid />

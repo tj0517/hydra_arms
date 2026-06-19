@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Outfit, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import CookiesBanner from "@/components/CookiesBannerLazy";
+import CookiesBanner from "@/components/CookiesBanner";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -68,10 +68,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pl">
+    <html lang="pl" suppressHydrationWarning>
       <head>
         {/* Preload hero poster so it paints before the loading screen finishes — drives LCP */}
         <link rel="preload" as="image" href="/video/hero-poster.jpg" fetchPriority="high" />
+        {/* Synchronously hide cookie banner for returning visitors before first paint */}
+        <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem('hydra_cookie_consent'))document.documentElement.setAttribute('data-cookies-ok','1')}catch(e){}` }} />
       </head>
       <body
         className={`${outfit.variable} ${jetbrainsMono.variable} antialiased`}

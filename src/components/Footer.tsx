@@ -82,9 +82,10 @@ export default function Footer({
         muted
         loop
         playsInline
+        preload="none"
         className="absolute inset-0 w-full h-full object-cover grayscale brightness-[0.55] contrast-[1.3]"
       >
-        <source src="/video/rain.mp4" type="video/mp4" />
+        {visible && <source src="/video/rain.mp4" type="video/mp4" />}
       </video>
 
       {/* Overlays */}

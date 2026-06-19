@@ -26,6 +26,7 @@ export default function SubpageHero({ subtitle, title, titleClass, video }: Subp
   useEffect(() => {
     const vid = videoRef.current;
     const canvas = pixCanvasRef.current;
+    const hero = heroRef.current;
     if (!vid) return;
     vid.pause();
 
@@ -39,6 +40,16 @@ export default function SubpageHero({ subtitle, title, titleClass, video }: Subp
     };
     waitForLoad();
 
+    // Pause video when hero scrolls fully out of view, resume when back
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) vid.play().catch(() => {});
+        else vid.pause();
+      },
+      { threshold: 0 }
+    );
+    if (hero) obs.observe(hero);
+
     const onSeeked = () => {
       if (!canvas || vid.currentTime > 0.5) return;
       canvas.classList.remove("glitch-once");
@@ -47,7 +58,10 @@ export default function SubpageHero({ subtitle, title, titleClass, video }: Subp
     };
 
     vid.addEventListener("seeked", onSeeked);
-    return () => vid.removeEventListener("seeked", onSeeked);
+    return () => {
+      vid.removeEventListener("seeked", onSeeked);
+      obs.disconnect();
+    };
   }, []);
 
   /* ── Grain canvas — video + heavy animated noise ── */
@@ -57,16 +71,17 @@ export default function SubpageHero({ subtitle, title, titleClass, video }: Subp
     if (!vid || !canvas) return;
 
     const ctx = canvas.getContext("2d")!;
-    const W = window.innerWidth > 768 ? 1920 : 960;
-    const H = window.innerWidth > 768 ? 1080 : 540;
+    // Half-res: CSS stretches to fill, grain is imperceptible at lower res
+    const W = window.innerWidth > 768 ? 960 : 480;
+    const H = window.innerWidth > 768 ? 540 : 270;
     canvas.width = W;
     canvas.height = H;
 
     const noiseCvs = document.createElement("canvas");
-    noiseCvs.width = 512;
-    noiseCvs.height = 512;
+    noiseCvs.width = 256;
+    noiseCvs.height = 256;
     const nCtx = noiseCvs.getContext("2d")!;
-    const noiseImg = nCtx.createImageData(512, 512);
+    const noiseImg = nCtx.createImageData(256, 256);
     const nd = noiseImg.data;
     for (let i = 0; i < nd.length; i += 4) {
       const v = Math.random() * 255;
@@ -78,16 +93,20 @@ export default function SubpageHero({ subtitle, title, titleClass, video }: Subp
     nCtx.putImageData(noiseImg, 0, 0);
 
     let raf = 0;
-    const draw = () => {
-      if (!vid.paused && !vid.ended) {
+    let lastDraw = 0;
+    const FRAME_MS = 1000 / 30; // cap at 30fps
+
+    const draw = (now: number) => {
+      if (!document.hidden && now - lastDraw >= FRAME_MS && !vid.paused && !vid.ended) {
+        lastDraw = now;
         ctx.globalCompositeOperation = "source-over";
         ctx.drawImage(vid, 0, 0, W, H);
         ctx.fillStyle = "rgba(10,10,11,0.65)";
         ctx.fillRect(0, 0, W, H);
         ctx.globalCompositeOperation = "overlay";
         ctx.globalAlpha = 0.15;
-        const ox = Math.floor(Math.random() * 256);
-        const oy = Math.floor(Math.random() * 256);
+        const ox = Math.floor(Math.random() * 128);
+        const oy = Math.floor(Math.random() * 128);
         ctx.drawImage(noiseCvs, -ox, -oy);
         ctx.globalAlpha = 1;
         ctx.globalCompositeOperation = "source-over";
@@ -95,9 +114,9 @@ export default function SubpageHero({ subtitle, title, titleClass, video }: Subp
       raf = requestAnimationFrame(draw);
     };
 
-    const start = () => draw();
+    const start = () => draw(performance.now());
     vid.addEventListener("play", start);
-    if (!vid.paused) draw();
+    if (!vid.paused) draw(performance.now());
     return () => {
       cancelAnimationFrame(raf);
       vid.removeEventListener("play", start);
@@ -177,6 +196,7 @@ export default function SubpageHero({ subtitle, title, titleClass, video }: Subp
         loop
         playsInline
         preload="none"
+        poster="/video/hero-poster.jpg"
         className="absolute inset-0 w-full h-full object-cover z-0"
       >
         <source src={video} type="video/mp4" />

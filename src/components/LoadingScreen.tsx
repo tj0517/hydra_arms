@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const ACCENT = "var(--color-accent)";
 
@@ -17,15 +17,27 @@ export default function LoadingScreen() {
   const [progress, setProgress] = useState(0);
   const [phase, setPhase] = useState<"loading" | "glitching" | "done">("loading");
   const [removed, setRemoved] = useState(false);
+  const skip = useRef(false);
 
   useEffect(() => {
+    // Skip on mobile or slow connections — immediately hand off to page
+    const isMobile = window.innerWidth < 768;
+    const conn = (navigator as { connection?: { effectiveType?: string } }).connection;
+    const isSlow = conn && ["slow-2g", "2g", "3g"].includes(conn.effectiveType ?? "");
+    if (isMobile || isSlow) {
+      skip.current = true;
+      setRemoved(true);
+      window.dispatchEvent(new Event("loadingDone"));
+      return;
+    }
     document.documentElement.classList.add("loading-active");
     return () => document.documentElement.classList.remove("loading-active");
   }, []);
 
   useEffect(() => {
+    if (skip.current) return;
     const timeouts: ReturnType<typeof setTimeout>[] = [];
-    let t = 200;
+    let t = 100;
 
     // Show lines one by one
     BOOT_LINES.forEach((_, i) => {
@@ -35,11 +47,11 @@ export default function LoadingScreen() {
           setProgress(Math.round(((i + 1) / BOOT_LINES.length) * 100));
         }, t)
       );
-      t += 250;
+      t += 130;
     });
 
     // Glitch out
-    timeouts.push(setTimeout(() => setPhase("glitching"), t + 100));
+    timeouts.push(setTimeout(() => setPhase("glitching"), t + 80));
 
     // Remove
     timeouts.push(
@@ -48,7 +60,7 @@ export default function LoadingScreen() {
         setRemoved(true);
         document.documentElement.classList.remove("loading-active");
         window.dispatchEvent(new Event("loadingDone"));
-      }, t + 600)
+      }, t + 280)
     );
 
     return () => timeouts.forEach(clearTimeout);
@@ -56,11 +68,12 @@ export default function LoadingScreen() {
 
   // Safety
   useEffect(() => {
+    if (skip.current) return;
     const t = setTimeout(() => {
       setRemoved(true);
       document.documentElement.classList.remove("loading-active");
       window.dispatchEvent(new Event("loadingDone"));
-    }, 3000);
+    }, 1500);
     return () => clearTimeout(t);
   }, []);
 
