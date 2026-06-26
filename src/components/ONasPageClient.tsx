@@ -108,7 +108,7 @@ export default function ONasPageClient({
 
       {/* ─── MISSION SECTION ─── */}
       <TwoColSection
-        leftClassName="px-[clamp(32px,5vw,64px)] pt-12 md:pt-20 pb-4 flex flex-col h-full border-b md:border-b-0"
+        leftClassName="px-[clamp(32px,5vw,64px)] pt-12 md:pt-20 pb-12 md:pb-4 flex flex-col h-full border-b border-white/[0.08] md:border-b-0"
         rightClassName="md:border-l border-white/[0.08] flex flex-col h-full"
         left={<>
           <TypewriterTitle
@@ -118,7 +118,7 @@ export default function ONasPageClient({
           >
             {missionTitle}
           </TypewriterTitle>
-          <div className="mt-6 md:mt-auto flex-1 flex items-end">
+          <div className="hidden md:flex mt-auto flex-1 items-end">
             <TacticalReadout />
           </div>
         </>}
@@ -126,7 +126,7 @@ export default function ONasPageClient({
           {missionItems.map((item, i) => (
             <div key={i} className="flex-1 relative">
               {i < missionItems.length - 1 && (
-                <div className="absolute bottom-0 left-0 right-4 md:right-8 h-px bg-white/[0.08]" />
+                <div className="absolute bottom-0 left-0 right-0 h-px bg-white/[0.08]" />
               )}
               <AnimateIn delay={i * 0.15} y={10} className="h-full flex flex-col justify-center px-[clamp(32px,5vw,64px)] py-10 md:py-12">
                 <h3 className="text-white text-[19px] md:text-[24px] font-medium leading-[1.25] md:leading-[30px] mb-3">
@@ -152,12 +152,12 @@ export default function ONasPageClient({
 
       {/* ─── CERTIFICATION CARDS ─── */}
       <section>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 border-t border-white/5 px-[clamp(32px,5vw,64px)]">
+        <div className="grid grid-cols-1 lg:grid-cols-3 border-t border-white/5">
           {certCards.map((card, i) => (
             <AnimateIn key={i} delay={i * 0.25} y={20}>
               <div
-                className={`py-7 px-4 md:px-9 flex flex-col gap-4 h-full ${
-                  i < certCards.length - 1 ? "md:border-r md:border-white/5 border-b border-white/5 md:border-b-0" : ""
+                className={`py-7 px-[clamp(32px,5vw,64px)] flex flex-col gap-4 h-full ${
+                  i < certCards.length - 1 ? "border-b border-white/5 lg:border-r lg:border-white/5 lg:border-b-0" : ""
                 }`}
               >
                 <div className="flex flex-col gap-2.5">

@@ -1,0 +1,247 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e3]:
+      - link "HYDRA.ARMS" [ref=e4]:
+        - /url: /
+      - list [ref=e5]:
+        - listitem [ref=e6]:
+          - link "Usługi" [ref=e7]:
+            - /url: /uslugi
+        - listitem [ref=e8]:
+          - link "O nas" [ref=e9]:
+            - /url: /o-nas
+        - listitem [ref=e10]:
+          - link "Współpraca" [ref=e11]:
+            - /url: /wspolpraca
+        - listitem [ref=e12]:
+          - link "Blog" [ref=e13]:
+            - /url: /blog
+        - listitem [ref=e14]:
+          - link "Kontakt" [ref=e15]:
+            - /url: /kontakt
+        - listitem [ref=e16]:
+          - link "[ Sklep ]" [ref=e17]:
+            - /url: /sklep
+  - main [ref=e18]:
+    - generic [ref=e19]:
+      - generic:
+        - img
+        - generic: X:0000 Y:0000
+      - heading [level=1] [ref=e22]
+    - generic [ref=e25]:
+      - generic [ref=e31]: hydra-arms@terminal:~/kontakt — BEZPIECZNY KANAŁ ŁĄCZNOŚCI v2.4.1
+      - generic [ref=e32]:
+        - generic [ref=e33]:
+          - generic [ref=e34]: HYDRA ARMS — BEZPIECZNY KANAŁ ŁĄCZNOŚCI v2.4.1
+          - generic [ref=e35]: Inicjalizacja szyfrowanego kanału... OK
+          - generic [ref=e36]: Połączenie nawiązane. Oczekiwanie na dane wejściowe.
+          - generic [ref=e37]: Protokół weryfikacji tożsamości aktywny. RODO-COMPLIANT
+        - generic [ref=e39]:
+          - generic [ref=e40]:
+            - generic [ref=e41]:
+              - generic [ref=e42]: $ cat /etc/hydra/company.conf
+              - generic [ref=e43]:
+                - paragraph [ref=e44]: HYDRA ARMS SP. Z O.O.
+                - paragraph [ref=e45]: ul. Cechowa 44B 30-614 Kraków
+                - paragraph [ref=e46]: "Sklep: ul. Gdańska 22, 31-411 Kraków"
+                - paragraph [ref=e48]:
+                  - generic [ref=e49]: NIP
+                  - text: "6793302181"
+                - paragraph [ref=e50]:
+                  - generic [ref=e51]: REGON
+                  - text: "528976880"
+                - paragraph [ref=e52]:
+                  - generic [ref=e53]: KRS
+                  - text: "0001111593"
+                - paragraph [ref=e54]:
+                  - generic [ref=e55]: KONCESJA
+                  - text: MSWiA B-117/2025
+                - paragraph [ref=e56]:
+                  - generic [ref=e57]: NCAGE
+                  - text: 9CJ3H
+                - paragraph [ref=e58]:
+                  - generic [ref=e59]: D-U-N-S®
+                  - text: "665007622"
+                - paragraph [ref=e60]:
+                  - generic [ref=e61]: BDO
+                  - text: "000654184"
+                - paragraph [ref=e62]:
+                  - generic [ref=e63]: UEI
+                  - text: YUXMMDP8MNP4
+            - generic [ref=e64]:
+              - generic [ref=e65]: $ cat /etc/hydra/certifications.conf
+              - generic [ref=e66]:
+                - paragraph [ref=e67]:
+                  - text: PN-EN ISO 9001:2015-10
+                  - generic [ref=e68]: — System Zarządzania Jakością
+                - paragraph [ref=e69]:
+                  - text: AQAP 2110:2016
+                  - generic [ref=e70]: — Wymagania NATO dotyczące zapewnienia jakości przy projektowaniu, wytwarzaniu i przeprowadzaniu prób
+                - paragraph [ref=e71]: Wewnętrzny System Kontroli
+            - generic [ref=e72]:
+              - generic [ref=e73]: $ cat /etc/hydra/contact.conf
+              - generic [ref=e74]:
+                - paragraph [ref=e75]:
+                  - generic [ref=e76]: R&D
+                  - link "rd@hydraarms.com" [ref=e77]:
+                    - /url: mailto:rd@hydraarms.com
+                - paragraph [ref=e78]:
+                  - generic [ref=e79]: B2G
+                  - link "b2g@hydraarms.com" [ref=e80]:
+                    - /url: mailto:b2g@hydraarms.com
+                - paragraph [ref=e81]:
+                  - generic [ref=e82]: HANDEL
+                  - link "handel@hydraarms.com" [ref=e83]:
+                    - /url: mailto:handel@hydraarms.com
+                - paragraph [ref=e84]:
+                  - generic [ref=e85]: BIURO
+                  - link "biuro@hydraarms.com" [ref=e86]:
+                    - /url: mailto:biuro@hydraarms.com
+            - generic [ref=e87]:
+              - generic [ref=e88]: $ hydra --social-links
+              - generic [ref=e89]:
+                - generic "Facebook" [ref=e90]:
+                  - img [ref=e91]
+                - generic "Instagram" [ref=e93]:
+                  - img [ref=e94]
+                - link "LinkedIn" [ref=e96]:
+                  - /url: "#!"
+                  - img [ref=e97]
+                - link "Email" [ref=e99]:
+                  - /url: mailto:biuro@hydraarms.com
+                  - img [ref=e100]
+          - generic [ref=e103]:
+            - generic [ref=e104]: $ hydra --wyslij-wiadomosc --allow-attachments
+            - generic [ref=e105]:
+              - generic [ref=e106]:
+                - generic [ref=e107]: ">"
+                - textbox "IMIĘ I NAZWISKO" [ref=e108]
+              - generic [ref=e110]:
+                - generic [ref=e111]: ">"
+                - textbox "ADRES EMAIL" [ref=e112]
+              - generic [ref=e114]:
+                - generic [ref=e115]: ">"
+                - textbox "TELEFON (OPCJONALNIE)" [ref=e116]
+              - generic [ref=e118]:
+                - generic [ref=e119]: ">"
+                - combobox [ref=e120] [cursor=pointer]:
+                  - option "DZIAŁ / DEPARTAMENT" [disabled] [selected]
+                  - option "R&D — Badania i Rozwój"
+                  - option "B2G — Sektor rządowy"
+                  - option "HANDEL — Sprzedaż"
+                  - option "BIURO — Informacje ogólne"
+              - generic [ref=e122]:
+                - generic [ref=e123]: ">"
+                - textbox "TYTUŁ / TEMAT" [ref=e124]
+              - generic [ref=e126]:
+                - generic [ref=e127]: ">"
+                - textbox "TREŚĆ WIADOMOŚCI" [ref=e128]
+              - generic [ref=e130]:
+                - generic [ref=e131]:
+                  - generic [ref=e132]: ">"
+                  - button "ZAŁĄCZ PLIKI" [ref=e133]:
+                    - img [ref=e134]
+                    - text: ZAŁĄCZ PLIKI
+                - generic [ref=e136]: PDF, DOC, JPG, PNG, ZIP — maks. 10 MB łącznie
+              - generic [ref=e138]:
+                - generic [ref=e139]: // SUBSKRYBUJ — KANAŁ INFORMACYJNY
+                - generic [ref=e140]:
+                  - generic [ref=e141] [cursor=pointer]:
+                    - checkbox "AKTUALNOŚCI" [checked] [ref=e143]
+                    - generic [ref=e146]: AKTUALNOŚCI
+                  - generic [ref=e147] [cursor=pointer]:
+                    - checkbox "BLOG" [ref=e149]
+                    - generic [ref=e151]: BLOG
+                  - generic [ref=e152] [cursor=pointer]:
+                    - checkbox "B2G" [ref=e154]
+                    - generic [ref=e156]: B2G
+                  - generic [ref=e157] [cursor=pointer]:
+                    - checkbox "B2B" [ref=e159]
+                    - generic [ref=e161]: B2B
+                  - generic [ref=e162] [cursor=pointer]:
+                    - checkbox "SKLEP" [ref=e164]
+                    - generic [ref=e166]: SKLEP
+                - generic [ref=e167]:
+                  - generic [ref=e168]:
+                    - generic [ref=e169]: ">"
+                    - textbox "EMAIL@DOMENA.PL" [ref=e170]
+                  - button "ZAPISZ" [ref=e171]
+              - generic [ref=e172]:
+                - checkbox [ref=e174]
+                - generic [ref=e176]:
+                  - text: Wyrażam zgodę na przetwarzanie danych osobowych przez HYDRA ARMS SP. Z O.O. w celu obsługi zgłoszenia kontaktowego, zgodnie z
+                  - link "Polityką Prywatności" [ref=e177]:
+                    - /url: /polityka-prywatnosci
+                  - text: .
+              - button "WYŚLIJ ZGŁOSZENIE" [disabled] [ref=e184]
+  - contentinfo [ref=e185]:
+    - generic [ref=e188]:
+      - generic [ref=e189]:
+        - generic [ref=e190]: HYDRA.ARMS
+        - generic [ref=e191]:
+          - paragraph [ref=e192]: HYDRA ARMS SP. Z O.O.
+          - paragraph [ref=e193]: ul. Cechowa 44B 30-614 Kraków
+          - paragraph [ref=e194]: "Sklep: ul. Gdańska 22, 31-411 Kraków"
+          - paragraph [ref=e196]: "NIP: [ 6793302181 ]"
+          - paragraph [ref=e197]: "REGON: [ 528976880 ]"
+          - paragraph [ref=e198]: "KRS: [ 0001111593 ]"
+          - paragraph [ref=e199]: "BDO: [ 000654184 ]"
+      - generic [ref=e200]:
+        - generic [ref=e201]:
+          - heading "Certyfikaty" [level=4] [ref=e202]
+          - list [ref=e203]:
+            - listitem [ref=e204]:
+              - generic [ref=e205]: ISO
+              - generic [ref=e206]: ISO 9001:2015
+            - listitem [ref=e207]:
+              - generic [ref=e208]: AQAP
+              - generic [ref=e209]: AQAP 2110:2016
+            - listitem [ref=e210]:
+              - generic [ref=e211]: WSK
+              - generic [ref=e212]: Wewnętrzny System Kontroli
+        - generic [ref=e213]:
+          - heading "Nawigacja" [level=4] [ref=e214]
+          - list [ref=e215]:
+            - listitem [ref=e216]:
+              - link "Usługi" [ref=e217]:
+                - /url: /uslugi
+            - listitem [ref=e218]:
+              - link "O nas" [ref=e219]:
+                - /url: /o-nas
+            - listitem [ref=e220]:
+              - link "Współpraca" [ref=e221]:
+                - /url: /wspolpraca
+            - listitem [ref=e222]:
+              - link "Aktualności" [ref=e223]:
+                - /url: /aktualnosci
+            - listitem [ref=e224]:
+              - link "Blog" [ref=e225]:
+                - /url: /blog
+            - listitem [ref=e226]:
+              - link "Kontakt" [ref=e227]:
+                - /url: /kontakt
+            - listitem [ref=e228]:
+              - link "Sklep" [ref=e229]:
+                - /url: /sklep
+        - generic [ref=e231]:
+          - link "Facebook" [ref=e232]:
+            - /url: "#!"
+            - img [ref=e233]
+          - link "Instagram" [ref=e235]:
+            - /url: "#!"
+            - img [ref=e236]
+          - link "LinkedIn" [ref=e238]:
+            - /url: "#!"
+            - img [ref=e239]
+          - link "Email" [ref=e241]:
+            - /url: mailto:biuro@hydraarms.com
+            - img [ref=e242]
+    - generic [ref=e246]:
+      - link "[ Polityka prywatności ]" [ref=e247]:
+        - /url: /polityka-prywatnosci
+      - link "[ Regulamin ]" [ref=e248]:
+        - /url: /regulamin
+      - generic [ref=e249]: "[ REALIZACJA ... ]"
+  - button "Open Next.js Dev Tools" [ref=e255] [cursor=pointer]:
+    - img [ref=e256]
+  - alert [ref=e259]

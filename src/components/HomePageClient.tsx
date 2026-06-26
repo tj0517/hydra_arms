@@ -175,15 +175,8 @@ export default function HomePageClient({
     { id: "sklep",       label: "SKLEP"        },
   ];
   const [nlSelected, setNlSelected] = useState<Set<string>>(new Set(["aktualnosci"]));
-  const [nlEmail, setNlEmail]       = useState("");
-  const [nlStatus, setNlStatus]     = useState<"idle" | "ok">("idle");
   const toggleNl = (id: string) =>
     setNlSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
-  const handleNlSubmit = () => {
-    if (!nlEmail || nlSelected.size === 0) return;
-    setNlStatus("ok");
-    setNlEmail("");
-  };
 
   /* ── Glitch on video loop — triggers before loop to hide the cut ── */
   useEffect(() => {
@@ -448,12 +441,12 @@ export default function HomePageClient({
             <div
               key={service.id}
               ref={(el) => { serviceRefs.current[i] = el; }}
-              className="sticky top-0 min-h-screen border-t border-white/5"
+              className={`sticky top-0 border-t border-white/5 ${i === services.length - 1 ? 'md:min-h-screen' : 'min-h-screen'}`}
               style={{ zIndex: i + 1 }}
             >
-              <div className="grid grid-cols-1 md:grid-cols-[0.75fr_1fr] min-h-screen bg-bg">
+              <div className={`grid grid-cols-1 md:grid-cols-[0.75fr_1fr] bg-bg items-start content-start md:items-stretch md:content-normal ${i === services.length - 1 ? 'md:min-h-screen' : 'min-h-screen'}`}>
                 {/* Left — image with military overlay */}
-                <div className="relative min-h-[300px] md:min-h-0 md:h-screen overflow-hidden">
+                <div className="relative h-[240px] md:h-screen overflow-hidden">
                   <Image
                     src={service.img}
                     alt={service.title}
@@ -474,9 +467,9 @@ export default function HomePageClient({
                 </div>
 
                 {/* Right — content */}
-                <div className="md:border-l border-text-dim/25 px-8 md:px-10 flex flex-col justify-center py-10 md:py-0">
+                <div className="md:border-l border-text-dim/25 px-8 md:px-10 flex flex-col justify-start md:justify-center pt-4 pb-6 md:py-0">
                   <div className="max-w-[600px]">
-                    <div className="flex items-center justify-between mb-6 md:mb-10">
+                    <div className="flex items-center justify-between mb-3 md:mb-10">
                       <span className="text-[14px] md:text-[18px] font-medium text-text-dim">
                         {service.label}
                       </span>
@@ -492,15 +485,15 @@ export default function HomePageClient({
                       </div>
                     </div>
 
-                    <h2 className="text-[clamp(1.5rem,4vw,48px)] font-normal text-white leading-[1.15] md:leading-[53px] tracking-[-0.48px] mb-6 md:mb-9">
+                    <h2 className="text-[clamp(1.5rem,4vw,48px)] font-normal text-white leading-[1.15] md:leading-[53px] tracking-[-0.48px] mb-3 md:mb-9">
                       {service.title}
                     </h2>
-                    <p className="text-[15px] md:text-[18px] font-light text-text-dim leading-[1.7] md:leading-[28px] mb-6 md:mb-8 text-justify">
+                    <p className="text-[15px] md:text-[18px] font-light text-text-dim leading-[1.7] md:leading-[28px] mb-3 md:mb-8 text-justify">
                       {service.desc}
                     </p>
 
                     {/* Tags */}
-                    <TagBullets tags={service.tags} className="mb-8" />
+                    <TagBullets tags={service.tags} className="mb-4 md:mb-8" />
 
                     <CornerCTA href="/uslugi" label="Szczegóły →" />
                   </div>
@@ -531,16 +524,21 @@ export default function HomePageClient({
         <section className="border-t border-white/[0.08]">
           <SectionLabel label="//03 AKTUALNOŚCI" />
           <div className="px-[clamp(32px,5vw,64px)] pt-12 md:pt-16 pb-14 md:pb-20">
-            <div className="flex items-end justify-between mb-8 md:mb-12">
-              <h2 className="text-[clamp(1.4rem,3.5vw,52px)] font-normal text-white leading-[1.1] tracking-[-0.5px]">
+            <div className="flex items-end justify-between mb-12 md:mb-12">
+              <h2 className="text-[clamp(1.75rem,3.5vw,52px)] font-normal text-white leading-[1.1] tracking-[-0.5px]">
                 Aktualności
               </h2>
-              <CornerCTA href="/aktualnosci" label="Wszystkie aktualności →" />
+              <div className="hidden sm:block">
+                <CornerCTA href="/aktualnosci" label="Wszystkie aktualności" />
+              </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {recentNews.map((post) => (
                 <PostCard key={post._id} post={post} />
               ))}
+            </div>
+            <div className="mt-6 sm:hidden">
+              <CornerCTA href="/aktualnosci" label="Wszystkie aktualności" />
             </div>
           </div>
         </section>
@@ -675,16 +673,21 @@ export default function HomePageClient({
         <section className="border-t border-white/[0.08]">
           <SectionLabel label="//06 BLOG" />
           <div className="px-[clamp(32px,5vw,64px)] pt-12 md:pt-16 pb-14 md:pb-20">
-            <div className="flex items-end justify-between mb-8 md:mb-12">
-              <h2 className="text-[clamp(1.4rem,3.5vw,52px)] font-normal text-white leading-[1.1] tracking-[-0.5px]">
+            <div className="flex items-end justify-between mb-12 md:mb-12">
+              <h2 className="text-[clamp(1.75rem,3.5vw,52px)] font-normal text-white leading-[1.1] tracking-[-0.5px]">
                 Blog
               </h2>
-              <CornerCTA href="/blog" label="Wszystkie wpisy →" />
+              <div className="hidden sm:block">
+                <CornerCTA href="/blog" label="Wszystkie wpisy" />
+              </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {recentBlog.map((post) => (
                 <PostCard key={post._id} post={post} />
               ))}
+            </div>
+            <div className="mt-6 sm:hidden">
+              <CornerCTA href="/blog" label="Wszystkie wpisy" />
             </div>
           </div>
         </section>
@@ -776,7 +779,7 @@ export default function HomePageClient({
                     $ hydra --wyslij-wiadomosc
                   </div>
                   <form className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="flex items-center gap-2">
                         <span className="font-[var(--font-mono)] text-[13px] text-accent/50 shrink-0">&gt;</span>
                         <input
@@ -853,34 +856,9 @@ export default function HomePageClient({
                           );
                         })}
                       </div>
-                      {nlStatus === "ok" ? (
-                        <p className="font-[var(--font-mono)] text-[11px] text-accent tracking-[0.12em] uppercase">
-                          <span className="terminal-blink">█</span>{" "}ZAPISANO — POTWIERDZENIE ZOSTANIE WYSŁANE
-                        </p>
-                      ) : (
-                        <div className="flex items-stretch">
-                          <div className="flex items-center gap-2 flex-1 border border-white/10 hover:border-accent/30 focus-within:border-accent/50 transition-colors duration-200 px-3 py-2">
-                            <span className="font-[var(--font-mono)] text-[12px] text-accent/40 shrink-0 leading-none">&gt;</span>
-                            <input
-                              type="email"
-                              value={nlEmail}
-                              onChange={(e) => setNlEmail(e.target.value)}
-                              placeholder="EMAIL@DOMENA.PL"
-                              className="w-full bg-transparent font-[var(--font-mono)] text-[12px] text-accent tracking-[0.05em] focus:outline-none placeholder:text-accent/20 caret-accent"
-                            />
-                          </div>
-                          <button
-                            type="button"
-                            onClick={handleNlSubmit}
-                            className="font-[var(--font-mono)] text-[11px] tracking-[0.18em] uppercase text-bg bg-accent hover:bg-accent/80 transition-colors duration-200 px-5 whitespace-nowrap"
-                          >
-                            ZAPISZ
-                          </button>
-                        </div>
-                      )}
                     </div>
-                    <div className="flex items-start gap-2 mt-2">
-                      <label className="mt-0.5 shrink-0 w-3.5 h-3.5 relative cursor-pointer block" aria-label="Zgoda na przetwarzanie danych osobowych">
+                    <div className="flex items-start gap-4 mt-2">
+                      <label className="mt-0.5 shrink-0 w-5 h-5 relative cursor-pointer block p-2 -m-2" aria-label="Zgoda na przetwarzanie danych osobowych">
                         <input type="checkbox" className="sr-only peer" />
                         <span className="absolute inset-0 border border-accent/50 peer-checked:border-accent transition-colors duration-150" />
                         <span className="absolute inset-[3px] bg-accent scale-0 peer-checked:scale-100 transition-transform duration-150" />

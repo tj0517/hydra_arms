@@ -275,7 +275,7 @@ export default function WspolpracaPageClient({
 
       {/* ─── ETHICS SECTION ─── */}
       <TwoColSection
-        leftClassName="px-[clamp(32px,5vw,64px)] pt-10 md:pt-16 flex flex-col h-full border-b md:border-b-0"
+        leftClassName="px-[clamp(32px,5vw,64px)] pt-10 md:pt-16 pb-10 md:pb-0 flex flex-col h-full border-b border-white/[0.08] md:border-b-0"
         rightClassName="md:border-l border-white/[0.08] flex flex-col h-full min-w-0 overflow-hidden"
         left={<>
           <TypewriterTitle
@@ -285,7 +285,7 @@ export default function WspolpracaPageClient({
           >
             Kodeks etyki w partnerstwie strategicznym
           </TypewriterTitle>
-          <div className="mt-6 md:mt-auto">
+          <div className="hidden md:block mt-6 md:mt-auto">
             <MissionBriefing />
           </div>
         </>}
@@ -293,7 +293,7 @@ export default function WspolpracaPageClient({
           {ethicsItems.map((item, i) => (
             <div key={i} className="flex-1 relative">
               {i < ethicsItems.length - 1 && (
-                <div className="absolute bottom-0 left-0 right-4 md:right-8 h-px bg-white/[0.08]" />
+                <div className="absolute bottom-0 left-0 right-0 h-px bg-white/[0.08]" />
               )}
               <AnimateIn delay={i * 0.2} y={10} className="h-full flex flex-col justify-center px-[clamp(32px,5vw,64px)] py-7 md:py-9">
                 <DrawReveal title={item.title} desc={item.desc} noLine />

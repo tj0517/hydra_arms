@@ -103,12 +103,20 @@ Harmonogram crona:
 
 | Źródło | Typ | URL / dostęp | Status |
 |---|---|---|---|
-| **Kolba** | hurtownia, prosty XML | `b2b.kolba.pl/.../KOLBAB2B.xml` (otwarty) | działa; pełny plik do potwierdzenia |
-| **Sharg — full** | hurtownia, IOF 3.0 katalog | `hurt.sharg.pl/edi/export-offer.php?...type=full` (token) | panel: „Pobrany: Nigdy"; przez nasz fetch zwracał „disabled" |
-| **Sharg — light** | stany+ceny (5562) | `...type=light` (token) | jw. „Nie wygenerowano" |
+| **Kolba** | hurtownia, prosty XML | `b2b.kolba.pl/.../KOLBAB2B.xml` (publiczny, bez auth) | ✅ zweryfikowany: **62,8 MB / 13 687 szt.** — za duży dla web_fetch i Automatyzera (10 MB) → pobieranie strumieniowe; brak kategorii/VAT, EAN pusty 14% |
+| **Sharg — full** | hurtownia, IOF 3.0 katalog | `hurt.sharg.pl/edi/export-offer.php?...type=full` (token) | przez przeglądarkę działa; server→server dawał „disabled" (do potwierdzenia dla crona) |
+| **Sharg — light** | stany+ceny | `...type=light` (token) | ✅ zweryfikowany 24.06: 2,48 MB, 6052 produkty, 7501 rozmiarów |
+| **Sharg — categories** | słownik kategorii | `...type=categories` (token) | ✅ 295 kategorii (ogólne: sport/fitness/sporty walki — do zmapowania) |
 | **Sharg — gateway** | manifest/wejście (8381) | `...type=gateway` (token) | ✅ działa — mamy świeży plik z 19.06; z niego: categories/producers/parameters/light/stocks/changes |
-| **Automatyzer** | NIE hurtownia — usługa | `xml.automatyzer.com` | wyjaśnić rolę (agreguje? pośredniczy?) |
-| **Spechurt** | hurtownia, HEAVY | `b2b.spechurt.pl/xml_heavy_export.php?key=...` | ⛔ whitelista IP (ERR105 z 83.25.13.208) |
+| **Automatyzer** | NIE hurtownia — usługa | `xml.automatyzer.com` | **konwerter XML → format BaseLinker**; limit pliku **10 MB** → nie ogarnie Kolby (62,8 MB); konwertuje format, nie naprawia braków danych |
+| **Spechurt** | hurtownia, HEAVY | `b2b.spechurt.pl/xml_heavy_export.php?key=...` | ⛔ whitelista IP — ERR105 z 2 IP (83.25.13.208 i 37.31.147.160); blokuje każde nasze IP |
 | **KZS** | — | brak na liście źródeł | NIE jest dostawcą; wgrany „KZS.pdf" to faktycznie spec SPECHURT |
 
 **Wniosek dla Sharga:** integrować przez **gateway** (jeden URL wejścia → hashe → pobieramy tylko zmiany). Najpierw jednak wyjaśnić ze Shargiem, czemu `full`/`light` zwracają „disabled", a gateway działa.
+
+
+newsletter jako sma element formualrza konaktwoego 
+ikony w wersji mobilnej 
+mobilna wersjaaaaaa
+27.06 10:00 spotkanie 
+pryzogtuj plik xml- prolbmey wyślij dziś/ jutro 

@@ -1,0 +1,274 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e320] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e321]:
+      - img [ref=e322]
+    - generic [ref=e325]:
+      - button "Open issues overlay" [ref=e326]:
+        - generic [ref=e327]:
+          - generic [ref=e328]: "0"
+          - generic [ref=e329]: "1"
+        - generic [ref=e330]: Issue
+      - button "Collapse issues badge" [ref=e331]:
+        - img [ref=e332]
+  - navigation [ref=e334]:
+    - generic [ref=e335]:
+      - link "HYDRA.ARMS" [ref=e336]:
+        - /url: /
+      - button "Menu" [ref=e337]
+  - generic:
+    - link "Usługi":
+      - /url: /uslugi
+    - link "O nas":
+      - /url: /o-nas
+    - link "Współpraca":
+      - /url: /wspolpraca
+    - link "Blog":
+      - /url: /blog
+    - link "Kontakt":
+      - /url: /kontakt
+    - link "[ Sklep ]":
+      - /url: /sklep
+  - main [ref=e340]:
+    - generic [ref=e341]:
+      - generic:
+        - img
+        - generic: X:0000 Y:0000
+      - generic [ref=e343]: HYDRA ARMS / O nas
+      - heading "O nas" [level=1] [ref=e344]
+    - paragraph [ref=e346]:
+      - generic [ref=e347]: Powstaliśmy
+      - generic [ref=e348]: z
+      - generic [ref=e349]: połączenia
+      - generic [ref=e350]: ekspertów
+      - generic [ref=e351]: zaawansowanej
+      - generic [ref=e352]: inżynierii
+      - generic [ref=e353]: i
+      - generic [ref=e354]: sektora
+      - generic [ref=e355]: strzelecko-obronnego.
+      - generic [ref=e356]: Ta
+      - generic [ref=e357]: synergia
+      - generic [ref=e358]: pozwala
+      - generic [ref=e359]: nam
+      - generic [ref=e360]: wytwarzać
+      - generic [ref=e361]: uzbrojenie,
+      - generic [ref=e362]: które
+      - generic [ref=e363]: odpowiada
+      - generic [ref=e364]: na
+      - generic [ref=e365]: realne
+      - generic [ref=e366]: potrzeby
+      - generic [ref=e367]: użytkownika.
+    - generic [ref=e368]:
+      - heading "Nasza misja, Innowacja i rzetelność" [level=2] [ref=e370]
+      - generic [ref=e371]:
+        - generic [ref=e374]:
+          - heading "Wytwarzanie i R&D" [level=3] [ref=e375]
+          - paragraph [ref=e376]: Projektujemy autorskie rozwiązania, kładąc nacisk na precyzję wykonania i niezawodność mechanizmów.
+        - generic [ref=e379]:
+          - heading "Obrót uzbrojeniem" [level=3] [ref=e380]
+          - paragraph [ref=e381]: Prowadzimy działalność handlową w zakresie materiałów wybuchowych, broni, amunicji oraz wyrobów i technologii o przeznaczeniu wojskowym lub policyjnym.
+        - generic [ref=e383]:
+          - heading "Synergia branży" [level=3] [ref=e384]
+          - paragraph [ref=e385]: Inżynierowie w naszych strukturach dbają o parametry techniczne i materiałowe, podczas gdy eksperci branżowi odpowiadają za walidację użytkową sprzętu.
+    - paragraph [ref=e387]:
+      - generic [ref=e388]: Działamy
+      - generic [ref=e389]: w
+      - generic [ref=e390]: oparciu
+      - generic [ref=e391]: o
+      - generic [ref=e392]: własną
+      - generic [ref=e393]: infrastrukturę
+      - generic [ref=e394]: technologiczną
+      - generic [ref=e395]: w
+      - generic [ref=e396]: Krakowie,
+      - generic [ref=e397]: co
+      - generic [ref=e398]: pozwala
+      - generic [ref=e399]: na
+      - generic [ref=e400]: sprawne
+      - generic [ref=e401]: zarządzanie
+      - generic [ref=e402]: kluczowymi
+      - generic [ref=e403]: procesami
+      - generic [ref=e404]: produkcyjnymi
+      - generic [ref=e405]: oraz
+      - generic [ref=e406]: logistyką
+      - generic [ref=e407]: obrotu
+      - generic [ref=e408]: specjalnego.
+    - generic [ref=e410]:
+      - generic [ref=e413]:
+        - generic [ref=e414]: MSWiA
+        - heading "Koncesja MSWiA" [level=3] [ref=e415]
+        - paragraph [ref=e416]: Posiadamy uprawnienia do wytwarzania broni, amunicji oraz wyrobów o przeznaczeniu wojskowym lub policyjnym, a także obrotu materiałami wybuchowymi, bronią, amunicją oraz wyrobami i technologią o przeznaczeniu wojskowym lub policyjnym.
+      - generic [ref=e419]:
+        - generic [ref=e420]: NATO
+        - heading "NATO CAGE" [level=3] [ref=e421]
+        - paragraph [ref=e422]: Jesteśmy dostawcą zarejestrowanym w systemie kodyfikacyjnym NATO, co umożliwia nam współpracę w krajowych i międzynarodowych strukturach obronnych.
+      - generic [ref=e425]:
+        - generic [ref=e426]: Lokalizacja
+        - heading "Strategiczna lokalizacja" [level=3] [ref=e427]
+        - paragraph [ref=e428]: Nasze lokalizacje w Małopolsce, przy głównych węzłach komunikacyjnych, zapewniają bezpieczne i profesjonalne zaplecze do realizacji transakcji.
+    - generic [ref=e429]:
+      - generic [ref=e430]: //04 KLIENCI
+      - generic [ref=e431]:
+        - heading [level=2] [ref=e432]
+        - paragraph [ref=e435]: Swoje usługi kierujemy do szerokiego spektrum odbiorców — od jednostek wojskowych i policyjnych, przez instytucje badawcze, aż po partnerów przemysłowych w modelu B2B.
+      - generic [ref=e436]:
+        - generic [ref=e437]:
+          - img "Siły Zbrojne" [ref=e439]
+          - generic [ref=e440]:
+            - generic [ref=e441]: Wojsko
+            - heading "Siły Zbrojne" [level=3] [ref=e442]
+            - paragraph [ref=e443]: Dostarczamy uzbrojenie i wyposażenie spełniające najwyższe standardy wojskowe, testowane w warunkach operacyjnych.
+            - link "Dowiedz się więcej" [ref=e450]:
+              - /url: /wspolpraca
+        - generic [ref=e451]:
+          - img "Służby mundurowe" [ref=e453]
+          - generic [ref=e454]:
+            - generic [ref=e455]: Formacje
+            - heading "Służby mundurowe" [level=3] [ref=e456]
+            - paragraph [ref=e457]: Współpracujemy z policją, strażą graniczną i innymi formacjami mundurowymi, oferując dedykowane rozwiązania.
+            - link "Dowiedz się więcej" [ref=e464]:
+              - /url: /wspolpraca
+        - generic [ref=e465]:
+          - img "Przemysł B2B" [ref=e467]
+          - generic [ref=e468]:
+            - generic [ref=e469]: B2B
+            - heading "Przemysł B2B" [level=3] [ref=e470]
+            - paragraph [ref=e471]: Realizujemy zlecenia dla partnerów przemysłowych — od prototypowania po produkcję seryjną komponentów obronnych.
+            - link "Dowiedz się więcej" [ref=e478]:
+              - /url: /wspolpraca
+        - generic [ref=e479]:
+          - img "Rynek cywilny" [ref=e481]
+          - generic [ref=e482]:
+            - generic [ref=e483]: Cywilny
+            - heading "Rynek cywilny" [level=3] [ref=e484]
+            - paragraph [ref=e485]: Dystrybucja broni strzeleckiej i amunicji dla uprawnionych odbiorców indywidualnych — myśliwych, kolekcjonerów i sportowców.
+            - link "Dowiedz się więcej" [ref=e492]:
+              - /url: /wspolpraca
+    - generic [ref=e493]:
+      - generic [ref=e496]:
+        - heading [level=2] [ref=e497]
+        - link "Rozpocznij współpracę" [ref=e504]:
+          - /url: /wspolpraca
+      - generic [ref=e505]:
+        - generic [ref=e507]:
+          - button "Interdyscyplinarne badania i rozwój [+]" [ref=e508]:
+            - generic [ref=e509]: Interdyscyplinarne badania i rozwój
+            - generic [ref=e510]: "[+]"
+          - paragraph [ref=e511]: Nasze projekty badawcze łączą wiele dziedzin nauki.
+        - generic [ref=e513]:
+          - button "Wszechstronność projektowa [+]" [ref=e514]:
+            - generic [ref=e515]: Wszechstronność projektowa
+            - generic [ref=e516]: "[+]"
+          - paragraph [ref=e517]: Tworzymy koncepcje dla różnych rodzajów uzbrojenia.
+        - generic [ref=e519]:
+          - button "Nowoczesne materiały [+]" [ref=e520]:
+            - generic [ref=e521]: Nowoczesne materiały
+            - generic [ref=e522]: "[+]"
+          - paragraph [ref=e523]: Od wysokogatunkowych stopów metali, przez zaawansowane tworzywa sztuczne, aż po kompozyty nowej generacji.
+        - generic [ref=e525]:
+          - button "Innowacja procesowa [+]" [ref=e526]:
+            - generic [ref=e527]: Innowacja procesowa
+            - generic [ref=e528]: "[+]"
+          - paragraph [ref=e529]: Wdrażamy rozwiązania, które redefiniują skuteczność, ergonomię i trwałość systemów obronnych.
+        - generic [ref=e531]:
+          - button "Inżynieria precyzyjna [+]" [ref=e532]:
+            - generic [ref=e533]: Inżynieria precyzyjna
+            - generic [ref=e534]: "[+]"
+          - paragraph [ref=e535]: Dysponujemy zapleczem technologicznym zdolnym do realizacji złożonych zadań.
+        - generic [ref=e537]:
+          - button "Transparentność [+]" [ref=e538]:
+            - generic [ref=e539]: Transparentność
+            - generic [ref=e540]: "[+]"
+          - paragraph [ref=e541]: Działamy w ścisłej zgodności z krajowymi i międzynarodowymi procedurami kontroli.
+  - generic [ref=e543]:
+    - generic [ref=e544]:
+      - generic [ref=e545]: // SUBSKRYBUJ
+      - generic [ref=e546]: Kanał informacyjny
+    - generic [ref=e547]:
+      - generic [ref=e548] [cursor=pointer]:
+        - checkbox "AKTUALNOŚCI" [checked] [ref=e550]
+        - generic [ref=e553]: AKTUALNOŚCI
+      - generic [ref=e554] [cursor=pointer]:
+        - checkbox "BLOG" [ref=e556]
+        - generic [ref=e558]: BLOG
+      - generic [ref=e559] [cursor=pointer]:
+        - checkbox "B2G" [ref=e561]
+        - generic [ref=e563]: B2G
+      - generic [ref=e564] [cursor=pointer]:
+        - checkbox "B2B" [ref=e566]
+        - generic [ref=e568]: B2B
+      - generic [ref=e569] [cursor=pointer]:
+        - checkbox "SKLEP" [ref=e571]
+        - generic [ref=e573]: SKLEP
+    - generic [ref=e575]:
+      - generic [ref=e576]:
+        - generic [ref=e577]: ">"
+        - textbox "EMAIL@DOMENA.PL" [ref=e578]
+      - button "ZAPISZ" [ref=e579]
+  - contentinfo [ref=e580]:
+    - generic [ref=e583]:
+      - generic [ref=e584]:
+        - generic [ref=e585]: HYDRA.ARMS
+        - generic [ref=e586]:
+          - paragraph [ref=e587]: HYDRA ARMS SP. Z O.O.
+          - paragraph [ref=e588]: ul. Cechowa 44B 30-614 Kraków
+          - paragraph [ref=e589]: "Sklep: ul. Gdańska 22, 31-411 Kraków"
+          - paragraph [ref=e591]: "NIP: [ 6793302181 ]"
+          - paragraph [ref=e592]: "REGON: [ 528976880 ]"
+          - paragraph [ref=e593]: "KRS: [ 0001111593 ]"
+          - paragraph [ref=e594]: "BDO: [ 000654184 ]"
+      - generic [ref=e595]:
+        - generic [ref=e596]:
+          - heading "Certyfikaty" [level=4] [ref=e597]
+          - list [ref=e598]:
+            - listitem [ref=e599]:
+              - generic [ref=e600]: ISO
+              - generic [ref=e601]: ISO 9001:2015
+            - listitem [ref=e602]:
+              - generic [ref=e603]: AQAP
+              - generic [ref=e604]: AQAP 2110:2016
+            - listitem [ref=e605]:
+              - generic [ref=e606]: WSK
+              - generic [ref=e607]: Wewnętrzny System Kontroli
+        - generic [ref=e608]:
+          - heading "Nawigacja" [level=4] [ref=e609]
+          - list [ref=e610]:
+            - listitem [ref=e611]:
+              - link "Usługi" [ref=e612]:
+                - /url: /uslugi
+            - listitem [ref=e613]:
+              - link "O nas" [ref=e614]:
+                - /url: /o-nas
+            - listitem [ref=e615]:
+              - link "Współpraca" [ref=e616]:
+                - /url: /wspolpraca
+            - listitem [ref=e617]:
+              - link "Aktualności" [ref=e618]:
+                - /url: /aktualnosci
+            - listitem [ref=e619]:
+              - link "Blog" [ref=e620]:
+                - /url: /blog
+            - listitem [ref=e621]:
+              - link "Kontakt" [ref=e622]:
+                - /url: /kontakt
+            - listitem [ref=e623]:
+              - link "Sklep" [ref=e624]:
+                - /url: /sklep
+        - generic [ref=e626]:
+          - link "Facebook" [ref=e627]:
+            - /url: "#!"
+            - img [ref=e628]
+          - link "Instagram" [ref=e630]:
+            - /url: "#!"
+            - img [ref=e631]
+          - link "LinkedIn" [ref=e633]:
+            - /url: "#!"
+            - img [ref=e634]
+          - link "Email" [ref=e636]:
+            - /url: mailto:biuro@hydraarms.com
+            - img [ref=e637]
+    - generic [ref=e641]:
+      - link "[ Polityka prywatności ]" [ref=e642]:
+        - /url: /polityka-prywatnosci
+      - link "[ Regulamin ]" [ref=e643]:
+        - /url: /regulamin
+      - generic [ref=e644]: "[ REALIZACJA ... ]"
+  - alert [ref=e695]

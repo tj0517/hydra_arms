@@ -124,7 +124,7 @@ export default function Nav({ navLinks }: { navLinks?: { href: string; label: st
           </Link>
 
           {/* Desktop links */}
-          <ul className="hidden md:flex gap-9 list-none items-center">
+          <ul className="hidden md:flex gap-5 lg:gap-9 list-none items-center">
             {links.map((item) => (
               <ScrambleNavLink key={item.href} href={item.href} label={item.label} active={pathname === item.href} />
             ))}

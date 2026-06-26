@@ -1,0 +1,122 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e4]: "[░░░░░░░░░░░░░░░░░░░░] 0%"
+  - navigation [ref=e5]:
+    - generic [ref=e6]:
+      - link "HYDRA.ARMS" [ref=e7]:
+        - /url: /
+      - button "Menu" [ref=e8]
+  - generic:
+    - link "Usługi":
+      - /url: /uslugi
+    - link "O nas":
+      - /url: /o-nas
+    - link "Współpraca":
+      - /url: /wspolpraca
+    - link "Blog":
+      - /url: /blog
+    - link "Kontakt":
+      - /url: /kontakt
+    - link "[ Sklep ]":
+      - /url: /sklep
+  - main [ref=e11]:
+    - generic [ref=e12]:
+      - generic:
+        - img
+        - generic: X:0000 Y:0000
+      - heading [level=1] [ref=e15]
+    - paragraph [ref=e18]: Brak wpisów
+  - generic [ref=e20]:
+    - generic [ref=e21]:
+      - generic [ref=e22]: // SUBSKRYBUJ
+      - generic [ref=e23]: Kanał informacyjny
+    - generic [ref=e24]:
+      - generic [ref=e25] [cursor=pointer]:
+        - checkbox "AKTUALNOŚCI" [checked] [ref=e27]
+        - generic [ref=e30]: AKTUALNOŚCI
+      - generic [ref=e31] [cursor=pointer]:
+        - checkbox "BLOG" [ref=e33]
+        - generic [ref=e35]: BLOG
+      - generic [ref=e36] [cursor=pointer]:
+        - checkbox "B2G" [ref=e38]
+        - generic [ref=e40]: B2G
+      - generic [ref=e41] [cursor=pointer]:
+        - checkbox "B2B" [ref=e43]
+        - generic [ref=e45]: B2B
+      - generic [ref=e46] [cursor=pointer]:
+        - checkbox "SKLEP" [ref=e48]
+        - generic [ref=e50]: SKLEP
+    - generic [ref=e52]:
+      - generic [ref=e53]:
+        - generic [ref=e54]: ">"
+        - textbox "EMAIL@DOMENA.PL" [ref=e55]
+      - button "ZAPISZ" [ref=e56]
+  - contentinfo [ref=e57]:
+    - generic [ref=e60]:
+      - generic [ref=e61]:
+        - generic [ref=e62]: HYDRA.ARMS
+        - generic [ref=e63]:
+          - paragraph [ref=e64]: HYDRA ARMS SP. Z O.O.
+          - paragraph [ref=e65]: ul. Cechowa 44B 30-614 Kraków
+          - paragraph [ref=e66]: "Sklep: ul. Gdańska 22, 31-411 Kraków"
+          - paragraph [ref=e68]: "NIP: [ 6793302181 ]"
+          - paragraph [ref=e69]: "REGON: [ 528976880 ]"
+          - paragraph [ref=e70]: "KRS: [ 0001111593 ]"
+          - paragraph [ref=e71]: "BDO: [ 000654184 ]"
+      - generic [ref=e72]:
+        - generic [ref=e73]:
+          - heading "Certyfikaty" [level=4] [ref=e74]
+          - list [ref=e75]:
+            - listitem [ref=e76]:
+              - generic [ref=e77]: ISO
+              - generic [ref=e78]: ISO 9001:2015
+            - listitem [ref=e79]:
+              - generic [ref=e80]: AQAP
+              - generic [ref=e81]: AQAP 2110:2016
+            - listitem [ref=e82]:
+              - generic [ref=e83]: WSK
+              - generic [ref=e84]: Wewnętrzny System Kontroli
+        - generic [ref=e85]:
+          - heading "Nawigacja" [level=4] [ref=e86]
+          - list [ref=e87]:
+            - listitem [ref=e88]:
+              - link "Usługi" [ref=e89]:
+                - /url: /uslugi
+            - listitem [ref=e90]:
+              - link "O nas" [ref=e91]:
+                - /url: /o-nas
+            - listitem [ref=e92]:
+              - link "Współpraca" [ref=e93]:
+                - /url: /wspolpraca
+            - listitem [ref=e94]:
+              - link "Aktualności" [ref=e95]:
+                - /url: /aktualnosci
+            - listitem [ref=e96]:
+              - link "Blog" [ref=e97]:
+                - /url: /blog
+            - listitem [ref=e98]:
+              - link "Kontakt" [ref=e99]:
+                - /url: /kontakt
+            - listitem [ref=e100]:
+              - link "Sklep" [ref=e101]:
+                - /url: /sklep
+        - generic [ref=e103]:
+          - link "Facebook" [ref=e104]:
+            - /url: "#!"
+            - img [ref=e105]
+          - link "Instagram" [ref=e107]:
+            - /url: "#!"
+            - img [ref=e108]
+          - link "LinkedIn" [ref=e110]:
+            - /url: "#!"
+            - img [ref=e111]
+          - link "Email" [ref=e113]:
+            - /url: mailto:biuro@hydraarms.com
+            - img [ref=e114]
+    - generic [ref=e118]:
+      - link "[ Polityka prywatności ]" [ref=e119]:
+        - /url: /polityka-prywatnosci
+      - link "[ Regulamin ]" [ref=e120]:
+        - /url: /regulamin
+      - generic [ref=e121]: "[ REALIZACJA ... ]"
+  - button "Open Next.js Dev Tools" [ref=e127] [cursor=pointer]:
+    - img [ref=e128]

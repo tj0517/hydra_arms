@@ -86,15 +86,28 @@ interface ClientSegmentsGridProps {
 
 export default function ClientSegmentsGrid({ segments, topBorder = false, glow = "green", plain = false }: ClientSegmentsGridProps) {
   const tagClass = "font-[var(--font-mono)] text-[10px] tracking-[0.25em] text-accent/70 border border-accent/20 px-2.5 py-1 inline-block mb-5 w-fit";
-  const cols = segments.length === 4 ? "md:grid-cols-4" : "md:grid-cols-3";
-  const inter = segments.length === 4 ? "md:px-8" : "md:px-10";
-  const interL = segments.length === 4 ? "md:pl-8" : "md:pl-10";
-  const interR = segments.length === 4 ? "md:pr-8" : "md:pr-10";
+  const is4 = segments.length === 4;
+  const cols = is4 ? "lg:grid-cols-4" : "md:grid-cols-3";
+  const inter = is4 ? "lg:px-8" : "md:px-10";
+  const interL = is4 ? "lg:pl-8" : "md:pl-10";
+  const interR = is4 ? "lg:pr-8" : "md:pr-10";
 
   const cellPad = (i: number) => {
+    if (is4) {
+      if (i === 0) return `px-[clamp(32px,5vw,64px)] ${interR} lg:pl-[clamp(32px,5vw,64px)]`;
+      if (i === segments.length - 1) return `px-[clamp(32px,5vw,64px)] ${interL} lg:pr-[clamp(32px,5vw,64px)]`;
+      return `px-[clamp(32px,5vw,64px)] ${inter}`;
+    }
     if (i === 0) return `px-[clamp(32px,5vw,64px)] ${interR} md:pl-[clamp(32px,5vw,64px)]`;
     if (i === segments.length - 1) return `px-[clamp(32px,5vw,64px)] ${interL} md:pr-[clamp(32px,5vw,64px)]`;
     return `px-[clamp(32px,5vw,64px)] ${inter}`;
+  };
+
+  // 4-segment: 2×2 at md, 4×1 at lg — borders differ per breakpoint
+  const borderR = (i: number) => {
+    if (!is4) return i < segments.length - 1 ? "md:border-r" : "";
+    if (i === 3) return "";
+    return i % 2 === 0 ? "md:border-r" : "lg:border-r";
   };
 
   return (
@@ -104,9 +117,9 @@ export default function ClientSegmentsGrid({ segments, topBorder = false, glow =
       {segments.map((seg, i) => (
         <div
           key={seg.tag}
-          className={`${i < segments.length - 1 ? "md:border-r" : ""} border-b border-white/[0.08] flex flex-col py-8 md:py-12 ${cellPad(i)}`}
+          className={`${borderR(i)} border-b border-white/[0.08] flex flex-col py-8 md:py-12 ${cellPad(i)}`}
         >
-          <div className="h-[260px] hidden md:block mb-8">
+          <div className="h-[180px] md:h-[260px] mb-6 md:mb-8">
             {plain ? (
               <Image src={seg.img} alt={seg.title} width={900} height={450} className={`w-full h-full object-contain ${seg.imgClass ?? ''}`} style={seg.imgStyle} draggable={false} />
             ) : (

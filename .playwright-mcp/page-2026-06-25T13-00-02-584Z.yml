@@ -1,0 +1,256 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e4]: "[░░░░░░░░░░░░░░░░░░░░] 0%"
+  - navigation [ref=e5]:
+    - generic [ref=e6]:
+      - link "HYDRA.ARMS" [ref=e7]:
+        - /url: /
+      - list [ref=e8]:
+        - listitem [ref=e9]:
+          - link "Usługi" [ref=e10]:
+            - /url: /uslugi
+        - listitem [ref=e11]:
+          - link "O nas" [ref=e12]:
+            - /url: /o-nas
+        - listitem [ref=e13]:
+          - link "Współpraca" [ref=e14]:
+            - /url: /wspolpraca
+        - listitem [ref=e15]:
+          - link "Blog" [ref=e16]:
+            - /url: /blog
+        - listitem [ref=e17]:
+          - link "Kontakt" [ref=e18]:
+            - /url: /kontakt
+        - listitem [ref=e19]:
+          - link "[ Sklep ]" [ref=e20]:
+            - /url: /sklep
+  - main [ref=e21]:
+    - generic [ref=e22]:
+      - generic:
+        - img
+        - generic: X:0000 Y:0000
+      - heading [level=1] [ref=e25]
+    - generic [ref=e26]:
+      - paragraph [ref=e27]:
+        - generic [ref=e28]: W
+        - generic [ref=e29]: HYDRA
+        - generic [ref=e30]: ARMS
+        - generic [ref=e31]: proces
+        - generic [ref=e32]: twórczy
+        - generic [ref=e33]: zaczyna
+        - generic [ref=e34]: się
+        - generic [ref=e35]: od
+        - generic [ref=e36]: precyzyjnej
+        - generic [ref=e37]: definicji
+        - generic [ref=e38]: potrzeb
+        - generic [ref=e39]: operacyjnych.
+        - generic [ref=e40]: Nasz
+        - generic [ref=e41]: zespół
+        - generic [ref=e42]: inżynierski,
+        - generic [ref=e43]: wspierany
+        - generic [ref=e44]: przez
+        - generic [ref=e45]: praktyków
+        - generic [ref=e46]: z
+        - generic [ref=e47]: sektora
+        - generic [ref=e48]: obronnego,
+        - generic [ref=e49]: projektuje
+        - generic [ref=e50]: systemy
+        - generic [ref=e51]: uzbrojenia
+        - generic [ref=e52]: i
+        - generic [ref=e53]: komponenty
+        - generic [ref=e54]: zorientowane
+        - generic [ref=e55]: na
+        - generic [ref=e56]: ekstremalną
+        - generic [ref=e57]: trwałość
+        - generic [ref=e58]: i
+        - generic [ref=e59]: niezawodność.
+      - link "Zapytaj o wycenę" [ref=e66]:
+        - /url: "#"
+    - generic [ref=e67]:
+      - heading "Nasze kompetencje" [level=2] [ref=e69]
+      - generic [ref=e70]:
+        - button "[ Projektowanie i R&D ]" [ref=e71]:
+          - text: "["
+          - generic [ref=e72]: Projektowanie i R&D
+          - text: "]"
+        - button "[ Obróbka CNC ]" [ref=e73]:
+          - text: "["
+          - generic [ref=e74]: Obróbka CNC
+          - text: "]"
+        - button "[ Druk 3D ]" [ref=e75]:
+          - text: "["
+          - generic [ref=e76]: Druk 3D
+          - text: "]"
+        - button "[ Kontrola jakości ]" [ref=e77]:
+          - text: "["
+          - generic [ref=e78]: Kontrola jakości
+          - text: "]"
+        - button "[ Montaż i serwis ]" [ref=e79]:
+          - text: "["
+          - generic [ref=e80]: Montaż i serwis
+          - text: "]"
+      - generic [ref=e82]:
+        - generic [ref=e85]:
+          - text: "01"
+          - generic [ref=e86]: /05
+        - heading "Projektowanie i badania rozwojowe" [level=3] [ref=e87]
+        - paragraph [ref=e88]: Rozwijamy systemy uzbrojenia od koncepcji do kompletnej dokumentacji produkcyjnej.
+        - generic [ref=e89]:
+          - generic [ref=e91]: CAD/CAM
+          - generic [ref=e94]: Analizy MES
+          - generic [ref=e97]: Inżynieria odwrotna
+        - link "Zapytaj o projekt" [ref=e104]:
+          - /url: "#"
+    - generic [ref=e110]:
+      - generic [ref=e111]: //05 KLIENCI
+      - generic [ref=e112]:
+        - heading [level=2] [ref=e113]
+        - generic [ref=e114]:
+          - paragraph [ref=e116]: Swoje usługi kierujemy do szerokiego spektrum odbiorców — od jednostek wojskowych i policyjnych, przez instytucje badawcze, aż po partnerów przemysłowych w modelu B2B.
+          - img [ref=e119]
+      - generic [ref=e121]:
+        - generic [ref=e122]:
+          - img "Siły Zbrojne" [ref=e124]
+          - generic [ref=e125]:
+            - generic [ref=e126]: Wojsko
+            - heading "Siły Zbrojne" [level=3] [ref=e127]
+            - paragraph [ref=e128]: Dostarczamy uzbrojenie i wyposażenie spełniające najwyższe standardy wojskowe, testowane w warunkach operacyjnych.
+            - link "Dowiedz się więcej" [ref=e135]:
+              - /url: /wspolpraca
+        - generic [ref=e136]:
+          - img "Służby mundurowe" [ref=e138]
+          - generic [ref=e139]:
+            - generic [ref=e140]: Formacje
+            - heading "Służby mundurowe" [level=3] [ref=e141]
+            - paragraph [ref=e142]: Współpracujemy z policją, strażą graniczną i innymi formacjami mundurowymi, oferując dedykowane rozwiązania.
+            - link "Dowiedz się więcej" [ref=e149]:
+              - /url: /wspolpraca
+        - generic [ref=e150]:
+          - img "Przemysł B2B" [ref=e152]
+          - generic [ref=e153]:
+            - generic [ref=e154]: B2B
+            - heading "Przemysł B2B" [level=3] [ref=e155]
+            - paragraph [ref=e156]: Realizujemy zlecenia dla partnerów przemysłowych — od prototypowania po produkcję seryjną komponentów obronnych.
+            - link "Dowiedz się więcej" [ref=e163]:
+              - /url: /wspolpraca
+        - generic [ref=e164]:
+          - img "Rynek cywilny" [ref=e166]
+          - generic [ref=e167]:
+            - generic [ref=e168]: Cywilny
+            - heading "Rynek cywilny" [level=3] [ref=e169]
+            - paragraph [ref=e170]: Oferujemy produkty i rozwiązania dla rynku cywilnego — myśliwych, kolekcjonerów oraz firm zajmujących się bezpieczeństwem prywatnym.
+            - link "Dowiedz się więcej" [ref=e177]:
+              - /url: /wspolpraca
+    - generic [ref=e178]:
+      - paragraph [ref=e179]:
+        - generic [ref=e180]: Dostarczamy
+        - generic [ref=e181]: rozwiązania
+        - generic [ref=e182]: tam,
+        - generic [ref=e183]: gdzie
+        - generic [ref=e184]: standardowe
+        - generic [ref=e185]: metody
+        - generic [ref=e186]: zawodzą.
+        - generic [ref=e187]: Szukasz
+        - generic [ref=e188]: partnera
+        - generic [ref=e189]: technologicznego
+        - generic [ref=e190]: do
+        - generic [ref=e191]: projektu
+        - generic [ref=e192]: obronnego
+        - generic [ref=e193]: lub
+        - generic [ref=e194]: cywilnego?
+      - link "Rozpocznij współpracę" [ref=e201]:
+        - /url: /wspolpraca
+  - generic [ref=e203]:
+    - generic [ref=e204]:
+      - generic [ref=e205]: // SUBSKRYBUJ
+      - generic [ref=e206]: Kanał informacyjny
+    - generic [ref=e207]:
+      - generic [ref=e208] [cursor=pointer]:
+        - checkbox "AKTUALNOŚCI" [checked] [ref=e210]
+        - generic [ref=e213]: AKTUALNOŚCI
+      - generic [ref=e214] [cursor=pointer]:
+        - checkbox "BLOG" [ref=e216]
+        - generic [ref=e218]: BLOG
+      - generic [ref=e219] [cursor=pointer]:
+        - checkbox "B2G" [ref=e221]
+        - generic [ref=e223]: B2G
+      - generic [ref=e224] [cursor=pointer]:
+        - checkbox "B2B" [ref=e226]
+        - generic [ref=e228]: B2B
+      - generic [ref=e229] [cursor=pointer]:
+        - checkbox "SKLEP" [ref=e231]
+        - generic [ref=e233]: SKLEP
+    - generic [ref=e235]:
+      - generic [ref=e236]:
+        - generic [ref=e237]: ">"
+        - textbox "EMAIL@DOMENA.PL" [ref=e238]
+      - button "ZAPISZ" [ref=e239]
+  - contentinfo [ref=e240]:
+    - generic [ref=e243]:
+      - generic [ref=e244]:
+        - generic [ref=e245]: HYDRA.ARMS
+        - generic [ref=e246]:
+          - paragraph [ref=e247]: HYDRA ARMS SP. Z O.O.
+          - paragraph [ref=e248]: ul. Cechowa 44B 30-614 Kraków
+          - paragraph [ref=e249]: "Sklep: ul. Gdańska 22, 31-411 Kraków"
+          - paragraph [ref=e251]: "NIP: [ 6793302181 ]"
+          - paragraph [ref=e252]: "REGON: [ 528976880 ]"
+          - paragraph [ref=e253]: "KRS: [ 0001111593 ]"
+          - paragraph [ref=e254]: "BDO: [ 000654184 ]"
+      - generic [ref=e255]:
+        - generic [ref=e256]:
+          - heading "Certyfikaty" [level=4] [ref=e257]
+          - list [ref=e258]:
+            - listitem [ref=e259]:
+              - generic [ref=e260]: ISO
+              - generic [ref=e261]: ISO 9001:2015
+            - listitem [ref=e262]:
+              - generic [ref=e263]: AQAP
+              - generic [ref=e264]: AQAP 2110:2016
+            - listitem [ref=e265]:
+              - generic [ref=e266]: WSK
+              - generic [ref=e267]: Wewnętrzny System Kontroli
+        - generic [ref=e268]:
+          - heading "Nawigacja" [level=4] [ref=e269]
+          - list [ref=e270]:
+            - listitem [ref=e271]:
+              - link "Usługi" [ref=e272]:
+                - /url: /uslugi
+            - listitem [ref=e273]:
+              - link "O nas" [ref=e274]:
+                - /url: /o-nas
+            - listitem [ref=e275]:
+              - link "Współpraca" [ref=e276]:
+                - /url: /wspolpraca
+            - listitem [ref=e277]:
+              - link "Aktualności" [ref=e278]:
+                - /url: /aktualnosci
+            - listitem [ref=e279]:
+              - link "Blog" [ref=e280]:
+                - /url: /blog
+            - listitem [ref=e281]:
+              - link "Kontakt" [ref=e282]:
+                - /url: /kontakt
+            - listitem [ref=e283]:
+              - link "Sklep" [ref=e284]:
+                - /url: /sklep
+        - generic [ref=e286]:
+          - link "Facebook" [ref=e287]:
+            - /url: "#!"
+            - img [ref=e288]
+          - link "Instagram" [ref=e290]:
+            - /url: "#!"
+            - img [ref=e291]
+          - link "LinkedIn" [ref=e293]:
+            - /url: "#!"
+            - img [ref=e294]
+          - link "Email" [ref=e296]:
+            - /url: mailto:biuro@hydraarms.com
+            - img [ref=e297]
+    - generic [ref=e301]:
+      - link "[ Polityka prywatności ]" [ref=e302]:
+        - /url: /polityka-prywatnosci
+      - link "[ Regulamin ]" [ref=e303]:
+        - /url: /regulamin
+      - generic [ref=e304]: "[ REALIZACJA ... ]"
+  - button "Open Next.js Dev Tools" [ref=e310] [cursor=pointer]:
+    - img [ref=e311]

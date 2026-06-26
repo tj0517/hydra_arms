@@ -72,15 +72,8 @@ export default function KontaktClient({
     { id: "sklep",       label: "SKLEP"        },
   ];
   const [nlSelected, setNlSelected] = useState<Set<string>>(new Set(["aktualnosci"]));
-  const [nlEmail, setNlEmail]       = useState("");
-  const [nlStatus, setNlStatus]     = useState<"idle" | "ok">("idle");
   const toggleNl = (id: string) =>
     setNlSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
-  const handleNlSubmit = () => {
-    if (!nlEmail || nlSelected.size === 0) return;
-    setNlStatus("ok");
-    setNlEmail("");
-  };
 
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) setFiles(Array.from(e.target.files));
@@ -124,7 +117,7 @@ export default function KontaktClient({
                 <span className="w-2.5 h-2.5 rounded-full bg-accent/20" />
                 <span className="w-2.5 h-2.5 rounded-full bg-accent/20" />
               </div>
-              <span className="font-[var(--font-mono)] text-[11px] text-accent/50 tracking-[0.15em] uppercase">
+              <span className="font-[var(--font-mono)] text-[11px] text-accent/50 tracking-[0.15em] uppercase truncate min-w-0">
                 hydra-arms@terminal:~/kontakt — BEZPIECZNY KANAŁ ŁĄCZNOŚCI v2.4.1
               </span>
             </div>
@@ -378,31 +371,6 @@ export default function KontaktClient({
                             );
                           })}
                         </div>
-                        {nlStatus === "ok" ? (
-                          <p className="font-[var(--font-mono)] text-[11px] text-accent tracking-[0.12em] uppercase">
-                            <span className="terminal-blink">█</span>{" "}ZAPISANO — POTWIERDZENIE ZOSTANIE WYSŁANE
-                          </p>
-                        ) : (
-                          <div className="flex items-stretch">
-                            <div className="flex items-center gap-2 flex-1 border border-white/10 hover:border-accent/30 focus-within:border-accent/50 transition-colors duration-200 px-3 py-2">
-                              <span className="font-[var(--font-mono)] text-[12px] text-accent/40 shrink-0 leading-none">&gt;</span>
-                              <input
-                                type="email"
-                                value={nlEmail}
-                                onChange={(e) => setNlEmail(e.target.value)}
-                                placeholder="EMAIL@DOMENA.PL"
-                                className="w-full bg-transparent font-[var(--font-mono)] text-[12px] text-accent tracking-[0.05em] focus:outline-none placeholder:text-accent/20 caret-accent"
-                              />
-                            </div>
-                            <button
-                              type="button"
-                              onClick={handleNlSubmit}
-                              className="font-[var(--font-mono)] text-[11px] tracking-[0.18em] uppercase text-bg bg-accent hover:bg-accent/80 transition-colors duration-200 px-5 whitespace-nowrap"
-                            >
-                              ZAPISZ
-                            </button>
-                          </div>
-                        )}
                       </div>
 
                       <div className="flex items-start gap-2 mt-2">

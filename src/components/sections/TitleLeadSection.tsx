@@ -39,11 +39,11 @@ export default function TitleLeadSection({
         </TypewriterTitle>
         <div className={`grid grid-cols-1 ${bodyGridCols} gap-8 mt-8 ${bodyPb} md:gap-16 md:mt-16`}>
           <div>
-            <p className="text-text-dim text-[15px] md:text-[18px] font-normal leading-[1.7] md:leading-[30px] text-justify">
+            <p className="text-text-dim text-[15px] md:text-[18px] font-normal leading-[1.7] md:leading-[30px] text-justify mb-8 md:mb-0">
               {body}
             </p>
           </div>
-          <div className="hidden md:flex items-start justify-end">
+          <div className="hidden md:flex items-end justify-end">
             {ctaHref ? (
               <Link
                 href={ctaHref}

@@ -99,7 +99,7 @@ export default function CookiesBanner() {
           <div className="border-t border-accent/10" />
 
           {/* Intro text */}
-          <p className="font-[var(--font-mono)] text-[12px] text-accent/60 leading-[1.8]">
+          <p className="font-[var(--font-mono)] text-[12px] text-accent/60 leading-[1.8] text-justify">
             Używamy plików cookie, by zapewnić prawidłowe działanie serwisu oraz — za Twoją zgodą — analizować ruch i wyświetlać spersonalizowane treści. Szczegóły w{" "}
             <Link href="/polityka-prywatnosci" className="text-accent hover:text-white transition-colors">
               Polityce Prywatności

@@ -104,7 +104,7 @@ export default function Footer({
       />
 
       <div className="relative px-[clamp(32px,5vw,64px)] py-16 md:py-24">
-        <div className="flex flex-col md:flex-row md:justify-between gap-12 md:gap-16">
+        <div className="flex flex-col lg:flex-row lg:justify-between gap-12 lg:gap-16">
 
           {/* ── Col 1: Company ── */}
           <div className={`transition-all duration-700 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
@@ -120,34 +120,39 @@ export default function Footer({
               <p>REGON: [ {regon} ]</p>
               <p>KRS: [ {krs} ]</p>
               <p>BDO: [ {bdo} ]</p>
+              <p>Koncesja MSWiA: [ {koncesja} ]</p>
+              <p>NCAGE: [ {ncage} ]</p>
+              <p>D-U-N-S®: [ {duns} ]</p>
+              <p>UEI: [ {uei} ]</p>
             </div>
           </div>
 
-          {/* ── Cols 2-4 grouped right ── */}
-          <div className="flex flex-col sm:flex-row gap-12 md:gap-16">
-
-          {/* ── Col 2: Certifications ── */}
-          <div className={`transition-all duration-700 delay-100 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
-            <h4 className="font-[var(--font-mono)] text-base text-white uppercase tracking-[0.2em] mb-6">
+          {/* ── Col 2: Cert Badges ── */}
+          <div className={`flex flex-col gap-4 transition-all duration-700 delay-100 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
+            <h4 className="font-[var(--font-mono)] text-base text-white uppercase tracking-[0.2em]">
               Certyfikaty
             </h4>
-            <ul className="space-y-3">
-              {[
-                { code: "ISO", label: "ISO 9001:2015" },
-                { code: "AQAP", label: "AQAP 2110:2016" },
-                { code: "WSK", label: "Wewnętrzny System Kontroli" },
-              ].map((cert) => (
-                <li key={cert.code} className="flex items-center gap-3">
-                  <span className="font-[var(--font-mono)] text-[10px] text-accent tracking-[0.25em] border border-accent/25 px-2 py-0.5 shrink-0">
-                    {cert.code}
-                  </span>
-                  <span className="font-[var(--font-mono)] text-[11px] text-text-dim tracking-[0.08em]">
-                    {cert.label}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <div className="grid gap-1" style={{ gridTemplateColumns: "160px 160px" }}>
+              {/* znak1 — CCJ: AQAP / ISO / WSK */}
+              <div className="flex items-center h-40">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/cert/znak1_CCJ_ISO_AQAP_WSK.svg" alt="CCJ — AQAP 2110:2016, PN-EN ISO 9001:2015, WSK" className="max-h-full w-auto object-contain" draggable={false} />
+              </div>
+              {/* NCAGE */}
+              <div className="flex items-start h-40">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/cert/ncage_9CJ3H.png" alt="NCAGE 9CJ3H" className="h-32 w-auto object-contain" draggable={false} />
+              </div>
+              {/* znak2 — CCJ + PCA */}
+              <div className="flex items-start h-52 -ml-1">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/cert/znak2_CCJ_PCA_ISO9001.svg" alt="CCJ + PCA — PN-EN ISO 9001:2015, AC 057" className="max-h-full w-auto object-contain scale-110" draggable={false} />
+              </div>
+            </div>
           </div>
+
+          {/* ── Cols 3-4 grouped right ── */}
+          <div className="flex flex-col sm:flex-row gap-12 md:gap-16">
 
           {/* ── Col 3: Navigation ── */}
           <div className={`transition-all duration-700 delay-200 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
@@ -212,7 +217,7 @@ export default function Footer({
             </div>
           </div>
 
-          </div>{/* end cols 2-4 */}
+          </div>{/* end cols 3-4 */}
         </div>
       </div>
 

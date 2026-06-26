@@ -68,7 +68,7 @@ export default function PostCard({ post }: { post: PostCardData }) {
 
         {/* Excerpt */}
         {post.excerpt && (
-          <p className="text-text-dim text-sm leading-relaxed line-clamp-3 flex-1">{post.excerpt}</p>
+          <p className="text-text-dim text-sm leading-relaxed line-clamp-3 flex-1 text-justify">{post.excerpt}</p>
         )}
 
         {/* Date + CTA row */}

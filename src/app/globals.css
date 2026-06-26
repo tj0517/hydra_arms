@@ -111,7 +111,7 @@ body:not(:has([data-studio])) input[type="submit"] {
   border-right: 0.5px solid rgba(192, 200, 199, 0.25);
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
   .lines-grid {
     left: 32px;
     right: 32px;

@@ -12,7 +12,7 @@ const MermaidBlock = dynamic(() => import("./MermaidBlock"), { ssr: false });
 export default function PostBodyRenderer({ body }: { body: any[] }) {
   const components: PortableTextComponents = {
     block: {
-      normal: ({ children }) => <p className="mb-4 leading-relaxed text-text-dim">{children}</p>,
+      normal: ({ children }) => <p className="mb-4 leading-relaxed text-text-dim text-justify">{children}</p>,
       h1: ({ children }) => <h1 className="mt-10 mb-4 text-3xl font-bold text-white tracking-tight">{children}</h1>,
       h2: ({ children }) => <h2 className="mt-8 mb-3 text-2xl font-bold text-white tracking-tight">{children}</h2>,
       h3: ({ children }) => <h3 className="mt-6 mb-2 text-xl font-semibold text-white">{children}</h3>,
