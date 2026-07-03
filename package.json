@@ -6,7 +6,10 @@
     "dev": "NODE_OPTIONS='--max-http-header-size=32768' next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:shop": "playwright test tests/shop"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
@@ -31,6 +34,7 @@
     "three": "^0.184.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

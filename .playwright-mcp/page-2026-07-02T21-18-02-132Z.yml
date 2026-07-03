@@ -1,0 +1,384 @@
+- generic [active] [ref=f11e1]:
+  - generic [ref=f11e4]: "[░░░░░░░░░░░░░░░░░░░░] 0%"
+  - navigation [ref=f11e5]:
+    - generic [ref=f11e6]:
+      - link "HYDRA.ARMS" [ref=f11e7]:
+        - /url: /
+      - list [ref=f11e8]:
+        - listitem [ref=f11e9]:
+          - link "Usługi" [ref=f11e10]:
+            - /url: /uslugi
+        - listitem [ref=f11e11]:
+          - link "O nas" [ref=f11e12]:
+            - /url: /o-nas
+        - listitem [ref=f11e13]:
+          - link "Współpraca" [ref=f11e14]:
+            - /url: /wspolpraca
+        - listitem [ref=f11e15]:
+          - link "Blog" [ref=f11e16]:
+            - /url: /blog
+        - listitem [ref=f11e17]:
+          - link "Kontakt" [ref=f11e18]:
+            - /url: /kontakt
+        - listitem [ref=f11e19]:
+          - link "[ Sklep ]" [ref=f11e20]:
+            - /url: /sklep
+  - main [ref=f11e21]:
+    - generic [ref=f11e22]:
+      - generic:
+        - img
+        - generic: X:0000 Y:0000
+      - generic:
+        - generic:
+          - generic: // PL-2026
+          - generic: // KRAKÓW, PL
+        - generic:
+          - generic: "[ 050°04'00\"N ]"
+          - generic: "[ 019°57'00\"E ]"
+          - generic: "[ BEZ // OBR ]"
+        - generic [ref=f11e25]:
+          - generic [ref=f11e26]: // HYDRA ARMS - PL-2026
+          - generic:
+            - heading "Zaawansowana inżynieria obronna — Obrót nowoczesnym uzbrojeniem" [level=1] [ref=f11e27]
+            - paragraph
+            - paragraph
+          - generic [ref=f11e28]:
+            - link "Nasze usługi" [ref=f11e34]:
+              - /url: /uslugi
+            - link "Sklep" [ref=f11e40]:
+              - /url: "#"
+    - generic [ref=f11e42]:
+      - generic [ref=f11e44]:
+        - img "Projektowanie i badania rozwojowe" [ref=f11e46]
+        - generic [ref=f11e50]:
+          - generic [ref=f11e51]:
+            - generic [ref=f11e52]: Projektowanie i R&D
+            - generic [ref=f11e58]:
+              - text: "01"
+              - generic [ref=f11e59]: /04
+          - heading "Projektowanie i badania rozwojowe" [level=2] [ref=f11e60]
+          - paragraph [ref=f11e61]: Rozwijamy systemy uzbrojenia od koncepcji do kompletnej dokumentacji produkcyjnej. Modelowanie 3D, analizy wytrzymałościowe MES, inżynieria odwrotna — każdy projekt przechodzi pełny cykl walidacji przed wejściem do produkcji.
+          - generic [ref=f11e62]:
+            - generic [ref=f11e64]: CAD/CAM
+            - generic [ref=f11e67]: Analizy MES
+            - generic [ref=f11e70]: Inżynieria odwrotna
+          - link "Szczegóły →" [ref=f11e76]:
+            - /url: /uslugi
+      - generic [ref=f11e78]:
+        - img "Produkcja komponentów" [ref=f11e80]
+        - generic [ref=f11e84]:
+          - generic [ref=f11e85]:
+            - generic [ref=f11e86]: Produkcja
+            - generic [ref=f11e92]:
+              - text: "02"
+              - generic [ref=f11e93]: /04
+          - heading "Produkcja komponentów" [level=2] [ref=f11e94]
+          - paragraph [ref=f11e95]: Wytwarzamy zaawansowane komponenty uzbrojenia z wykorzystaniem precyzyjnych technologii CNC, obróbki cieplnej i kontroli jakości zgodnej ze standardami NATO.
+          - generic [ref=f11e96]:
+            - generic [ref=f11e98]: CNC
+            - generic [ref=f11e101]: Obróbka cieplna
+            - generic [ref=f11e104]: Kontrola jakości
+          - link "Szczegóły →" [ref=f11e110]:
+            - /url: /uslugi
+      - generic [ref=f11e112]:
+        - img "Obrót i dystrybucja" [ref=f11e114]
+        - generic [ref=f11e118]:
+          - generic [ref=f11e119]:
+            - generic [ref=f11e120]: Dystrybucja
+            - generic [ref=f11e126]:
+              - text: "03"
+              - generic [ref=f11e127]: /04
+          - heading "Obrót i dystrybucja" [level=2] [ref=f11e128]
+          - paragraph [ref=f11e129]: Prowadzimy licencjonowaną działalność handlową w zakresie broni, amunicji oraz wyposażenia specjalnego dla sektora obronnego i odbiorców cywilnych.
+          - generic [ref=f11e130]:
+            - generic [ref=f11e132]: B2G
+            - generic [ref=f11e135]: B2B
+            - generic [ref=f11e138]: Rynek cywilny
+          - link "Szczegóły →" [ref=f11e144]:
+            - /url: /uslugi
+      - generic [ref=f11e146]:
+        - img "Serwis i modernizacja" [ref=f11e148]
+        - generic [ref=f11e152]:
+          - generic [ref=f11e153]:
+            - generic [ref=f11e154]: Serwis
+            - generic [ref=f11e160]:
+              - text: "04"
+              - generic [ref=f11e161]: /04
+          - heading "Serwis i modernizacja" [level=2] [ref=f11e162]
+          - paragraph [ref=f11e163]: Zapewniamy kompleksowy serwis techniczny, modernizację istniejących systemów uzbrojenia oraz dostosowanie do aktualnych standardów operacyjnych.
+          - generic [ref=f11e164]:
+            - generic [ref=f11e166]: Modernizacja
+            - generic [ref=f11e169]: Diagnostyka
+            - generic [ref=f11e172]: Kalibracja
+          - link "Szczegóły →" [ref=f11e178]:
+            - /url: /uslugi
+    - generic [ref=f11e179]:
+      - generic [ref=f11e180]: //02 O NAS
+      - generic [ref=f11e181]:
+        - paragraph [ref=f11e182]:
+          - generic [ref=f11e183]: Realizujemy
+          - generic [ref=f11e184]: krytyczne
+          - generic [ref=f11e185]: projekty
+          - generic [ref=f11e186]: z
+          - generic [ref=f11e187]: zakresu
+          - generic [ref=f11e188]: wytwarzania
+          - generic [ref=f11e189]: uzbrojenia
+          - generic [ref=f11e190]: oraz
+          - generic [ref=f11e191]: technologii
+          - generic [ref=f11e192]: dual-use.
+          - generic [ref=f11e193]: Łączymy
+          - generic [ref=f11e194]: rygorystyczne
+          - generic [ref=f11e195]: standardy
+          - generic [ref=f11e196]: NATO
+          - generic [ref=f11e197]: z
+          - generic [ref=f11e198]: precyzją
+          - generic [ref=f11e199]: nowoczesnych
+          - generic [ref=f11e200]: technologii
+          - generic [ref=f11e201]: tworząc
+          - generic [ref=f11e202]: innowacje.
+          - generic [ref=f11e203]: Prowadzimy
+          - generic [ref=f11e204]: również
+          - generic [ref=f11e205]: działalność
+          - generic [ref=f11e206]: handlową
+          - generic [ref=f11e207]: na
+          - generic [ref=f11e208]: rynku
+          - generic [ref=f11e209]: cywilnym
+          - generic [ref=f11e210]: i
+          - generic [ref=f11e211]: specjalnym.
+        - link "Zobacz więcej" [ref=f11e218]:
+          - /url: /o-nas
+    - generic [ref=f11e219]:
+      - generic [ref=f11e220]: //03 AKTUALNOŚCI
+      - generic [ref=f11e221]:
+        - generic [ref=f11e222]:
+          - heading "Aktualności" [level=2] [ref=f11e223]
+          - link "Wszystkie aktualności" [ref=f11e230]:
+            - /url: /aktualnosci
+        - generic [ref=f11e231]:
+          - link "Lorem ipsum Lorem Ipsum Lorem ipsum Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec egestas nec diam vitae posuere. 17 maja 2026 czytaj →" [ref=f11e232]:
+            - /url: /aktualnosci/lorem-ipsum
+            - img "Lorem ipsum" [ref=f11e234]
+            - generic [ref=f11e235]:
+              - generic [ref=f11e236]:
+                - generic [ref=f11e237]: Lorem
+                - generic [ref=f11e238]: Ipsum
+              - heading "Lorem ipsum" [level=3] [ref=f11e239]
+              - paragraph [ref=f11e240]: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec egestas nec diam vitae posuere.
+              - generic [ref=f11e241]:
+                - generic [ref=f11e242]: 17 maja 2026
+                - generic [ref=f11e243]: czytaj →
+          - link "Lorem ipsum Lorem Ipsum Lorem ipsum Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec egestas nec diam vitae posuere. 17 maja 2026 czytaj →" [ref=f11e244]:
+            - /url: /aktualnosci/lorem-ipsum1
+            - img "Lorem ipsum" [ref=f11e246]
+            - generic [ref=f11e247]:
+              - generic [ref=f11e248]:
+                - generic [ref=f11e249]: Lorem
+                - generic [ref=f11e250]: Ipsum
+              - heading "Lorem ipsum" [level=3] [ref=f11e251]
+              - paragraph [ref=f11e252]: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec egestas nec diam vitae posuere.
+              - generic [ref=f11e253]:
+                - generic [ref=f11e254]: 17 maja 2026
+                - generic [ref=f11e255]: czytaj →
+          - link "Lorem ipsum Lorem Ipsum Lorem ipsum Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec egestas nec diam vitae posuere. 17 maja 2026 czytaj →" [ref=f11e256]:
+            - /url: /aktualnosci/lorem-ipsum2
+            - img "Lorem ipsum" [ref=f11e258]
+            - generic [ref=f11e259]:
+              - generic [ref=f11e260]:
+                - generic [ref=f11e261]: Lorem
+                - generic [ref=f11e262]: Ipsum
+              - heading "Lorem ipsum" [level=3] [ref=f11e263]
+              - paragraph [ref=f11e264]: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec egestas nec diam vitae posuere.
+              - generic [ref=f11e265]:
+                - generic [ref=f11e266]: 17 maja 2026
+                - generic [ref=f11e267]: czytaj →
+    - generic [ref=f11e271]:
+      - generic [ref=f11e272]: //04 POTENCJAŁ
+      - generic [ref=f11e273]:
+        - heading [level=2] [ref=f11e274]
+        - generic [ref=f11e275]:
+          - paragraph [ref=f11e277]: HYDRA ARMS to krakowski ośrodek kompetencyjny dedykowany dla sektora Security & Defense. Specjalizujemy się w wytwarzaniu zaawansowanych komponentów o wysokim stopniu skomplikowania.
+          - link "Zobacz więcej" [ref=f11e279]:
+            - /url: /o-nas
+            - img [ref=f11e280]
+    - generic [ref=f11e282]:
+      - generic [ref=f11e283]: //05 DYSTRYBUCJA
+      - generic [ref=f11e284]:
+        - generic [ref=f11e285]:
+          - img "Zamówienia rządowe" [ref=f11e287]
+          - generic [ref=f11e288]:
+            - generic [ref=f11e289]: B2G
+            - heading "Zamówienia rządowe" [level=3] [ref=f11e290]
+            - paragraph [ref=f11e291]: Dostawy dla jednostek wojskowych, służb mundurowych i instytucji państwowych realizowane w ramach ścisłych procedur bezpieczeństwa i zamówień publicznych.
+            - link "Dowiedz się więcej" [ref=f11e298]:
+              - /url: /wspolpraca
+        - generic [ref=f11e299]:
+          - img "Kooperacja przemysłowa" [ref=f11e301]
+          - generic [ref=f11e302]:
+            - generic [ref=f11e303]: B2B
+            - heading "Kooperacja przemysłowa" [level=3] [ref=f11e304]
+            - paragraph [ref=f11e305]: Współpraca z partnerami przemysłowymi w zakresie prototypowania, produkcji seryjnej komponentów i integracji systemów obronnych na zamówienie.
+            - link "Dowiedz się więcej" [ref=f11e312]:
+              - /url: /wspolpraca
+        - generic [ref=f11e313]:
+          - img "Rynek cywilny" [ref=f11e315]
+          - generic [ref=f11e316]:
+            - generic [ref=f11e317]: B2C
+            - heading "Rynek cywilny" [level=3] [ref=f11e318]
+            - paragraph [ref=f11e319]: Dystrybucja profesjonalnych systemów broni strzeleckiej i amunicji dla uprawnionych odbiorców indywidualnych zgodnie z obowiązującymi regulacjami.
+            - link "Dowiedz się więcej" [ref=f11e326]:
+              - /url: /wspolpraca
+    - generic [ref=f11e328]:
+      - generic [ref=f11e329]:
+        - generic:
+          - img
+      - generic [ref=f11e333]:
+        - heading "HYDRA ARMS SP. Z O.O." [level=3] [ref=f11e334]
+        - generic [ref=f11e335]:
+          - paragraph [ref=f11e336]: "[→] ul. Gdańska 22"
+          - paragraph [ref=f11e337]: "[→] 31-411 Kraków, Polska"
+          - paragraph [ref=f11e338]: "[→] 50°04'33\"N 019°56'39\"E"
+          - paragraph [ref=f11e339]: "[→] Punkt handlowo-biurowy"
+        - link "Wyznacz Trasę →" [ref=f11e346]:
+          - /url: https://maps.google.com/?q=50.0758,19.9441
+    - generic [ref=f11e349]:
+      - generic [ref=f11e355]: hydra-arms@terminal:~/kontakt
+      - generic [ref=f11e356]:
+        - generic [ref=f11e357]:
+          - generic [ref=f11e358]: HYDRA ARMS — BEZPIECZNY KANAŁ ŁĄCZNOŚCI v2.4.1
+          - generic [ref=f11e359]: Inicjalizacja szyfrowanego kanału... OK
+          - generic [ref=f11e360]: Połączenie nawiązane. Oczekiwanie na dane wejściowe.
+        - generic [ref=f11e362]:
+          - generic [ref=f11e363]:
+            - generic [ref=f11e364]: $ cat /etc/hydra/contact.conf
+            - generic [ref=f11e365]:
+              - paragraph [ref=f11e366]: R&D rd@hydraarms.com
+              - paragraph [ref=f11e367]: B2G b2g@hydraarms.com
+              - paragraph [ref=f11e368]: HANDEL handel@hydraarms.com
+              - paragraph [ref=f11e369]: BIURO biuro@hydraarms.com
+            - generic [ref=f11e370]:
+              - generic [ref=f11e371]: $ hydra --status
+              - generic [ref=f11e372]:
+                - generic [ref=f11e373]: "SZYFROWANIE: AES-256"
+                - generic [ref=f11e374]: "PROTOKÓŁ: TLS 1.3"
+                - generic [ref=f11e375]: "STATUS: AKTYWNY █"
+          - generic [ref=f11e376]:
+            - generic [ref=f11e377]: $ hydra --wyslij-wiadomosc
+            - generic [ref=f11e378]:
+              - generic [ref=f11e379]:
+                - generic [ref=f11e380]:
+                  - generic [ref=f11e381]: ">"
+                  - textbox "IMIĘ" [ref=f11e382]
+                - generic [ref=f11e383]:
+                  - generic [ref=f11e384]: ">"
+                  - textbox "NAZWISKO" [ref=f11e385]
+              - generic [ref=f11e387]:
+                - generic [ref=f11e388]: ">"
+                - textbox "EMAIL" [ref=f11e389]
+              - generic [ref=f11e391]:
+                - generic [ref=f11e392]: ">"
+                - textbox "FIRMA / INSTYTUCJA (opcjonalne)" [ref=f11e393]
+              - generic [ref=f11e395]:
+                - generic [ref=f11e396]: ">"
+                - textbox "TYTUŁ" [ref=f11e397]
+              - generic [ref=f11e399]:
+                - generic [ref=f11e400]: ">"
+                - textbox "TREŚĆ WIADOMOŚCI" [ref=f11e401]
+              - generic [ref=f11e403]:
+                - generic [ref=f11e404]: // SUBSKRYBUJ — KANAŁ INFORMACYJNY
+                - generic [ref=f11e405]:
+                  - generic [ref=f11e406] [cursor=pointer]:
+                    - checkbox "AKTUALNOŚCI" [checked] [ref=f11e408]
+                    - generic [ref=f11e411]: AKTUALNOŚCI
+                  - generic [ref=f11e412] [cursor=pointer]:
+                    - checkbox "BLOG" [ref=f11e414]
+                    - generic [ref=f11e416]: BLOG
+                  - generic [ref=f11e417] [cursor=pointer]:
+                    - checkbox "B2G" [ref=f11e419]
+                    - generic [ref=f11e421]: B2G
+                  - generic [ref=f11e422] [cursor=pointer]:
+                    - checkbox "B2B" [ref=f11e424]
+                    - generic [ref=f11e426]: B2B
+                  - generic [ref=f11e427] [cursor=pointer]:
+                    - checkbox "SKLEP" [ref=f11e429]
+                    - generic [ref=f11e431]: SKLEP
+              - generic [ref=f11e432]:
+                - generic "Zgoda na przetwarzanie danych osobowych" [ref=f11e433] [cursor=pointer]:
+                  - checkbox "Zgoda na przetwarzanie danych osobowych" [ref=f11e434]
+                - generic [ref=f11e436]:
+                  - text: Wyrażam zgodę na przetwarzanie danych przez HYDRA ARMS w celu inicjacji procedury kontaktowej. Akceptuję
+                  - link "Politykę Prywatności" [ref=f11e437]:
+                    - /url: /polityka-prywatnosci
+                  - text: .
+              - button "WYŚLIJ" [ref=f11e444]
+  - contentinfo [ref=f11e445]:
+    - generic [ref=f11e448]:
+      - generic [ref=f11e449]:
+        - generic [ref=f11e450]: HYDRA.ARMS
+        - generic [ref=f11e451]:
+          - paragraph [ref=f11e452]: HYDRA ARMS SP. Z O.O.
+          - paragraph [ref=f11e453]: ul. Cechowa 44B 30-614 Kraków
+          - paragraph [ref=f11e454]: "Sklep: ul. Gdańska 22, 31-411 Kraków"
+          - paragraph [ref=f11e456]: "NIP: [ 6793302181 ]"
+          - paragraph [ref=f11e457]: "REGON: [ 528976880 ]"
+          - paragraph [ref=f11e458]: "KRS: [ 0001111593 ]"
+          - paragraph [ref=f11e459]: "BDO: [ 000654184 ]"
+          - paragraph [ref=f11e460]: "Koncesja MSWiA: [ B-117/2025 ]"
+          - paragraph [ref=f11e461]: "NCAGE: [ 9CJ3H ]"
+          - paragraph [ref=f11e462]: "D-U-N-S®: [ 665007622 ]"
+          - paragraph [ref=f11e463]: "UEI: [ YUXMMDP8MNP4 ]"
+      - generic [ref=f11e464]:
+        - heading "Certyfikaty" [level=4] [ref=f11e465]
+        - generic [ref=f11e466]:
+          - img "CCJ — Centrum Certyfikacji Jakości" [ref=f11e469]
+          - img "NCAGE 9CJ3H" [ref=f11e472]
+          - img "CCJ + PCA — PN-EN ISO 9001:2015, AC 057" [ref=f11e475]
+      - generic [ref=f11e476]:
+        - generic [ref=f11e477]:
+          - heading "Nawigacja" [level=4] [ref=f11e478]
+          - list [ref=f11e479]:
+            - listitem [ref=f11e480]:
+              - link "Usługi" [ref=f11e481]:
+                - /url: /uslugi
+            - listitem [ref=f11e482]:
+              - link "O nas" [ref=f11e483]:
+                - /url: /o-nas
+            - listitem [ref=f11e484]:
+              - link "Współpraca" [ref=f11e485]:
+                - /url: /wspolpraca
+            - listitem [ref=f11e486]:
+              - link "Aktualności" [ref=f11e487]:
+                - /url: /aktualnosci
+            - listitem [ref=f11e488]:
+              - link "Blog" [ref=f11e489]:
+                - /url: /blog
+            - listitem [ref=f11e490]:
+              - link "Kontakt" [ref=f11e491]:
+                - /url: /kontakt
+            - listitem [ref=f11e492]:
+              - link "Sklep" [ref=f11e493]:
+                - /url: /sklep
+        - generic [ref=f11e495]:
+          - link "Facebook" [ref=f11e496]:
+            - /url: "#!"
+            - img [ref=f11e497]
+          - link "Instagram" [ref=f11e499]:
+            - /url: "#!"
+            - img [ref=f11e500]
+          - link "LinkedIn" [ref=f11e502]:
+            - /url: "#!"
+            - img [ref=f11e503]
+          - link "Email" [ref=f11e505]:
+            - /url: mailto:biuro@hydraarms.com
+            - img [ref=f11e506]
+    - generic [ref=f11e510]:
+      - link "[ Polityka prywatności ]" [ref=f11e511]:
+        - /url: /polityka-prywatnosci
+      - link "[ Regulamin ]" [ref=f11e512]:
+        - /url: /regulamin
+      - link "[ Polityka jakości ]" [ref=f11e513]:
+        - /url: /polityka-jakosci
+      - link "[ Polityka WSK ]" [ref=f11e514]:
+        - /url: /polityka-wsk
+      - generic [ref=f11e515]: "[ REALIZACJA ... ]"
+  - button "Open Next.js Dev Tools" [ref=f11e521] [cursor=pointer]:
+    - img [ref=f11e522]

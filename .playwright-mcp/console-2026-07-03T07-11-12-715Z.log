@@ -1,0 +1,3 @@
+[    9419ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://hydra-ams.vercel.app/:0
+[    9516ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://hydra-ams.vercel.app/favicon.ico:0
+[   23496ms] [WARNING] Image "wood-pattern" could not be loaded. Please make sure you have added the image with map.addImage() or a "sprite" property in your style. You can provide missing images by listening for the "styleimagemissing" map event. @ https://hydra-arms.vercel.app/_next/static/chunks/42ec29ff2a32d602.js?dpl=dpl_FNY8Wd911N8W5Gdk16DV8B3JXeMS:0

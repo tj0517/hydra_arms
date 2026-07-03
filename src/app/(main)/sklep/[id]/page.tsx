@@ -4,15 +4,13 @@ import ProductDetailClient from '@/components/shop/ProductDetailClient';
 import { createPublicClient } from '@/lib/supabase/public';
 import type { ShopProduct, ShopCategory } from '@/lib/supabase/types';
 
-const INVENTORY_ID = 35743;
-
 async function fetchProduct(id: number): Promise<{ product: ShopProduct; categories: ShopCategory[]; related: ShopProduct[] } | null> {
   const sb = createPublicClient();
   if (!sb) return null;
 
   const [productResult, categoriesResult] = await Promise.all([
     sb.from('shop_products').select('*').eq('id', id).eq('is_active', true).limit(1).single(),
-    sb.from('shop_categories').select('*').eq('inventory_id', INVENTORY_ID).order('name', { ascending: true }).limit(200),
+    sb.from('shop_categories').select('*').order('name', { ascending: true }).limit(500),
   ]);
 
   if (!productResult.data) return null;
@@ -57,7 +55,7 @@ export async function generateMetadata({
   const data = await fetchProduct(productId);
   if (!data) return {};
   const { product } = data;
-  const image = product.images?.[0];
+  const image = product.images ? Object.values(product.images)[0] : undefined;
   return {
     title: product.name,
     description: product.description

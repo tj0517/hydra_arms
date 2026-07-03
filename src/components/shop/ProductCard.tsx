@@ -16,7 +16,7 @@ const fmt = (n: number) =>
 
 
 export default function ProductCard({ product, categories }: ProductCardProps) {
-  const { addItem } = useCart();
+  const { addItem, items } = useCart();
   const cardRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   const [imgError, setImgError] = useState(false);
@@ -40,16 +40,18 @@ export default function ProductCard({ product, categories }: ProductCardProps) {
     return () => observer.disconnect();
   }, []);
 
+  const cartQty = items.find(i => i.product.id === product.id)?.quantity ?? 0;
+  const outOfStock = product.stock === 0;
+  const atStockLimit = cartQty >= product.stock;
+
   function handleAdd(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    if (product.stock === 0 || adding) return;
+    if (outOfStock || adding || atStockLimit) return;
     addItem(product);
     setAdding(true);
     setTimeout(() => setAdding(false), 1400);
   }
-
-  const outOfStock = product.stock === 0;
 
   return (
     <Link href={`/sklep/${product.id}`} className="block group">
@@ -131,16 +133,16 @@ export default function ProductCard({ product, categories }: ProductCardProps) {
 
           <button
             onClick={handleAdd}
-            disabled={outOfStock || adding}
+            disabled={outOfStock || adding || atStockLimit}
             className={`mt-1 w-full py-2.5 border font-[var(--font-mono)] text-[10px] tracking-[0.18em] transition-all duration-200 ${
-              outOfStock
+              outOfStock || atStockLimit
                 ? 'border-white/8 text-white/15 cursor-not-allowed'
                 : adding
                 ? 'border-accent text-accent bg-accent/5'
                 : 'border-white/15 text-text-dim hover:border-accent/50 hover:text-accent hover:bg-accent/3'
             }`}
           >
-            {adding ? '✓ DODANO' : '[ DODAJ DO KOSZYKA ]'}
+            {adding ? '✓ DODANO' : atStockLimit ? 'BRAK W MAGAZYNIE' : '[ DODAJ DO KOSZYKA ]'}
           </button>
         </div>
       </div>

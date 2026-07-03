@@ -191,10 +191,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Nie udało się zapisać pozycji zamówienia' }, { status: 500 })
     }
 
-    // Push to BaseLinker — non-fatal: checkout succeeds even if BL is unreachable
-    try {
+    // Push to BaseLinker — non-fatal: checkout succeeds even if BL is unreachable.
+    // Skip if BASELINKER_ORDER_STATUS_ID is not configured (avoids ERROR_BAD_ORDER_STATUS_ID).
+    const blStatusId = parseInt(process.env.BASELINKER_ORDER_STATUS_ID ?? '0', 10);
+    if (blStatusId === 0) {
+      console.log('[checkout] Skipping BaseLinker push — BASELINKER_ORDER_STATUS_ID not set');
+    } else try {
       const blOrderId = await addOrder({
-        order_status_id: parseInt(process.env.BASELINKER_ORDER_STATUS_ID ?? '0', 10),
+        order_status_id: blStatusId,
         currency: 'PLN',
         payment_method: 'Przelew',
         payment_method_cod: 0,

@@ -56,7 +56,7 @@ export default function CartDrawer() {
         </div>
 
         {/* Items */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto" data-lenis-prevent>
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full gap-4 px-6 text-center">
               <svg width="40" height="40" viewBox="0 0 40 40" fill="none" className="text-white/10">
@@ -117,7 +117,7 @@ export default function CartDrawer() {
                     {/* Remove */}
                     <button
                       onClick={() => removeItem(product.id)}
-                      className="text-white/20 hover:text-accent transition-colors self-start mt-0.5 font-[var(--font-mono)] text-sm"
+                      className="text-white/50 hover:text-accent transition-colors self-start mt-0.5 font-[var(--font-mono)] text-sm"
                       title="Usuń"
                     >×</button>
                   </li>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
 
 interface OrderData {
   id: string
@@ -23,6 +24,7 @@ export default function OrderConfirmationClient({ orderId }: { orderId: string }
   const [order, setOrder] = useState<OrderData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
 
   useEffect(() => {
     fetch(`/api/shop/orders/${orderId}`)
@@ -33,6 +35,8 @@ export default function OrderConfirmationClient({ orderId }: { orderId: string }
       .then(data => setOrder(data))
       .catch(() => setError(true))
       .finally(() => setLoading(false))
+
+    createClient().auth.getUser().then(({ data }) => setIsLoggedIn(!!data.user))
   }, [orderId])
 
   if (loading) {
@@ -139,10 +143,10 @@ export default function OrderConfirmationClient({ orderId }: { orderId: string }
 
         <div className="flex items-center justify-center gap-4 pt-4 flex-wrap">
           <Link
-            href="/konto/zamowienia"
+            href={isLoggedIn ? '/konto/zamowienia' : '/konto/rejestracja'}
             className="border border-white/15 px-6 py-3.5 font-[var(--font-mono)] text-xs text-white/70 hover:border-accent hover:text-accent transition-colors tracking-[0.15em]"
           >
-            MOJE ZAMÓWIENIA
+            {isLoggedIn ? 'MOJE ZAMÓWIENIA' : 'ZAŁÓŻ KONTO'}
           </Link>
           <Link
             href="/sklep"

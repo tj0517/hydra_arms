@@ -32,7 +32,7 @@ function sanitizeHtml(html: string): string {
 
 
 export default function ProductDetailClient({ product, categories, related }: Props) {
-  const { addItem, openCart } = useCart();
+  const { addItem, openCart, items } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [activeImg, setActiveImg] = useState(0);
   const [adding, setAdding] = useState(false);
@@ -42,9 +42,11 @@ export default function ProductDetailClient({ product, categories, related }: Pr
   const category = categories.find(c => c.id === product.category_id);
   const parentCategory = category?.parent_id ? categories.find(c => c.id === category.parent_id) : null;
   const outOfStock = product.stock === 0;
+  const cartQty = items.find(i => i.product.id === product.id)?.quantity ?? 0;
+  const atStockLimit = cartQty + quantity > product.stock;
 
   function handleAdd() {
-    if (outOfStock || adding) return;
+    if (outOfStock || adding || atStockLimit) return;
     addItem(product, quantity);
     setAdding(true);
     setTimeout(() => { setAdding(false); openCart(); }, 900);
@@ -217,16 +219,16 @@ export default function ProductDetailClient({ product, categories, related }: Pr
 
               <button
                 onClick={handleAdd}
-                disabled={outOfStock || adding}
+                disabled={outOfStock || adding || atStockLimit}
                 className={`w-full py-4 font-[var(--font-mono)] text-xs tracking-[0.2em] border transition-all duration-300 ${
-                  outOfStock
+                  outOfStock || atStockLimit
                     ? 'border-white/8 text-white/15 cursor-not-allowed'
                     : adding
                     ? 'border-accent bg-accent/8 text-accent'
                     : 'border-accent/50 text-accent hover:bg-accent/8 hover:border-accent'
                 }`}
               >
-                {adding ? '[ DODANO DO KOSZYKA ✓ ]' : '[ DODAJ DO KOSZYKA ]'}
+                {adding ? '[ DODANO DO KOSZYKA ✓ ]' : atStockLimit ? '[ BRAK W MAGAZYNIE ]' : '[ DODAJ DO KOSZYKA ]'}
               </button>
             </div>
 

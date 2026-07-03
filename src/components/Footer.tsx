@@ -132,21 +132,32 @@ export default function Footer({
             <h4 className="font-[var(--font-mono)] text-base text-white uppercase tracking-[0.2em]">
               Certyfikaty
             </h4>
-            <div className="grid gap-1" style={{ gridTemplateColumns: "160px 160px" }}>
-              {/* znak1 — CCJ: AQAP / ISO / WSK */}
-              <div className="flex items-center h-40">
+            <div className="grid grid-cols-2 gap-2">
+              {/* Card 1: CCJ ISO 9001 */}
+              <div className="bg-white rounded-lg p-2 flex items-center justify-center">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/cert/znak1_CCJ_ISO_AQAP_WSK.svg" alt="CCJ — AQAP 2110:2016, PN-EN ISO 9001:2015, WSK" className="max-h-full w-auto object-contain" draggable={false} />
+                <img src="/cert/Tekst%20akapitu.png" alt="CCJ — PN-EN ISO 9001:2015 Certyfikowany System Zarządzania" className="h-24 w-auto object-contain" draggable={false} />
               </div>
-              {/* NCAGE */}
-              <div className="flex items-start h-40">
+              {/* Card 2: NCAGE */}
+              <div className="bg-white rounded-lg p-2 flex items-center justify-center">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/cert/ncage_9CJ3H.png" alt="NCAGE 9CJ3H" className="h-32 w-auto object-contain" draggable={false} />
+                <img src="/cert/ncage_9CJ3H.png" alt="NCAGE 9CJ3H" className="h-24 w-auto object-contain" draggable={false} />
               </div>
-              {/* znak2 — CCJ + PCA */}
-              <div className="flex items-start h-52 -ml-1">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/cert/znak2_CCJ_PCA_ISO9001.svg" alt="CCJ + PCA — PN-EN ISO 9001:2015, AC 057" className="max-h-full w-auto object-contain scale-110" draggable={false} />
+              {/* Card 3: CCJ w1 + PCA EMAS — spans both columns */}
+              <div className="col-span-2 bg-white rounded-lg p-2 flex flex-col items-center justify-center gap-2">
+                <div className="flex items-start justify-center gap-0">
+                  <div className="flex flex-col items-center gap-1">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/cert/ccj_w1.png" alt="CCJ — Centrum Certyfikacji Jakości" className="h-24 w-auto object-contain" draggable={false} />
+                    <div className="text-center text-[10px] text-black leading-snug" style={{ fontFamily: "Arial, sans-serif" }}>
+                      <p>AQAP 2110:2016</p>
+                      <p>PN-EN ISO 9001:2015</p>
+                      <p>Wewnętrzny System Kontroli</p>
+                    </div>
+                  </div>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/cert/AC%20057.png" alt="PCA — Weryfikacja EMAS · AC 057" className="h-24 w-auto object-contain -ml-6" draggable={false} />
+                </div>
               </div>
             </div>
           </div>
@@ -229,6 +240,12 @@ export default function Footer({
           </Link>
           <Link href="/regulamin" className="font-[var(--font-mono)] text-xs text-text-dim hover:text-accent transition-colors duration-300 uppercase tracking-[0.15em]">
             [ Regulamin ]
+          </Link>
+          <Link href="/polityka-jakosci" className="font-[var(--font-mono)] text-xs text-text-dim hover:text-accent transition-colors duration-300 uppercase tracking-[0.15em]">
+            [ Polityka jakości ]
+          </Link>
+          <Link href="/polityka-wsk" className="font-[var(--font-mono)] text-xs text-text-dim hover:text-accent transition-colors duration-300 uppercase tracking-[0.15em]">
+            [ Polityka WSK ]
           </Link>
           <span className="font-[var(--font-mono)] text-xs text-text-dim uppercase tracking-[0.15em]">
             [ REALIZACJA ... ]

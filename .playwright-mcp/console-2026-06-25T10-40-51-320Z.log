@@ -1,8 +1,0 @@
-[     249ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:2297
-[     367ms] [LOG] [Fast Refresh] done in 218ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:2297
-[     722ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:2297
-[     785ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:2297
-[    8603ms] [WARNING] Image with src "https://cdn.sanity.io/images/y0kc7fj6/production/4497f0a69aa5c204b4362de5d06cb351d16b1015-1920x2880.jpg?rect=0,800,1920,1280&w=600&h=400" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
-Read more: https://nextjs.org/docs/app/api-reference/components/image#loading @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:2297
-[   91297ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:2297
-[   91794ms] [LOG] [Fast Refresh] done in 521ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:2297
