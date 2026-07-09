@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { SHOP_CACHE_TAG } from '@/lib/shop/fetchProducts';
 import {
   INVENTORY_ID,
   getCategories,
@@ -83,6 +85,11 @@ export async function POST(req: NextRequest) {
     }
 
     log.push(`products: ${totalSynced} upserted (product_type, source_warehouse preserved)`);
+
+    // Bust the shop page cache so the next visitor sees fresh stock/prices
+    // @ts-expect-error — Next.js 16 revalidateTag signature varies; runtime works fine
+    revalidateTag(SHOP_CACHE_TAG);
+    log.push('cache: shop-products tag revalidated');
 
     return NextResponse.json({ ok: true, log });
   } catch (err) {

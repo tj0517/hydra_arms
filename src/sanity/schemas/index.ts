@@ -9,6 +9,12 @@ import { navigation } from './navigation'
 import { newsPost } from './newsPost'
 import { blogPost } from './blogPost'
 import { certyfikatyPage } from './certyfikatyPage'
+import { shopPage } from './shopPage'
+import { shopBannerBlock } from './shop/shopBannerBlock'
+import { shopProductPickerBlock } from './shop/shopProductPickerBlock'
+import { shopTileGridBlock } from './shop/shopTileGridBlock'
+import { shopTextCtaBlock } from './shop/shopTextCtaBlock'
+import { shopIconStripBlock } from './shop/shopIconStripBlock'
 
 export const schemaTypes = [
   siteSettings,
@@ -22,4 +28,11 @@ export const schemaTypes = [
   newsPost,
   blogPost,
   certyfikatyPage,
+  // Shop page builder
+  shopPage,
+  shopBannerBlock,
+  shopProductPickerBlock,
+  shopTileGridBlock,
+  shopTextCtaBlock,
+  shopIconStripBlock,
 ]

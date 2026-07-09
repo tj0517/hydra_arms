@@ -172,6 +172,44 @@ export const otherNewsPostsQuery = groq`*[_type == "newsPost" && slug.current !=
   featured
 }`
 
+export const shopPageQuery = groq`*[_type == "shopPage"][0] {
+  title,
+  sections[] {
+    _key,
+    _type,
+    heading,
+    subtitle,
+    image,
+    videoPath,
+    ctaText,
+    ctaLink,
+    ctaSecondaryText,
+    ctaSecondaryLink,
+    theme,
+    height,
+    selectionMode,
+    productIds,
+    limit,
+    layout,
+    background,
+    columns,
+    body,
+    tiles[] {
+      _key,
+      label,
+      description,
+      image,
+      link
+    },
+    items[] {
+      _key,
+      icon,
+      label,
+      subtext
+    }
+  }
+}`
+
 export const blogPostBySlugQuery = groq`*[_type == "blogPost" && slug.current == $slug][0] {
   ${postCardFields},
   body[] {
