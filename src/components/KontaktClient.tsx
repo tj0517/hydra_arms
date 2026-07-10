@@ -63,6 +63,7 @@ export default function KontaktClient({
   const [consent, setConsent] = useState(false);
   const [dept, setDept] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [rodoOpen, setRodoOpen] = useState(false);
 
   const NL_SEGMENTS = [
     { id: "aktualnosci", label: "AKTUALNOŚCI" },
@@ -373,6 +374,55 @@ export default function KontaktClient({
                         </div>
                       </div>
 
+                      {/* ─── RODO Clause ─── */}
+                      <div className="border border-accent/10 bg-accent/[0.02]">
+                        <button
+                          type="button"
+                          onClick={() => setRodoOpen(o => !o)}
+                          className="w-full flex items-center justify-between px-4 py-3 font-[var(--font-mono)] text-[10px] text-accent/40 hover:text-accent/70 transition-colors tracking-[0.2em] uppercase text-left"
+                        >
+                          <span>// Klauzula informacyjna RODO</span>
+                          <span className="ml-2 shrink-0">{rodoOpen ? '[ − ]' : '[ + ]'}</span>
+                        </button>
+                        {rodoOpen && (
+                          <div className="px-4 pb-4 space-y-2 font-[var(--font-mono)] text-[11px] text-accent/40 leading-[1.8] border-t border-accent/10">
+                            <p className="pt-3">
+                              <span className="text-accent/60">Administrator:</span>{' '}
+                              HYDRA ARMS Sp. z o.o., ul. Cechowa 44B, 30-614 Kraków, KRS: 0001111593.
+                            </p>
+                            <p>
+                              <span className="text-accent/60">Cel i podstawa prawna:</span>{' '}
+                              Twoje dane (imię, adres e-mail, telefon, treść wiadomości, załączone pliki) są przetwarzane
+                              na podstawie art. 6 ust. 1 lit. f RODO — prawnie uzasadniony interes Administratora
+                              polegający na sprawnej obsłudze zapytań i korespondencji handlowej. W przypadku zapytań
+                              dotyczących usług koncesjonowanych lub eksportowych — również na podstawie art. 6 ust. 1 lit. c RODO.
+                            </p>
+                            <p>
+                              <span className="text-accent/60">Dobrowolność:</span>{' '}
+                              Podanie danych jest dobrowolne, ale konieczne do wysłania formularza i obsługi zapytania.
+                            </p>
+                            <p>
+                              <span className="text-accent/60">Okres przechowywania:</span>{' '}
+                              Do czasu zakończenia korespondencji lub zgłoszenia skutecznego sprzeciwu,
+                              nie dłużej niż 2 lata od ostatniego kontaktu.
+                            </p>
+                            <p>
+                              <span className="text-accent/60">Prawa:</span>{' '}
+                              Przysługuje Ci prawo dostępu do danych, ich sprostowania, usunięcia, ograniczenia
+                              przetwarzania, przenoszenia, wniesienia sprzeciwu oraz skargi do Prezesa UODO.
+                              Kontakt RODO: <span className="text-accent/60">rodo@hydra-arms.pl</span>
+                            </p>
+                            <p>
+                              Szczegóły w{' '}
+                              <Link href="/polityka-prywatnosci" className="text-accent/70 hover:text-accent transition-colors underline underline-offset-2">
+                                Polityce Prywatności
+                              </Link>
+                              .
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
                       <div className="flex items-start gap-2 mt-2">
                         <label className="mt-0.5 shrink-0 w-3.5 h-3.5 relative cursor-pointer block">
                           <input type="checkbox" className="sr-only peer" checked={consent} onChange={(e) => setConsent(e.target.checked)} required />
@@ -380,7 +430,8 @@ export default function KontaktClient({
                           <span className="absolute inset-[3px] bg-accent scale-0 peer-checked:scale-100 transition-transform duration-150" />
                         </label>
                         <span className="font-[var(--font-mono)] text-[11px] text-accent/30 leading-[1.6]">
-                          Wyrażam zgodę na przetwarzanie danych osobowych przez {companyName} w celu obsługi zgłoszenia kontaktowego, zgodnie z{" "}
+                          Zapoznałem/am się z klauzulą informacyjną RODO i wyrażam zgodę na przetwarzanie moich danych
+                          osobowych przez {companyName} w celu obsługi zgłoszenia kontaktowego, zgodnie z{' '}
                           <Link href="/polityka-prywatnosci" className="text-accent/60 hover:text-accent transition-colors">Polityką Prywatności</Link>.
                         </span>
                       </div>

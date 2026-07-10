@@ -133,7 +133,7 @@ export default function WspolpracaPageClient({
 
       {/* ─── FUNDAMENTY SECTION ─── */}
       <section className="border-t border-white/5">
-        <div className="flex items-start md:items-end justify-between px-[clamp(32px,5vw,64px)] pt-10 md:pt-16 pb-6 md:pb-8 gap-4">
+        <div className="flex items-center justify-between px-[clamp(32px,5vw,64px)] py-8 md:py-10 gap-4">
           <TypewriterTitle
             as="h2"
             className="text-[clamp(1.5rem,3.17vw,48px)] font-normal text-white leading-[1.15] md:leading-[53px] tracking-[-0.48px]"
@@ -231,7 +231,7 @@ export default function WspolpracaPageClient({
         text={secondText}
         ctaHref="#"
         ctaLabel="Rozpocznij współpracę"
-        py="py-16 md:py-28"
+        py="py-10 md:py-16"
       />
 
       {/* ─── PARTNERSTWA STRATEGICZNE ─── */}

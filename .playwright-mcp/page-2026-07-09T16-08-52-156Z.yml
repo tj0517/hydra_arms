@@ -1,0 +1,575 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e4]: "[░░░░░░░░░░░░░░░░░░░░] 0%"
+  - navigation [ref=e5]:
+    - generic [ref=e6]:
+      - link "HYDRA.ARMS" [ref=e7]:
+        - /url: /
+      - list [ref=e8]:
+        - listitem [ref=e9]:
+          - link "Usługi" [ref=e10]:
+            - /url: /uslugi
+        - listitem [ref=e11]:
+          - link "O nas" [ref=e12]:
+            - /url: /o-nas
+        - listitem [ref=e13]:
+          - link "Współpraca" [ref=e14]:
+            - /url: /wspolpraca
+        - listitem [ref=e15]:
+          - link "Blog" [ref=e16]:
+            - /url: /blog
+        - listitem [ref=e17]:
+          - link "Kontakt" [ref=e18]:
+            - /url: /kontakt
+        - listitem [ref=e19]:
+          - link "[ Zaloguj ]" [ref=e20]:
+            - /url: /konto/login
+        - listitem [ref=e21]:
+          - link "[ Zarejestruj ]" [ref=e22]:
+            - /url: /konto/rejestracja
+  - main [ref=e23]:
+    - generic [ref=e24]:
+      - generic:
+        - img
+        - generic: X:0000 Y:0000
+      - heading [level=1] [ref=e27]
+    - generic [ref=e28]:
+      - generic [ref=e32]:
+        - heading "Profesjonalne wyposażenie taktyczne" [level=2] [ref=e33]
+        - paragraph [ref=e34]: Sprawdzony sprzęt dla służb mundurowych i klientów indywidualnych.
+        - link "PRZEGLĄDAJ KATALOG" [ref=e35]:
+          - /url: "#catalog"
+      - generic [ref=e37]:
+        - generic [ref=e38]:
+          - generic [ref=e39]:
+            - paragraph [ref=e40]: Wybór redakcji
+            - heading "Bestsellery" [level=2] [ref=e41]
+          - link "Zobacz wszystkie →" [ref=e42]:
+            - /url: "#catalog"
+        - generic [ref=e43]:
+          - link "Amunicja hukowa pistoletowa WADIE 9mm P.A.Knall 50szt (845644) Broń alarmowa i hukowa Amunicja hukowa pistoletowa WADIE 9mm P.A.Knall 50szt (845644) 1,78 PLN W MAGAZYNIE · 78399 SZT. [ DODAJ DO KOSZYKA ]" [ref=e44]:
+            - /url: /sklep/619345325
+            - generic [ref=e45]:
+              - img "Amunicja hukowa pistoletowa WADIE 9mm P.A.Knall 50szt (845644)" [ref=e47]
+              - generic [ref=e48]:
+                - generic [ref=e49]: Broń alarmowa i hukowa
+                - heading "Amunicja hukowa pistoletowa WADIE 9mm P.A.Knall 50szt (845644)" [level=3] [ref=e50]
+                - generic [ref=e51]:
+                  - generic [ref=e52]: 1,78
+                  - generic [ref=e53]: PLN
+                - generic [ref=e56]: W MAGAZYNIE · 78399 SZT.
+                - button "[ DODAJ DO KOSZYKA ]" [ref=e57]
+          - link "Ekol Viper śruba szczerbinki (5203.03KV) Akcesoria do broni Ekol Viper śruba szczerbinki (5203.03KV) 15,00 PLN W MAGAZYNIE · 49 SZT. [ DODAJ DO KOSZYKA ]" [ref=e58]:
+            - /url: /sklep/619343789
+            - generic [ref=e59]:
+              - img "Ekol Viper śruba szczerbinki (5203.03KV)" [ref=e61]
+              - generic [ref=e62]:
+                - generic [ref=e63]: Akcesoria do broni
+                - heading "Ekol Viper śruba szczerbinki (5203.03KV)" [level=3] [ref=e64]
+                - generic [ref=e65]:
+                  - generic [ref=e66]: 15,00
+                  - generic [ref=e67]: PLN
+                - generic [ref=e70]: W MAGAZYNIE · 49 SZT.
+                - button "[ DODAJ DO KOSZYKA ]" [ref=e71]
+          - link "Gaz pieprzowy KKS OC 5000 Gel 15ml dysza Cone (510004) Gazy pieprzowe Gaz pieprzowy KKS OC 5000 Gel 15ml dysza Cone (510004) 30,00 PLN W MAGAZYNIE · 10 SZT. [ DODAJ DO KOSZYKA ]" [ref=e72]:
+            - /url: /sklep/619343709
+            - generic [ref=e73]:
+              - img "Gaz pieprzowy KKS OC 5000 Gel 15ml dysza Cone (510004)" [ref=e75]
+              - generic [ref=e76]:
+                - generic [ref=e77]: Gazy pieprzowe
+                - heading "Gaz pieprzowy KKS OC 5000 Gel 15ml dysza Cone (510004)" [level=3] [ref=e78]
+                - generic [ref=e79]:
+                  - generic [ref=e80]: 30,00
+                  - generic [ref=e81]: PLN
+                - generic [ref=e84]: W MAGAZYNIE · 10 SZT.
+                - button "[ DODAJ DO KOSZYKA ]" [ref=e85]
+          - link "Gaz pieprzowy KKS OC 5000 Gel 50ml dysza Cone (510006) Gazy pieprzowe Gaz pieprzowy KKS OC 5000 Gel 50ml dysza Cone (510006) 45,00 PLN W MAGAZYNIE · 105 SZT. [ DODAJ DO KOSZYKA ]" [ref=e86]:
+            - /url: /sklep/619343752
+            - generic [ref=e87]:
+              - img "Gaz pieprzowy KKS OC 5000 Gel 50ml dysza Cone (510006)" [ref=e89]
+              - generic [ref=e90]:
+                - generic [ref=e91]: Gazy pieprzowe
+                - heading "Gaz pieprzowy KKS OC 5000 Gel 50ml dysza Cone (510006)" [level=3] [ref=e92]
+                - generic [ref=e93]:
+                  - generic [ref=e94]: 45,00
+                  - generic [ref=e95]: PLN
+                - generic [ref=e98]: W MAGAZYNIE · 105 SZT.
+                - button "[ DODAJ DO KOSZYKA ]" [ref=e99]
+      - generic [ref=e100]:
+        - generic [ref=e101]:
+          - paragraph [ref=e102]: Przeglądaj asortyment
+          - heading "Kategorie" [level=2] [ref=e103]
+        - generic [ref=e104]:
+          - generic [ref=e108]:
+            - paragraph [ref=e109]: Broń krótka
+            - paragraph [ref=e110]: Pistolety i rewolwery
+          - generic [ref=e114]:
+            - paragraph [ref=e115]: Optyka
+            - paragraph [ref=e116]: Lunety i celowniki
+          - generic [ref=e120]:
+            - paragraph [ref=e121]: Akcesoria
+            - paragraph [ref=e122]: Kabury i wyposażenie
+          - generic [ref=e126]:
+            - paragraph [ref=e127]: Amunicja
+            - paragraph [ref=e128]: Strzelecka i szkolna
+      - generic [ref=e131]:
+        - heading "Jak kupować produkty z ograniczeniem wiekowym?" [level=2] [ref=e132]
+        - paragraph [ref=e134]: Część produktów w naszym sklepie wymaga weryfikacji wieku lub posiadania odpowiednich uprawnień. Złóż zamówienie online — nasz zespół skontaktuje się z Tobą w celu potwierdzenia dokumentów przed wysyłką lub odbiorem osobistym.
+        - link "SKONTAKTUJ SIĘ" [ref=e136]:
+          - /url: /kontakt
+      - generic [ref=e139]:
+        - generic [ref=e140]:
+          - img [ref=e141]
+          - generic [ref=e143]: Legalna sprzedaż
+          - generic [ref=e144]: Koncesja MSWiA
+        - generic [ref=e145]:
+          - img [ref=e146]
+          - generic [ref=e151]: Dostawa kurierem
+          - generic [ref=e152]: DHL / InPost
+        - generic [ref=e153]:
+          - img [ref=e154]
+          - generic [ref=e158]: Odbiór osobisty
+          - generic [ref=e159]: Kraków, ul. Cechowa 44B
+        - generic [ref=e160]:
+          - img [ref=e161]
+          - generic [ref=e164]: Czas realizacji
+          - generic [ref=e165]: 1–3 dni robocze
+    - generic [ref=e169]: KATALOG PRODUKTÓW
+    - generic [ref=e171]:
+      - generic [ref=e172]:
+        - generic [ref=e174]: Koszyk
+        - button "×" [ref=e175]
+      - generic [ref=e177]:
+        - img [ref=e178]
+        - paragraph [ref=e181]: KOSZYK JEST PUSTY
+    - generic [ref=e182]:
+      - generic [ref=e183]:
+        - generic [ref=e185]: 200 PRODUKTÓW
+        - textbox "SZUKAJ..." [ref=e188]
+      - generic [ref=e189]:
+        - complementary [ref=e190]:
+          - generic [ref=e191]:
+            - generic [ref=e192]:
+              - generic [ref=e193]: Kategorie
+              - navigation [ref=e194]:
+                - button "▸ WSZYSTKIE PRODUKTY 200" [ref=e195]:
+                  - generic [ref=e196]:
+                    - generic [ref=e197]: ▸
+                    - text: WSZYSTKIE PRODUKTY
+                  - generic [ref=e198]: "200"
+                - generic [ref=e201]:
+                  - button "BROŃ I STRZELANIE" [ref=e202]:
+                    - generic [ref=e203]: BROŃ I STRZELANIE
+                  - button "Rozwiń" [ref=e204]: +
+                - generic [ref=e206]:
+                  - button "NOŻE I BROŃ BIAŁA" [ref=e207]:
+                    - generic [ref=e208]: NOŻE I BROŃ BIAŁA
+                  - button "Rozwiń" [ref=e209]: +
+                - generic [ref=e211]:
+                  - button "ODZIEŻ I WYPOSAŻENIE" [ref=e212]:
+                    - generic [ref=e213]: ODZIEŻ I WYPOSAŻENIE
+                  - button "Rozwiń" [ref=e214]: +
+                - generic [ref=e216]:
+                  - button "OPTYKA" [ref=e217]:
+                    - generic [ref=e218]: OPTYKA
+                  - button "Rozwiń" [ref=e219]: +
+                - generic [ref=e221]:
+                  - button "SAMOOBRONA" [ref=e222]:
+                    - generic [ref=e223]: SAMOOBRONA
+                  - button "Rozwiń" [ref=e224]: +
+            - generic [ref=e225]:
+              - generic [ref=e228]: Filtry
+              - generic [ref=e229]:
+                - paragraph [ref=e230]: Dostępność
+                - generic [ref=e233] [cursor=pointer]: Tylko dostępne
+              - generic [ref=e234]:
+                - paragraph [ref=e235]: Cena (PLN)
+                - generic [ref=e236]:
+                  - spinbutton "1" [ref=e237]
+                  - generic [ref=e238]: —
+                  - spinbutton "31660" [ref=e239]
+        - generic [ref=e240]:
+          - generic [ref=e241]:
+            - link "NIEDOSTĘPNY 10 x nóż Morakniv Hook 162 Double Edge stal nierdzewna 0,00 PLN BRAK W MAGAZYNIE BRAK W MAGAZYNIE" [ref=e242]:
+              - /url: /sklep/619638287
+              - generic [ref=e243]:
+                - generic [ref=e246]: NIEDOSTĘPNY
+                - generic [ref=e247]:
+                  - heading "10 x nóż Morakniv Hook 162 Double Edge stal nierdzewna" [level=3] [ref=e248]
+                  - generic [ref=e249]:
+                    - generic [ref=e250]: 0,00
+                    - generic [ref=e251]: PLN
+                  - generic [ref=e254]: BRAK W MAGAZYNIE
+                  - button "BRAK W MAGAZYNIE" [disabled] [ref=e255]
+            - link "NIEDOSTĘPNY 10 x nóż Morakniv Hook 163 Double Edge stal nierdzewna 0,00 PLN BRAK W MAGAZYNIE BRAK W MAGAZYNIE" [ref=e256]:
+              - /url: /sklep/619638311
+              - generic [ref=e257]:
+                - generic [ref=e260]: NIEDOSTĘPNY
+                - generic [ref=e261]:
+                  - heading "10 x nóż Morakniv Hook 163 Double Edge stal nierdzewna" [level=3] [ref=e262]
+                  - generic [ref=e263]:
+                    - generic [ref=e264]: 0,00
+                    - generic [ref=e265]: PLN
+                  - generic [ref=e268]: BRAK W MAGAZYNIE
+                  - button "BRAK W MAGAZYNIE" [disabled] [ref=e269]
+            - link "NIEDOSTĘPNY 10 x nóż Morakniv Wood Carving Hook 164 Right stal nierdzewna 0,00 PLN BRAK W MAGAZYNIE BRAK W MAGAZYNIE" [ref=e270]:
+              - /url: /sklep/619638330
+              - generic [ref=e271]:
+                - generic [ref=e274]: NIEDOSTĘPNY
+                - generic [ref=e275]:
+                  - heading "10 x nóż Morakniv Wood Carving Hook 164 Right stal nierdzewna" [level=3] [ref=e276]
+                  - generic [ref=e277]:
+                    - generic [ref=e278]: 0,00
+                    - generic [ref=e279]: PLN
+                  - generic [ref=e282]: BRAK W MAGAZYNIE
+                  - button "BRAK W MAGAZYNIE" [disabled] [ref=e283]
+            - link "NIEDOSTĘPNY 169Nóż składany Kizer Mini Bulldog Ki3672SA1 0,00 PLN BRAK W MAGAZYNIE BRAK W MAGAZYNIE" [ref=e284]:
+              - /url: /sklep/619638369
+              - generic [ref=e285]:
+                - generic [ref=e288]: NIEDOSTĘPNY
+                - generic [ref=e289]:
+                  - heading "169Nóż składany Kizer Mini Bulldog Ki3672SA1" [level=3] [ref=e290]
+                  - generic [ref=e291]:
+                    - generic [ref=e292]: 0,00
+                    - generic [ref=e293]: PLN
+                  - generic [ref=e296]: BRAK W MAGAZYNIE
+                  - button "BRAK W MAGAZYNIE" [disabled] [ref=e297]
+            - link "NIEDOSTĘPNY 3 x Wiatrówka Optima 90 4.5 mm 0,00 PLN BRAK W MAGAZYNIE BRAK W MAGAZYNIE" [ref=e298]:
+              - /url: /sklep/619638224
+              - generic [ref=e299]:
+                - generic [ref=e302]: NIEDOSTĘPNY
+                - generic [ref=e303]:
+                  - heading "3 x Wiatrówka Optima 90 4.5 mm" [level=3] [ref=e304]
+                  - generic [ref=e305]:
+                    - generic [ref=e306]: 0,00
+                    - generic [ref=e307]: PLN
+                  - generic [ref=e310]: BRAK W MAGAZYNIE
+                  - button "BRAK W MAGAZYNIE" [disabled] [ref=e311]
+            - link "NIEDOSTĘPNY 45 x Kule metalowe RGun Steel Core Devastator kal. .68 / 40 szt. do Umarex HDR 68 0,00 PLN BRAK W MAGAZYNIE BRAK W MAGAZYNIE" [ref=e312]:
+              - /url: /sklep/619638350
+              - generic [ref=e313]:
+                - generic [ref=e316]: NIEDOSTĘPNY
+                - generic [ref=e317]:
+                  - heading "45 x Kule metalowe RGun Steel Core Devastator kal. .68 / 40 szt. do Umarex HDR 68" [level=3] [ref=e318]
+                  - generic [ref=e319]:
+                    - generic [ref=e320]: 0,00
+                    - generic [ref=e321]: PLN
+                  - generic [ref=e324]: BRAK W MAGAZYNIE
+                  - button "BRAK W MAGAZYNIE" [disabled] [ref=e325]
+            - link "NIEDOSTĘPNY 5 x krzesiwo Morakniv Fire Starter 0,00 PLN BRAK W MAGAZYNIE BRAK W MAGAZYNIE" [ref=e326]:
+              - /url: /sklep/619638242
+              - generic [ref=e327]:
+                - generic [ref=e330]: NIEDOSTĘPNY
+                - generic [ref=e331]:
+                  - heading "5 x krzesiwo Morakniv Fire Starter" [level=3] [ref=e332]
+                  - generic [ref=e333]:
+                    - generic [ref=e334]: 0,00
+                    - generic [ref=e335]: PLN
+                  - generic [ref=e338]: BRAK W MAGAZYNIE
+                  - button "BRAK W MAGAZYNIE" [disabled] [ref=e339]
+            - link "NIEDOSTĘPNY 6 x ostrzałka karabińczyk Lansky Road 1 0,00 PLN BRAK W MAGAZYNIE BRAK W MAGAZYNIE" [ref=e340]:
+              - /url: /sklep/619638261
+              - generic [ref=e341]:
+                - generic [ref=e344]: NIEDOSTĘPNY
+                - generic [ref=e345]:
+                  - heading "6 x ostrzałka karabińczyk Lansky Road 1" [level=3] [ref=e346]
+                  - generic [ref=e347]:
+                    - generic [ref=e348]: 0,00
+                    - generic [ref=e349]: PLN
+                  - generic [ref=e352]: BRAK W MAGAZYNIE
+                  - button "BRAK W MAGAZYNIE" [disabled] [ref=e353]
+            - link "NIEDOSTĘPNY Adapter Acheron TriLug 1/2\" 28 UNEF 0,00 PLN BRAK W MAGAZYNIE BRAK W MAGAZYNIE" [ref=e354]:
+              - /url: /sklep/619638390
+              - generic [ref=e355]:
+                - generic [ref=e358]: NIEDOSTĘPNY
+                - generic [ref=e359]:
+                  - heading "Adapter Acheron TriLug 1/2\" 28 UNEF" [level=3] [ref=e360]
+                  - generic [ref=e361]:
+                    - generic [ref=e362]: 0,00
+                    - generic [ref=e363]: PLN
+                  - generic [ref=e366]: BRAK W MAGAZYNIE
+                  - button "BRAK W MAGAZYNIE" [disabled] [ref=e367]
+            - link "NIEDOSTĘPNY Adapter aluminiowy FTCS dla kolby AR15 do AKM 0,00 PLN BRAK W MAGAZYNIE BRAK W MAGAZYNIE" [ref=e368]:
+              - /url: /sklep/619638408
+              - generic [ref=e369]:
+                - generic [ref=e372]: NIEDOSTĘPNY
+                - generic [ref=e373]:
+                  - heading "Adapter aluminiowy FTCS dla kolby AR15 do AKM" [level=3] [ref=e374]
+                  - generic [ref=e375]:
+                    - generic [ref=e376]: 0,00
+                    - generic [ref=e377]: PLN
+                  - generic [ref=e380]: BRAK W MAGAZYNIE
+                  - button "BRAK W MAGAZYNIE" [disabled] [ref=e381]
+            - link "NIEDOSTĘPNY Adapter CO2 Walther 0,00 PLN BRAK W MAGAZYNIE BRAK W MAGAZYNIE" [ref=e382]:
+              - /url: /sklep/619638433
+              - generic [ref=e383]:
+                - generic [ref=e386]: NIEDOSTĘPNY
+                - generic [ref=e387]:
+                  - heading "Adapter CO2 Walther" [level=3] [ref=e388]
+                  - generic [ref=e389]:
+                    - generic [ref=e390]: 0,00
+                    - generic [ref=e391]: PLN
+                  - generic [ref=e394]: BRAK W MAGAZYNIE
+                  - button "BRAK W MAGAZYNIE" [disabled] [ref=e395]
+            - link "NIEDOSTĘPNY Adapter digiscoping Hawke do lunet Nature Trek 65/80 i Endurance 50/60/85 0,00 PLN BRAK W MAGAZYNIE BRAK W MAGAZYNIE" [ref=e396]:
+              - /url: /sklep/619638457
+              - generic [ref=e397]:
+                - generic [ref=e400]: NIEDOSTĘPNY
+                - generic [ref=e401]:
+                  - heading "Adapter digiscoping Hawke do lunet Nature Trek 65/80 i Endurance 50/60/85" [level=3] [ref=e402]
+                  - generic [ref=e403]:
+                    - generic [ref=e404]: 0,00
+                    - generic [ref=e405]: PLN
+                  - generic [ref=e408]: BRAK W MAGAZYNIE
+                  - button "BRAK W MAGAZYNIE" [disabled] [ref=e409]
+            - link "NIEDOSTĘPNY Adapter digiscoping Hawke do lunet obserwacyjnych z okuarem 28-45 mm 0,00 PLN BRAK W MAGAZYNIE BRAK W MAGAZYNIE" [ref=e410]:
+              - /url: /sklep/619638484
+              - generic [ref=e411]:
+                - generic [ref=e414]: NIEDOSTĘPNY
+                - generic [ref=e415]:
+                  - heading "Adapter digiscoping Hawke do lunet obserwacyjnych z okuarem 28-45 mm" [level=3] [ref=e416]
+                  - generic [ref=e417]:
+                    - generic [ref=e418]: 0,00
+                    - generic [ref=e419]: PLN
+                  - generic [ref=e422]: BRAK W MAGAZYNIE
+                  - button "BRAK W MAGAZYNIE" [disabled] [ref=e423]
+            - link "NIEDOSTĘPNY Adapter digiscoping Hawke do lunety Nature Trek 9-27x56 0,00 PLN BRAK W MAGAZYNIE BRAK W MAGAZYNIE" [ref=e424]:
+              - /url: /sklep/619638508
+              - generic [ref=e425]:
+                - generic [ref=e428]: NIEDOSTĘPNY
+                - generic [ref=e429]:
+                  - heading "Adapter digiscoping Hawke do lunety Nature Trek 9-27x56" [level=3] [ref=e430]
+                  - generic [ref=e431]:
+                    - generic [ref=e432]: 0,00
+                    - generic [ref=e433]: PLN
+                  - generic [ref=e436]: BRAK W MAGAZYNIE
+                  - button "BRAK W MAGAZYNIE" [disabled] [ref=e437]
+            - link "NIEDOSTĘPNY Adapter digiscoping Hawke do Smartfona 60 mm 0,00 PLN BRAK W MAGAZYNIE BRAK W MAGAZYNIE" [ref=e438]:
+              - /url: /sklep/619638529
+              - generic [ref=e439]:
+                - generic [ref=e442]: NIEDOSTĘPNY
+                - generic [ref=e443]:
+                  - heading "Adapter digiscoping Hawke do Smartfona 60 mm" [level=3] [ref=e444]
+                  - generic [ref=e445]:
+                    - generic [ref=e446]: 0,00
+                    - generic [ref=e447]: PLN
+                  - generic [ref=e450]: BRAK W MAGAZYNIE
+                  - button "BRAK W MAGAZYNIE" [disabled] [ref=e451]
+            - link "NIEDOSTĘPNY Adapter digiscoping T2 Hawke do aparatów Canon EOS 0,00 PLN BRAK W MAGAZYNIE BRAK W MAGAZYNIE" [ref=e452]:
+              - /url: /sklep/619638551
+              - generic [ref=e453]:
+                - generic [ref=e456]: NIEDOSTĘPNY
+                - generic [ref=e457]:
+                  - heading "Adapter digiscoping T2 Hawke do aparatów Canon EOS" [level=3] [ref=e458]
+                  - generic [ref=e459]:
+                    - generic [ref=e460]: 0,00
+                    - generic [ref=e461]: PLN
+                  - generic [ref=e464]: BRAK W MAGAZYNIE
+                  - button "BRAK W MAGAZYNIE" [disabled] [ref=e465]
+            - link "NIEDOSTĘPNY Adapter digiscoping T2 Hawke do aparatów Fuji 0,00 PLN BRAK W MAGAZYNIE BRAK W MAGAZYNIE" [ref=e466]:
+              - /url: /sklep/619638570
+              - generic [ref=e467]:
+                - generic [ref=e470]: NIEDOSTĘPNY
+                - generic [ref=e471]:
+                  - heading "Adapter digiscoping T2 Hawke do aparatów Fuji" [level=3] [ref=e472]
+                  - generic [ref=e473]:
+                    - generic [ref=e474]: 0,00
+                    - generic [ref=e475]: PLN
+                  - generic [ref=e478]: BRAK W MAGAZYNIE
+                  - button "BRAK W MAGAZYNIE" [disabled] [ref=e479]
+            - link "NIEDOSTĘPNY Adapter digiscoping T2 Hawke do aparatów Minolta Maxxum 0,00 PLN BRAK W MAGAZYNIE BRAK W MAGAZYNIE" [ref=e480]:
+              - /url: /sklep/619638593
+              - generic [ref=e481]:
+                - generic [ref=e484]: NIEDOSTĘPNY
+                - generic [ref=e485]:
+                  - heading "Adapter digiscoping T2 Hawke do aparatów Minolta Maxxum" [level=3] [ref=e486]
+                  - generic [ref=e487]:
+                    - generic [ref=e488]: 0,00
+                    - generic [ref=e489]: PLN
+                  - generic [ref=e492]: BRAK W MAGAZYNIE
+                  - button "BRAK W MAGAZYNIE" [disabled] [ref=e493]
+            - link "NIEDOSTĘPNY Adapter digiscoping T2 Hawke do aparatów Nikon 0,00 PLN BRAK W MAGAZYNIE BRAK W MAGAZYNIE" [ref=e494]:
+              - /url: /sklep/619638613
+              - generic [ref=e495]:
+                - generic [ref=e498]: NIEDOSTĘPNY
+                - generic [ref=e499]:
+                  - heading "Adapter digiscoping T2 Hawke do aparatów Nikon" [level=3] [ref=e500]
+                  - generic [ref=e501]:
+                    - generic [ref=e502]: 0,00
+                    - generic [ref=e503]: PLN
+                  - generic [ref=e506]: BRAK W MAGAZYNIE
+                  - button "BRAK W MAGAZYNIE" [disabled] [ref=e507]
+            - link "NIEDOSTĘPNY Adapter digiscoping T2 Hawke do aparatów Olympus 4/3 0,00 PLN BRAK W MAGAZYNIE BRAK W MAGAZYNIE" [ref=e508]:
+              - /url: /sklep/619638635
+              - generic [ref=e509]:
+                - generic [ref=e512]: NIEDOSTĘPNY
+                - generic [ref=e513]:
+                  - heading "Adapter digiscoping T2 Hawke do aparatów Olympus 4/3" [level=3] [ref=e514]
+                  - generic [ref=e515]:
+                    - generic [ref=e516]: 0,00
+                    - generic [ref=e517]: PLN
+                  - generic [ref=e520]: BRAK W MAGAZYNIE
+                  - button "BRAK W MAGAZYNIE" [disabled] [ref=e521]
+            - link "NIEDOSTĘPNY Adapter digiscoping T2 Hawke do aparatów Pentax K 0,00 PLN BRAK W MAGAZYNIE BRAK W MAGAZYNIE" [ref=e522]:
+              - /url: /sklep/619638658
+              - generic [ref=e523]:
+                - generic [ref=e526]: NIEDOSTĘPNY
+                - generic [ref=e527]:
+                  - heading "Adapter digiscoping T2 Hawke do aparatów Pentax K" [level=3] [ref=e528]
+                  - generic [ref=e529]:
+                    - generic [ref=e530]: 0,00
+                    - generic [ref=e531]: PLN
+                  - generic [ref=e534]: BRAK W MAGAZYNIE
+                  - button "BRAK W MAGAZYNIE" [disabled] [ref=e535]
+            - link "NIEDOSTĘPNY Adapter digiscoping T2 Hawke do aparatów Sony Alpha 0,00 PLN BRAK W MAGAZYNIE BRAK W MAGAZYNIE" [ref=e536]:
+              - /url: /sklep/619638690
+              - generic [ref=e537]:
+                - generic [ref=e540]: NIEDOSTĘPNY
+                - generic [ref=e541]:
+                  - heading "Adapter digiscoping T2 Hawke do aparatów Sony Alpha" [level=3] [ref=e542]
+                  - generic [ref=e543]:
+                    - generic [ref=e544]: 0,00
+                    - generic [ref=e545]: PLN
+                  - generic [ref=e548]: BRAK W MAGAZYNIE
+                  - button "BRAK W MAGAZYNIE" [disabled] [ref=e549]
+            - link "NIEDOSTĘPNY Adapter digiscoping T2 Hawke do aparatów Sony NEX-E 0,00 PLN BRAK W MAGAZYNIE BRAK W MAGAZYNIE" [ref=e550]:
+              - /url: /sklep/619638723
+              - generic [ref=e551]:
+                - generic [ref=e554]: NIEDOSTĘPNY
+                - generic [ref=e555]:
+                  - heading "Adapter digiscoping T2 Hawke do aparatów Sony NEX-E" [level=3] [ref=e556]
+                  - generic [ref=e557]:
+                    - generic [ref=e558]: 0,00
+                    - generic [ref=e559]: PLN
+                  - generic [ref=e562]: BRAK W MAGAZYNIE
+                  - button "BRAK W MAGAZYNIE" [disabled] [ref=e563]
+            - link "NIEDOSTĘPNY Adapter do bipodów Harris na M-LOK 0,00 PLN BRAK W MAGAZYNIE BRAK W MAGAZYNIE" [ref=e564]:
+              - /url: /sklep/619638755
+              - generic [ref=e565]:
+                - generic [ref=e568]: NIEDOSTĘPNY
+                - generic [ref=e569]:
+                  - heading "Adapter do bipodów Harris na M-LOK" [level=3] [ref=e570]
+                  - generic [ref=e571]:
+                    - generic [ref=e572]: 0,00
+                    - generic [ref=e573]: PLN
+                  - generic [ref=e576]: BRAK W MAGAZYNIE
+                  - button "BRAK W MAGAZYNIE" [disabled] [ref=e577]
+          - generic [ref=e578]:
+            - button "← POPRZEDNIA" [disabled] [ref=e579]
+            - generic [ref=e580]:
+              - button "1" [ref=e581]
+              - button "2" [ref=e582]
+              - button "3" [ref=e583]
+              - generic [ref=e584]: …
+              - button "9" [ref=e585]
+            - button "NASTĘPNA →" [ref=e586]
+  - generic [ref=e588]:
+    - generic [ref=e589]:
+      - generic [ref=e590]: // SUBSKRYBUJ
+      - generic [ref=e591]: Kanał informacyjny
+    - generic [ref=e592]:
+      - generic [ref=e593] [cursor=pointer]:
+        - checkbox "AKTUALNOŚCI" [checked] [ref=e595]
+        - generic [ref=e598]: AKTUALNOŚCI
+      - generic [ref=e599] [cursor=pointer]:
+        - checkbox "BLOG" [ref=e601]
+        - generic [ref=e603]: BLOG
+      - generic [ref=e604] [cursor=pointer]:
+        - checkbox "B2G" [ref=e606]
+        - generic [ref=e608]: B2G
+      - generic [ref=e609] [cursor=pointer]:
+        - checkbox "B2B" [ref=e611]
+        - generic [ref=e613]: B2B
+      - generic [ref=e614] [cursor=pointer]:
+        - checkbox "SKLEP" [ref=e616]
+        - generic [ref=e618]: SKLEP
+    - generic [ref=e620]:
+      - generic [ref=e621]:
+        - generic [ref=e622]: ">"
+        - textbox "EMAIL@DOMENA.PL" [ref=e623]
+      - button "ZAPISZ" [ref=e624]
+  - contentinfo [ref=e625]:
+    - generic [ref=e628]:
+      - generic [ref=e629]:
+        - generic [ref=e630]: HYDRA.ARMS
+        - generic [ref=e631]:
+          - paragraph [ref=e632]: HYDRA ARMS SP. Z O.O.
+          - paragraph [ref=e633]: ul. Cechowa 44B 30-614 Kraków
+          - paragraph [ref=e634]: "Sklep: ul. Gdańska 22, 31-411 Kraków"
+          - paragraph [ref=e636]: "NIP: [ 6793302181 ]"
+          - paragraph [ref=e637]: "REGON: [ 528976880 ]"
+          - paragraph [ref=e638]: "KRS: [ 0001111593 ]"
+          - paragraph [ref=e639]: "BDO: [ 000654184 ]"
+          - paragraph [ref=e640]: "Koncesja MSWiA: [ B-117/2025 ]"
+          - paragraph [ref=e641]: "NCAGE: [ 9CJ3H ]"
+          - paragraph [ref=e642]: "D-U-N-S®: [ 665007622 ]"
+          - paragraph [ref=e643]: "UEI: [ YUXMMDP8MNP4 ]"
+      - generic [ref=e644]:
+        - heading "Certyfikaty" [level=4] [ref=e645]
+        - generic [ref=e646]:
+          - img "CCJ — Centrum Certyfikacji Jakości" [ref=e648]
+          - img "NCAGE 9CJ3H" [ref=e650]
+          - generic [ref=e651]:
+            - img "CCJ PN-EN ISO 9001:2015 · PCA AC 057" [ref=e652]
+            - generic [ref=e653]:
+              - paragraph [ref=e654]: AQAP 2110:2016
+              - paragraph [ref=e655]: PN-EN ISO 9001:2015
+              - paragraph [ref=e656]: Wewnętrzny System Kontroli
+      - generic [ref=e657]:
+        - generic [ref=e658]:
+          - heading "Nawigacja" [level=4] [ref=e659]
+          - list [ref=e660]:
+            - listitem [ref=e661]:
+              - link "Usługi" [ref=e662]:
+                - /url: /uslugi
+            - listitem [ref=e663]:
+              - link "O nas" [ref=e664]:
+                - /url: /o-nas
+            - listitem [ref=e665]:
+              - link "Współpraca" [ref=e666]:
+                - /url: /wspolpraca
+            - listitem [ref=e667]:
+              - link "Aktualności" [ref=e668]:
+                - /url: /aktualnosci
+            - listitem [ref=e669]:
+              - link "Blog" [ref=e670]:
+                - /url: /blog
+            - listitem [ref=e671]:
+              - link "Kontakt" [ref=e672]:
+                - /url: /kontakt
+            - listitem [ref=e673]:
+              - link "Sklep" [ref=e674]:
+                - /url: /sklep
+        - generic [ref=e676]:
+          - link "Facebook" [ref=e677]:
+            - /url: "#!"
+            - img [ref=e678]
+          - link "Instagram" [ref=e680]:
+            - /url: "#!"
+            - img [ref=e681]
+          - link "LinkedIn" [ref=e683]:
+            - /url: "#!"
+            - img [ref=e684]
+          - link "Email" [ref=e686]:
+            - /url: mailto:biuro@hydraarms.com
+            - img [ref=e687]
+    - generic [ref=e691]:
+      - link "[ Polityka prywatności ]" [ref=e692]:
+        - /url: /polityka-prywatnosci
+      - link "[ Polityka cookies ]" [ref=e693]:
+        - /url: /polityka-cookies
+      - link "[ Regulamin sklepu ]" [ref=e694]:
+        - /url: /regulamin
+      - link "[ Regulamin usług ]" [ref=e695]:
+        - /url: /regulamin-uslug
+      - link "[ Polityka jakości ]" [ref=e696]:
+        - /url: /polityka-jakosci
+      - link "[ Polityka WSK ]" [ref=e697]:
+        - /url: /polityka-wsk
+      - generic [ref=e698]: "[ REALIZACJA ... ]"
+  - button "KOSZYK 0" [ref=e699]:
+    - img [ref=e700]
+    - text: KOSZYK
+    - generic [ref=e704]: "0"
+  - button "Open Next.js Dev Tools" [ref=e710] [cursor=pointer]:
+    - img [ref=e711]
+  - alert [ref=e714]

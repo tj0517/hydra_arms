@@ -12,6 +12,7 @@ interface TitleLeadSectionProps {
   pt?: string
   bodyGridCols?: string
   bodyPb?: string
+  titleClassName?: string
   children?: React.ReactNode
 }
 
@@ -24,6 +25,7 @@ export default function TitleLeadSection({
   pt = "pt-12 md:pt-16",
   bodyGridCols = "sm:grid-cols-2",
   bodyPb = "pb-0 md:pb-4",
+  titleClassName = "text-[clamp(1.75rem,9.26vw,140px)] font-medium text-white leading-[1.05] tracking-[-0.5px] md:tracking-[-2px] uppercase",
   children,
 }: TitleLeadSectionProps) {
   return (
@@ -32,7 +34,7 @@ export default function TitleLeadSection({
       <div className={`${pt} px-[clamp(32px,5vw,64px)]`}>
         <TypewriterTitle
           as="h2"
-          className="text-[clamp(1.75rem,9.26vw,140px)] font-medium text-white leading-[1.05] tracking-[-0.5px] md:tracking-[-2px] uppercase"
+          className={titleClassName}
           speed={60}
         >
           {title}

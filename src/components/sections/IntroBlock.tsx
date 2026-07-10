@@ -14,7 +14,7 @@ export default function IntroBlock({
   ctaHref,
   ctaLabel,
   borderBottom = false,
-  py = "py-20 md:py-32",
+  py = "py-10 md:py-16",
 }: IntroBlockProps) {
   return (
     <section

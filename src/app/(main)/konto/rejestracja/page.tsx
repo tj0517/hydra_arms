@@ -4,6 +4,58 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 
+function RodoKlauzula() {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="border border-accent/10 bg-accent/[0.02]">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-4 py-3 font-[var(--font-mono)] text-[10px] text-accent/40 hover:text-accent/70 transition-colors tracking-[0.2em] uppercase text-left"
+      >
+        <span>// Klauzula informacyjna RODO</span>
+        <span className="ml-2 shrink-0">{open ? '[ − ]' : '[ + ]'}</span>
+      </button>
+      {open && (
+        <div className="px-4 pb-4 space-y-2 font-[var(--font-mono)] text-[11px] text-accent/40 leading-[1.8] border-t border-accent/10">
+          <p className="pt-3">
+            <span className="text-accent/60">Administrator:</span>{' '}
+            HYDRA ARMS Sp. z o.o., ul. Cechowa 44B, 30-614 Kraków, KRS: 0001111593.
+          </p>
+          <p>
+            <span className="text-accent/60">Cel i podstawa prawna:</span>{' '}
+            Dane podane w formularzu rejestracyjnym są przetwarzane na podstawie art. 6 ust. 1 lit. b RODO w celu
+            utworzenia i prowadzenia Konta Klienta oraz świadczenia usług drogą elektroniczną zgodnie z Regulaminem Sklepu.
+            W przypadku weryfikacji dostępu do towarów 18+ lub rezerwacji towarów koncesjonowanych — również na podstawie
+            art. 6 ust. 1 lit. c RODO (obowiązek prawny).
+          </p>
+          <p>
+            <span className="text-accent/60">Dobrowolność:</span>{' '}
+            Podanie danych jest dobrowolne, ale konieczne do założenia konta.
+          </p>
+          <p>
+            <span className="text-accent/60">Okres przechowywania:</span>{' '}
+            Przez okres aktywności Konta lub do momentu zgłoszenia żądania jego usunięcia,
+            a następnie przez czas niezbędny do zabezpieczenia i przedawnienia ewentualnych roszczeń.
+          </p>
+          <p>
+            <span className="text-accent/60">Prawa:</span>{' '}
+            Przysługuje Ci prawo dostępu do danych, ich sprostowania, usunięcia, ograniczenia przetwarzania,
+            przenoszenia danych, wniesienia sprzeciwu oraz skargi do Prezesa UODO.
+          </p>
+          <p>
+            Szczegóły w{' '}
+            <Link href="/polityka-prywatnosci" className="text-accent/70 hover:text-accent transition-colors underline underline-offset-2">
+              Polityce Prywatności
+            </Link>
+            .
+          </p>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function RegisterPage() {
   const [form, setForm] = useState({
     firstName: '',
@@ -104,6 +156,8 @@ export default function RegisterPage() {
           <Field label="Email" type="email" value={form.email} onChange={v => update('email', v)} required />
           <Field label="Hasło" type="password" value={form.password} onChange={v => update('password', v)} required />
           <Field label="Potwierdź hasło" type="password" value={form.confirmPassword} onChange={v => update('confirmPassword', v)} required />
+
+          <RodoKlauzula />
 
           <button
             type="submit"

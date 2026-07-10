@@ -3,8 +3,6 @@ import { Suspense } from 'react';
 import SubpageHero from '@/components/SubpageHero';
 import SklepClient from '@/components/shop/SklepClient';
 import ShopPageSections, { type ShopSection } from '@/components/shop/ShopPageSections';
-import { sanityFetch } from '@/sanity/client';
-import { shopPageQuery } from '@/sanity/queries';
 import { fetchShopData } from '@/lib/shop/fetchProducts';
 import type { ShopProduct, ShopCategory } from '@/lib/supabase/types';
 
@@ -13,32 +11,24 @@ export const metadata: Metadata = {
   alternates: { canonical: '/sklep' },
 };
 
-// ── Types ──────────────────────────────────────────────────────────────────────
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyBlock = { _key: string; _type: string; [key: string]: any }
-
-interface ShopPageData {
-  title?: string
-  sections?: AnyBlock[]
-}
-
 // ── Data fetching ──────────────────────────────────────────────────────────────
 
 function resolveProductsForBlock(
-  block: AnyBlock,
+  block: ShopSection,
   products: ShopProduct[],
 ): ShopProduct[] {
   if (block._type !== 'shopProductPickerBlock') return []
 
-  const limit = block.limit ?? 4
+  // TypeScript narrowed to ProductPickerBlock after guard above
+  const b = block
+  const limit = b.limit ?? 4
   const withImages = products.filter(
     (p) => p.images && Object.keys(p.images).length > 0,
   )
 
   let pool: ShopProduct[]
 
-  switch (block.selectionMode) {
+  switch (b.selectionMode) {
     case 'new_arrivals':
       pool = [...withImages].sort((a, b) => b.id - a.id)
       break
@@ -49,9 +39,9 @@ function resolveProductsForBlock(
       if (!pool.length) pool = [...withImages].sort((a, b) => b.id - a.id)
       break
     case 'manual': {
-      if (block.productIds?.length) {
+      if (b.productIds?.length) {
         // preserve the order the client chose in Studio
-        pool = block.productIds
+        pool = b.productIds
           .map((idStr: string) => products.find((p: ShopProduct) => p.id === Number(idStr)))
           .filter((p: ShopProduct | undefined): p is ShopProduct => p != null)
         return pool
@@ -143,23 +133,12 @@ const DEMO_SECTIONS: ShopSection[] = [
 // ── Page ───────────────────────────────────────────────────────────────────────
 
 export default async function SklepPage() {
-  const [{ products, categories }, shopPageData] = await Promise.all([
+  const [{ products, categories }] = await Promise.all([
     fetchShopData(),
-    sanityFetch<ShopPageData>({ query: shopPageQuery }).catch(() => null),
   ])
 
-  const cmsSections = (shopPageData?.sections ?? []) as ShopSection[]
-  // Supplement CMS sections with demo placeholders for types not yet populated in CMS.
-  // A type is "populated" only if it would actually render (has required content).
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const isPopulated = (s: ShopSection) => {
-    if (s._type === 'shopIconStripBlock') return !!((s as any).items?.length)
-    if (s._type === 'shopTileGridBlock') return !!((s as any).tiles?.length)
-    return true
-  }
-  const populatedCmsTypes = new Set(cmsSections.filter(isPopulated).map((s) => s._type))
-  const supplemental = DEMO_SECTIONS.filter((d) => !populatedCmsTypes.has(d._type))
-  const sections = cmsSections.length > 0 ? [...cmsSections, ...supplemental] : DEMO_SECTIONS
+  // TODO: replace with Sanity CMS sections once client has configured them in Studio
+  const sections = DEMO_SECTIONS
 
   // Resolve products for each product picker block (server-side)
   const resolvedProducts: Record<string, ShopProduct[]> = {}

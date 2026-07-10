@@ -426,9 +426,9 @@ export default function HomePageClient({
                 {heroTagline2}
               </SplitText>
             </div>
-            <div className="flex gap-6 mt-6 md:gap-12 md:mt-8 items-center">
-              <CornerCTA href="/uslugi" label="Nasze usługi" linkClassName="hover:text-white transition-colors duration-300" />
-              <CornerCTA href="#" label="Sklep" linkClassName="hover:text-white transition-colors duration-300" />
+            <div className="flex gap-4 mt-6 md:gap-12 md:mt-8 items-center">
+              <CornerCTA href="/uslugi" label="Nasze usługi" className="flex-1 justify-center" linkClassName="hover:text-white transition-colors duration-300 whitespace-nowrap" />
+              <CornerCTA href="#" label="Sklep" className="flex-1 justify-center" linkClassName="hover:text-white transition-colors duration-300 whitespace-nowrap" />
             </div>
           </div>
         </div>
@@ -597,6 +597,7 @@ export default function HomePageClient({
         title="POTENCJAŁ I OPOWIEDZIALNOŚĆ"
         body="HYDRA ARMS to krakowski ośrodek kompetencyjny dedykowany dla sektora Security & Defense. Specjalizujemy się w wytwarzaniu zaawansowanych komponentów o wysokim stopniu skomplikowania."
         ctaHref="/o-nas"
+        titleClassName="text-[clamp(1.75rem,7vw,140px)] font-medium text-white leading-[1.05] tracking-[-0.5px] md:tracking-[-2px] uppercase"
       />
 
 {/* ─── 3 FILARY ─── */}

@@ -27,8 +27,11 @@ export default function TabPanel({
   children,
 }: TabPanelProps) {
   const [activeId, setActiveId] = useState(tabs[0]?.id ?? "")
+  const [dropdownOpen, setDropdownOpen] = useState(false)
   const contentRef = useRef<HTMLDivElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
   const activeIndex = tabs.findIndex((t) => t.id === activeId)
+  const activeLabel = tabs.find((t) => t.id === activeId)?.label ?? ""
 
   useEffect(() => {
     if (!contentRef.current) return
@@ -39,14 +42,72 @@ export default function TabPanel({
     )
   }, [activeId])
 
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!dropdownOpen) return
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [dropdownOpen])
+
   return (
     <>
-      <div className="flex gap-4 sm:gap-6 px-[clamp(32px,5vw,64px)] py-3.5 border-b border-white/10 overflow-x-auto scrollbar-hide">
+      {/* Mobile / tablet: custom dropdown */}
+      <div className="md:hidden border-b border-white/10 relative" ref={dropdownRef}>
+        <button
+          onClick={() => setDropdownOpen((o) => !o)}
+          className="w-full flex items-center gap-2 px-[clamp(32px,5vw,64px)] py-3"
+        >
+          <span className="font-[var(--font-mono)] text-[13px] text-accent/50 shrink-0">&gt;</span>
+          <span className="font-[var(--font-mono)] text-[13px] tracking-[1px] flex-1 text-left">
+            <span className="text-text-dim">[</span>
+            <span className="text-accent"> {activeLabel} </span>
+            <span className="text-text-dim">]</span>
+          </span>
+          <svg
+            className={`shrink-0 text-accent/50 transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
+            width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5"
+          >
+            <path d="M2 4l4 4 4-4"/>
+          </svg>
+        </button>
+
+        {dropdownOpen && (
+          <div className="absolute left-0 right-0 top-full z-50 border-t border-white/10 bg-[#0a0b0a]">
+            {tabs.map((tab, i) => (
+              <button
+                key={tab.id}
+                onClick={() => { setActiveId(tab.id); setDropdownOpen(false); }}
+                className={`w-full text-left flex items-center gap-2 px-[clamp(32px,5vw,64px)] py-3 font-[var(--font-mono)] text-[13px] tracking-[1px] transition-colors duration-150 ${
+                  i < tabs.length - 1 ? "border-b border-white/5" : ""
+                } ${activeId === tab.id ? "text-accent bg-accent/5" : "text-text-dim hover:text-text hover:bg-white/[0.03]"}`}
+              >
+                <span className="text-text-dim/50 w-5 shrink-0 font-[var(--font-mono)] text-[11px]">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <span className="text-text-dim">[</span>
+                <span className={activeId === tab.id ? "text-accent" : ""}> {tab.label} </span>
+                <span className="text-text-dim">]</span>
+                {activeId === tab.id && (
+                  <span className="ml-auto text-accent text-[10px]">▸</span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Desktop: tab strip */}
+      <div className="hidden md:flex gap-6 px-[clamp(32px,5vw,64px)] py-3.5 border-b border-white/10">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveId(tab.id)}
-            className={`font-[var(--font-mono)] text-[12px] sm:text-[14px] tracking-[1.12px] transition-colors duration-300 whitespace-nowrap shrink-0 ${
+            className={`font-[var(--font-mono)] text-[14px] tracking-[1.12px] transition-colors duration-300 whitespace-nowrap shrink-0 ${
               activeId === tab.id ? "text-text" : "text-text-dim hover:text-text"
             }`}
           >

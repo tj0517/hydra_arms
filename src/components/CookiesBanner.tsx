@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
 type CookiePrefs = {
@@ -12,6 +12,10 @@ type CookiePrefs = {
 const STORAGE_KEY = "hydra_cookie_consent";
 
 export default function CookiesBanner() {
+  // Don't render on the server — keeps the hero poster as the LCP element
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
   const [prefs, setPrefs] = useState<CookiePrefs>({
     necessary: true,
     analytics: false,
@@ -50,6 +54,8 @@ export default function CookiesBanner() {
       desc: "Reklamy dostosowane do profilu. Dane mogą być udostępniane partnerom.",
     },
   ];
+
+  if (!mounted) return null;
 
   return (
     /* Backdrop */
@@ -101,6 +107,10 @@ export default function CookiesBanner() {
           {/* Intro text */}
           <p className="font-[var(--font-mono)] text-[12px] text-accent/60 leading-[1.8] text-justify">
             Używamy plików cookie, by zapewnić prawidłowe działanie serwisu oraz — za Twoją zgodą — analizować ruch i wyświetlać spersonalizowane treści. Szczegóły w{" "}
+            <Link href="/polityka-cookies" className="text-accent hover:text-white transition-colors">
+              Polityce Cookies
+            </Link>
+            {" "}i{" "}
             <Link href="/polityka-prywatnosci" className="text-accent hover:text-white transition-colors">
               Polityce Prywatności
             </Link>

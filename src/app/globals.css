@@ -10,7 +10,8 @@ html[data-cookies-ok] .cookies-banner {
   to   { opacity: 0; pointer-events: none; }
 }
 .hero-overlay-fade {
-  animation: heroOverlayFade 1.2s 0.2s ease-out forwards;
+  /* 0.8s with no delay — hero poster visible sooner on mobile (LCP); desktop LoadingScreen covers it anyway */
+  animation: heroOverlayFade 0.8s 0s ease-out forwards;
 }
 
 @theme inline {
