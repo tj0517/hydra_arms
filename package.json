@@ -41,9 +41,17 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/three": "^0.184.0",
+    "critters": "^0.0.23",
     "eslint": "^9",
     "eslint-config-next": "16.1.7",
     "tailwindcss": "^4",
     "typescript": "^5"
-  }
+  },
+  "browserslist": [
+    "chrome >= 90",
+    "firefox >= 90",
+    "safari >= 14",
+    "edge >= 90",
+    "not dead"
+  ]
 }

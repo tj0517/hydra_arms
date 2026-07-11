@@ -78,10 +78,6 @@ export default async function HomePage() {
   })) ?? undefined
 
   return (
-    <>
-    {/* Preload hero poster so it's ready before JS hydrates — critical for mobile LCP */}
-    {/* eslint-disable-next-line @next/next/no-head-element */}
-    <link rel="preload" as="image" href="/video/hero-poster.jpg" fetchPriority="high" />
     <HomePageClient
       services={mappedServices}
       filary={mappedFilary}
@@ -93,6 +89,5 @@ export default async function HomePage() {
       recentNews={mapPosts(rawNews, 'aktualnosci')}
       recentBlog={mapPosts(rawBlog, 'blog')}
     />
-    </>
   )
 }

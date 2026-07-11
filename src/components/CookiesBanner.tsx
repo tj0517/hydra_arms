@@ -14,7 +14,13 @@ const STORAGE_KEY = "hydra_cookie_consent";
 export default function CookiesBanner() {
   // Don't render on the server — keeps the hero poster as the LCP element
   const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    // Delay banner so the hero poster is measured as LCP first (poster paints ~50ms
+    // after CSS loads; banner should appear well after that, not race for LCP).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    const t = setTimeout(() => setMounted(true), 800);
+    return () => clearTimeout(t);
+  }, []);
 
   const [prefs, setPrefs] = useState<CookiePrefs>({
     necessary: true,
