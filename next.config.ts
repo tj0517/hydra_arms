@@ -8,9 +8,6 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  experimental: {
-    optimizeCss: true,
-  },
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },
