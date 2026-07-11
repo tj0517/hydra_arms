@@ -130,6 +130,13 @@ export default function HomePageClient({
 
   // Overlay fades via CSS class `hero-overlay-fade` — no GSAP needed.
 
+  // Scope / cursor effects are mouse-only — skip entirely on touch/mobile devices.
+  const [hasHover, setHasHover] = useState(false);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setHasHover(window.matchMedia("(hover: hover) and (pointer: fine)").matches);
+  }, []);
+
   const mapSectionRef = useRef<HTMLDivElement>(null);
   const [mapVisible, setMapVisible] = useState(false);
   useEffect(() => {
@@ -315,57 +322,61 @@ export default function HomePageClient({
           </video>
         </div>
 
-        {/* hero-overflow — revealed by scope cursor via clip-path */}
-        <div
-          ref={heroOverflowRef}
-          className="absolute inset-0 z-[1] pointer-events-none scope-glitch overflow-hidden"
-          style={{ clipPath: "inset(50% 50% 50% 50%)" }}
-        >
-          <video
-            ref={overflowVideoInnerRef}
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="none"
-            className="absolute inset-0 w-full h-full object-cover grayscale brightness-[0.55] contrast-[1.2]"
-          >
-            <source src={heroVideo.replace('.mp4', '.webm')} type="video/webm" />
-            <source src={heroVideo} type="video/mp4" />
-          </video>
-          {/* Green tint */}
-          <div className="absolute inset-0 bg-[#13FF15]/30 mix-blend-screen pointer-events-none" />
-          <div className="absolute inset-0 bg-[#0a2a0a]/40 mix-blend-multiply pointer-events-none" />
-          {/* Grain inside scope */}
-          <div className="moving-grain !opacity-[0.18] !z-[2]" />
-        </div>
+        {/* hero-overflow — revealed by scope cursor via clip-path (desktop/hover only) */}
+        {hasHover && (
+          <>
+            <div
+              ref={heroOverflowRef}
+              className="absolute inset-0 z-[1] pointer-events-none scope-glitch overflow-hidden"
+              style={{ clipPath: "inset(50% 50% 50% 50%)" }}
+            >
+              <video
+                ref={overflowVideoInnerRef}
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="none"
+                className="absolute inset-0 w-full h-full object-cover grayscale brightness-[0.55] contrast-[1.2]"
+              >
+                <source src={heroVideo.replace('.mp4', '.webm')} type="video/webm" />
+                <source src={heroVideo} type="video/mp4" />
+              </video>
+              {/* Green tint */}
+              <div className="absolute inset-0 bg-[#13FF15]/30 mix-blend-screen pointer-events-none" />
+              <div className="absolute inset-0 bg-[#0a2a0a]/40 mix-blend-multiply pointer-events-none" />
+              {/* Grain inside scope */}
+              <div className="moving-grain !opacity-[0.18] !z-[2]" />
+            </div>
 
-        {/* Scope guide lines */}
-        <div ref={lineXRef} className="absolute top-0 left-0 w-full h-px bg-accent/30 pointer-events-none opacity-0 transition-opacity duration-300 z-[8]" />
-        <div ref={lineYRef} className="absolute top-0 left-0 w-px h-full bg-accent/30 pointer-events-none opacity-0 transition-opacity duration-300 z-[8]" />
+            {/* Scope guide lines */}
+            <div ref={lineXRef} className="absolute top-0 left-0 w-full h-px bg-accent/30 pointer-events-none opacity-0 transition-opacity duration-300 z-[8]" />
+            <div ref={lineYRef} className="absolute top-0 left-0 w-px h-full bg-accent/30 pointer-events-none opacity-0 transition-opacity duration-300 z-[8]" />
 
-        {/* Scope crosshair reticle */}
-        <div
-          ref={crosshairRef}
-          className="absolute top-0 left-0 z-[9] pointer-events-none opacity-0 transition-opacity duration-300"
-          style={{ marginLeft: -80, marginTop: -50 }}
-        >
-          <svg width="160" height="100" viewBox="0 0 160 100" fill="none">
-            <rect x="1" y="1" width="158" height="98" stroke="#13FF15" strokeWidth="0.5" opacity="0.5" />
-            <path d="M1 14 L1 1 L14 1" stroke="#13FF15" strokeWidth="1.5" fill="none" opacity="0.9" />
-            <path d="M146 1 L159 1 L159 14" stroke="#13FF15" strokeWidth="1.5" fill="none" opacity="0.9" />
-            <path d="M159 86 L159 99 L146 99" stroke="#13FF15" strokeWidth="1.5" fill="none" opacity="0.9" />
-            <path d="M14 99 L1 99 L1 86" stroke="#13FF15" strokeWidth="1.5" fill="none" opacity="0.9" />
-            <line x1="74" y1="50" x2="86" y2="50" stroke="#13FF15" strokeWidth="1" opacity="0.7" />
-            <line x1="80" y1="44" x2="80" y2="56" stroke="#13FF15" strokeWidth="1" opacity="0.7" />
-          </svg>
-          <span
-            ref={coordDisplayRef}
-            className="absolute bottom-[8px] left-[10px] font-[var(--font-mono)] text-[9px] text-accent/60 tracking-[0.1em]"
-          >
-            X:0000  Y:0000
-          </span>
-        </div>
+            {/* Scope crosshair reticle */}
+            <div
+              ref={crosshairRef}
+              className="absolute top-0 left-0 z-[9] pointer-events-none opacity-0 transition-opacity duration-300"
+              style={{ marginLeft: -80, marginTop: -50 }}
+            >
+              <svg width="160" height="100" viewBox="0 0 160 100" fill="none">
+                <rect x="1" y="1" width="158" height="98" stroke="#13FF15" strokeWidth="0.5" opacity="0.5" />
+                <path d="M1 14 L1 1 L14 1" stroke="#13FF15" strokeWidth="1.5" fill="none" opacity="0.9" />
+                <path d="M146 1 L159 1 L159 14" stroke="#13FF15" strokeWidth="1.5" fill="none" opacity="0.9" />
+                <path d="M159 86 L159 99 L146 99" stroke="#13FF15" strokeWidth="1.5" fill="none" opacity="0.9" />
+                <path d="M14 99 L1 99 L1 86" stroke="#13FF15" strokeWidth="1.5" fill="none" opacity="0.9" />
+                <line x1="74" y1="50" x2="86" y2="50" stroke="#13FF15" strokeWidth="1" opacity="0.7" />
+                <line x1="80" y1="44" x2="80" y2="56" stroke="#13FF15" strokeWidth="1" opacity="0.7" />
+              </svg>
+              <span
+                ref={coordDisplayRef}
+                className="absolute bottom-[8px] left-[10px] font-[var(--font-mono)] text-[9px] text-accent/60 tracking-[0.1em]"
+              >
+                X:0000  Y:0000
+              </span>
+            </div>
+          </>
+        )}
 
         {/* Vignette */}
         <div

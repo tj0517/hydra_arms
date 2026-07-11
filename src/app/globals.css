@@ -13,6 +13,11 @@ html[data-cookies-ok] .cookies-banner {
   /* 0.8s with no delay — hero poster visible sooner on mobile (LCP); desktop LoadingScreen covers it anyway */
   animation: heroOverlayFade 0.8s 0s ease-out forwards;
 }
+@media (max-width: 767px) {
+  .hero-overlay-fade {
+    animation-duration: 0.05s;
+  }
+}
 
 @theme inline {
   --color-bg: #0A0A0B;
