@@ -149,18 +149,35 @@ export default function AsciiHelicopter() {
     };
 
     let rafId = 0;
+    let hasDrawn = false;
+
+    // ResizeObserver handles redraws after the first render (e.g. window resize).
+    // It must NOT trigger the initial draw — that's gated behind the IO below.
     const ro = new ResizeObserver(() => {
+      if (!hasDrawn) return;
       cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(() => draw(el.clientWidth, el.clientHeight));
     });
 
+    // Defer the expensive initial draw until the section is near the viewport.
+    // Without this, 50 000+ synchronous fillText() calls block the main thread
+    // at page load, causing ~1 200 ms of Script Evaluation TBT on /o-nas.
+    const io = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        hasDrawn = true;
+        draw(el.clientWidth, el.clientHeight);
+        io.disconnect();
+      }
+    }, { rootMargin: "400px" });
+
     ro.observe(el);
-    draw(el.clientWidth, el.clientHeight);
+    io.observe(el);
 
     return () => {
       renderId = Infinity; // invalidate all pending renders
       cancelAnimationFrame(rafId);
       ro.disconnect();
+      io.disconnect();
     };
   }, []);
 
