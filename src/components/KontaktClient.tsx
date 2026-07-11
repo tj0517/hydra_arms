@@ -302,7 +302,7 @@ export default function KontaktClient({
 
                       <div className="flex items-center gap-2">
                         <span className="font-[var(--font-mono)] text-[13px] text-accent/50 shrink-0">&gt;</span>
-                        <select value={dept} onChange={(e) => setDept(e.target.value)} className="w-full bg-transparent text-accent font-[var(--font-mono)] text-[13px] tracking-[0.5px] focus:outline-none caret-accent appearance-none cursor-pointer" style={{ colorScheme: "dark" }}>
+                        <select value={dept} onChange={(e) => setDept(e.target.value)} aria-label="Dział / Departament" className="w-full bg-transparent text-accent font-[var(--font-mono)] text-[13px] tracking-[0.5px] focus:outline-none caret-accent appearance-none cursor-pointer" style={{ colorScheme: "dark" }}>
                           <option value="" disabled className="bg-[#060806] text-accent/40">DZIAŁ / DEPARTAMENT</option>
                           {departments.map((d) => (
                             <option key={d.key} value={d.key} className="bg-[#060806] text-accent">{d.label}</option>
@@ -361,7 +361,7 @@ export default function KontaktClient({
                             return (
                               <label key={seg.id} className="flex items-center gap-2 cursor-pointer group select-none">
                                 <span className="relative w-[11px] h-[11px] shrink-0">
-                                  <input type="checkbox" checked={on} onChange={() => toggleNl(seg.id)} className="sr-only" />
+                                  <input type="checkbox" checked={on} onChange={() => toggleNl(seg.id)} className="sr-only" aria-label={seg.label} />
                                   <span className={`absolute inset-0 border transition-colors duration-150 ${on ? "border-accent" : "border-white/20 group-hover:border-accent/40"}`} />
                                   {on && <span className="absolute inset-[2px] bg-accent" />}
                                 </span>
@@ -423,18 +423,18 @@ export default function KontaktClient({
                         )}
                       </div>
 
-                      <div className="flex items-start gap-2 mt-2">
-                        <label className="mt-0.5 shrink-0 w-3.5 h-3.5 relative cursor-pointer block">
+                      <label className="flex items-start gap-2 mt-2 cursor-pointer">
+                        <span className="mt-0.5 shrink-0 w-3.5 h-3.5 relative block">
                           <input type="checkbox" className="sr-only peer" checked={consent} onChange={(e) => setConsent(e.target.checked)} required />
                           <span className="absolute inset-0 border border-accent/50 peer-checked:border-accent transition-colors duration-150" />
                           <span className="absolute inset-[3px] bg-accent scale-0 peer-checked:scale-100 transition-transform duration-150" />
-                        </label>
+                        </span>
                         <span className="font-[var(--font-mono)] text-[11px] text-accent/30 leading-[1.6]">
                           Zapoznałem/am się z klauzulą informacyjną RODO i wyrażam zgodę na przetwarzanie moich danych
                           osobowych przez {companyName} w celu obsługi zgłoszenia kontaktowego, zgodnie z{' '}
                           <Link href="/polityka-prywatnosci" className="text-accent/60 hover:text-accent transition-colors">Polityką Prywatności</Link>.
                         </span>
-                      </div>
+                      </label>
 
                       <div className="flex justify-end pt-3">
                         <div className="relative px-8 py-2 inline-flex items-center w-fit">

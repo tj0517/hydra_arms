@@ -130,9 +130,9 @@ export default function Footer({
 
           {/* ── Col 2: Cert Badges ── */}
           <div className={`order-3 md:order-none flex flex-col gap-4 transition-all duration-700 delay-100 lg:-translate-x-[5%] ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
-            <h4 className="font-[var(--font-mono)] text-base text-white uppercase tracking-[0.2em]">
+            <p className="font-[var(--font-mono)] text-base text-white uppercase tracking-[0.2em]">
               Certyfikaty
-            </h4>
+            </p>
             <div className="grid grid-cols-2 gap-2 bg-white/10 rounded-2xl">
               {/* Card 1: CCJ logo */}
               <div className=" rounded-lg p-2 flex items-center justify-center h-[100px]">
@@ -156,9 +156,9 @@ export default function Footer({
 
           {/* ── Col 3: Navigation ── md: col 1 row 2 | lg: flex item ── */}
           <div className={`order-4 md:order-none md:col-start-1 transition-all duration-700 delay-200 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
-            <h4 className="font-[var(--font-mono)] text-base text-white uppercase tracking-[0.2em] mb-6">
+            <p className="font-[var(--font-mono)] text-base text-white uppercase tracking-[0.2em] mb-6">
               Nawigacja
-            </h4>
+            </p>
             <ul className="space-y-1.5">
               {links.map((link, i) => (
                 <li
@@ -180,9 +180,9 @@ export default function Footer({
 
           {/* ── Col 4: Social links ── md: col 2 row 2 | lg: flex item ── */}
           <div className={`order-2 md:order-none md:col-start-2 transition-all duration-700 delay-300 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
-            <h4 className="font-[var(--font-mono)] text-base text-white uppercase tracking-[0.2em] mb-6">
+            <p className="font-[var(--font-mono)] text-base text-white uppercase tracking-[0.2em] mb-6">
               Social
-            </h4>
+            </p>
             <div className="flex gap-3">
               {[
                 { href: fbUrl, label: "Facebook", external: true, icon: (

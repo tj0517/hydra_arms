@@ -199,6 +199,7 @@ export default function SubpageHero({ subtitle, title, titleClass, video }: Subp
         poster="/video/hero-poster.jpg"
         className="absolute inset-0 w-full h-full object-cover z-0"
       >
+        <source src={video.replace('.mp4', '.webm')} type="video/webm" />
         <source src={video} type="video/mp4" />
       </video>
 

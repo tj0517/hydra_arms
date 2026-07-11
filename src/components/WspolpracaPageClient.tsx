@@ -146,6 +146,7 @@ export default function WspolpracaPageClient({
             <button
               onClick={() => { setFundPage((p) => p - 1); resetAutoPlay(); }}
               disabled={fundPage === 0}
+              aria-label="Poprzednia strona"
               className="w-11 h-11 rounded-full border border-white/15 flex items-center justify-center text-text-dim hover:border-accent hover:text-accent transition-colors duration-300 disabled:opacity-20 disabled:pointer-events-none"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M10 3L5 8L10 13" /></svg>
@@ -153,6 +154,7 @@ export default function WspolpracaPageClient({
             <button
               onClick={() => { setFundPage((p) => p + 1); resetAutoPlay(); }}
               disabled={fundPage >= fundMaxPage}
+              aria-label="Następna strona"
               className="w-11 h-11 rounded-full border border-white/15 flex items-center justify-center text-text-dim hover:border-accent hover:text-accent transition-colors duration-300 disabled:opacity-20 disabled:pointer-events-none"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 3L11 8L6 13" /></svg>
@@ -209,6 +211,7 @@ export default function WspolpracaPageClient({
           playsInline
           className="absolute inset-0 w-full h-full object-cover opacity-30 grayscale brightness-[0.6] z-0"
         >
+          {aerialLoaded && <source src="/video/aerial-view.webm" type="video/webm" />}
           {aerialLoaded && <source src="/video/aerial-view.mp4" type="video/mp4" />}
         </video>
         <div className="absolute inset-0 z-[1]">

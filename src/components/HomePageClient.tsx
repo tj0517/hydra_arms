@@ -310,6 +310,7 @@ export default function HomePageClient({
             poster="/video/hero-poster.jpg"
             className="absolute inset-0 w-full h-full object-cover grayscale contrast-[1.15] brightness-[0.5] sepia-[0.08]"
           >
+            <source src={heroVideo.replace('.mp4', '.webm')} type="video/webm" />
             <source src={heroVideo} type="video/mp4" />
           </video>
         </div>
@@ -329,6 +330,7 @@ export default function HomePageClient({
             preload="none"
             className="absolute inset-0 w-full h-full object-cover grayscale brightness-[0.55] contrast-[1.2]"
           >
+            <source src={heroVideo.replace('.mp4', '.webm')} type="video/webm" />
             <source src={heroVideo} type="video/mp4" />
           </video>
           {/* Green tint */}
