@@ -440,8 +440,8 @@ export default function HomePageClient({
               </SplitText>
             </div>
             <div className="flex gap-4 mt-6 md:gap-12 md:mt-8 items-center">
-              <CornerCTA href="/uslugi" label="Nasze usługi" className="flex-1 justify-center" linkClassName="hover:text-white transition-colors duration-300 whitespace-nowrap" />
-              <CornerCTA href="#" label="Sklep" className="flex-1 justify-center" linkClassName="hover:text-white transition-colors duration-300 whitespace-nowrap" />
+              <CornerCTA href="/uslugi" label="Nasze usługi" className="flex-1 md:flex-none justify-center" linkClassName="hover:text-white transition-colors duration-300 whitespace-nowrap" />
+              <CornerCTA href="#" label="Sklep" className="flex-1 md:flex-none justify-center" linkClassName="hover:text-white transition-colors duration-300 whitespace-nowrap" />
             </div>
           </div>
         </div>
