@@ -13,7 +13,8 @@ const SEGMENTS = [
 export default function NewsletterBar() {
   const [selected, setSelected] = useState<Set<string>>(new Set(["aktualnosci"]));
   const [email, setEmail]       = useState("");
-  const [status, setStatus]     = useState<"idle" | "ok">("idle");
+  const [status, setStatus]     = useState<"idle" | "ok" | "error">("idle");
+  const [loading, setLoading]   = useState(false);
 
   const toggle = (id: string) =>
     setSelected(prev => {
@@ -22,12 +23,24 @@ export default function NewsletterBar() {
       return next;
     });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || selected.size === 0) return;
-    // TODO: wire to mailing provider (Resend / Mailchimp / etc.)
-    setStatus("ok");
-    setEmail("");
+    setLoading(true);
+    try {
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, segments: Array.from(selected) }),
+      });
+      if (!res.ok) throw new Error();
+      setStatus("ok");
+      setEmail("");
+    } catch {
+      setStatus("error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -98,6 +111,10 @@ export default function NewsletterBar() {
               <span className="terminal-blink">█</span>{" "}
               ZAPISANO — POTWIERDZENIE ZOSTANIE WYSŁANE
             </p>
+          ) : status === "error" ? (
+            <p className="font-[var(--font-mono)] text-[11px] text-red-400/80 tracking-[0.1em] uppercase">
+              BŁĄD ZAPISU — spróbuj ponownie
+            </p>
           ) : (
             <form onSubmit={handleSubmit} className="flex items-stretch">
               <div className="flex items-center gap-2 flex-1 border border-white/10 hover:border-accent/30 focus-within:border-accent/50 transition-colors duration-200 px-3 py-2">
@@ -115,9 +132,10 @@ export default function NewsletterBar() {
               </div>
               <button
                 type="submit"
-                className="font-[var(--font-mono)] text-[11px] tracking-[0.18em] uppercase text-bg bg-accent hover:bg-accent/80 transition-colors duration-200 px-5 whitespace-nowrap"
+                disabled={loading}
+                className="font-[var(--font-mono)] text-[11px] tracking-[0.18em] uppercase text-bg bg-accent hover:bg-accent/80 transition-colors duration-200 px-5 whitespace-nowrap disabled:opacity-50"
               >
-                ZAPISZ
+                {loading ? "..." : "ZAPISZ"}
               </button>
             </form>
           )}

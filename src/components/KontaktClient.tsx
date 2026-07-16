@@ -38,13 +38,10 @@ export default function KontaktClient({
   uei = "YUXMMDP8MNP4",
   adresSiedziby = "ul. Cechowa 44B\n30-614 Kraków",
   adresSklep = "ul. Gdańska 22\n31-411 Kraków",
-  emailRD = "rd@hydraarms.com",
-  emailB2G = "b2g@hydraarms.com",
-  emailHandel = "handel@hydraarms.com",
-  emailBiuro = "biuro@hydraarms.com",
-  facebookUrl = "#!",
-  instagramUrl = "#!",
-  linkedinUrl = "#!",
+  emailRD = "office@hydra-arms.com",
+  emailB2G = "office@hydra-arms.com",
+  emailHandel = "office@hydra-arms.com",
+  emailBiuro = "office@hydra-arms.com",
   certificates = [
     { name: "PN-EN ISO 9001:2015-10", desc: "System Zarządzania Jakością" },
     { name: "AQAP 2110:2016", desc: "Wymagania NATO dotyczące zapewnienia jakości" },
@@ -64,6 +61,15 @@ export default function KontaktClient({
   const [dept, setDept] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [rodoOpen, setRodoOpen] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
+
+  // Controlled form fields
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
 
   const NL_SEGMENTS = [
     { id: "aktualnosci", label: "AKTUALNOŚCI" },
@@ -80,10 +86,47 @@ export default function KontaktClient({
     if (e.target.files) setFiles(Array.from(e.target.files));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!consent) return;
-    setSubmitted(true);
+    setSending(true);
+    setSendError(null);
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          email,
+          phone,
+          dept,
+          subject,
+          message,
+          segments: Array.from(nlSelected),
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? "Nieznany błąd");
+      }
+
+      // If newsletter segments were selected, also register in audience
+      if (nlSelected.size > 0) {
+        await fetch("/api/newsletter", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, segments: Array.from(nlSelected) }),
+        }).catch(() => { /* non-fatal */ });
+      }
+
+      setSubmitted(true);
+    } catch (err) {
+      setSendError(err instanceof Error ? err.message : "Błąd wysyłki");
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -202,48 +245,12 @@ export default function KontaktClient({
                     </div>
                   </div>
 
-                  {/* Social */}
+                  {/* Email only — social media coming soon */}
                   <div>
                     <div className="font-[var(--font-mono)] text-[12px] text-accent/50 mb-4">
-                      $ hydra --social-links
+                      $ hydra --contact
                     </div>
                     <div className="flex gap-3">
-                      <a
-                        href={facebookUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group w-10 h-10 border border-accent/30 flex items-center justify-center text-accent hover:text-white hover:border-accent transition-all duration-300 relative overflow-hidden"
-                        aria-label="Facebook"
-                      >
-                        <div className="absolute inset-0 bg-accent/5 scale-0 group-hover:scale-100 transition-transform duration-300 origin-center" />
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="relative z-[1]">
-                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                        </svg>
-                      </a>
-                      <a
-                        href={instagramUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group w-10 h-10 border border-accent/30 flex items-center justify-center text-accent hover:text-white hover:border-accent transition-all duration-300 relative overflow-hidden"
-                        aria-label="Instagram"
-                      >
-                        <div className="absolute inset-0 bg-accent/5 scale-0 group-hover:scale-100 transition-transform duration-300 origin-center" />
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="relative z-[1]">
-                          <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
-                        </svg>
-                      </a>
-                      <a
-                        href={linkedinUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group w-10 h-10 border border-accent/30 flex items-center justify-center text-accent hover:text-white hover:border-accent transition-all duration-300 relative overflow-hidden"
-                        aria-label="LinkedIn"
-                      >
-                        <div className="absolute inset-0 bg-accent/5 scale-0 group-hover:scale-100 transition-transform duration-300 origin-center" />
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="relative z-[1]">
-                          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                        </svg>
-                      </a>
                       <a
                         href={`mailto:${emailBiuro}`}
                         className="group w-10 h-10 border border-accent/30 flex items-center justify-center text-accent hover:text-white hover:border-accent transition-all duration-300 relative overflow-hidden"
@@ -272,7 +279,7 @@ export default function KontaktClient({
                       <div className="text-accent/40">Czas reakcji: 24–48h roboczych.</div>
                       <div className="mt-4">
                         <button
-                          onClick={() => { setSubmitted(false); setFiles([]); setConsent(false); setDept(""); }}
+                          onClick={() => { setSubmitted(false); setFiles([]); setConsent(false); setDept(""); setName(""); setEmail(""); setPhone(""); setSubject(""); setMessage(""); setSendError(null); }}
                           className="font-[var(--font-mono)] text-[12px] text-accent/50 hover:text-accent transition-colors border border-accent/20 px-4 py-1.5"
                         >
                           WYŚLIJ KOLEJNĄ
@@ -284,19 +291,19 @@ export default function KontaktClient({
 
                       <div className="flex items-center gap-2">
                         <span className="font-[var(--font-mono)] text-[13px] text-accent/50 shrink-0">&gt;</span>
-                        <input type="text" placeholder="IMIĘ I NAZWISKO" required className="w-full bg-transparent text-accent font-[var(--font-mono)] text-[13px] tracking-[0.5px] focus:outline-none placeholder:text-accent/20 caret-accent" />
+                        <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="IMIĘ I NAZWISKO" required className="w-full bg-transparent text-accent font-[var(--font-mono)] text-[13px] tracking-[0.5px] focus:outline-none placeholder:text-accent/20 caret-accent" />
                       </div>
                       <div className="border-t border-accent/5" />
 
                       <div className="flex items-center gap-2">
                         <span className="font-[var(--font-mono)] text-[13px] text-accent/50 shrink-0">&gt;</span>
-                        <input type="email" placeholder="ADRES EMAIL" required className="w-full bg-transparent text-accent font-[var(--font-mono)] text-[13px] tracking-[0.5px] focus:outline-none placeholder:text-accent/20 caret-accent" />
+                        <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="ADRES EMAIL" required className="w-full bg-transparent text-accent font-[var(--font-mono)] text-[13px] tracking-[0.5px] focus:outline-none placeholder:text-accent/20 caret-accent" />
                       </div>
                       <div className="border-t border-accent/5" />
 
                       <div className="flex items-center gap-2">
                         <span className="font-[var(--font-mono)] text-[13px] text-accent/50 shrink-0">&gt;</span>
-                        <input type="tel" placeholder="TELEFON (OPCJONALNIE)" className="w-full bg-transparent text-accent font-[var(--font-mono)] text-[13px] tracking-[0.5px] focus:outline-none placeholder:text-accent/20 caret-accent" />
+                        <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="TELEFON (OPCJONALNIE)" className="w-full bg-transparent text-accent font-[var(--font-mono)] text-[13px] tracking-[0.5px] focus:outline-none placeholder:text-accent/20 caret-accent" />
                       </div>
                       <div className="border-t border-accent/5" />
 
@@ -313,13 +320,13 @@ export default function KontaktClient({
 
                       <div className="flex items-center gap-2">
                         <span className="font-[var(--font-mono)] text-[13px] text-accent/50 shrink-0">&gt;</span>
-                        <input type="text" placeholder="TYTUŁ / TEMAT" required className="w-full bg-transparent text-accent font-[var(--font-mono)] text-[13px] tracking-[0.5px] focus:outline-none placeholder:text-accent/20 caret-accent" />
+                        <input type="text" value={subject} onChange={e => setSubject(e.target.value)} placeholder="TYTUŁ / TEMAT" required className="w-full bg-transparent text-accent font-[var(--font-mono)] text-[13px] tracking-[0.5px] focus:outline-none placeholder:text-accent/20 caret-accent" />
                       </div>
                       <div className="border-t border-accent/5" />
 
                       <div className="flex items-start gap-2">
                         <span className="font-[var(--font-mono)] text-[13px] text-accent/50 shrink-0 pt-0.5">&gt;</span>
-                        <textarea placeholder="TREŚĆ WIADOMOŚCI" rows={7} required className="w-full bg-transparent text-accent font-[var(--font-mono)] text-[13px] tracking-[0.5px] focus:outline-none resize-none placeholder:text-accent/20 caret-accent" />
+                        <textarea value={message} onChange={e => setMessage(e.target.value)} placeholder="TREŚĆ WIADOMOŚCI" rows={7} required className="w-full bg-transparent text-accent font-[var(--font-mono)] text-[13px] tracking-[0.5px] focus:outline-none resize-none placeholder:text-accent/20 caret-accent" />
                       </div>
                       <div className="border-t border-accent/5" />
 
@@ -436,14 +443,20 @@ export default function KontaktClient({
                         </span>
                       </label>
 
+                      {sendError && (
+                        <p className="font-[var(--font-mono)] text-[11px] text-red-400/80">
+                          BŁĄD: {sendError} — spróbuj ponownie lub wyślij bezpośrednio na {emailBiuro}
+                        </p>
+                      )}
+
                       <div className="flex justify-end pt-3">
                         <div className="relative px-8 py-2 inline-flex items-center w-fit">
                           <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-text/50" />
                           <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-text/50" />
                           <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-text/50" />
                           <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-text/50" />
-                          <button type="submit" disabled={!consent} className="font-[var(--font-mono)] text-[13px] tracking-[1px] text-accent hover:text-white transition-colors duration-300 disabled:opacity-30 disabled:cursor-not-allowed">
-                            WYŚLIJ ZGŁOSZENIE
+                          <button type="submit" disabled={!consent || sending} className="font-[var(--font-mono)] text-[13px] tracking-[1px] text-accent hover:text-white transition-colors duration-300 disabled:opacity-30 disabled:cursor-not-allowed">
+                            {sending ? "WYSYŁANIE..." : "WYŚLIJ ZGŁOSZENIE"}
                           </button>
                         </div>
                       </div>

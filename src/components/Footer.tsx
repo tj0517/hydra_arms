@@ -8,10 +8,7 @@ const DEFAULT_NAV_LINKS = [
   { href: "/uslugi", label: "Usługi" },
   { href: "/o-nas", label: "O nas" },
   { href: "/wspolpraca", label: "Współpraca" },
-  { href: "/aktualnosci", label: "Aktualności" },
-  { href: "/blog", label: "Blog" },
   { href: "/kontakt", label: "Kontakt" },
-  { href: "/sklep", label: "Sklep" },
 ];
 
 type SiteSettings = {
@@ -133,19 +130,19 @@ export default function Footer({
             <p className="font-[var(--font-mono)] text-base text-white uppercase tracking-[0.2em]">
               Certyfikaty
             </p>
-            <div className="grid grid-cols-2 gap-2 bg-white/10 rounded-2xl">
+            <div className="grid grid-cols-2 gap-2">
               {/* Card 1: CCJ logo */}
-              <div className=" rounded-lg p-2 flex items-center justify-center h-[100px]">
-                <Image src="/cert/Curve.png" alt="CCJ — Centrum Certyfikacji Jakości" width={1000} height={1200} sizes="100px" loading="lazy" className="h-24 w-auto object-contain" draggable={false} />
+              <div className="bg-white/10 rounded-2xl p-3 flex items-center justify-center h-[100px]">
+                <Image src="/cert/Curve.png" alt="CCJ — Centrum Certyfikacji Jakości" width={1000} height={1200} sizes="120px" loading="lazy" className="max-h-[72px] w-auto object-contain" draggable={false} />
               </div>
               {/* Card 2: NCAGE */}
-              <div className=" rounded-lg p-2 flex items-center justify-center h-25">
-                <Image src="/cert/ncage_9CJ3H.png" alt="NCAGE 9CJ3H" width={2384} height={2784} sizes="100px" loading="lazy" className="h-20! w-auto object-contain" draggable={false} />
+              <div className="bg-white/10 rounded-2xl p-3 flex items-center justify-center h-[100px]">
+                <Image src="/cert/ncage_9CJ3H.png" alt="NCAGE 9CJ3H" width={2384} height={2784} sizes="120px" loading="lazy" className="max-h-[64px] w-auto object-contain" draggable={false} />
               </div>
               {/* Card 3: CCJ + PCA combined — spans both columns */}
-              <div className="col-span-2  rounded-lg p-3 flex flex-col items-center ">
-                <Image src="/cert/PCA CJJ.png" alt="CCJ PN-EN ISO 9001:2015 · PCA AC 057" width={1800} height={800} sizes="260px" loading="lazy" className="h-24 w-auto object-contain" draggable={false} />
-                <div className="text-center text-[8px] text-white leading-snug ml-[-18%] w-[63%]" style={{ fontFamily: "Arial, sans-serif" }}>
+              <div className="col-span-2 bg-white/10 rounded-2xl p-4 flex flex-col items-center gap-2">
+                <Image src="/cert/PCA CJJ.png" alt="CCJ PN-EN ISO 9001:2015 · PCA AC 057" width={1800} height={800} sizes="(max-width: 640px) 90vw, 280px" loading="lazy" className="max-h-[80px] w-auto object-contain" draggable={false} />
+                <div className="text-center text-[8px] text-white/70 leading-snug" style={{ fontFamily: "Arial, sans-serif" }}>
                   <p>AQAP 2110:2016</p>
                   <p>PN-EN ISO 9001:2015</p>
                   <p>Wewnętrzny System Kontroli</p>
@@ -184,42 +181,19 @@ export default function Footer({
               Social
             </p>
             <div className="flex gap-3">
-              {[
-                { href: fbUrl, label: "Facebook", external: true, icon: (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
-                  </svg>
-                )},
-                { href: igUrl, label: "Instagram", external: true, icon: (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
-                  </svg>
-                )},
-                { href: liUrl, label: "LinkedIn", external: true, icon: (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/>
-                  </svg>
-                )},
-                { href: `mailto:${emailBiuro}`, label: "Email", external: false, icon: (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
-                  </svg>
-                )},
-              ].map(({ href, label, external, icon }) => (
-                <a
-                  key={label}
-                  href={href}
-                  aria-label={label}
-                  {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                  className="relative w-10 h-10 flex items-center justify-center text-accent hover:bg-accent hover:text-bg transition-colors duration-300 group"
-                >
-                  <span className="absolute top-0 left-0 w-2.5 h-2.5 border-t border-l border-text/50 group-hover:border-bg/50 transition-colors duration-300" />
-                  <span className="absolute top-0 right-0 w-2.5 h-2.5 border-t border-r border-text/50 group-hover:border-bg/50 transition-colors duration-300" />
-                  <span className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b border-l border-text/50 group-hover:border-bg/50 transition-colors duration-300" />
-                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b border-r border-text/50 group-hover:border-bg/50 transition-colors duration-300" />
-                  {icon}
-                </a>
-              ))}
+              <a
+                href={`mailto:${emailBiuro}`}
+                aria-label="Email"
+                className="relative w-10 h-10 flex items-center justify-center text-accent hover:bg-accent hover:text-bg transition-colors duration-300 group"
+              >
+                <span className="absolute top-0 left-0 w-2.5 h-2.5 border-t border-l border-text/50 group-hover:border-bg/50 transition-colors duration-300" />
+                <span className="absolute top-0 right-0 w-2.5 h-2.5 border-t border-r border-text/50 group-hover:border-bg/50 transition-colors duration-300" />
+                <span className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b border-l border-text/50 group-hover:border-bg/50 transition-colors duration-300" />
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b border-r border-text/50 group-hover:border-bg/50 transition-colors duration-300" />
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                </svg>
+              </a>
             </div>
           </div>
 

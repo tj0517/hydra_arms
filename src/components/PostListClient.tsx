@@ -34,11 +34,18 @@ export default function PostListClient({ posts }: Props) {
 
   if (posts.length === 0) {
     return (
-      <section className="flex flex-col items-center justify-center py-24 gap-4 px-8">
-        <div className="w-px h-16 bg-white/10" />
-        <p className="font-[var(--font-mono)] text-xs uppercase tracking-[0.3em] text-text-dim">
-          Brak wpisów
+      <section className="flex flex-col items-center justify-center min-h-[40vh] py-32 gap-5 px-8">
+        <div className="w-px h-20 bg-accent/10" />
+        <p className="font-[var(--font-mono)] text-[10px] uppercase tracking-[0.4em] text-accent/40">
+          // WKRÓTCE
         </p>
+        <p className="font-[var(--font-mono)] text-sm uppercase tracking-[0.2em] text-white/50">
+          Sekcja w przygotowaniu
+        </p>
+        <p className="font-[var(--font-mono)] text-[11px] text-text-dim/40 max-w-[280px] text-center leading-relaxed">
+          Pracujemy nad pierwszymi wpisami. Wróć niebawem.
+        </p>
+        <div className="w-px h-20 bg-accent/10" />
       </section>
     );
   }

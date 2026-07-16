@@ -130,9 +130,33 @@ const DEMO_SECTIONS: ShopSection[] = [
   },
 ]
 
+// ── Temporary: shop disabled until configuration is complete ───────────────────
+const SHOP_DISABLED = true;
+
 // ── Page ───────────────────────────────────────────────────────────────────────
 
 export default async function SklepPage() {
+  if (SHOP_DISABLED) {
+    return (
+      <main>
+        <SubpageHero subtitle="HYDRA ARMS / Sklep" title="Sklep" video="/video/hero-video.mp4" />
+        <section className="flex flex-col items-center justify-center min-h-[40vh] py-32 gap-5 px-8">
+          <div className="w-px h-20 bg-accent/10" />
+          <p className="font-[var(--font-mono)] text-[10px] uppercase tracking-[0.4em] text-accent/40">
+            // WKRÓTCE
+          </p>
+          <p className="font-[var(--font-mono)] text-sm uppercase tracking-[0.2em] text-white/50">
+            Sklep w przygotowaniu
+          </p>
+          <p className="font-[var(--font-mono)] text-[11px] text-text-dim/40 max-w-[320px] text-center leading-relaxed">
+            Trwa konfiguracja sklepu. Zapisz się do newslettera, aby otrzymać powiadomienie o otwarciu.
+          </p>
+          <div className="w-px h-20 bg-accent/10" />
+        </section>
+      </main>
+    );
+  }
+
   const [{ products, categories }] = await Promise.all([
     fetchShopData(),
   ])
