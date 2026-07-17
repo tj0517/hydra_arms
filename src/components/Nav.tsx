@@ -11,7 +11,6 @@ const FLAT_LINKS = [
   { href: "/uslugi", label: "Usługi" },
   { href: "/o-nas", label: "O nas" },
   { href: "/wspolpraca", label: "Współpraca" },
-  { href: "/blog", label: "Blog" },
   { href: "/kontakt", label: "Kontakt" },
 ];
 

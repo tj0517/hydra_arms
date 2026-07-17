@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 import SubpageHero from '@/components/SubpageHero'
 import PostListClient from '@/components/PostListClient'
 import { sanityFetch } from '@/sanity/client'
@@ -52,6 +53,8 @@ export default async function BlogPage() {
   } catch {
     posts = []
   }
+
+  if (posts.length === 0) notFound()
 
   return (
     <main>
