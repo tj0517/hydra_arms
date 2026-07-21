@@ -42,6 +42,9 @@ export default function KontaktClient({
   emailB2G = "office@hydra-arms.com",
   emailHandel = "office@hydra-arms.com",
   emailBiuro = "office@hydra-arms.com",
+  facebookUrl = "#!",
+  instagramUrl = "#!",
+  linkedinUrl = "#!",
   certificates = [
     { name: "PN-EN ISO 9001:2015-10", desc: "System Zarządzania Jakością" },
     { name: "AQAP 2110:2016", desc: "Wymagania NATO dotyczące zapewnienia jakości" },
