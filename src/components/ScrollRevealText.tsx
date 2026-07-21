@@ -19,14 +19,15 @@ export default function ScrollRevealText({
   useEffect(() => {
     if (!containerRef.current) return;
 
-    const chars = containerRef.current.querySelectorAll(".reveal-char");
+    // Per-word animation (not per-character) — same scroll-sync feel, ~8x fewer DOM updates per frame
+    const words = containerRef.current.querySelectorAll(".reveal-word");
 
     gsap.fromTo(
-      chars,
+      words,
       { color: "rgba(192, 200, 199, 0.15)" },
       {
         color: "var(--color-text)",
-        stagger: 0.02,
+        stagger: 0.06,
         ease: "none",
         scrollTrigger: {
           trigger: containerRef.current,
@@ -44,24 +45,22 @@ export default function ScrollRevealText({
     };
   }, [text]);
 
+  const wordList = text.split(" ");
+
   return (
     <p ref={containerRef} className={className}>
       {indent > 0 &&
         Array.from({ length: indent }).map((_, i) => (
           <span key={`indent-${i}`} className="inline-block w-10 md:w-32" />
         ))}
-      {text.split(" ").map((word, wi) => (
-        <span key={wi}>
-          {word.split("").map((char, ci) => (
-            <span
-              key={ci}
-              className="reveal-char"
-              style={{ color: "rgba(192, 200, 199, 0.15)" }}
-            >
-              {char}
-            </span>
-          ))}
-          {wi < text.split(" ").length - 1 ? " " : ""}
+      {wordList.map((word, wi) => (
+        <span
+          key={wi}
+          className="reveal-word"
+          style={{ color: "rgba(192, 200, 199, 0.15)" }}
+        >
+          {word}
+          {wi < wordList.length - 1 ? "\u00a0" : ""}
         </span>
       ))}
     </p>
