@@ -27,9 +27,30 @@ export default function AnimateIn({
 
   useEffect(() => {
     if (!ref.current) return;
+    const el = ref.current;
 
+    if (once) {
+      // IntersectionObserver for one-shot entrance — zero ScrollTrigger overhead
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (!entry.isIntersecting) return;
+          observer.disconnect();
+          gsap.fromTo(
+            el,
+            { opacity: 0, y, x },
+            { opacity: 1, y: 0, x: 0, duration, delay, ease: "power3.out" }
+          );
+        },
+        // rootMargin -15% bottom ≈ ScrollTrigger "top 85%"
+        { threshold: 0, rootMargin: "0px 0px -15% 0px" }
+      );
+      observer.observe(el);
+      return () => observer.disconnect();
+    }
+
+    // Non-once: keep ScrollTrigger for reversible animations
     const anim = gsap.fromTo(
-      ref.current,
+      el,
       { opacity: 0, y, x },
       {
         opacity: 1,
@@ -39,9 +60,9 @@ export default function AnimateIn({
         delay,
         ease: "power3.out",
         scrollTrigger: {
-          trigger: ref.current,
+          trigger: el,
           start: "top 85%",
-          toggleActions: once ? "play none none none" : "play none none reverse",
+          toggleActions: "play none none reverse",
         },
       }
     );

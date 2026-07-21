@@ -64,19 +64,19 @@ export default function SubpageHero({ subtitle, title, titleClass, video }: Subp
     };
   }, []);
 
-  /* ── Grain canvas — video + heavy animated noise ── */
+  /* ── Grain canvas — static dark overlay, drawn once on first video frame ── */
   useEffect(() => {
     const vid = videoRef.current;
     const canvas = pixCanvasRef.current;
     if (!vid || !canvas) return;
 
     const ctx = canvas.getContext("2d")!;
-    // Half-res: CSS stretches to fill, grain is imperceptible at lower res
     const W = window.innerWidth > 768 ? 960 : 480;
     const H = window.innerWidth > 768 ? 540 : 270;
     canvas.width = W;
     canvas.height = H;
 
+    // Build static noise texture once
     const noiseCvs = document.createElement("canvas");
     noiseCvs.width = 256;
     noiseCvs.height = 256;
@@ -92,48 +92,28 @@ export default function SubpageHero({ subtitle, title, titleClass, video }: Subp
     }
     nCtx.putImageData(noiseImg, 0, 0);
 
-    let raf = 0;
-    let lastDraw = 0;
-    let visible = true;
-    const FRAME_MS = 1000 / 30; // cap at 30fps
-
-    const draw = (now: number) => {
-      raf = 0;
-      if (!visible) return; // stop RAF completely when off-screen
-      if (!document.hidden && now - lastDraw >= FRAME_MS && !vid.paused && !vid.ended) {
-        lastDraw = now;
-        ctx.globalCompositeOperation = "source-over";
-        ctx.drawImage(vid, 0, 0, W, H);
-        ctx.fillStyle = "rgba(10,10,11,0.65)";
-        ctx.fillRect(0, 0, W, H);
-        ctx.globalCompositeOperation = "overlay";
-        ctx.globalAlpha = 0.15;
-        const ox = Math.floor(Math.random() * 128);
-        const oy = Math.floor(Math.random() * 128);
-        ctx.drawImage(noiseCvs, -ox, -oy);
-        ctx.globalAlpha = 1;
-        ctx.globalCompositeOperation = "source-over";
-      }
-      raf = requestAnimationFrame(draw);
+    // Draw once: video frame + dark overlay + grain — no RAF loop needed
+    const drawOnce = () => {
+      ctx.globalCompositeOperation = "source-over";
+      ctx.drawImage(vid, 0, 0, W, H);
+      ctx.fillStyle = "rgba(10,10,11,0.65)";
+      ctx.fillRect(0, 0, W, H);
+      ctx.globalCompositeOperation = "overlay";
+      ctx.globalAlpha = 0.15;
+      ctx.drawImage(noiseCvs, 0, 0);
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = "source-over";
     };
 
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        visible = entry.isIntersecting;
-        if (visible && raf === 0) raf = requestAnimationFrame(draw);
-      },
-      { threshold: 0 }
-    );
-    io.observe(canvas);
-
-    const start = () => { if (raf === 0) raf = requestAnimationFrame(draw); };
-    vid.addEventListener("play", start);
-    if (!vid.paused) raf = requestAnimationFrame(draw);
-    return () => {
-      cancelAnimationFrame(raf);
-      io.disconnect();
-      vid.removeEventListener("play", start);
-    };
+    if (vid.readyState >= 2) {
+      drawOnce();
+    } else {
+      // Dark fill immediately so canvas isn't blank while video loads
+      ctx.fillStyle = "rgba(10,10,11,0.80)";
+      ctx.fillRect(0, 0, W, H);
+      vid.addEventListener("canplay", drawOnce, { once: true });
+      return () => vid.removeEventListener("canplay", drawOnce);
+    }
   }, []);
 
   /* ── Crosshair scope — reveals clean video ── */
