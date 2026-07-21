@@ -14,18 +14,16 @@ interface SubpageHeroProps {
 export default function SubpageHero({ subtitle, title, titleClass, video }: SubpageHeroProps) {
   const heroRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const pixCanvasRef = useRef<HTMLCanvasElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
   const crosshairRef = useRef<HTMLDivElement>(null);
   const coordRef = useRef<HTMLSpanElement>(null);
   const lineXRef = useRef<HTMLDivElement>(null);
   const lineYRef = useRef<HTMLDivElement>(null);
 
-  // Entrance overlay fades via CSS class `hero-overlay-fade`.
-
   /* ── Video playback + glitch on loop ── */
   useEffect(() => {
     const vid = videoRef.current;
-    const canvas = pixCanvasRef.current;
+    const overlay = overlayRef.current;
     const hero = heroRef.current;
     if (!vid) return;
     vid.pause();
@@ -51,10 +49,10 @@ export default function SubpageHero({ subtitle, title, titleClass, video }: Subp
     if (hero) obs.observe(hero);
 
     const onSeeked = () => {
-      if (!canvas || vid.currentTime > 0.5) return;
-      canvas.classList.remove("glitch-once");
-      void canvas.offsetWidth;
-      canvas.classList.add("glitch-once");
+      if (!overlay || vid.currentTime > 0.5) return;
+      overlay.classList.remove("glitch-once");
+      void overlay.offsetWidth;
+      overlay.classList.add("glitch-once");
     };
 
     vid.addEventListener("seeked", onSeeked);
@@ -64,64 +62,12 @@ export default function SubpageHero({ subtitle, title, titleClass, video }: Subp
     };
   }, []);
 
-  /* ── Grain canvas — static dark overlay, drawn once on first video frame ── */
-  useEffect(() => {
-    const vid = videoRef.current;
-    const canvas = pixCanvasRef.current;
-    if (!vid || !canvas) return;
-
-    const ctx = canvas.getContext("2d")!;
-    const W = window.innerWidth > 768 ? 960 : 480;
-    const H = window.innerWidth > 768 ? 540 : 270;
-    canvas.width = W;
-    canvas.height = H;
-
-    // Build static noise texture once
-    const noiseCvs = document.createElement("canvas");
-    noiseCvs.width = 256;
-    noiseCvs.height = 256;
-    const nCtx = noiseCvs.getContext("2d")!;
-    const noiseImg = nCtx.createImageData(256, 256);
-    const nd = noiseImg.data;
-    for (let i = 0; i < nd.length; i += 4) {
-      const v = Math.random() * 255;
-      nd[i] = v;
-      nd[i + 1] = v;
-      nd[i + 2] = v;
-      nd[i + 3] = 255;
-    }
-    nCtx.putImageData(noiseImg, 0, 0);
-
-    // Draw once: video frame + dark overlay + grain — no RAF loop needed
-    const drawOnce = () => {
-      ctx.globalCompositeOperation = "source-over";
-      ctx.drawImage(vid, 0, 0, W, H);
-      ctx.fillStyle = "rgba(10,10,11,0.65)";
-      ctx.fillRect(0, 0, W, H);
-      ctx.globalCompositeOperation = "overlay";
-      ctx.globalAlpha = 0.15;
-      ctx.drawImage(noiseCvs, 0, 0);
-      ctx.globalAlpha = 1;
-      ctx.globalCompositeOperation = "source-over";
-    };
-
-    if (vid.readyState >= 2) {
-      drawOnce();
-    } else {
-      // Dark fill immediately so canvas isn't blank while video loads
-      ctx.fillStyle = "rgba(10,10,11,0.80)";
-      ctx.fillRect(0, 0, W, H);
-      vid.addEventListener("canplay", drawOnce, { once: true });
-      return () => vid.removeEventListener("canplay", drawOnce);
-    }
-  }, []);
-
   /* ── Crosshair scope — reveals clean video ── */
   useEffect(() => {
     const hero = heroRef.current;
-    const canvas = pixCanvasRef.current;
+    const overlay = overlayRef.current;
     const crosshair = crosshairRef.current;
-    if (!hero || !canvas || !crosshair) return;
+    if (!hero || !overlay || !crosshair) return;
 
     let targetX = 0, targetY = 0, curX = 0, curY = 0;
     let active = false;
@@ -134,8 +80,8 @@ export default function SubpageHero({ subtitle, title, titleClass, video }: Subp
     const tick = () => {
       curX += (targetX - curX) * 0.08;
       curY += (targetY - curY) * 0.08;
-      canvas.style.setProperty("--cx", `${curX}px`);
-      canvas.style.setProperty("--cy", `${curY}px`);
+      overlay.style.setProperty("--cx", `${curX}px`);
+      overlay.style.setProperty("--cy", `${curY}px`);
       crosshair.style.transform = `translate(${curX}px, ${curY}px)`;
       if (lx) lx.style.transform = `translateY(${curY}px)`;
       if (ly) ly.style.transform = `translateX(${curX}px)`;
@@ -151,8 +97,8 @@ export default function SubpageHero({ subtitle, title, titleClass, video }: Subp
         active = true;
         curX = targetX;
         curY = targetY;
-        canvas.style.setProperty("--cx", `${curX}px`);
-        canvas.style.setProperty("--cy", `${curY}px`);
+        overlay.style.setProperty("--cx", `${curX}px`);
+        overlay.style.setProperty("--cy", `${curY}px`);
         crosshair.style.transform = `translate(${curX}px, ${curY}px)`;
         if (lx) { lx.style.transform = `translateY(${curY}px)`; lx.style.opacity = "1"; }
         if (ly) { ly.style.transform = `translateX(${curX}px)`; ly.style.opacity = "1"; }
@@ -164,8 +110,8 @@ export default function SubpageHero({ subtitle, title, titleClass, video }: Subp
     const onLeave = () => {
       active = false;
       cancelAnimationFrame(raf);
-      canvas.style.setProperty("--cx", "-9999px");
-      canvas.style.setProperty("--cy", "-9999px");
+      overlay.style.setProperty("--cx", "-9999px");
+      overlay.style.setProperty("--cy", "-9999px");
       crosshair.style.opacity = "0";
       if (lx) lx.style.opacity = "0";
       if (ly) ly.style.opacity = "0";
@@ -182,7 +128,7 @@ export default function SubpageHero({ subtitle, title, titleClass, video }: Subp
 
   return (
     <section ref={heroRef} className="relative h-[280px] sm:h-[360px] md:h-[450px] flex flex-col justify-end px-[clamp(32px,5vw,64px)] pb-2.5 border-b border-white/10 overflow-hidden">
-      {/* Clean video — only visible through scope hole */}
+      {/* Clean video — visible through scope hole */}
       <video
         ref={videoRef}
         muted
@@ -196,11 +142,15 @@ export default function SubpageHero({ subtitle, title, titleClass, video }: Subp
         <source src={video} type="video/mp4" />
       </video>
 
-      {/* Grain canvas — rectangular scope punches a hole */}
-      <canvas
-        ref={pixCanvasRef}
-        className="absolute inset-0 w-full h-full z-[2] pointer-events-none grayscale hero-video-glitch"
+      {/* backdrop-filter overlay — grayscale + dark, scope hole punched by CSS mask.
+          GPU-accelerated: no canvas draw loop needed. Always dark even before video loads. */}
+      <div
+        ref={overlayRef}
+        className="absolute inset-0 w-full h-full z-[2] pointer-events-none hero-video-glitch"
         style={{
+          background: "rgba(10,10,11,0.72)",
+          backdropFilter: "grayscale(1) brightness(0.55)",
+          WebkitBackdropFilter: "grayscale(1) brightness(0.55)",
           maskImage: "linear-gradient(black,black), linear-gradient(black,black)",
           maskSize: "100% 100%, 160px 104px",
           maskPosition: "0 0, calc(var(--cx, -9999px) - 80px) calc(var(--cy, -9999px) - 52px)",
