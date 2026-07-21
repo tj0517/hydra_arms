@@ -94,9 +94,12 @@ export default function SubpageHero({ subtitle, title, titleClass, video }: Subp
 
     let raf = 0;
     let lastDraw = 0;
+    let visible = true;
     const FRAME_MS = 1000 / 30; // cap at 30fps
 
     const draw = (now: number) => {
+      raf = 0;
+      if (!visible) return; // stop RAF completely when off-screen
       if (!document.hidden && now - lastDraw >= FRAME_MS && !vid.paused && !vid.ended) {
         lastDraw = now;
         ctx.globalCompositeOperation = "source-over";
@@ -114,11 +117,21 @@ export default function SubpageHero({ subtitle, title, titleClass, video }: Subp
       raf = requestAnimationFrame(draw);
     };
 
-    const start = () => draw(performance.now());
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        visible = entry.isIntersecting;
+        if (visible && raf === 0) raf = requestAnimationFrame(draw);
+      },
+      { threshold: 0 }
+    );
+    io.observe(canvas);
+
+    const start = () => { if (raf === 0) raf = requestAnimationFrame(draw); };
     vid.addEventListener("play", start);
-    if (!vid.paused) draw(performance.now());
+    if (!vid.paused) raf = requestAnimationFrame(draw);
     return () => {
       cancelAnimationFrame(raf);
+      io.disconnect();
       vid.removeEventListener("play", start);
     };
   }, []);
