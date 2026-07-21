@@ -60,7 +60,7 @@ export default function ScrollRevealText({
           style={{ color: "rgba(192, 200, 199, 0.15)" }}
         >
           {word}
-          {wi < wordList.length - 1 ? "\u00a0" : ""}
+          {wi < wordList.length - 1 ? " " : ""}
         </span>
       ))}
     </p>
