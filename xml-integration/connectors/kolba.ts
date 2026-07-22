@@ -13,11 +13,11 @@
  *   is the price for the whole pack, cena_brutto_detal is suggested per-unit retail
  * - Weight lives in atrybuty as "Masa [g]", not a dedicated field
  * - "Wymagane zezwolenie?" attribute directly maps to requires_license hint
- * - Images ARE provided in <zdjecia>/<zdjecie pozycja="N"> (CDATA URLs), sorted by pozycja
+ * - Images are provided via <zdjecia><zdjecie pozycja="N">url</zdjecie></zdjecia>
  */
 
 import { XMLParser } from 'fast-xml-parser'
-import type { Connector, ConnectorConfig, NormalizedProduct, NormalizedImage } from '../types'
+import type { Connector, ConnectorConfig, NormalizedImage, NormalizedProduct } from '../types'
 
 // ── Parser config ──────────────────────────────────────────────────────────────
 
@@ -52,10 +52,10 @@ interface KolbaProdukt {
   atrybuty: {
     atrybut: KolbaAtrybut[]
   }
-  ilosc_wariantow: { __cdata: string }
   zdjecia?: {
-    zdjecie?: Array<{ '@_pozycja'?: string; __cdata?: string; '#text'?: string } | string>
+    zdjecie: Array<{ '@_pozycja': string | number; __cdata?: string; '#text'?: string }>
   }
+  ilosc_wariantow: { __cdata: string }
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -98,21 +98,13 @@ function getAtribut(attrs: KolbaAtrybut[], name: string): string {
   return found ? cdataVal(found as { __cdata?: string }) : ''
 }
 
-/**
- * Build images from <zdjecia>/<zdjecie pozycja="N">CDATA-url</zdjecie>.
- * Kolba DOES provide images — sorted by the `pozycja` attribute (1 = main).
- */
-function buildImages(zdjecia: KolbaProdukt['zdjecia']): NormalizedImage[] {
-  const list = zdjecia?.zdjecie ?? []
-  return list
-    .map((z, i) => {
-      const url = cdataVal(z as { __cdata?: string; '#text'?: string } | string)
-      const pozycja =
-        typeof z === 'object' && z !== null
-          ? parseInt((z as { '@_pozycja'?: string })['@_pozycja'] ?? '', 10)
-          : NaN
-      return { url, priority: Number.isNaN(pozycja) ? i + 1 : pozycja }
-    })
+function extractKolbaImages(zdjecia: KolbaProdukt['zdjecia']): NormalizedImage[] {
+  if (!zdjecia) return []
+  return (zdjecia.zdjecie ?? [])
+    .map((z) => ({
+      url: cdataVal(z as { __cdata?: string; '#text'?: string }),
+      priority: parseInt(String(z['@_pozycja']), 10) || 99,
+    }))
     .filter((img) => img.url.startsWith('http'))
     .sort((a, b) => a.priority - b.priority)
 }
@@ -190,7 +182,7 @@ function parseKolba(xml: string): NormalizedProduct[] {
       price_compare: priceDetal > 0 && priceDetal !== priceGross ? priceDetal : null,
       stock,
       weight_g: weightG,
-      images: buildImages(p.zdjecia),
+      images: extractKolbaImages(p.zdjecia),
       supplier_category_id: supplierCategoryId,
       supplier_category_name: supplierCategoryName,
       has_variants: variantCount > 0,

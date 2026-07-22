@@ -62,7 +62,7 @@ interface ShargImage {
 
 interface ShargSize {
   '@_id': string | number
-  '@_name': string
+  '@_name'?: string
   '@_panel_name': string
   '@_code': string
   '@_weight'?: number
@@ -95,8 +95,7 @@ interface ShargProductFull {
     large?: { image?: ShargImage[] }
   }
   sizes?: { size?: ShargSize[] }
-  price?: { '@_gross': number; '@_net': number }
-  strikethrough_wholesale_price?: { '@_gross': number; '@_net': number }
+  // Note: price/srp/strikethrough_wholesale_price live inside <size>, NOT at product level
 }
 
 interface ShargProductLight {
@@ -184,11 +183,16 @@ function parseShargFull(xml: string, sourceUrl: string): NormalizedProduct[] {
       ? getPolishText(descShort as Parameters<typeof getPolishText>[0])
       : null
 
-    // Prices at product level
-    const priceGross = p.price?.['@_gross'] ?? 0
-    const priceNet = p.price?.['@_net'] ?? 0
+    // Prices live at size level (per SCHEMAS.md):
+    //   size/price   = cena zakupu (what we pay the supplier)
+    //   size/srp     = sugerowana detaliczna (what the customer pays)
+    //   size/strikethrough_wholesale_price = compare/reference price
+    const firstSize = sizes[0]
+    const priceGross = firstSize?.srp?.['@_gross'] ?? firstSize?.price?.['@_gross'] ?? 0
+    const priceNet = firstSize?.srp?.['@_net'] ?? firstSize?.price?.['@_net'] ?? 0
+    const pricePurchase = firstSize?.price?.['@_gross'] ?? null
     const taxRate = p['@_vat'] ?? 23
-    const priceCompare = p.strikethrough_wholesale_price?.['@_gross'] ?? null
+    const priceCompare = firstSize?.strikethrough_wholesale_price?.['@_gross'] ?? null
 
     // Weight: from first size with a weight
     const firstSizeWeight = sizes.find((s) => (s['@_weight'] ?? 0) > 0)
@@ -220,8 +224,8 @@ function parseShargFull(xml: string, sourceUrl: string): NormalizedProduct[] {
             ean: size['@_code_producer'] ? String(size['@_code_producer']) : null,
             stock: sizeStock,
             weight_g: size['@_weight'] ?? null,
-            price_gross: size.price?.['@_gross'] ?? priceGross,
-            price_net: size.price?.['@_net'] ?? priceNet,
+            price_gross: size.srp?.['@_gross'] ?? size.price?.['@_gross'] ?? priceGross,
+            price_net: size.srp?.['@_net'] ?? size.price?.['@_net'] ?? priceNet,
           }
         })
       : []
@@ -229,7 +233,10 @@ function parseShargFull(xml: string, sourceUrl: string): NormalizedProduct[] {
     return {
       connector: 'sharg',
       connector_product_id: String(p['@_id']),
-      connector_sku: p['@_code_on_card'],
+      // Per schema: size/@code_external is the connector_sku; fallback to product code_on_card
+      connector_sku: sizes[0]?.['@_code_external'] != null
+        ? String(sizes[0]['@_code_external'])
+        : p['@_code_on_card'],
       ean,
       brand,
       name,
@@ -239,7 +246,7 @@ function parseShargFull(xml: string, sourceUrl: string): NormalizedProduct[] {
       price_gross: priceGross,
       price_net: priceNet,
       tax_rate: taxRate,
-      price_purchase: null,  // Sharg doesn't expose their cost price
+      price_purchase: pricePurchase,  // size/price@gross = what we pay the supplier
       price_compare: priceCompare || null,
       stock,
       weight_g: weightG,
