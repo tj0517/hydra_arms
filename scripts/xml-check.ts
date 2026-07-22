@@ -12,11 +12,13 @@
 
 import { kolbaConnector } from '../xml-integration/connectors/kolba'
 import { shargConnector } from '../xml-integration/connectors/sharg'
+import { spechurtConnector } from '../xml-integration/connectors/spechurt'
 import type { NormalizedProduct } from '../xml-integration/types'
 
 const connectors: Record<string, typeof kolbaConnector> = {
   kolba: kolbaConnector,
   sharg: shargConnector,
+  spechurt: spechurtConnector,
 }
 
 async function fetchXml(url: string): Promise<string> {
@@ -64,7 +66,7 @@ async function main() {
   const limit = parseInt(process.argv[3] ?? '5', 10)
 
   if (!connectorName || !connectors[connectorName]) {
-    console.error(`Użycie: npx tsx scripts/xml-check.ts <kolba|sharg> [limit]`)
+    console.error(`Użycie: npx tsx scripts/xml-check.ts <kolba|sharg|spechurt> [limit]`)
     console.error(`Przykład: npx tsx scripts/xml-check.ts sharg 10`)
     process.exit(1)
   }
