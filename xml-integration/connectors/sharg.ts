@@ -24,6 +24,8 @@
  * - Stock is per-size per-warehouse: <stock id="1" quantity="24"/>
  * - strikethrough_wholesale_price is the compare/reference price
  * - gateway.xml has incremental change URLs — use these to avoid re-importing 8k products hourly
+ * - Feed contains ~11 700 products incl. fitness/beauty — DEFENCE_PATTERNS filters to ~9 000
+ * - "*Kategoria tymczasowa" (2 528 items) is excluded — unknown content, admin can review
  */
 
 import { XMLParser } from 'fast-xml-parser'
@@ -151,6 +153,99 @@ function getFirstEan(sizes: ShargSize[]): string | null {
   return null
 }
 
+// ── Defence category filter ────────────────────────────────────────────────────
+// Sharg's full catalogue has ~11 700 products spanning militaria, fitness, beauty, etc.
+// Only products whose category name or category_idosell path matches at least one of these
+// lowercase substrings are imported. Extend this list when new defence categories appear.
+//
+// Verified against live feed (2026-07-22, 118 unique categories):
+//   Kept:  militaria, strzelectwo, broń, ASG, paintball, samoobrona, noże, wiatrówki,
+//          śruty, CO2, kabury, celowniki, lornetki, noktowizory, latarki, survival,
+//          bushcraft, myślistwo, scyzoryki, okulary ochronne, rękawice ochronne,
+//          paralizatory, repliki, łucznictwo, OFERTA/NOŻE/OUTDOOR/SAMOOBRONA/BROŃ
+//   Excluded: *Kategoria tymczasowa (2528 unknowns), uroda, manicure, odzież casualowa,
+//             naczynia kuchenne, zabawki, ogrodnictwo, korkociągi, artykuły na przyjęcia
+
+export const SHARG_DEFENCE_PATTERNS: readonly string[] = [
+  // ── Core militaria & shooting ──────────────────────────────────────────────
+  'militaria',
+  'strzelectwo',
+  'broń',          // broń palna, broń biała, broń alarmowa, konserwacja broni…
+  'repliki broni',
+
+  // ── Air guns & shooting consumables ───────────────────────────────────────
+  'wiatrówk',      // wiatrówka / wiatrówki
+  'śrut',          // śrut / śruty
+  'kulki',         // kulki bb
+  'amunicja',
+  'co2',           // CO2 capsules for air guns
+
+  // ── ASG / Paintball ────────────────────────────────────────────────────────
+  'asg',
+  'airsoft',
+  'paintball',
+
+  // ── Self-defence ───────────────────────────────────────────────────────────
+  'samoobrona',
+  'gazy pieprzowe',
+  'paralizator',
+  'pałk',          // pałki teleskopowe, tonfy, kubotany
+
+  // ── Knives & blades ────────────────────────────────────────────────────────
+  'noże szturmowe',
+  'noże i akcesoria',
+  'broń biała',    // also caught by 'broń' above
+  'noże myśliwskie',
+  'topory i maczety',
+  'oferta/noże',
+  'scyzoryki',
+  'multitools',
+
+  // ── Optics ────────────────────────────────────────────────────────────────
+  'celownik',      // celowniki optyczne, lunety
+  'lornetk',       // lornetka / lornetki
+  'noktowizor',
+
+  // ── Carry & holsters ──────────────────────────────────────────────────────
+  'kabury',
+  'pasy do broni',
+
+  // ── Tactical lighting ─────────────────────────────────────────────────────
+  'latarki',
+
+  // ── Hunting & outdoor (defence-adjacent) ──────────────────────────────────
+  'myślistwo',
+  'survival',
+  'bushcraft',
+  'łucznictwo',    // archery / crossbows
+  'karabińczyki',  // OFERTA/OUTDOOR/KARABIŃCZYKI
+
+  // ── Protective gear ────────────────────────────────────────────────────────
+  'okulary ochronne',
+  'rękawice ochronne',
+  'odzież ochronna myśliwska',
+  'ubrania na polowanie i wojskowe',
+  'akcesoria ochronne',
+  'biobezpieczeństwo',  // NBC / bio protection
+
+  // ── Sharg's own OFERTA structure ──────────────────────────────────────────
+  'oferta/strzelectwo',
+  'oferta/samoobrona',
+  'oferta/outdoor',
+  'oferta/broń',
+]
+
+/**
+ * Returns true if the product's category belongs to the defence domain.
+ * Checks both the general category name and the idosell category path.
+ */
+function isDefenceProduct(p: ShargProductFull): boolean {
+  const catName = (p.category?.['@_name'] ?? '').toLowerCase()
+  const catPath = (p.category_idosell?.['@_path'] ?? '').toLowerCase()
+  const haystack = `${catName} | ${catPath}`
+  return SHARG_DEFENCE_PATTERNS.some((pat) => haystack.includes(pat))
+}
+
 // ── Full feed parser ───────────────────────────────────────────────────────────
 
 function parseShargFull(xml: string, sourceUrl: string): NormalizedProduct[] {
@@ -161,7 +256,10 @@ function parseShargFull(xml: string, sourceUrl: string): NormalizedProduct[] {
     raw?.products?.product ??
     []
 
-  return rawProducts.map((p) => {
+  const defenceProducts = rawProducts.filter(isDefenceProduct)
+  console.log(`[sharg] Defence filter: ${defenceProducts.length}/${rawProducts.length} products kept`)
+
+  return defenceProducts.map((p) => {
     const sizes: ShargSize[] = p.sizes?.size ?? []
     const isMultiSize = sizes.length > 1 && !sizes.every(isUniversalSize)
 
