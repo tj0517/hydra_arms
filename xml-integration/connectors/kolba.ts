@@ -17,7 +17,7 @@
  */
 
 import { XMLParser } from 'fast-xml-parser'
-import type { Connector, ConnectorConfig, NormalizedProduct } from '../types'
+import type { Connector, ConnectorConfig, NormalizedImage, NormalizedProduct } from '../types'
 
 // ── Parser config ──────────────────────────────────────────────────────────────
 
@@ -98,16 +98,14 @@ function getAtribut(attrs: KolbaAtrybut[], name: string): string {
   return found ? cdataVal(found as { __cdata?: string }) : ''
 }
 
-function extractKolbaImages(
-  zdjecia: KolbaProdukt['zdjecia'],
-): Array<{ url: string; priority: number }> {
+function extractKolbaImages(zdjecia: KolbaProdukt['zdjecia']): NormalizedImage[] {
   if (!zdjecia) return []
   return (zdjecia.zdjecie ?? [])
     .map((z) => ({
       url: cdataVal(z as { __cdata?: string; '#text'?: string }),
       priority: parseInt(String(z['@_pozycja']), 10) || 99,
     }))
-    .filter((img) => img.url.length > 0)
+    .filter((img) => img.url.startsWith('http'))
     .sort((a, b) => a.priority - b.priority)
 }
 

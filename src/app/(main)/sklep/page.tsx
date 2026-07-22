@@ -130,8 +130,8 @@ const DEMO_SECTIONS: ShopSection[] = [
   },
 ]
 
-// ── Temporary: shop disabled until configuration is complete ───────────────────
-const SHOP_DISABLED = true;
+// ── Set to true on main/production until shop config is complete ──────────────
+const SHOP_DISABLED = false;
 
 // ── Page ───────────────────────────────────────────────────────────────────────
 

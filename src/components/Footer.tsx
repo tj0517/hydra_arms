@@ -8,7 +8,10 @@ const DEFAULT_NAV_LINKS = [
   { href: "/uslugi", label: "Usługi" },
   { href: "/o-nas", label: "O nas" },
   { href: "/wspolpraca", label: "Współpraca" },
+  { href: "/aktualnosci", label: "Aktualności" },
+  { href: "/blog", label: "Blog" },
   { href: "/kontakt", label: "Kontakt" },
+  { href: "/sklep", label: "Sklep" },
 ];
 
 type SiteSettings = {
@@ -51,9 +54,6 @@ export default function Footer({
   const uei = siteSettings?.uei ?? "YUXMMDP8MNP4";
   const adresSiedziby = siteSettings?.adresSiedziby ?? "ul. Cechowa 44B\n30-614 Kraków";
   const adresSklep = siteSettings?.adresSklep ?? "ul. Gdańska 22\n31-411 Kraków";
-  const fbUrl = siteSettings?.facebookUrl ?? "#!";
-  const igUrl = siteSettings?.instagramUrl ?? "#!";
-  const liUrl = siteSettings?.linkedinUrl ?? "#!";
   const emailBiuro = siteSettings?.emailBiuro ?? "office@hydra-arms.com";
   const emailRd = siteSettings?.emailRd ?? "research@hydra-arms.com";
   const emailB2g = siteSettings?.emailB2g ?? "gov@hydra-arms.com";
