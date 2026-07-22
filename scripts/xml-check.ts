@@ -61,13 +61,35 @@ function printProduct(p: NormalizedProduct, index: number) {
   console.log()
 }
 
+function printCategories(products: NormalizedProduct[]) {
+  // Count products per unique category path
+  const counts = new Map<string, number>()
+  for (const p of products) {
+    const cat = p.supplier_category_name ?? '(brak kategorii)'
+    counts.set(cat, (counts.get(cat) ?? 0) + 1)
+  }
+
+  // Sort by count descending
+  const sorted = [...counts.entries()].sort((a, b) => b[1] - a[1])
+
+  console.log(`── Unikalne kategorie (${sorted.length}) ──────────────────────────`)
+  for (const [cat, count] of sorted) {
+    console.log(`  ${String(count).padStart(5)} szt.  ${cat}`)
+  }
+  console.log()
+}
+
 async function main() {
   const connectorName = process.argv[2]
-  const limit = parseInt(process.argv[3] ?? '5', 10)
+  const arg3 = process.argv[3] ?? '5'
+  const showCategories = arg3 === 'categories'
+  const limit = showCategories ? 0 : parseInt(arg3, 10)
 
   if (!connectorName || !connectors[connectorName]) {
-    console.error(`Użycie: npx tsx scripts/xml-check.ts <kolba|sharg|spechurt> [limit]`)
-    console.error(`Przykład: npx tsx scripts/xml-check.ts sharg 10`)
+    console.error(`Użycie: npx tsx scripts/xml-check.ts <kolba|sharg|spechurt> [limit|categories]`)
+    console.error(`Przykłady:`)
+    console.error(`  npx tsx scripts/xml-check.ts sharg 10          # pierwsze 10 produktów`)
+    console.error(`  npx tsx scripts/xml-check.ts sharg categories  # lista wszystkich kategorii`)
     process.exit(1)
   }
 
@@ -77,6 +99,11 @@ async function main() {
   const products = connector.parse(xml)
 
   console.log(`✓ Sparsowano ${products.length} produktów łącznie\n`)
+
+  if (showCategories) {
+    printCategories(products)
+    return
+  }
 
   // Podsumowanie
   const withEan    = products.filter(p => p.ean).length
