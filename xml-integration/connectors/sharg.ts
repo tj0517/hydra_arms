@@ -348,18 +348,19 @@ export function parseShargGateway(xml: string): ShargGatewayManifest {
 
 // ── Export ─────────────────────────────────────────────────────────────────────
 
+const SHARG_BASE = 'https://hurt.sharg.pl/edi/export-offer.php'
+const shargUrl = (token: string | undefined, type: string) =>
+  `${SHARG_BASE}?client=${process.env.SHARG_CLIENT ?? ''}&language=pol&token=${token ?? ''}&shop=3&type=${type}&format=xml&iof_3_0`
+
 export const shargConfig: ConnectorConfig = {
   name: 'sharg',
-  xml_url:
-    'https://hurt.sharg.pl/edi/export-offer.php?client=office@hydra-arms.com&language=pol&token=d3bcbca5d1dd6f67ee28406&shop=3&type=full&format=xml&iof_3_0',
-  auth_type: 'none',  // token is in the URL
+  xml_url: shargUrl(process.env.SHARG_TOKEN_FULL, 'full'),
+  auth_type: 'none',  // token is in the URL, provided via env
   charset: 'utf-8',
   feed_type: 'full',
   extra: {
-    light_url:
-      'https://hurt.sharg.pl/edi/export-offer.php?client=office@hydra-arms.com&language=pol&token=7775b406cdd1ba74ae3eafb&shop=3&type=light&format=xml&iof_3_0',
-    gateway_url:
-      'https://hurt.sharg.pl/edi/export-offer.php?client=office@hydra-arms.com&language=pol&token=499e719ac9b5499a0693367&shop=3&type=gateway&format=xml&iof_3_0',
+    light_url: shargUrl(process.env.SHARG_TOKEN_LIGHT, 'light'),
+    gateway_url: shargUrl(process.env.SHARG_TOKEN_GATEWAY, 'gateway'),
   },
 }
 

@@ -54,9 +54,6 @@ export default function Footer({
   const uei = siteSettings?.uei ?? "YUXMMDP8MNP4";
   const adresSiedziby = siteSettings?.adresSiedziby ?? "ul. Cechowa 44B\n30-614 Kraków";
   const adresSklep = siteSettings?.adresSklep ?? "ul. Gdańska 22\n31-411 Kraków";
-  const fbUrl = siteSettings?.facebookUrl ?? "#!";
-  const igUrl = siteSettings?.instagramUrl ?? "#!";
-  const liUrl = siteSettings?.linkedinUrl ?? "#!";
   const emailBiuro = siteSettings?.emailBiuro ?? "office@hydra-arms.com";
   const emailRd = siteSettings?.emailRd ?? "research@hydra-arms.com";
   const emailB2g = siteSettings?.emailB2g ?? "gov@hydra-arms.com";
@@ -129,7 +126,7 @@ export default function Footer({
           </div>
 
           {/* ── Col 2: Cert Badges ── */}
-          <div className={`order-3 md:order-none flex flex-col gap-4 transition-all duration-700 delay-100 lg:-translate-x-[5%] ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
+          <div className={`order-2 md:order-none flex flex-col gap-4 transition-all duration-700 delay-100 lg:-translate-x-[5%] ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
             <p className="font-[var(--font-mono)] text-base text-white uppercase tracking-[0.2em]">
               Certyfikaty
             </p>
@@ -154,73 +151,55 @@ export default function Footer({
             </div>
           </div>
 
-          {/* ── Col 3: Navigation ── md: col 1 row 2 | lg: flex item ── */}
-          <div className={`order-4 md:order-none md:col-start-1 transition-all duration-700 delay-200 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
-            <p className="font-[var(--font-mono)] text-base text-white uppercase tracking-[0.2em] mb-6">
-              Nawigacja
-            </p>
-            <ul className="space-y-1.5">
-              {links.map((link, i) => (
-                <li
-                  key={link.href}
-                  className="transition-all duration-500"
-                  style={{
-                    transitionDelay: visible ? `${250 + i * 50}ms` : "0ms",
-                    opacity: visible ? 1 : 0,
-                    transform: visible ? "translateX(0)" : "translateX(8px)",
-                  }}
-                >
-                  <Link href={link.href} className="font-[var(--font-mono)] text-sm text-text-dim hover:text-accent transition-colors duration-300">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* ── Col 3 + 4 wrapper: 2-col grid on mobile, transparent on md+ ── */}
+          <div className="order-3 grid grid-cols-2 gap-8 md:contents">
 
-          {/* ── Col 4: Social links ── md: col 2 row 2 | lg: flex item ── */}
-          <div className={`order-2 md:order-none md:col-start-2 transition-all duration-700 delay-300 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
-            <p className="font-[var(--font-mono)] text-base text-white uppercase tracking-[0.2em] mb-6">
-              Social
-            </p>
-            <div className="flex gap-3">
-              {[
-                { href: fbUrl, label: "Facebook", external: true, icon: (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
-                  </svg>
-                )},
-                { href: igUrl, label: "Instagram", external: true, icon: (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
-                  </svg>
-                )},
-                { href: liUrl, label: "LinkedIn", external: true, icon: (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/>
-                  </svg>
-                )},
-                { href: `mailto:${emailBiuro}`, label: "Email", external: false, icon: (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
-                  </svg>
-                )},
-              ].map(({ href, label, external, icon }) => (
+            {/* ── Col 3: Navigation ── */}
+            <div className={`md:col-start-1 transition-all duration-700 delay-200 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
+              <p className="font-[var(--font-mono)] text-base text-white uppercase tracking-[0.2em] mb-6">
+                Nawigacja
+              </p>
+              <ul className="space-y-1.5">
+                {links.map((link, i) => (
+                  <li
+                    key={link.href}
+                    className="transition-all duration-500"
+                    style={{
+                      transitionDelay: visible ? `${250 + i * 50}ms` : "0ms",
+                      opacity: visible ? 1 : 0,
+                      transform: visible ? "translateX(0)" : "translateX(8px)",
+                    }}
+                  >
+                    <Link href={link.href} className="font-[var(--font-mono)] text-sm text-text-dim hover:text-accent transition-colors duration-300">
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* ── Col 4: Social links ── */}
+            <div className={`md:col-start-2 transition-all duration-700 delay-300 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
+              <p className="font-[var(--font-mono)] text-base text-white uppercase tracking-[0.2em] mb-6">
+                Social
+              </p>
+              <div className="flex gap-3">
                 <a
-                  key={label}
-                  href={href}
-                  aria-label={label}
-                  {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                  href={`mailto:${emailBiuro}`}
+                  aria-label="Email"
                   className="relative w-10 h-10 flex items-center justify-center text-accent hover:bg-accent hover:text-bg transition-colors duration-300 group"
                 >
                   <span className="absolute top-0 left-0 w-2.5 h-2.5 border-t border-l border-text/50 group-hover:border-bg/50 transition-colors duration-300" />
                   <span className="absolute top-0 right-0 w-2.5 h-2.5 border-t border-r border-text/50 group-hover:border-bg/50 transition-colors duration-300" />
                   <span className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b border-l border-text/50 group-hover:border-bg/50 transition-colors duration-300" />
                   <span className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b border-r border-text/50 group-hover:border-bg/50 transition-colors duration-300" />
-                  {icon}
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                  </svg>
                 </a>
-              ))}
+              </div>
             </div>
+
           </div>
 
         </div>
