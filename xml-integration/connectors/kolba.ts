@@ -13,7 +13,7 @@
  *   is the price for the whole pack, cena_brutto_detal is suggested per-unit retail
  * - Weight lives in atrybuty as "Masa [g]", not a dedicated field
  * - "Wymagane zezwolenie?" attribute directly maps to requires_license hint
- * - No images in this feed — must be sourced separately or left blank for admin
+ * - Images are provided via <zdjecia><zdjecie pozycja="N">url</zdjecie></zdjecia>
  */
 
 import { XMLParser } from 'fast-xml-parser'
@@ -27,7 +27,7 @@ const xmlParser = new XMLParser({
   cdataPropName: '__cdata',
   // Kolba wraps values in CDATA, but fast-xml-parser resolves them automatically
   // when we access the value — the __cdata key holds the actual text
-  isArray: (tagName) => tagName === 'produkt' || tagName === 'atrybut',
+  isArray: (tagName) => tagName === 'produkt' || tagName === 'atrybut' || tagName === 'zdjecie',
   allowBooleanAttributes: true,
 })
 
@@ -51,6 +51,9 @@ interface KolbaProdukt {
   cena_brutto_hurt: { __cdata: string }
   atrybuty: {
     atrybut: KolbaAtrybut[]
+  }
+  zdjecia?: {
+    zdjecie: Array<{ '@_pozycja': string | number; __cdata?: string; '#text'?: string }>
   }
   ilosc_wariantow: { __cdata: string }
 }
@@ -93,6 +96,19 @@ function buildFeatures(atrybuty: KolbaAtrybut[]): Record<string, string> {
 function getAtribut(attrs: KolbaAtrybut[], name: string): string {
   const found = attrs.find((a) => a['@_nazwa'] === name)
   return found ? cdataVal(found as { __cdata?: string }) : ''
+}
+
+function extractKolbaImages(
+  zdjecia: KolbaProdukt['zdjecia'],
+): Array<{ url: string; priority: number }> {
+  if (!zdjecia) return []
+  return (zdjecia.zdjecie ?? [])
+    .map((z) => ({
+      url: cdataVal(z as { __cdata?: string; '#text'?: string }),
+      priority: parseInt(String(z['@_pozycja']), 10) || 99,
+    }))
+    .filter((img) => img.url.length > 0)
+    .sort((a, b) => a.priority - b.priority)
 }
 
 // ── Main parser ────────────────────────────────────────────────────────────────
@@ -168,7 +184,7 @@ function parseKolba(xml: string): NormalizedProduct[] {
       price_compare: priceDetal > 0 && priceDetal !== priceGross ? priceDetal : null,
       stock,
       weight_g: weightG,
-      images: [],  // Kolba does not provide images in this feed
+      images: extractKolbaImages(p.zdjecia),
       supplier_category_id: supplierCategoryId,
       supplier_category_name: supplierCategoryName,
       has_variants: variantCount > 0,
