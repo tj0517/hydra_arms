@@ -27,8 +27,12 @@ async function blRaw(method: string, params: Record<string, unknown>) {
 
 async function tryVariant(label: string, product: Record<string, unknown>) {
   console.log(`\n── ${label} ──`);
-  console.log('payload:', JSON.stringify({ inventory_id: INVENTORY_ID, product }, null, 2));
-  const result = await blRaw('addInventoryProduct', { inventory_id: INVENTORY_ID, product });
+  // BL addInventoryProduct takes product fields flat at the top level of parameters
+  // (nesting under a `product` key silently breaks the import).
+  // Confirmed working name format: variant 1 — text_fields: { name, description }.
+  const params = { inventory_id: INVENTORY_ID, ...product };
+  console.log('payload:', JSON.stringify(params, null, 2));
+  const result = await blRaw('addInventoryProduct', params);
   console.log('response:', JSON.stringify(result, null, 2));
 }
 
