@@ -8,8 +8,8 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env.local'), override: true 
 
 const INVENTORY_ID = parseInt(process.env.BASELINKER_INVENTORY_ID ?? '35743', 10);
 const PRICE_GROUP  = parseInt(process.env.BASELINKER_PRICE_GROUP  ?? '23934', 10);
-const WAREHOUSE    = process.env.BASELINKER_WAREHOUSE ?? 'blconnect_6820';
-const TOKEN        = process.env.BASELINKER_TOKEN ?? process.env.base ?? '';
+const WAREHOUSE    = process.env.BASELINKER_WAREHOUSE_H1 ?? '';
+const TOKEN        = process.env.BASELINKER_TOKEN ?? '';
 
 async function blRaw(method: string, params: Record<string, unknown>) {
   const body = new URLSearchParams({

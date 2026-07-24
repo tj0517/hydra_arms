@@ -80,7 +80,8 @@ async function syncProducts() {
     const rows = Object.entries(details).map(([idStr, p]) => {
       const id = parseInt(idStr, 10);
       const tags: string[] = p.tags ?? [];
-      const product_type = tags.includes('age_restricted')
+      // `age_18` is the anchor tag set by the XML importer for branch 15 (gaz/pałki/paralizatory)
+      const product_type = tags.includes('age_restricted') || tags.includes('age_18')
         ? 'age_restricted'
         : tags.includes('pickup_only')
         ? 'pickup_only'
@@ -101,7 +102,9 @@ async function syncProducts() {
         category_id: p.category_id || null,
         images: p.images && Object.keys(p.images).length > 0 ? p.images : null,
         product_type,
-        is_active: true,
+        // Publish gate: only products the admin tagged `approved` in BL go live.
+        // XML imports carry auto/review/flag until reviewed.
+        is_active: tags.includes('approved'),
         synced_at: new Date().toISOString(),
       };
     });

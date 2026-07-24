@@ -72,7 +72,8 @@ export async function POST(req: NextRequest) {
         weight: p.weight ?? null,
         category_id: p.category_id || null,
         images: p.images && Object.keys(p.images).length > 0 ? p.images : null,
-        is_active: true,
+        // Publish gate: only products the admin tagged `approved` in BL go live
+        is_active: (p.tags ?? []).includes('approved'),
         synced_at: new Date().toISOString(),
       }));
 

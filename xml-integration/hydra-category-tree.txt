@@ -1,0 +1,229 @@
+[PORTAL E-COMMERCE / SYSTEM ERP]
+ │
+ ├── 01. BROŃ PALNA (Koncesjonowana – Odbiór osobisty: Salon Kraków)
+ │    ├── 1.1 Broń Krótka
+ │    │    ├── 1.1.1 Pistolety Samopowtarzalne (Bojowe, Sportowe/IPSC, Subkompaktowe)
+ │    │    ├── 1.1.2 Rewolwery (Double Action, Single Action)
+ │    │    └── 1.1.3 Broń Bocznego Zapłonu (.22 LR, .22 WMR)
+ │    │
+ │    ├── 1.2 Broń Długa
+ │    │    ├── 1.2.1 Karabiny i Karabinki Samopowtarzalne (Platformy AR-15, AR-10, AK, Samopowtarzalne .22 LR)
+ │    │    ├── 1.2.2 Karabiny i Karabinki Powtarzalne (Czterotaktowe/Bolt-Action, Dwutaktowe, Lever-Action)
+ │    │    ├── 1.2.3 Karabinki Samoczynne (Dostępne wyłącznie dla podmiotów koncesjonowanych - wojsko, służby)
+ │    │    └── 1.2.4 Karabinki PCC (Pistol Caliber Carbine) i Pistolety Maszynowe
+ │    │
+ │    ├── 1.3 Strzelby Gładkolufowe
+ │    │    ├── 1.3.1 Strzelby Powtarzalne (Pump-Action / „Pompki”)
+ │    │    ├── 1.3.2 Strzelby Samopowtarzalne (Semi-Auto)
+ │    │    └── 1.3.3 Strzelby Łamane i Inne (Bocki sportowe, Dubeltówki, Pojedynki)
+ │    │
+ │    └── 1.4 Broń Kolekcjonerska i Historyczna (Demobil Wojskowy, Broń Pozbawiona Cech Użytkowych - CLK KGP)
+ │    └── 1.5 Broń alarmowa i sygnałowa 
+ │
+ ├── 02. AMUNICJA I ELEMENTY RECHARGINGU (Koncesjonowana – Odbiór osobisty: Salon Kraków)
+ │    ├── 2.1 Amunicja Pistoletowa i Rewolwerowa (9x19mm Parabellum, .45 ACP, .40 S&W, .357 Magnum, .38 Special)
+ │    ├── 2.2 Amunicja Pośrednia i Karabinowa (.223 Rem / 5.56x45mm, 7.62x39mm, .308 Win, 6.5 Creedmoor, .338 Lapua Mag)
+ │    ├── 2.3 Amunicja Śrutowa (Śrut sportowy trap/skeet, Śrut myśliwski, Breneka - 12 GA, 16 GA, 20 GA)
+ │    ├── 2.4 Amunicja Bocznego Zapłonu (.22 LR, .17 HMR, .22 WMR)
+ │    ├── 2.5 Amunicja Hukowa, Alarmowa i Gazowa
+ │    │    ├── 2.5.1 Naboje Pistoletowe i Rewolwerowe Hukowe (9mm P.A.K., 6mm Short/.22 Long, 9mm R. Knall)
+ │    │    ├── 2.5.2 Naboje Gazowe (Naboje z gazem łzawiącym CS, naboje pieprzowe PV OC - 9mm P.A.K. / 9mm Knall)
+ │    │    └── 2.5.3 Środki Sygnałowe i Race (Race pistoletowe 15mm, naboje sygnałowe kalibru 4 / 26.5mm)
+ │    │
+ │    └── 2.6 Elementy Koncesjonowane do Elaboracji (Prochy bezdymne i czarne, Spłonki pistoletowe/karabinowe)
+ │
+ ├── 03. OPTYKA STRZELECKA I OPTOELEKTRONIKA (Wolna sprzedaż / Zgodność z Dual-Use)
+ │    ├── 3.1 Lunety Celownicze (LPVO, Precyzyjne PRS w FFP, Myśliwskie w SFP)
+ │    ├── 3.2 Celowniki Kolimatorowe i Holograficzne (Micro Red Dot, Prism Scopes, Magnifiers 3x/5x)
+ │    ├── 3.3 Optoelektronika Obserwacyjna i Celownicza (Termowizja, Noktowizja Gen 2+/3, Dalmierze laserowe)
+ │    └── 3.4 Systemy Montażowe do Optyki
+ │         ├── 3.4.1 Montaże Jednoczęściowe (Sztywne, Cantilever do platform AR-15/AR-10)
+ │         ├── 3.4.2 Pierścienie i Obejmy Montażowe (Średnice: 30 mm, 34 mm, 35 mm, 36 mm, 1 cal)
+ │         ├── 3.4.3 Montaże Dedykowane pod Kolimatory (Micro H-1/T-1/T-2 standard, RMR standard, Acro standard)
+ │         ├── 3.4.4 Bazy i Szyny Montażowe (Szyny Picatinny MIL-STD-1913, Weaver, jaskółczy ogon 11 mm)
+ │         ├── 3.4.5 Bazy i Szyny Montażowe dedykowane (Bazy pod konkretne modele sztucerów i karabinów)
+ │         └── 3.4.6 Akcesoria do Montaży (Poziomnice tubusowe, śruby rusznikarskie, podkładki dystansowe, kliny pozycjonujące)
+         └── 3.5 laserowe wskaźniki celu
+ │
+ ├── 04. CZĘŚCI ZAMIENNE I TUNING BRONI (Niekoncesjonowane – Bezpośrednia wysyłka)
+ │    ├── 4.1 Komponenty Platformy AR-15/AR-10 (Układy gazowe, Łoża M-LOK, Systemy spustowe Match, Prowadnice kolb)
+ │    ├── 4.2 Komponenty Platformy AK (Rury gazowe z szyną, Łoża i nakładki rury gazowej M-LOK, Urządzenia powrotne, Selektory)
+ │    ├── 4.3 Komponenty - Inne Platformy (Części HK MR223/MR308, MSBS Grot, platformy Sig Sauer, karabinki bocznego zapłonu)
+ │    ├── 4.4 Komponenty Pistoletowe (Sprężyny powrotne, Przyrządy celownicze trytowe/światłowodowe, Konektory spustu)
+ │    │
+ │    ├── 4.5 Urządzenia Wylotowe
+ │    │    ├── 4.5.1 Tłumiki Płomienia (Flash Hiders - klasyczne typu A2, wielofunkcyjne rozpraszacze płomienia)
+ │    │    ├── 4.5.2 Tłumiki Huku i Wielofunkcyjne Urządzenia Wylotowe (Tłumiki dźwięku QD/Direct Thread, kompensatory liniowe)
+ │    │    ├── 4.5.3 Kompensatory i Hamulce Wylotowe (Muzzle Brakes - redukcja podrzutu i odrzutu, kompensatory sportowe IPSC)
+ │    │    ├── 4.5.4 Pozostałe Urządzenia Wylotowe (Odrzutniki ślepej amunicji, osłony gwintu lufy)
+ │    │    └── 4.5.5 Akcesoria do Urządzeń Wylotowych (Podkładki regulacyjne Crush Washers, podkładki indeksujące Shims, adaptery)
+ │    │
+ │    └── 4.6 Ergonomia i Punkty Podparcia
+ │         ├── 4.6.1 Kolby (Kolby stałe, teleskopowe standardu Mil-Spec/Commercial, kolby precyzyjne z regulacją baki i stopki)
+ │         ├── 4.6.2 Chwyty Pistoletowe (Chwyty o zróżnicowanym kącie nachylenia, chwyty z gumowaną teksturą)
+ │         ├── 4.6.3 Chwyty Przednie i Handstopy (Chwyty pionowe, chwyty skośne, ograniczniki dłoni w standardzie M-LOK/Picatinny)
+ │         ├── 4.6.4 Okładziny i Panele Ochronne (Panele termiczne na łoża M-LOK/KeyMod, taśmy fakturowane)
+ │         └── 4.6.5 Akcesoria Ergonomiczne (Prowadnice kolby/Receiver Extensions, nakrętki koronowe Castle Nut, płytki końcowe)
+ │
+ ├── 05. MAGAZYNKI I SZYBKOŁADOWARKI
+ │    ├── 5.1 Magazynki Pistoletowe i Karabinowe (Pmag, Aluminiowe Mil-Spec, Magazynki bębnowe)
+ │    └── 5.2 Akcesoria do Magazynków (Stopki zwiększające pojemność, Kopytka, Szybkoładowarki, Sprężyny wzmocnione)
+ │
+ ├── 06. PRZENOSZENIE BRONI I WYPOSAŻENIA (Tactical Gear)
+ │    ├── 6.1 Kabury Pistoletowe (OWB Kydex, IWB/AIWB do skrytego noszenia, Służbowe z zabezpieczeniem poziomu II/III)
+ │    ├── 6.2 Ładownice
+ │    │    ├── 6.2.1 Ładownice Karabinowe (Otwarte typu "Shingle", ładownice z klapą, kydexowe inserty)
+ │    │    ├── 6.2.2 Ładownice Pistoletowe (Pojedyncze, podwójne, hybrydowe kydex-cordura)
+ │    │    └── 6.2.3 Systemy Przenoszenia Śrutu (Ładownice elastyczne, platformy sztywne Match Strips / Shell Holders)
+ │    ├── 6.3 Pasy
+ │    │    ├── 6.3.1 Pasy Strzeleckie (Dwuczęściowe pasy sztywne Outer/Inner pod rzep)
+ │    │    ├── 6.3.2 Pasy Taktyczne i Służbowe (Pasy ratownicze typu Rescue/Rigger, pasy z klamrą Cobra)
+ │    │    └── 6.3.3 Pasy Nośne do Broni (Zawieszenia taktyczne 1-punktowe, 2-punktowe, bączki i montaże zawieszenia QD)
+ │    └── 6.4 Pozostałe Wyposażenie do Przenoszenia
+ │         ├── 6.4.1 Plecaki Taktyczne i Patrolowe (Z systemem MOLLE/PALS, kieszeniami na systemy hydracyjne)
+ │         ├── 6.4.2 Torby Strzeleckie (Range Bags ze specjalnymi przegrodami na pistolety i amunicję)
+ │         ├── 6.4.3 Panele Udowe i Szelki (Platformy modułowe, pasy piersiowe, pasy biodrowe)
+ │         └── 6.4.4 Akcesoria i Części Zamienne (Klamry ITW Nexus, troki, taśmy montażowe, karabińczyki Grimloc)
+ │
+ ├── 07. KONSERWACJA, CHEMIA I NARZĘDZIA RUSZNIKARSKIE
+ │    ├── 7.1 Chemia Specjalistyczna
+ │    │    ├── 7.1.1 Solwenty i Zmywacze (Rozpuszczalniki do usuwania nagaru, miedzi, ołowiu i cynku)
+ │    │    ├── 7.1.2 Oleje i Smary Syntetyczne (Oleje penetrujące, smary z dodatkiem PTFE, smary ceramiczne i MoS2)
+ │    │    └── 7.1.3 Środki Ochronne i Powłoki (Preparaty antykorozyjne, preparaty wypierające wodę, oksydy na zimno)
+ │    ├── 7.2 Przybory do Czyszczenia
+ │    │    ├── 7.2.1 Wyciory i Sznury do Luf (Wyciory jednoczęściowe powlekane, wyciory węglowe, sznury Bore Snake)
+ │    │    ├── 7.2.2 Szczotki, Jagi i Pętle (Szczotki z brązu fosforowego, mosiężne, nylonowe, jagi mosiężne pod przecieraki)
+ │    │    └── 7.2.3 Przecieraki i Filce (Przecieraki bawełniane, przecieraki filcowe kalibrowane, patch-e bezpyłowe)
+ │    └── 7.3 Narzędzia Rusznikarskie i Warsztatowe
+ │         ├── 7.3.1 Klucze i Narzędzia Dedykowane (Klucze rusznikarskie do nakrętek lufy i kolb AR, bloki montażowe do imadeł)
+ │         ├── 7.3.2 Narzędzia Precyzyjne i Pomiarowe (Klucze dynamometryczne o drobnej skali, sprawdziany Go/No-Go)
+ │         └── 7.3.3 Akcesoria Warsztatowe (Maty rusznikarskie z magnetycznymi polami, wybijaki do pinów, młotki rusznikarskie)
+ │
+ ├── 08. ELABORACJA AMUNICJI (Elementy niekoncesjonowane)
+ │    ├── 8.1 Prasy i Matryce (Prasy jednostanowiskowe i progresywne, Matryce formatujące i osadzające z węglików)
+ │    └── 8.2 Komponenty i Przygotowanie Łusek (Pociski tarczowe/myśliwskie, Łuski mosiężne, Myjki rotacyjne/ultradźwiękowe)
+ │
+ ├── 09. OCHRONA INDYWIDUALNA, SŁUCHU, WZROKU I BALISTYKA
+ │    ├── 9.1 Ochronniki Słuchu
+ │    │    ├── 9.1.1 Aktywne Ochronniki Słuchu (Słuchawki elektroniczne z funkcją kompresji dźwięku impulsowego)
+ │    │    ├── 9.1.2 Pasywne Ochronniki Słuchu (Słuchawki o wysokim wskaźniku tłumienia SNR)
+ │    │    ├── 9.1.3 Zatyczki i Stopery Douszne (Zatyczki pasywne, zatyczki aktywne douszne, filtry akustyczne)
+ │    │    └── 9.1.4 Akcesoria do Ochronników (Wkładki żelowe, adaptery do montażu na hełmach ARC/Team Wendy, etui)
+ │    ├── 9.2 Ochrona Wzroku
+ │    │    ├── 9.2.1 Okulary Balistyczne (Okulary ze stałymi lub wymiennymi wizjerami klasy balistycznej)
+ │    │    ├── 9.2.2 Gogle Balistyczne (Gogle o pełnym profilu z systemami wentylacji przeciwmgielnej)
+ │    │    ├── 9.2.3 Wizjery i Szyby Wymienne (Szyby przezroczyste, przyciemniane, polaryzacyjne, kontrastowe żółte/miedziane)
+ │    │    └── 9.2.4 Akcesoria do Okularów (Wkładki korekcyjne RX, płyny anti-fog, opaski zabezpieczające)
+ │    ├── 9.3 Wyposażenie Balistyczne
+ │         ├── 9.3.1 Kamizelki Zintegrowane i Plate Carriery (Kamizelki operacyjne pod twarde płyty balistyczne)
+ │         ├── 9.3.2 Twarde Płyty Balistyczne (Płyty ceramiczne, polietylenowe UHMWPE, stalowe klasy NIJ III, III+, IV)
+ │         ├── 9.3.3 Miękkie Wkłady Balistyczne (Wkłady kevlarowe/aramidowe klasy NIJ IIIA do kamizelek i pasów)
+ │         └── 9.3.4 Hełmy Balistyczne (Hełmy typu High-Cut/FAST, MICH, pasywne pokrowce i akcesoria do hełmów)
+ │    └── 9.4 Specjalistyczne Środki Ochrony Dróg Oddechowych (ŚOI)
+ │         ├── 9.4.1 Maski Przeciwgazowe i Maski Pełnotwarzowe (Zgodne z normą EN 136, maski klasy 2 i 3 z panoramicznymi wizjerami)
+ │         ├── 9.4.2 Półmaski Ochronne i Filtrujące (Zgodne z normą EN 140, półmaski silikonowe, półmaski neoprenowe)
+ │         ├── 9.4.3 Filtropochłaniacze, Pochłaniacze i Filtry (Filtropochłaniacze wielogazowe A2B2E2K2P3 R D, filtry cząstek P3)
+ │         └── 9.4.4 Kaptury Ucieczkowe i Akcesoria (Kaptury ucieczkowe z filtropochłaniaczem, torby na maski, preparaty zapobiegające parowaniu wizjerów)
+ │
+ ├── 10. AKCESORIA STRZELNICZE I LOGISTYKA
+ │    ├── 10.1 Sejfy i Szafy na Broń
+ │    │    ├── 10.1.1 Szafy na Broń Długą (Klasa S1 wg PN-EN 14450, szafy z przegrodami, szafy z przeszkleniem pancernym)
+ │    │    ├── 10.1.2 Sejfy na Broń Krótką (Kompaktowe sejfy szufladowe, sejfy ścienne i wolnostojące klasy S1)
+ │    │    ├── 10.1.3 Sejfy Szybkiego Dostępu (Sejfy z czytnikiem biometrycznym lub klawiaturą mechaniczną Simplex klasy S1)
+ │    │    └── 10.1.4 Akcesoria do Sejfów (Zamki elektroniczne kl. B, uchwyty magnetyczne na broń, systemy ogrzewania wnętrza szaf)
+ │    ├── 10.2 Walizki i Pokrowce
+ │    │    ├── 10.2.1 Walizki Sztywne (Walizki polimerowe z certyfikatem IP67, zaworami ciśnieniowymi, wypełnieniem piankowym)
+ │    │    ├── 10.2.2 Pokrowce Miękkie (Pokrowce z cordury, wyściełane pianką o zamkniętych komórkach, z szelkami transportowymi)
+ │    │    └── 10.2.3 Akcesoria Transportowe (Kłódki z atestem TSA, pochłaniacze wilgoci Silica Gel do futerałów)
+ │    └── 10.3 Elektronika i Cele
+ │         ├── 10.3.1 Urządzenia Pomiarowe i Chronografy (Chronografy dopplerowskie/radarowe, chronografy optyczne)
+ │         ├── 10.3.2 Timery Strzeleckie (Shot Timery z rejestracją czasu fali akustycznej)
+ │         ├── 10.3.3 Cele Stalowe i Reaktory (Gongi, popery wykonane ze stali Hardox 500/550 o grubościach 10/12 mm)
+ │         └── 10.3.4 Cele Papierowe i Akcesoria (Tarcze sylwetkowe, tarcze sportowe TS-2, stojaki do tarcz, zaklejki matowe)
+ │
+ ├── 11. STRZELECTWO PNEUMATYCZNE, REKREACYJNE I STRZELECTWO DUŻEJ MOCY (FAC)
+ │    ├── 11.1 Karabinki Pneumatyczne (Wiatrówki Długie)
+ │    │    ├── 11.1.1 Karabinki PCP do 17 J (Pre-Charged Pneumatic - wolna sprzedaż)
+ │    │    ├── 11.1.2 Karabinki PCP FAC powyżej 17 J (Wiatrówki dużej mocy, wymagające rejestracji na Policji - WPA)
+ │    │    ├── 11.1.3 Karabinki Sprężynowe (Klasycznie łamane, z naciągiem dolnym lub bocznym, tłoki gazowe i metalowe)
+ │    │    ├── 11.1.4 Karabinki PCA i CO2 (PCA - systemy wstępnego sprężania dźwignią, CO2 - zasilane kapsułami 12g lub 88g)
+ │    │
+ │    ├── 11.2 Pistolety i Rewolwery Pneumatyczne (Wiatrówki Krótkie)
+ │    │    ├── 11.2.1 Pistolety Tarczowe (Precyzyjne pistolety pneumatyczne PCP/PCA do strzelectwa wyczynowego 10 m)
+ │    │    ├── 11.2.2 Pistolety i Rewolwery CO2 (Repliki rekreacyjne z systemem Blow-Back imitującym ruch zamka)
+ │    │    └── 11.2.3 Pistolety Sprężynowe (Klasyczne pistolety łamane)
+ │    │
+ │    └── 11.3 Amunicja i Akcesoria Pneumatyczne
+ │         ├── 11.3.1 Śrut Diabolo (Śrut ołowiany: płaski tarczowy, półokrągły do strzelania na dystans, szpiczasty)
+ │         ├── 11.3.2 Śrut Stalowy BB (Kulki stalowe kalibru 4.46 mm dedykowane do wiatrówek gładkolufowych)
+ │         ├── 11.3.3 Kapsuły i Kartusze Zasilające (Kapsuły CO2 12g/88g, butle PCP, przejściówki, pompki rusznikarskie 300 bar)
+ │         └── 11.3.4 Akcesoria Konserwacyjne (Oleje silikonowe do uszczelek, śrut czyszczący filcowy, wyciory wiatrówkowe)
+ │
+ ├── 12. ODZIEŻ, OBUWIE I SYSTEMY NOŚNE
+ │    ├── 12.1 Odzież Taktyczna i Mundurowa
+ │    │    ├── 12.1.1 Spodnie Taktyczne i Bojówki (Spodnie ze splotem Rip-Stop, kieszeniami cargo, dedykowanymi kieszeniami na magazynki)
+ │    │    ├── 12.1.2 Bluzy i Combat Shirty (Bluzy mundurowe, trudnopalne combat shirty pod kamizelki balistyczne)
+ │    │    └── 12.1.3 Kurtki i Warstwy Zewnętrzne (Kurtki membranowe Gore-Tex/PTFE, softshelle przeciwwietrzne, polary termiczne)
+ │    ├── 12.2 Obuwie Taktyczne i Służbowe
+ │    │    ├── 12.2.1 Obuwie Wysokie (Buty bojowe i pustynne z cholewką 8 cali, membranami wodoodpornymi i podeszwą Vibram)
+ │    │    ├── 12.2.2 Obuwie Niskie i Podejściowe (Lekkie buty patrolowe i sportowe dedykowane do strzelectwa dynamicznego)
+ │    │    └── 12.2.3 Akcesoria do Obuwia (Sznurówki kevlarowe, wkładki amortyzujące, preparaty do impregnacji membran hydrofobowych)
+ │    ├── 12.3 Bielizna Termoaktywna i Skarpety
+ │    │    ├── 12.3.1 Bielizna Aktywna (Koszulki i kalesony termoaktywne z jonami srebra, systemy bezszwowe)
+ │    │    └── 12.3.2 Skarpety Specjalistyczne (Skarpety z wełną Merino, ze strefami amortyzacji stopy, systemy odprowadzania wilgoci)
+ │    └── 12.4 Rękawice Taktyczne i Ochronne
+ │         ├── 12.4.1 Rękawice Strzeleckie (Cienkie rękawice zapewniające doskonałe czucie języka spustowego, skóra syntetyczna AX Suede)
+ │         ├── 12.4.2 Rękawice Ochronne (Rękawice z protektorami kostek D3O, odporne na przecięcia Kevlar, rękawice trudnopalne Nomex)
+ │         └── 12.4.3 Rękawice Ocieplane (Rękawice zimowe z membraną Windstopper i ociepliną Thinsulate)
+ │
+ ├── 13. NOŻE, NARZĘDZIA WIELOFUNKCYJNE I NARZĘDZIA FORCE ENTRY
+ │    ├── 13.1 Noże ze Stałą Klingą (Fixed Blade)
+ │    │    ├── 13.1.1 Noże Taktyczne i Bojowe (Głownie typu Tanto/Drop Point, stale proszkowe CPM-3V / D2, powłoki DLC)
+ │    │    ├── 13.1.2 Noże Survivalowe i Bushcraftowe (Konstrukcje Full Tang, grube głownie, stale węglowe 1095 / Sleipner)
+ │    │    └── 13.1.3 Noże Ratownicze i Nurkowe (Ząbkowane krawędzie, bezpieczne czubki typu Sheepsfoot, stale odporne na korozję)
+ │    ├── 13.2 Noże Składane (Folder)
+ │    │    ├── 13.2.1 Noże EDC (Everyday Carry - lekkie noże codziennego użytku, stale M390 / S35VN / 14C28N)
+ │    │    ├── 13.2.2 Noże Taktyczne Składane (Wzmocnione blokady typu Axis Lock, Frame Lock, Tri-Ad Lock)
+ │    │    └── 13.2.3 Noże Automatyczne i Półautomatyczne (Noże typu OTF - Out-The-Front, mechanizmy sprężynowe)
+ │    ├── 13.3 Narzędzia Wielofunkcyjne i Multitool-e
+ │    │    ├── 13.3.1 Multitoole Wojskowe (Narzędzia ze skrobakami do nagaru AR-15, przyrządami do zaciskania spłonek)
+ │    │    ├── 13.3.2 Multitoole Codzienne (Klasyczne multitoole z kombinerkami, nożyczkami, zestawami bitów)
+ │    │    └── 13.3.3 Kieszonkowe Narzędzia Ratownicze (Przecinaki do pasów, zbijaki do szyb hartowanych)
+ │    └── 13.4 Narzędzia Wejścia i Saperskie (Force Entry & Breaching Tools)
+ │         ├── 13.4.1 Tarany i Łomy Wyburzeniowe (Tarany taktyczne, łomy breachingowe Halligan, nożyce hydrauliczne)
+ │         ├── 13.4.2 Narzędzia Saperskie (Łopatki saperskie składane Glock/Fiskars, piły ręczne, macki minerskie)
+ │         └── 13.4.3 Toporki i Tomahawki Taktyczne (Toporki wyważeniowe, tomahawki bojowe ze stali węglowej)
+ │
+ ├── 14. WYPOSAŻENIE OUTDOOR, SURVIVAL I MEDYCYNA POLOWA (TCCC)
+ │    ├── 14.1 Medycyna Polowa i Ratownictwo (Zgodne z wytycznymi TCCC - Tactical Combat Casualty Care)
+ │    │    ├── 14.1.1 Indywidualne Apteczki Taktyczne (IFAK - Individual First Aid Kit, zrywane panele medyczne)
+ │    │    ├── 14.1.2 Wyposażenie Hemostatyczne (Stazy taktyczne CAT Gen 7 / SOFTT-W, gazy hemostatyczne QuikClot / Celox)
+ │    │    ├── 14.1.3 Zabezpieczenie Dróg Oddechowych (Rurki nosowo-gardłowe, opatrunki wentylowe na klatkę piersiową Chest Seal)
+ │    │    └── 14.1.4 Termoregulacja i Zaopatrzenie Ran (Koce termiczne NRC, szyny unieruchamiające SAM Splint, nożyczki ratownicze)
+ │    ├── 14.2 Obozowanie i Bytowanie
+ │    │    ├── 14.2.1 Schronienie (Namioty ekspedycyjne, tarpy/płachty biwakowe z silnylonu, hamaki taktyczne)
+ │    │    ├── 14.2.2 Systemy Śpiworów (Śpiwory modułowe MSS, karimaty wojskowe, materace samopompujące)
+ │    │    └── 14.2.3 Oświetlenie i Zasilanie (Latarki czołowe z diodami IR, latarki kątowe, panele solarne, powerbanki pyłoszczelne)
+ │    ├── 14.3 Kuchnia Polowa i Hydratacja
+ │    │    ├── 14.3.1 Filtrowanie i Uzdatnianie Wody (Filtry membranowe hollow-fiber, tabletki do odkażania wody, butelki z filtrem)
+ │    │    ├── 14.3.2 Przenoszenie Wody (Pęcherze hydracyjne Source/Camelbak, maniurki wojskowe, kubki stalowe)
+ │    │    └── 14.3.3 Palniki i Żywność (Kuchenki wielopaliwowe i gazowe, racje żywnościowe typu MRE, liofilizaty)
+ │    └── 14.4 Nawigacja i Łączność Polowa
+ │         ├── 14.4.1 Nawigacja Klasyczna (Kompasy i busole namiarowe, mapy topograficzne laminowane, GPS-y turystyczne)
+ │         └── 14.4.2 Radiokomunikacja (Radiotelefony PMR/UHF/VHF, anteny taktyczne, ochronniki słuchu ze zintegrowanym radiem)
+ │
+ └── 15. ŚRODKI DO OCHRONY OSOBISTEJ (Niekoncesjonowane urządzenia obronne i akcesoria)
+      ├── 15.1 Miotacze Gazu Pieprzowego (OC - Oleoresin Capsicum)
+      │    ├── 15.1.1 Gazy Pieprzowe Ręczne (Miotacze gazu w strumieniu - Gel/Stream, chmurze - Fog, oraz pianie - Foam)
+      │    ├── 15.1.2 Pistoletowe Miotacze Gazu (Urządzenia miotające z wymiennymi kartridżami gazowymi)
+      │    └── 15.1.3 Akcesoria do Miotaczy (Kabury pasowe, klipsy montażowe, neutralizatory gazu pieprzowego)
+      ├── 15.2 Pałki teleskopowe i inne
+      │    ├── 15.2.1 Pałki Teleskopowe Hartowane (Wykonane ze stali ciągnionej na zimno klasy 4130, blokowanie typu Friction Lock lub Easy Lock)
+      │    ├── 15.2.2 Pałki Teleskopowe Niehartowane (Rekreacyjne pałki stalowe do lekkich zastosowań)
+      │    └── 15.2.3 Akcesoria do Pałek (Kabury obrotowe 360 stopni, końcówki taktyczne zbijakowe, pierścienie zabezpieczające)
+      ├── 15.3 Urządzenia Przedmioty przeznaczone do obezwładniania za pomocą energii elektrycznej (Paralizatory)
+      │    ├── 15.3.1 Paralizatory Kontaktowe)
+      │    └── 15.3.2 Paralizatory Bezdotykowe (Wystrzeliwujące elektrody na odległość, z zabezpieczeniem przed nieuprawnionym użyciem)
+      └── 15.4 Akcesoria Sygnalizacyjne i Ostrzegawcze
+           ├── 15.4.1 Syreny Osobiste i Alarmy Kieszonkowe (Urządzenia emitujące sygnał dźwiękowy o natężeniu powyżej 120 dB)
+           └── 15.4.2 Kubotany i Longpeny Taktyczne (Przyrządy do ucisku punktów wrażliwych wykonane z duraluminium lotniczego)

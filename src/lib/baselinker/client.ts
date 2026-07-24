@@ -5,7 +5,6 @@ const API_URL = 'https://api.baselinker.com/connector.php';
 
 export const INVENTORY_ID = parseInt(process.env.BASELINKER_INVENTORY_ID ?? '35743', 10);
 const DEFAULT_PRICE_GROUP = parseInt(process.env.BASELINKER_PRICE_GROUP ?? '23934', 10);
-const DEFAULT_WAREHOUSE = process.env.BASELINKER_WAREHOUSE ?? 'blconnect_6820';
 
 export async function blCall(method: string, params: Record<string, unknown> = {}): Promise<unknown> {
   // Read lazily so dotenv has time to populate process.env before first call
@@ -13,7 +12,7 @@ export async function blCall(method: string, params: Record<string, unknown> = {
     return getMockResponse(method, params);
   }
 
-  const token = process.env.BASELINKER_TOKEN ?? process.env.base ?? '';
+  const token = process.env.BASELINKER_TOKEN ?? '';
   const body = new URLSearchParams({
     token,
     method,
@@ -77,9 +76,59 @@ export function getPrice(prices: Record<string, number>): number {
   return prices[DEFAULT_PRICE_GROUP] ?? Object.values(prices)[0] ?? 0;
 }
 
-/** Get stock from the default warehouse, falling back to total */
+/** Get sellable stock: sum across all warehouses (H1 + H2 + …) */
 export function getWarehouseStock(stock: Record<string, number>): number {
-  return stock[DEFAULT_WAREHOUSE] ?? totalStock(stock);
+  return totalStock(stock);
+}
+
+/**
+ * Add or update a single product in a BL inventory (full import path — slow, rate-limited).
+ * Pass `productId` to update an existing product instead of creating a new one.
+ * Per BL docs the product fields (sku, ean, prices, stock, text_fields, images, …)
+ * go FLAT at the top level of the params — not nested under a `product` key.
+ * Returns the BL product_id.
+ */
+export async function addInventoryProduct(
+  inventoryId: number,
+  product: Record<string, unknown>,
+  productId?: number | string,
+): Promise<number> {
+  const data = await blCall('addInventoryProduct', {
+    inventory_id: inventoryId,
+    ...(productId != null ? { product_id: String(productId) } : {}),
+    ...product,
+  }) as { product_id: number };
+  return data.product_id;
+}
+
+/**
+ * Bulk stock update (fast path for frequent cron syncs).
+ * `products` = { [product_id]: { [warehouse_id]: quantity } }, max 1000 products per call.
+ */
+export async function updateInventoryProductsStock(
+  inventoryId: number,
+  products: Record<string, Record<string, number>>,
+): Promise<{ counter: number; warnings: Record<string, string> }> {
+  const data = await blCall('updateInventoryProductsStock', {
+    inventory_id: inventoryId,
+    products,
+  }) as { counter: number; warnings?: Record<string, string> };
+  return { counter: data.counter ?? 0, warnings: data.warnings ?? {} };
+}
+
+/**
+ * Bulk price update (fast path for frequent cron syncs).
+ * `products` = { [product_id]: { [price_group_id]: price } }, max 1000 products per call.
+ */
+export async function updateInventoryProductsPrices(
+  inventoryId: number,
+  products: Record<string, Record<string, number>>,
+): Promise<{ counter: number; warnings: Record<string, string> }> {
+  const data = await blCall('updateInventoryProductsPrices', {
+    inventory_id: inventoryId,
+    products,
+  }) as { counter: number; warnings?: Record<string, string> };
+  return { counter: data.counter ?? 0, warnings: data.warnings ?? {} };
 }
 
 export interface BLOrderProduct {

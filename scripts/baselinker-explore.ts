@@ -4,7 +4,7 @@ import * as path from "path";
 
 dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 
-const TOKEN = process.env.base;
+const TOKEN = process.env.BASELINKER_TOKEN;
 const API_URL = "https://api.baselinker.com/connector.php";
 
 async function call(method: string, parameters: Record<string, unknown> = {}) {

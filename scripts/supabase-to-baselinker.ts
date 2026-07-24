@@ -17,7 +17,7 @@ import { blCall } from '../src/lib/baselinker/client';
 
 const INVENTORY_ID = parseInt(process.env.BASELINKER_INVENTORY_ID ?? '35743', 10);
 const PRICE_GROUP  = parseInt(process.env.BASELINKER_PRICE_GROUP  ?? '23934', 10);
-const WAREHOUSE    = process.env.BASELINKER_WAREHOUSE ?? 'blconnect_6820';
+const WAREHOUSE    = process.env.BASELINKER_WAREHOUSE_H1 ?? '';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -117,13 +117,14 @@ async function pushProducts(categoryMap: Map<number, number>): Promise<void> {
       // Debug first product only
       if (total === 0) {
         console.log('\n  [debug] first product payload:');
-        console.log(JSON.stringify({ inventory_id: INVENTORY_ID, product }, null, 2));
+        console.log(JSON.stringify({ inventory_id: INVENTORY_ID, ...product }, null, 2));
       }
 
       try {
+        // BL addInventoryProduct takes product fields flat at the top level
         await blCall('addInventoryProduct', {
           inventory_id: INVENTORY_ID,
-          product,
+          ...product,
         });
         process.stdout.write('.');
       } catch (err: unknown) {
