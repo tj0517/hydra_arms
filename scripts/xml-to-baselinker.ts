@@ -11,7 +11,7 @@
  *   npx tsx scripts/xml-to-baselinker.ts <kolba|sharg|spechurt> [import|sync]
  *
  *   import  (default) — full upsert: creates missing products, updates existing
- *                       (addInventoryProduct, ~1 req/s — run rarely, e.g. weekly cron)
+ *                       (addInventoryProduct, 1 call/product — run rarely, e.g. weekly cron)
  *   sync              — stock + price refresh only for products already in BL
  *                       (updateInventoryProductsStock/Prices, batched — run often)
  *
@@ -23,7 +23,8 @@
  *     (BASELINKER_MARKUP_KOLBA / _SHARG / _SPECHURT); purchase price is written
  *     to the BASELINKER_PRICE_GROUP_PURCHASE price group
  *   - Sharg: the connector itself filters to defence categories (SHARG_DEFENCE_PATTERNS)
- *   - Rate limit: BL free tier ~1 req/s — 300 ms sleep between calls
+ *   - Rate limit: BL free plan ~100 req/min — 700 ms sleep between calls;
+ *     on ERROR_BLOCKED_TOKEN blCall waits out the block and retries
  *
  * Categories & review tags (no auto-created supplier categories):
  *   - The BL category tree is built once by scripts/bl-build-categories.ts
@@ -63,9 +64,10 @@ const MARKUP_ENV: Record<ConnectorName, string> = {
   spechurt: 'BASELINKER_MARKUP_SPECHURT',
 };
 
-// BaseLinker free tier rate limit: ~1 req/s
+// BaseLinker free plan rate limit: ~100 req/min → keep under ~85 req/min.
+// blCall additionally catches ERROR_BLOCKED_TOKEN and waits out the block.
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-const RATE_LIMIT_MS = 300;
+const RATE_LIMIT_MS = 700;
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 

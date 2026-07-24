@@ -6,6 +6,26 @@ const API_URL = 'https://api.baselinker.com/connector.php';
 export const INVENTORY_ID = parseInt(process.env.BASELINKER_INVENTORY_ID ?? '35743', 10);
 const DEFAULT_PRICE_GROUP = parseInt(process.env.BASELINKER_PRICE_GROUP ?? '23934', 10);
 
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+/**
+ * When BL rate-limits (~100 req/min on the free plan) it returns
+ * ERROR_BLOCKED_TOKEN with "… blocked until YYYY-MM-DD HH:MM:SS" in the message.
+ * Returns how long to wait before retrying: until that time + 5 s.
+ * BL reports server-local (Polish) time — parsed as local time here.
+ */
+function blockedWaitMs(message: string): number {
+  const m = message.match(/(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/);
+  if (m) {
+    const until = new Date(m[1].replace(' ', 'T')).getTime();
+    const wait = until - Date.now() + 5_000;
+    if (!isNaN(until) && wait > 0) {
+      return Math.min(wait, 15 * 60_000); // clamp; if still blocked, the retry loop waits again
+    }
+  }
+  return 60_000; // timestamp missing/unparseable — safe default
+}
+
 export async function blCall(method: string, params: Record<string, unknown> = {}): Promise<unknown> {
   // Read lazily so dotenv has time to populate process.env before first call
   if (process.env.BASELINKER_MOCK === 'true') {
@@ -19,18 +39,26 @@ export async function blCall(method: string, params: Record<string, unknown> = {
     parameters: JSON.stringify(params),
   });
 
-  const res = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body,
-  });
+  while (true) {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body,
+    });
 
-  if (!res.ok) throw new Error(`BaseLinker HTTP error: ${res.status}`);
-  const data = await res.json();
-  if (data.status !== 'SUCCESS') {
+    if (!res.ok) throw new Error(`BaseLinker HTTP error: ${res.status}`);
+    const data = await res.json();
+    if (data.status === 'SUCCESS') return data;
+
+    if (data.error_code === 'ERROR_BLOCKED_TOKEN') {
+      const wait = blockedWaitMs(String(data.error_message ?? ''));
+      console.warn(`[baselinker] token blocked (rate limit) — retrying ${method} in ${Math.ceil(wait / 1000)} s`);
+      await sleep(wait);
+      continue; // retry the same call instead of failing the run
+    }
+
     throw new Error(`BaseLinker error: ${data.error_code} — ${data.error_message}`);
   }
-  return data;
 }
 
 export async function getInventories(): Promise<BLInventory[]> {

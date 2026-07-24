@@ -32,8 +32,9 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env.local'), override: true 
 const OUTPUT_PATH = path.resolve(process.cwd(), 'xml-integration/hydra-categories.json');
 const DEFAULT_TREE = path.resolve(process.cwd(), 'xml-integration/hydra-category-tree.txt');
 
+// BaseLinker free plan rate limit: ~100 req/min
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-const RATE_LIMIT_MS = 300;
+const RATE_LIMIT_MS = 700;
 
 interface ParsedCategory {
   num: string;         // "01" | "1.1" | "3.4.3" — as written in the tree
