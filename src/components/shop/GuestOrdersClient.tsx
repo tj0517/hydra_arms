@@ -1,7 +1,16 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+'use client'
+
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { getSiblingSessionId } from '@/lib/shop/orderSession'
+
+interface GuestOrder {
+  id: string
+  status: string
+  total: number | null
+  shipping_address: Record<string, string> | null
+  fulfillment_route: string | null
+  created_at: string
+}
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
@@ -22,48 +31,46 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: 'bg-red-400',
 }
 
-export default async function ZamowieniaPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/konto/login')
+export default function GuestOrdersClient() {
+  const [orders, setOrders] = useState<GuestOrder[] | null>(null)
 
-  const { data: orders } = await supabase
-    .from('orders')
-    .select(`
-      id, status, total, shipping_address, fulfillment_route, created_at, session_id
-    `)
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
-
-  // Split checkout (mixed cart) → pair up ship/pickup orders for display,
-  // using only the already-fetched list (no extra query).
-  const sessionToId = new Map((orders ?? []).map(o => [o.session_id, o.id]))
-  const siblingIdOf = (sessionId: string | null) => {
-    const sibling = sessionId ? getSiblingSessionId(sessionId) : null
-    return sibling ? sessionToId.get(sibling) ?? null : null
-  }
+  useEffect(() => {
+    fetch('/api/shop/orders/guest')
+      .then(res => res.json())
+      .then(data => setOrders(data.orders ?? []))
+      .catch(() => setOrders([]))
+  }, [])
 
   return (
     <main className="min-h-screen pt-32 pb-20 px-6 md:px-16">
       <div className="max-w-4xl mx-auto">
         <div className="mb-10">
           <p className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-[0.3em] uppercase mb-3">
-            HYDRA ARMS / Konto
+            HYDRA ARMS / Sklep
           </p>
           <div className="flex items-end justify-between">
-            <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Zamówienia</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Moje zamówienia</h1>
             <Link
-              href="/konto"
+              href="/sklep"
               className="font-[var(--font-mono)] text-[10px] text-text-dim hover:text-accent transition-colors tracking-wider"
             >
-              ← Konto
+              ← Sklep
             </Link>
           </div>
+          <p className="text-xs text-text-dim/60 mt-3">
+            Lista zamówień złożonych bez logowania z tej przeglądarki. Aby mieć stały dostęp do historii zamówień, załóż konto.
+          </p>
         </div>
 
-        {!orders?.length ? (
+        {orders === null ? (
+          <div className="py-16 text-center">
+            <div className="w-8 h-8 border border-white/20 border-t-accent rounded-full animate-spin mx-auto" />
+          </div>
+        ) : !orders.length ? (
           <div className="py-16 text-center space-y-4">
-            <p className="font-[var(--font-mono)] text-xs text-text-dim tracking-wider">Brak zamówień</p>
+            <p className="font-[var(--font-mono)] text-xs text-text-dim tracking-wider">
+              Brak zamówień powiązanych z tą przeglądarką
+            </p>
             <Link
               href="/sklep"
               className="inline-block font-[var(--font-mono)] text-[10px] text-accent hover:text-white transition-colors tracking-wider"
@@ -74,12 +81,11 @@ export default async function ZamowieniaPage() {
         ) : (
           <ul className="space-y-2">
             {orders.map(order => {
-              const addr = order.shipping_address as Record<string, string> | null
-              const siblingId = siblingIdOf(order.session_id)
+              const addr = order.shipping_address
               return (
                 <li key={order.id}>
                   <Link
-                    href={`/konto/zamowienia/${order.id}`}
+                    href={`/sklep/zamowienie/${order.id}`}
                     className="block border border-white/10 hover:border-white/20 transition-colors group"
                   >
                     <div className="flex items-center justify-between px-5 py-4">
@@ -92,11 +98,6 @@ export default async function ZamowieniaPage() {
                           <p className="font-[var(--font-mono)] text-[10px] text-text-dim/60 tracking-wider uppercase">
                             {STATUS_LABELS[order.status] ?? order.status}
                           </p>
-                          {siblingId && (
-                            <span className="font-[var(--font-mono)] text-[9px] text-blue-300 border border-blue-400/30 px-1.5 py-0.5 tracking-wider uppercase">
-                              część 1/2
-                            </span>
-                          )}
                         </div>
                         <p className="text-xs text-text-dim">
                           {new Date(order.created_at).toLocaleDateString('pl-PL', {

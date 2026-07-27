@@ -15,6 +15,7 @@ interface OrderData {
     unit_price: number
     product_snapshot: { name?: string; sku?: string; images?: Record<string, string> } | null
   }[]
+  related_order: { id: string; fulfillment_route: string | null } | null
 }
 
 const fmt = (n: number) =>
@@ -83,6 +84,28 @@ export default function OrderConfirmationClient({ orderId }: { orderId: string }
           </p>
         </div>
 
+        {/* Split-order notice */}
+        {order.related_order && (
+          <section className="border border-blue-500/25 bg-blue-500/5 px-6 py-4 flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <p className="font-[var(--font-mono)] text-[10px] text-blue-300 tracking-[0.2em] uppercase mb-1">
+                Zamówienie podzielone na dwie części
+              </p>
+              <p className="text-sm text-text-dim">
+                {order.related_order.fulfillment_route === 'pickup'
+                  ? 'Pozostałe produkty czekają na odbiór osobisty w osobnym zamówieniu.'
+                  : 'Pozostałe produkty zostały wysłane kurierem w osobnym zamówieniu.'}
+              </p>
+            </div>
+            <Link
+              href={`/sklep/zamowienie/${order.related_order.id}`}
+              className="flex-shrink-0 border border-blue-400/40 px-4 py-2 font-[var(--font-mono)] text-[10px] text-blue-300 hover:border-blue-300 hover:text-white transition-colors tracking-widest"
+            >
+              ZOBACZ #{order.related_order.id.slice(0, 8).toUpperCase()}
+            </Link>
+          </section>
+        )}
+
         {/* Order details */}
         <section className="border border-white/10 divide-y divide-white/10">
           <div className="px-6 py-4">
@@ -143,11 +166,19 @@ export default function OrderConfirmationClient({ orderId }: { orderId: string }
 
         <div className="flex items-center justify-center gap-4 pt-4 flex-wrap">
           <Link
-            href={isLoggedIn ? '/konto/zamowienia' : '/konto/rejestracja'}
+            href={isLoggedIn ? '/konto/zamowienia' : '/sklep/moje-zamowienia'}
             className="border border-white/15 px-6 py-3.5 font-[var(--font-mono)] text-xs text-white/70 hover:border-accent hover:text-accent transition-colors tracking-[0.15em]"
           >
-            {isLoggedIn ? 'MOJE ZAMÓWIENIA' : 'ZAŁÓŻ KONTO'}
+            MOJE ZAMÓWIENIA
           </Link>
+          {!isLoggedIn && (
+            <Link
+              href="/konto/rejestracja"
+              className="border border-white/15 px-6 py-3.5 font-[var(--font-mono)] text-xs text-white/70 hover:border-accent hover:text-accent transition-colors tracking-[0.15em]"
+            >
+              ZAŁÓŻ KONTO
+            </Link>
+          )}
           <Link
             href="/sklep"
             className="border border-white/15 px-6 py-3.5 font-[var(--font-mono)] text-xs text-white/70 hover:border-accent hover:text-accent transition-colors tracking-[0.15em]"

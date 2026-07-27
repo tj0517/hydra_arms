@@ -10,23 +10,40 @@ import {
   getPrice,
   getWarehouseStock,
 } from '@/lib/baselinker/client';
+import { isSyncAuthorized, isCronAuthorized } from '@/lib/apiAuth';
+import { getReservedQuantities } from '@/lib/shop/reservedStock';
+import { filterHydraCategories } from '@/lib/shop/categoryFilter';
 
-const SYNC_SECRET = process.env.SYNC_SECRET;
 const CHUNK = 100;
 
-export async function POST(req: NextRequest) {
-  // Validate secret
-  const authHeader = req.headers.get('x-sync-secret');
-  if (!SYNC_SECRET || authHeader !== SYNC_SECRET) {
+// Full BL→Supabase sync can take a while on large catalogues
+export const maxDuration = 300;
+
+// Vercel cron invokes this path with GET + `Authorization: Bearer $CRON_SECRET`
+export async function GET(req: NextRequest) {
+  if (!isCronAuthorized(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+  return runSync();
+}
 
+// Manual trigger (VPS / curl) with x-sync-secret
+export async function POST(req: NextRequest) {
+  if (!isSyncAuthorized(req)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  return runSync();
+}
+
+async function runSync() {
   const supabase = createAdminClient();
   const log: string[] = [];
 
   try {
-    // Sync categories
-    const cats = await getCategories(INVENTORY_ID);
+    // Sync categories — BL inventory also carries ~55 auto-generated
+    // marketplace category paths unrelated to the real product tree; keep
+    // only the Hydra taxonomy (see filterHydraCategories).
+    const cats = filterHydraCategories(await getCategories(INVENTORY_ID));
     const catRows = cats.map((c) => ({
       id: c.category_id,
       name: c.name,
@@ -58,24 +75,31 @@ export async function POST(req: NextRequest) {
       const chunkIds = allIds.slice(i, i + CHUNK);
       const details = await getProductsData(INVENTORY_ID, chunkIds);
 
-      const rows = Object.entries(details).map(([idStr, p]) => ({
-        id: parseInt(idStr, 10),
-        inventory_id: INVENTORY_ID,
-        sku: p.sku || null,
-        ean: p.ean || null,
-        name: p.text_fields.name,
-        description: p.text_fields.description ?? null,
-        features: p.text_fields.features ?? null,
-        price: getPrice(p.prices),
-        tax_rate: p.tax_rate,
-        stock: getWarehouseStock(p.stock),
-        weight: p.weight ?? null,
-        category_id: p.category_id || null,
-        images: p.images && Object.keys(p.images).length > 0 ? p.images : null,
-        // Publish gate: only products the admin tagged `approved` in BL go live
-        is_active: (p.tags ?? []).includes('approved'),
-        synced_at: new Date().toISOString(),
-      }));
+      // Net out paid-but-unfulfilled orders so this overwrite doesn't
+      // resurrect stock that's already been sold (see getReservedQuantities).
+      const reserved = await getReservedQuantities(supabase, chunkIds.map((id) => parseInt(id, 10)));
+
+      const rows = Object.entries(details).map(([idStr, p]) => {
+        const id = parseInt(idStr, 10);
+        return {
+          id,
+          inventory_id: INVENTORY_ID,
+          sku: p.sku || null,
+          ean: p.ean || null,
+          name: p.text_fields.name,
+          description: p.text_fields.description ?? null,
+          features: p.text_fields.features ?? null,
+          price: getPrice(p.prices),
+          tax_rate: p.tax_rate,
+          stock: Math.max(0, getWarehouseStock(p.stock) - (reserved.get(id) ?? 0)),
+          weight: p.weight ?? null,
+          category_id: p.category_id || null,
+          images: p.images && Object.keys(p.images).length > 0 ? p.images : null,
+          // Publish gate: only products the admin tagged `approved` in BL go live
+          is_active: (p.tags ?? []).includes('approved'),
+          synced_at: new Date().toISOString(),
+        };
+      });
 
       const { error: prodError } = await supabase
         .from('shop_products')

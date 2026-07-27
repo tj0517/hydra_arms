@@ -15,6 +15,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { isSyncAuthorized } from '@/lib/apiAuth'
 import { kolbaConnector } from '../../../../../xml-integration/connectors/kolba'
 import { shargConnector } from '../../../../../xml-integration/connectors/sharg'
 import { spechurtConnector } from '../../../../../xml-integration/connectors/spechurt'
@@ -44,9 +45,19 @@ async function runConnector(name: string, connector: Connector) {
 }
 
 export async function POST(req: NextRequest) {
+  // ── Kill switch ───────────────────────────────────────────────────────────
+  // Architecture decision: BaseLinker is the source of truth for products.
+  // The XML→Supabase path (this route + engine.ts) conflicts with the
+  // BL→Supabase replica sync, so it stays disabled unless explicitly enabled.
+  if (process.env.XML_SYNC_ENABLED !== 'true') {
+    return NextResponse.json(
+      { error: 'XML→Supabase import is disabled (BaseLinker is the source of truth — use scripts/xml-to-baselinker.ts). Set XML_SYNC_ENABLED=true to re-enable.' },
+      { status: 410 },
+    )
+  }
+
   // ── Auth ──────────────────────────────────────────────────────────────────
-  const secret = process.env.SYNC_SECRET
-  if (!secret || req.headers.get('x-sync-secret') !== secret) {
+  if (!isSyncAuthorized(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -71,16 +82,16 @@ export async function POST(req: NextRequest) {
 
   try {
     if (connector === 'all') {
-      const results = await Promise.allSettled(
-        Object.entries(CONNECTORS).map(([name, conn]) => runConnector(name, conn)),
-      )
-
-      const summary = Object.keys(CONNECTORS).map((name, i) => {
-        const r = results[i]
-        return r.status === 'fulfilled'
-          ? r.value
-          : { connector: name, error: r.reason?.message ?? String(r.reason) }
-      })
+      // Sequential — running three ~200 MB feed parses concurrently in one
+      // function invocation risks OOM/timeouts
+      const summary: unknown[] = []
+      for (const [name, conn] of Object.entries(CONNECTORS)) {
+        try {
+          summary.push(await runConnector(name, conn))
+        } catch (err) {
+          summary.push({ connector: name, error: err instanceof Error ? err.message : String(err) })
+        }
+      }
 
       return NextResponse.json({ ok: true, started_at, results: summary })
     }

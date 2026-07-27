@@ -2,18 +2,40 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { addOrder, getOrderStatusList, getOrders } from '@/lib/baselinker/client'
 import { mapBLStatus } from '@/lib/shop/blStatusMap'
+import { isSyncAuthorized, isCronAuthorized } from '@/lib/apiAuth'
 import type { BLOrder } from '@/lib/baselinker/types'
 
-export async function POST(req: NextRequest) {
-  const secret = req.headers.get('x-sync-secret')
-  if (secret !== process.env.SYNC_SECRET) {
+export const maxDuration = 300
+
+// Vercel cron invokes this path with GET + `Authorization: Bearer $CRON_SECRET`
+export async function GET(req: NextRequest) {
+  if (!isCronAuthorized(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+  return runOrderSync()
+}
 
+// Manual trigger (VPS / curl) with x-sync-secret
+export async function POST(req: NextRequest) {
+  if (!isSyncAuthorized(req)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  return runOrderSync()
+}
+
+async function runOrderSync() {
   const supabase = createAdminClient()
 
   // ── Phase A: Retry orphaned orders (BL push failed at checkout) ───────────
   const phaseA = { found: 0, retried: 0, ok: 0 }
+
+  const blStatusId = parseInt(
+    process.env.BASELINKER_ORDER_STATUS_ID ?? process.env.BASELINKER_STATUS_PAID ?? '0',
+    10,
+  )
+  if (blStatusId === 0) {
+    console.log('[orders/sync] Phase A skipped — BASELINKER_STATUS_PAID not set')
+  }
 
   const { data: orphaned } = await supabase
     .from('orders')
@@ -24,7 +46,7 @@ export async function POST(req: NextRequest) {
 
   phaseA.found = orphaned?.length ?? 0
 
-  for (const order of orphaned ?? []) {
+  for (const order of blStatusId === 0 ? [] : orphaned ?? []) {
     phaseA.retried++
     try {
       const addr = order.shipping_address as Record<string, string> | null
@@ -40,7 +62,7 @@ export async function POST(req: NextRequest) {
       const isPickup = order.fulfillment_route === 'pickup'
 
       const blOrderId = await addOrder({
-        order_status_id: parseInt(process.env.BASELINKER_ORDER_STATUS_ID ?? '0', 10),
+        order_status_id: blStatusId,
         currency: 'PLN',
         payment_method: 'Przelew',
         payment_method_cod: 0,
@@ -70,7 +92,7 @@ export async function POST(req: NextRequest) {
             tax_rate: (snap.tax_rate as number) ?? 23,
           }
         }),
-      })
+      }, { blockedRetries: 1 })
 
       await supabase
         .from('orders')

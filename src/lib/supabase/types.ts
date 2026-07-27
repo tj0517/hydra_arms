@@ -368,6 +368,16 @@ export interface Database {
         Args: Record<string, never>;
         Returns: number;
       };
+      checkout_create_order: {
+        Args: {
+          p_session_id: string;
+          p_user_id: string | null;
+          p_shipping: Record<string, string>;
+          p_fulfillment_route: string;
+          p_items: Array<{ product_id: number; quantity: number }>;
+        };
+        Returns: Array<{ order_id: string; order_total: number }>;
+      };
     };
     Enums: {
       product_type: ProductType;

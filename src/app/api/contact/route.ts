@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
+import { rateLimit, getClientIp } from "@/lib/rateLimit";
 
 const FROM = process.env.RESEND_FROM_EMAIL ?? "formularz@hydra-arms.com";
 const TO_DEFAULT = "office@hydra-arms.com";
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const DEPT_EMAILS: Record<string, string> = {
   "R&D":    process.env.EMAIL_RD      ?? "office@hydra-arms.com",
@@ -87,7 +89,7 @@ function buildContactEmail(opts: {
         <!-- Divider -->
         <p style="margin:0 0 12px;font-family:${mono};font-size:10px;color:rgba(19,255,21,0.15);letter-spacing:0.1em;">&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;</p>
         <p style="margin:0;font-family:${mono};font-size:11px;color:${dim};letter-spacing:0.08em;">
-          // NEWSLETTER: <span style="color:${green};">${segments.map(s => s.toUpperCase()).join(", ")}</span>
+          // NEWSLETTER: <span style="color:${green};">${segments.map(s => safe(s.toUpperCase())).join(", ")}</span>
         </p>
         ` : ""}
 
@@ -110,6 +112,14 @@ function buildContactEmail(opts: {
 }
 
 export async function POST(req: NextRequest) {
+  const limit = rateLimit(`contact:${getClientIp(req)}`, 5, 10 * 60_000);
+  if (!limit.ok) {
+    return NextResponse.json(
+      { error: "Zbyt wiele wiadomości. Spróbuj ponownie później." },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfterSec) } },
+    );
+  }
+
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
     return NextResponse.json({ error: "Email service not configured" }, { status: 503 });
@@ -121,6 +131,10 @@ export async function POST(req: NextRequest) {
 
     if (!name || !email || !subject || !message) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    if (typeof email !== "string" || !EMAIL_RE.test(email)) {
+      return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
     }
 
     const to = dept ? (DEPT_EMAILS[dept] ?? TO_DEFAULT) : TO_DEFAULT;

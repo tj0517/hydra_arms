@@ -5,6 +5,44 @@ import type { ShopProduct, ShopCategory } from '@/lib/supabase/types'
 export const SHOP_CACHE_TAG = 'shop-products'
 
 /**
+ * Columns safe to expose publicly. Deliberately excludes supplier/margin data
+ * (price_purchase, connector*, sync_locked_fields) and admin-only fields
+ * (notes_internal, review_flags, completeness_score, inventory_id).
+ */
+export const PUBLIC_PRODUCT_COLUMNS = [
+  'id',
+  'sku',
+  'ean',
+  'name',
+  'description',
+  'short_description',
+  'features',
+  'price',
+  'price_compare',
+  'tax_rate',
+  'stock',
+  'weight',
+  'dimensions',
+  'category_id',
+  'images',
+  'product_type',
+  'source_warehouse',
+  'is_active',
+  'age_min',
+  'requires_license',
+  'license_category',
+  'delivery_allowed',
+  'slug',
+  'is_featured',
+  'badge',
+  'availability_status',
+  'shipping_class',
+  'meta_title',
+  'meta_description',
+  'updated_at',
+].join(', ')
+
+/**
  * Cached product + category fetch for use in server components.
  *
  * TTL: 5 minutes. The sync route calls revalidateTag(SHOP_CACHE_TAG) after
@@ -22,7 +60,7 @@ export const fetchShopData = unstable_cache(
     const [productsResult, categoriesResult] = await Promise.all([
       sb
         .from('shop_products')
-        .select('*')
+        .select(PUBLIC_PRODUCT_COLUMNS)
         .eq('is_active', true)
         .order('name', { ascending: true }),
       sb
@@ -33,7 +71,7 @@ export const fetchShopData = unstable_cache(
     ])
 
     return {
-      products: (productsResult.data ?? []) as ShopProduct[],
+      products: (productsResult.data ?? []) as unknown as ShopProduct[],
       categories: (categoriesResult.data ?? []) as ShopCategory[],
     }
   },

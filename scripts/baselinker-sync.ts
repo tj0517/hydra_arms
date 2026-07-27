@@ -19,6 +19,8 @@ import {
   getPrice,
   getWarehouseStock,
 } from '../src/lib/baselinker/client';
+import { getReservedQuantities } from '../src/lib/shop/reservedStock';
+import { filterHydraCategories } from '../src/lib/shop/categoryFilter';
 
 // Read after dotenv so ESM hoisting doesn't freeze the value
 const INVENTORY_ID = parseInt(process.env.BASELINKER_INVENTORY_ID ?? '35743', 10);
@@ -33,8 +35,9 @@ const CHUNK = 100; // products per getInventoryProductsData call
 
 async function syncCategories() {
   console.log('\n── Categories ──');
-  const cats = await getCategories(INVENTORY_ID);
-  console.log(`  fetched ${cats.length} categories`);
+  const allCats = await getCategories(INVENTORY_ID);
+  const cats = filterHydraCategories(allCats);
+  console.log(`  fetched ${allCats.length} categories (${allCats.length - cats.length} non-Hydra marketplace categories filtered out)`);
 
   const rows = cats.map((c) => ({
     id: c.category_id,
@@ -77,6 +80,10 @@ async function syncProducts() {
     const chunkIds = allIds.slice(i, i + CHUNK);
     const details = await getProductsData(INVENTORY_ID, chunkIds);
 
+    // Net out paid-but-unfulfilled orders so this overwrite doesn't
+    // resurrect stock that's already been sold (see getReservedQuantities).
+    const reserved = await getReservedQuantities(supabase, chunkIds.map((id) => parseInt(id, 10)));
+
     const rows = Object.entries(details).map(([idStr, p]) => {
       const id = parseInt(idStr, 10);
       const tags: string[] = p.tags ?? [];
@@ -97,7 +104,7 @@ async function syncProducts() {
         features: p.text_fields.features ?? null,
         price: getPrice(p.prices),
         tax_rate: p.tax_rate,
-        stock: getWarehouseStock(p.stock),
+        stock: Math.max(0, getWarehouseStock(p.stock) - (reserved.get(id) ?? 0)),
         weight: p.weight ?? null,
         category_id: p.category_id || null,
         images: p.images && Object.keys(p.images).length > 0 ? p.images : null,

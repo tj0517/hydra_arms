@@ -81,7 +81,9 @@ function parseStock(raw: string): number {
  * Filters out known compliance fields that get promoted to _hints.
  */
 function buildFeatures(atrybuty: KolbaAtrybut[]): Record<string, string> {
-  const skip = new Set(['Wymagane zezwolenie?', 'Masa [g]', 'Marka'])
+  // Only Marka (brand) and compliance flag are excluded — they map to dedicated columns.
+  // Masa [g] stays in features so it appears as a product parameter in BL and Supabase.
+  const skip = new Set(['Wymagane zezwolenie?', 'Marka'])
   const result: Record<string, string> = {}
   for (const a of atrybuty) {
     const name = a['@_nazwa']

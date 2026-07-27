@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { PUBLIC_PRODUCT_COLUMNS } from '@/lib/shop/fetchProducts';
 import type { ProductType } from '@/lib/supabase/types';
 
 const PAGE_SIZE = 24;
@@ -16,7 +17,7 @@ export async function GET(req: NextRequest) {
 
   let query = supabase
     .from('shop_products')
-    .select('*', { count: 'exact' })
+    .select(PUBLIC_PRODUCT_COLUMNS, { count: 'exact' })
     .eq('is_active', true)
     .order('name', { ascending: true })
     .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);

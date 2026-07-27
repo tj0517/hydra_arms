@@ -4,7 +4,7 @@ import { getMockResponse } from './fixtures/index';
 const API_URL = 'https://api.baselinker.com/connector.php';
 
 export const INVENTORY_ID = parseInt(process.env.BASELINKER_INVENTORY_ID ?? '35743', 10);
-const DEFAULT_PRICE_GROUP = parseInt(process.env.BASELINKER_PRICE_GROUP ?? '23934', 10);
+const DEFAULT_PRICE_GROUP = parseInt(process.env.BASELINKER_PRICE_GROUP ?? '', 10);
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
@@ -26,7 +26,20 @@ function blockedWaitMs(message: string): number {
   return 60_000; // timestamp missing/unparseable — safe default
 }
 
-export async function blCall(method: string, params: Record<string, unknown> = {}): Promise<unknown> {
+export interface BLCallOptions {
+  /**
+   * How many times to wait out an ERROR_BLOCKED_TOKEN block before giving up.
+   * Default Infinity — right for batch scripts, wrong for HTTP request paths
+   * (a block sleeps 60s–15min per retry). Checkout passes 0 to fail fast.
+   */
+  blockedRetries?: number;
+}
+
+export async function blCall(
+  method: string,
+  params: Record<string, unknown> = {},
+  opts: BLCallOptions = {},
+): Promise<unknown> {
   // Read lazily so dotenv has time to populate process.env before first call
   if (process.env.BASELINKER_MOCK === 'true') {
     return getMockResponse(method, params);
@@ -38,6 +51,9 @@ export async function blCall(method: string, params: Record<string, unknown> = {
     method,
     parameters: JSON.stringify(params),
   });
+
+  const blockedRetries = opts.blockedRetries ?? Infinity;
+  let blockedAttempts = 0;
 
   while (true) {
     const res = await fetch(API_URL, {
@@ -51,6 +67,10 @@ export async function blCall(method: string, params: Record<string, unknown> = {
     if (data.status === 'SUCCESS') return data;
 
     if (data.error_code === 'ERROR_BLOCKED_TOKEN') {
+      if (blockedAttempts >= blockedRetries) {
+        throw new Error(`BaseLinker error: ERROR_BLOCKED_TOKEN — rate limited, gave up after ${blockedAttempts} wait(s)`);
+      }
+      blockedAttempts++;
       const wait = blockedWaitMs(String(data.error_message ?? ''));
       console.warn(`[baselinker] token blocked (rate limit) — retrying ${method} in ${Math.ceil(wait / 1000)} s`);
       await sleep(wait);
@@ -99,9 +119,13 @@ export function totalStock(stock: Record<string, number>): number {
   return Object.values(stock).reduce((acc, v) => acc + v, 0);
 }
 
-/** Get price from the default price group */
+/** Get price from the default price group (falls back to first available group if BASELINKER_PRICE_GROUP is not set) */
 export function getPrice(prices: Record<string, number>): number {
-  return prices[DEFAULT_PRICE_GROUP] ?? Object.values(prices)[0] ?? 0;
+  if (!isNaN(DEFAULT_PRICE_GROUP)) {
+    return prices[DEFAULT_PRICE_GROUP] ?? Object.values(prices)[0] ?? 0;
+  }
+  // BASELINKER_PRICE_GROUP not set — use first available price group
+  return Object.values(prices)[0] ?? 0;
 }
 
 /** Get sellable stock: sum across all warehouses (H1 + H2 + …) */
@@ -192,8 +216,8 @@ export interface BLAddOrderParams {
 }
 
 /** Push a new order to BaseLinker. Returns the created BL order_id. */
-export async function addOrder(params: BLAddOrderParams): Promise<number> {
-  const data = await blCall('addOrder', params as unknown as Record<string, unknown>) as { order_id: number };
+export async function addOrder(params: BLAddOrderParams, opts?: BLCallOptions): Promise<number> {
+  const data = await blCall('addOrder', params as unknown as Record<string, unknown>, opts) as { order_id: number };
   return data.order_id;
 }
 

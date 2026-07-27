@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import ProductDetailClient from '@/components/shop/ProductDetailClient';
 import { createPublicClient } from '@/lib/supabase/public';
+import { PUBLIC_PRODUCT_COLUMNS } from '@/lib/shop/fetchProducts';
 import type { ShopProduct, ShopCategory } from '@/lib/supabase/types';
 
 async function fetchProduct(id: number): Promise<{ product: ShopProduct; categories: ShopCategory[]; related: ShopProduct[] } | null> {
@@ -9,17 +10,17 @@ async function fetchProduct(id: number): Promise<{ product: ShopProduct; categor
   if (!sb) return null;
 
   const [productResult, categoriesResult] = await Promise.all([
-    sb.from('shop_products').select('*').eq('id', id).eq('is_active', true).limit(1).single(),
+    sb.from('shop_products').select(PUBLIC_PRODUCT_COLUMNS).eq('id', id).eq('is_active', true).limit(1).single(),
     sb.from('shop_categories').select('*').order('name', { ascending: true }).limit(500),
   ]);
 
   if (!productResult.data) return null;
 
-  const product = productResult.data as ShopProduct;
+  const product = productResult.data as unknown as ShopProduct;
 
   let { data: related } = await sb
     .from('shop_products')
-    .select('*')
+    .select(PUBLIC_PRODUCT_COLUMNS)
     .eq('category_id', product.category_id ?? -1)
     .eq('is_active', true)
     .neq('id', id)
@@ -29,7 +30,7 @@ async function fetchProduct(id: number): Promise<{ product: ShopProduct; categor
   if (!related?.length) {
     const { data: fallback } = await sb
       .from('shop_products')
-      .select('*')
+      .select(PUBLIC_PRODUCT_COLUMNS)
       .eq('is_active', true)
       .neq('id', id)
       .order('name', { ascending: true })
@@ -40,7 +41,7 @@ async function fetchProduct(id: number): Promise<{ product: ShopProduct; categor
   return {
     product,
     categories: (categoriesResult.data ?? []) as ShopCategory[],
-    related: (related ?? []) as ShopProduct[],
+    related: (related ?? []) as unknown as ShopProduct[],
   };
 }
 

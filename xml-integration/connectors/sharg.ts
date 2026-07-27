@@ -451,6 +451,63 @@ export function parseShargGateway(xml: string): ShargGatewayManifest {
   }
 }
 
+// ── Parameters feed parser ────────────────────────────────────────────────────
+// Sharg provides product attributes (caliber, barrel length, etc.) in a separate
+// `parameters` feed (URL from gateway manifest). The full feed only has weight in
+// size/@weight; all other specs live here.
+//
+// IdoSell IOF 3.0 parameters feed format (verified against live feed):
+//   <offer><parameters>
+//     <product id="12345">
+//       <param lang="pol" name="Kaliber [mm]">4.5</param>
+//       <param lang="pol" name="Długość lufy [mm]">450</param>
+//     </product>
+//   </parameters></offer>
+//
+// Returns: Map<product_id_string, Record<param_name, param_value>>
+
+export function parseShargParameters(xml: string): Map<string, Record<string, string>> {
+  const parser = new XMLParser({
+    ignoreAttributes: false,
+    attributeNamePrefix: '@_',
+    isArray: (tagName) => ['product', 'param'].includes(tagName),
+    removeNSPrefix: true,
+    allowBooleanAttributes: true,
+    parseAttributeValue: false,  // keep values as strings (caliber "4,5 mm" etc.)
+    cdataPropName: '__cdata',
+  })
+  const raw = parser.parse(xml)
+
+  // Root may be <offer><parameters>…</offer> or just <parameters>…
+  const products: Array<{ '@_id': string | number; param?: Array<{ '@_lang'?: string; '@_name': string; '#text'?: string; __cdata?: string }> }> =
+    raw?.offer?.parameters?.product ??
+    raw?.parameters?.product ??
+    []
+
+  const map = new Map<string, Record<string, string>>()
+
+  for (const p of products) {
+    const id = String(p['@_id'])
+    const params: Array<{ '@_lang'?: string; '@_name': string; '#text'?: string; __cdata?: string }> =
+      Array.isArray(p.param) ? p.param : (p.param ? [p.param] : [])
+
+    const features: Record<string, string> = {}
+    for (const param of params) {
+      const lang = param['@_lang'] ?? ''
+      // Only take Polish values; skip other languages (eng etc.)
+      // If no language is set on any param, take all
+      if (lang && lang !== 'pol') continue
+      const name = (param['@_name'] ?? '').trim()
+      const value = ((param['#text'] ?? param.__cdata ?? '') as string).trim()
+      if (name && value) features[name] = value
+    }
+
+    if (Object.keys(features).length > 0) map.set(id, features)
+  }
+
+  return map
+}
+
 // ── Export ─────────────────────────────────────────────────────────────────────
 
 const SHARG_BASE = 'https://hurt.sharg.pl/edi/export-offer.php'

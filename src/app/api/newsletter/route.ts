@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
+import { rateLimit, getClientIp } from "@/lib/rateLimit";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const escapeHtml = (s: string) =>
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 // Segment → Audience mapping (3 audiences, Resend free plan limit)
 // aktualnosci + blog  → RESEND_AUDIENCE_AKTUALNOSCI
@@ -14,6 +19,14 @@ const SEGMENT_AUDIENCE: Record<string, string> = {
 };
 
 export async function POST(req: NextRequest) {
+  const limit = rateLimit(`newsletter:${getClientIp(req)}`, 5, 10 * 60_000);
+  if (!limit.ok) {
+    return NextResponse.json(
+      { error: "Zbyt wiele prób. Spróbuj ponownie później." },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfterSec) } },
+    );
+  }
+
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
     console.warn("RESEND_API_KEY not set — newsletter signup skipped");
@@ -22,16 +35,17 @@ export async function POST(req: NextRequest) {
   const resend = new Resend(apiKey);
 
   try {
-    const { email, segments }: { email: string; segments?: string[] } = await req.json();
+    const { email, segments: rawSegments }: { email: string; segments?: string[] } = await req.json();
 
-    if (!email) {
-      return NextResponse.json({ error: "Email is required" }, { status: 400 });
+    if (!email || typeof email !== "string" || !EMAIL_RE.test(email)) {
+      return NextResponse.json({ error: "Nieprawidłowy adres email" }, { status: 400 });
     }
 
+    // Only known segment keys make it into audiences and the confirmation email
+    const segments = (rawSegments ?? ["aktualnosci"]).filter((s) => s in SEGMENT_AUDIENCE);
+
     // Resolve unique audience IDs for the selected segments
-    const audienceEnvKeys = new Set(
-      (segments ?? ["aktualnosci"]).map((s) => SEGMENT_AUDIENCE[s]).filter(Boolean)
-    );
+    const audienceEnvKeys = new Set(segments.map((s) => SEGMENT_AUDIENCE[s]));
 
     if (audienceEnvKeys.size === 0) {
       return NextResponse.json({ error: "No valid segments" }, { status: 400 });
@@ -61,7 +75,9 @@ export async function POST(req: NextRequest) {
     const dim = `rgba(19,255,21,0.45)`;
     const bg = `#060806`;
     const border = `rgba(19,255,21,0.18)`;
-    const segList = segments?.map((s: string) => s.toUpperCase()).join(",&nbsp; ") ?? "AKTUALNOŚCI";
+    const segList = segments.length
+      ? segments.map((s) => s.toUpperCase()).join(",&nbsp; ")
+      : "AKTUALNOŚCI";
 
     const confirmHtml = `<!DOCTYPE html>
 <html lang="pl">
@@ -111,7 +127,7 @@ export async function POST(req: NextRequest) {
                 </tr>
                 <tr>
                   <td style="font-family:${mono};font-size:11px;color:${dim};letter-spacing:0.08em;padding:4px 0;vertical-align:top;">EMAIL</td>
-                  <td style="font-family:${mono};font-size:12px;color:#e8ffe8;padding:4px 0;">${email}</td>
+                  <td style="font-family:${mono};font-size:12px;color:#e8ffe8;padding:4px 0;">${escapeHtml(email)}</td>
                 </tr>
                 <tr>
                   <td style="font-family:${mono};font-size:11px;color:${dim};letter-spacing:0.08em;padding:4px 0;vertical-align:top;">SEGMENTY</td>

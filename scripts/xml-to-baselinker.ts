@@ -81,7 +81,19 @@ interface Env {
 
 function loadEnv(connectorName: ConnectorName): Env {
   const inventoryId = parseInt(process.env.BASELINKER_INVENTORY_ID ?? '35743', 10);
-  const priceGroup = parseInt(process.env.BASELINKER_PRICE_GROUP ?? '23934', 10);
+  if (isNaN(inventoryId)) {
+    console.error('[error] BASELINKER_INVENTORY_ID must be set to a numeric BL inventory ID');
+    console.error('        Find it in BaseLinker: Produkty → Ustawienia → Katalogi');
+    process.exit(1);
+  }
+
+  const priceGroup = parseInt(process.env.BASELINKER_PRICE_GROUP ?? '', 10);
+  if (isNaN(priceGroup)) {
+    console.error('[error] BASELINKER_PRICE_GROUP must be set to the BL selling price group ID (numeric)');
+    console.error('        Find it in BaseLinker: Produkty → Ustawienia → Grupy cenowe');
+    console.error('        ⚠ If this was empty, all previously imported prices in BL will be 0 — re-run with correct value');
+    process.exit(1);
+  }
 
   const purchaseRaw = process.env.BASELINKER_PRICE_GROUP_PURCHASE;
   const priceGroupPurchase = purchaseRaw ? parseInt(purchaseRaw, 10) : null;
@@ -117,11 +129,12 @@ function loadEnv(connectorName: ConnectorName): Env {
 // Selling price = purchase price + markup. Feed retail price is ignored.
 // If the feed has no purchase price, fall back to feed gross price and warn.
 
-function computeSellingPrice(p: NormalizedProduct, markupPct: number): { price: number; fromFallback: boolean } {
+function computeSellingPrice(p: NormalizedProduct, markupPct: number): { price: number; fromFallback: boolean; priceZero: boolean } {
   if (p.price_purchase && p.price_purchase > 0) {
-    return { price: round2(p.price_purchase * (1 + markupPct / 100)), fromFallback: false };
+    const price = round2(p.price_purchase * (1 + markupPct / 100));
+    return { price, fromFallback: false, priceZero: price === 0 };
   }
-  return { price: p.price_gross, fromFallback: true };
+  return { price: p.price_gross, fromFallback: true, priceZero: p.price_gross === 0 };
 }
 
 // ── Existing BL products: EAN → id, SKU → id (upsert key, no duplicates) ──────
@@ -311,8 +324,8 @@ function toBLProduct(
   env: Env,
   categoryId: number,
   tags: string[],
-): { product: Record<string, unknown>; priceFromFallback: boolean } {
-  const { price, fromFallback } = computeSellingPrice(p, env.markupPct);
+): { product: Record<string, unknown>; priceFromFallback: boolean; priceZero: boolean } {
+  const { price, fromFallback, priceZero } = computeSellingPrice(p, env.markupPct);
 
   const prices: Record<string, number> = { [env.priceGroup]: price };
   if (env.priceGroupPurchase && p.price_purchase && p.price_purchase > 0) {
@@ -340,7 +353,7 @@ function toBLProduct(
     ...(images.length ? { images } : {}),
   };
 
-  return { product, priceFromFallback: fromFallback };
+  return { product, priceFromFallback: fromFallback, priceZero };
 }
 
 // ── Fetch + parse feed via connector ──────────────────────────────────────────
@@ -360,12 +373,79 @@ async function fetchAndParse(connectorName: ConnectorName): Promise<NormalizedPr
 
   const products = connector.parse(xml);
   console.log(`Parsed ${products.length} products`);
+
+  if (connectorName === 'sharg') {
+    await mergeShargParameters(products, connector.config.extra as { gateway_url?: string });
+  }
+
   return products;
+}
+
+/**
+ * Fetch the Sharg parameters feed (via gateway manifest) and merge product
+ * attributes into NormalizedProduct.features.
+ * No-op if gateway_url is not configured or the fetch fails.
+ */
+async function mergeShargParameters(
+  products: NormalizedProduct[],
+  extra: { gateway_url?: string },
+): Promise<void> {
+  const gatewayUrl = extra?.gateway_url;
+  if (!gatewayUrl) {
+    console.warn('[sharg] SHARG_TOKEN_GATEWAY not set — product parameters will NOT be imported');
+    return;
+  }
+
+  const { parseShargGateway, parseShargParameters } = await import('../xml-integration/connectors/sharg');
+
+  // Step 1: fetch gateway manifest to get parameters_url
+  let parametersUrl: string | null = null;
+  try {
+    console.log('\nFetching Sharg gateway manifest…');
+    const gwRes = await fetch(gatewayUrl);
+    if (!gwRes.ok) throw new Error(`HTTP ${gwRes.status}`);
+    const gwXml = await gwRes.text();
+    const manifest = parseShargGateway(gwXml);
+    parametersUrl = manifest.parameters_url;
+    if (!parametersUrl) {
+      console.warn('[sharg] Gateway manifest has no parameters_url — skipping parameters');
+      return;
+    }
+    console.log(`  parameters feed: ${parametersUrl.slice(0, 80)}…`);
+  } catch (err) {
+    console.warn(`[sharg] Gateway fetch failed: ${err instanceof Error ? err.message : err} — skipping parameters`);
+    return;
+  }
+
+  // Step 2: fetch and parse parameters feed
+  let featuresMap: Map<string, Record<string, string>>;
+  try {
+    const paramRes = await fetch(parametersUrl);
+    if (!paramRes.ok) throw new Error(`HTTP ${paramRes.status}`);
+    const paramXml = await paramRes.text();
+    console.log(`  parameters feed: ${(paramXml.length / 1024).toFixed(0)} KB`);
+    featuresMap = parseShargParameters(paramXml);
+    console.log(`  parsed parameters for ${featuresMap.size} products`);
+  } catch (err) {
+    console.warn(`[sharg] Parameters fetch failed: ${err instanceof Error ? err.message : err} — skipping parameters`);
+    return;
+  }
+
+  // Step 3: merge into products (only those that passed the defence filter)
+  let merged = 0;
+  for (const p of products) {
+    const params = featuresMap.get(p.connector_product_id);
+    if (params) {
+      p.features = { ...params, ...p.features };  // product-level fields win over params
+      merged++;
+    }
+  }
+  console.log(`  merged parameters into ${merged}/${products.length} defence products`);
 }
 
 // ── Mode: import — full upsert via addInventoryProduct ────────────────────────
 
-async function runImport(connectorName: ConnectorName, env: Env): Promise<void> {
+async function runImport(connectorName: ConnectorName, env: Env, limit: number | null): Promise<void> {
   const bl = await import('../src/lib/baselinker/client');
 
   const tree = new HydraTree(loadJson<Record<string, number>>(
@@ -379,7 +459,11 @@ async function runImport(connectorName: ConnectorName, env: Env): Promise<void> 
     'create the supplier→Hydra category dictionary (see xml-integration/category-map.json)',
   );
 
-  const products = await fetchAndParse(connectorName);
+  let products = await fetchAndParse(connectorName);
+  if (limit !== null) {
+    products = products.filter((p) => (p.stock ?? 0) > 0).slice(0, limit);
+    console.log(`Filtered to ${products.length} in-stock products (--limit=${limit})`);
+  }
   if (products.length === 0) { console.log('Nothing to import.'); return; }
 
   console.log('\nLoading existing BL products (dedup index)…');
@@ -418,7 +502,7 @@ async function runImport(connectorName: ConnectorName, env: Env): Promise<void> 
     }
   }
 
-  let created = 0, updated = 0, errors = 0, priceFallbacks = 0;
+  let created = 0, updated = 0, errors = 0, priceFallbacks = 0, priceZeros = 0;
 
   console.log(`\nUpserting ${products.length} products (~${Math.ceil(products.length * RATE_LIMIT_MS / 60000)} min)…`);
   for (const p of products) {
@@ -431,8 +515,9 @@ async function runImport(connectorName: ConnectorName, env: Env): Promise<void> 
       tags = [...adminTags, ...tags];
     }
 
-    const { product, priceFromFallback } = toBLProduct(p, env, r.categoryId, tags);
+    const { product, priceFromFallback, priceZero } = toBLProduct(p, env, r.categoryId, tags);
     if (priceFromFallback) priceFallbacks++;
+    if (priceZero) priceZeros++;
 
     try {
       const productId = await bl.addInventoryProduct(env.inventoryId, product, existingId);
@@ -457,6 +542,10 @@ async function runImport(connectorName: ConnectorName, env: Env): Promise<void> 
   if (priceFallbacks > 0) {
     console.warn(`⚠ ${priceFallbacks} products had no purchase price in the feed — feed gross price used instead of markup pricing`);
   }
+  if (priceZeros > 0) {
+    console.warn(`⚠ ${priceZeros} products were imported with price 0 — the feed has no price data for these`);
+    console.warn('  Set price_override in BL manually, or check if the feed is missing price fields');
+  }
   console.log('\nNothing is auto-published. Next steps:');
   console.log('  1. In BL, review products by tag (flag → assign category, review → confirm) and bulk-tag them `approved`');
   console.log('  2. npx tsx scripts/baselinker-sync.ts — replicates BL → Supabase; only `approved` products go live\n');
@@ -464,9 +553,13 @@ async function runImport(connectorName: ConnectorName, env: Env): Promise<void> 
 
 // ── Mode: sync — bulk stock + price refresh for products already in BL ────────
 
-async function runSync(connectorName: ConnectorName, env: Env): Promise<void> {
+async function runSync(connectorName: ConnectorName, env: Env, limit: number | null): Promise<void> {
   const bl = await import('../src/lib/baselinker/client');
-  const products = await fetchAndParse(connectorName);
+  let products = await fetchAndParse(connectorName);
+  if (limit !== null) {
+    products = products.filter((p) => (p.stock ?? 0) > 0).slice(0, limit);
+    console.log(`Filtered to ${products.length} in-stock products (--limit=${limit})`);
+  }
   if (products.length === 0) { console.log('Nothing to sync.'); return; }
 
   console.log('\nLoading existing BL products (match index)…');
@@ -475,7 +568,7 @@ async function runSync(connectorName: ConnectorName, env: Env): Promise<void> {
 
   const stockUpdates: Record<string, Record<string, number>> = {};
   const priceUpdates: Record<string, Record<string, number>> = {};
-  let matched = 0, unmatched = 0, priceFallbacks = 0;
+  let matched = 0, unmatched = 0, priceFallbacks = 0, priceZeros = 0;
 
   for (const p of products) {
     const id = findExistingId(p, index);
@@ -484,8 +577,9 @@ async function runSync(connectorName: ConnectorName, env: Env): Promise<void> {
 
     stockUpdates[id] = { [env.warehouse]: p.stock ?? 0 };
 
-    const { price, fromFallback } = computeSellingPrice(p, env.markupPct);
+    const { price, fromFallback, priceZero } = computeSellingPrice(p, env.markupPct);
     if (fromFallback) priceFallbacks++;
+    if (priceZero) priceZeros++;
     priceUpdates[id] = { [env.priceGroup]: price };
     if (env.priceGroupPurchase && p.price_purchase && p.price_purchase > 0) {
       priceUpdates[id][env.priceGroupPurchase] = round2(p.price_purchase);
@@ -517,18 +611,28 @@ async function runSync(connectorName: ConnectorName, env: Env): Promise<void> {
   if (priceFallbacks > 0) {
     console.warn(`⚠ ${priceFallbacks} products had no purchase price in the feed — feed gross price used instead of markup pricing`);
   }
+  if (priceZeros > 0) {
+    console.warn(`⚠ ${priceZeros} products synced with price 0 — the feed has no price data for these`);
+  }
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 async function main() {
-  const connectorName = process.argv[2] as ConnectorName | undefined;
-  const mode = process.argv[3] ?? 'import';
+  const positional = process.argv.slice(2).filter((a) => !a.startsWith('--'));
+  const flags = process.argv.slice(2).filter((a) => a.startsWith('--'));
+
+  const connectorName = positional[0] as ConnectorName | undefined;
+  const mode = positional[1] ?? 'import';
+
+  const limitFlag = flags.find((f) => f.startsWith('--limit='));
+  const limit = limitFlag ? parseInt(limitFlag.split('=')[1], 10) : null;
 
   if (!connectorName || !CONNECTOR_NAMES.includes(connectorName) || !['import', 'sync'].includes(mode)) {
-    console.error('Usage: npx tsx scripts/xml-to-baselinker.ts <kolba|sharg|spechurt> [import|sync]');
+    console.error('Usage: npx tsx scripts/xml-to-baselinker.ts <kolba|sharg|spechurt> [import|sync] [--limit=N]');
     console.error('  import (default) — full upsert into BL catalogue (slow, run rarely)');
     console.error('  sync             — stock + price refresh only (batched, run often)');
+    console.error('  --limit=N        — only import/sync the first N products with stock > 0');
     process.exit(1);
   }
 
@@ -545,9 +649,10 @@ async function main() {
   console.log(`  warehouse : ${env.warehouse} (${WAREHOUSE_ENV[connectorName]})`);
   console.log(`  price grp : ${env.priceGroup} (sale) / ${env.priceGroupPurchase ?? '—'} (purchase)`);
   console.log(`  markup    : +${env.markupPct}% on purchase price`);
+  if (limit !== null) console.log(`  limit     : ${limit} in-stock products`);
 
-  if (mode === 'import') await runImport(connectorName, env);
-  else await runSync(connectorName, env);
+  if (mode === 'import') await runImport(connectorName, env, limit);
+  else await runSync(connectorName, env, limit);
 }
 
 main().catch((err) => {

@@ -14,7 +14,7 @@ type Step = 'shipping' | 'processing' | 'error'
 type DeliveryMode = 'pickup_all' | 'split'
 
 export default function CheckoutClient() {
-  const { items, total, clearCart } = useCart()
+  const { items, total, clearCart, removeItem } = useCart()
   const router = useRouter()
   const [step, setStep] = useState<Step>('shipping')
   const analysis = analyzeCart(items)
@@ -87,6 +87,12 @@ export default function CheckoutClient() {
           setError(shipData.error || 'Błąd przy tworzeniu zamówienia wysyłkowego')
           return
         }
+
+        // Ship order is confirmed — drop those items now, before attempting
+        // the pickup leg. If the pickup leg then fails and the customer
+        // closes the tab instead of retrying immediately, a later reload
+        // must not be able to resubmit (and double-order) what's already sold.
+        standardItems.forEach(i => removeItem(i.product.id))
 
         const pickupRes = await fetch('/api/shop/checkout', {
           method: 'POST',

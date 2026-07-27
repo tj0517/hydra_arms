@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
+import { getSiblingSessionId } from '@/lib/shop/orderSession'
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
@@ -34,7 +35,7 @@ export default async function OrderDetailPage({
 
   const { data: order } = await supabase
     .from('orders')
-    .select('id, status, total, shipping_address, fulfillment_route, tracking_number, shipping_carrier, bl_status_id, created_at, user_id')
+    .select('id, status, total, shipping_address, fulfillment_route, tracking_number, shipping_carrier, bl_status_id, created_at, user_id, session_id')
     .eq('id', id)
     .single()
 
@@ -44,6 +45,13 @@ export default async function OrderDetailPage({
     .from('order_items')
     .select('quantity, unit_price, product_snapshot, product_id')
     .eq('order_id', id)
+
+  // Split checkout (mixed cart) → cross-link the sibling order. Reuses the
+  // RLS-scoped client, so this can never resolve to another user's order.
+  const siblingSessionId = order.session_id ? getSiblingSessionId(order.session_id) : null
+  const { data: relatedOrder } = siblingSessionId
+    ? await supabase.from('orders').select('id, fulfillment_route').eq('session_id', siblingSessionId).single()
+    : { data: null }
 
   const addr = order.shipping_address as Record<string, string> | null
   const orderItems = items ?? []
@@ -69,6 +77,28 @@ export default async function OrderDetailPage({
             </Link>
           </div>
         </div>
+
+        {/* Split-order notice */}
+        {relatedOrder && (
+          <div className="border border-blue-500/25 bg-blue-500/5 px-6 py-4 flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <p className="font-[var(--font-mono)] text-[10px] text-blue-300 tracking-[0.2em] uppercase mb-1">
+                Zamówienie podzielone na dwie części
+              </p>
+              <p className="text-sm text-text-dim">
+                {relatedOrder.fulfillment_route === 'pickup'
+                  ? 'Pozostałe produkty czekają na odbiór osobisty w osobnym zamówieniu.'
+                  : 'Pozostałe produkty zostały wysłane kurierem w osobnym zamówieniu.'}
+              </p>
+            </div>
+            <Link
+              href={`/konto/zamowienia/${relatedOrder.id}`}
+              className="flex-shrink-0 border border-blue-400/40 px-4 py-2 font-[var(--font-mono)] text-[10px] text-blue-300 hover:border-blue-300 hover:text-white transition-colors tracking-widest"
+            >
+              ZOBACZ #{relatedOrder.id.slice(0, 8).toUpperCase()}
+            </Link>
+          </div>
+        )}
 
         {/* Summary bar */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-white/5">
@@ -237,6 +267,7 @@ export default async function OrderDetailPage({
               {order.fulfillment_route === 'direct_H1' && 'Wysyłka bezpośrednia z magazynu H1'}
               {order.fulfillment_route === 'direct_H2' && 'Wysyłka bezpośrednia z magazynu H2'}
               {order.fulfillment_route === 'consolidated' && 'Wysyłka skonsolidowana'}
+              {order.fulfillment_route === 'pickup' && 'Odbiór osobisty'}
             </p>
           </section>
         )}

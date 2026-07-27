@@ -12,6 +12,19 @@
 
 # testing
 /coverage
+/test-results/
+/playwright-report/
+/.playwright-mcp/
+/.unlighthouse/
+
+# generated data exports (script outputs, not source)
+/exports/
+/products.csv
+
+# stray debug screenshots at repo root
+/*.png
+/*.jpg
+/*.jpeg
 
 # next.js
 /.next/

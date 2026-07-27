@@ -41,9 +41,10 @@ All content pages follow this pattern: server component fetches from Sanity (via
 **Data flow:** BaseLinker API → Supabase (`shop_products`, `shop_categories`) → Next.js API routes → React client
 
 - **BaseLinker client**: `src/lib/baselinker/client.ts` — set `BASELINKER_MOCK=true` to use fixture data from `src/lib/baselinker/fixtures/` instead of live API. Inventory ID: 35743.
-- **Sync**: `POST /api/shop/sync` (header: `x-sync-secret`) or `npx tsx scripts/baselinker-sync.ts`. Runs nightly via Vercel cron (`vercel.json`). Sync never overwrites `product_type` or `source_warehouse`.
+- **Sync**: `POST /api/shop/sync` (header: `x-sync-secret`, manual/VPS) or `GET` (Vercel cron, `Authorization: Bearer $CRON_SECRET`) or `npx tsx scripts/baselinker-sync.ts`. Runs nightly via Vercel cron (`vercel.json`); `/api/shop/orders/sync` (same auth scheme) every 4h. Sync never overwrites `product_type` or `source_warehouse`.
 - **Cart**: Client-side `useReducer` in `src/components/shop/CartProvider.tsx`, persisted to `localStorage` as `hydra-cart`.
-- **Checkout**: `POST /api/shop/checkout` — validates stock, atomically decrements, writes to `orders`/`order_items` in Supabase, then pushes to BaseLinker (non-fatal if BL is unreachable).
+- **Checkout**: `POST /api/shop/checkout` — validates items/restrictions, then calls the `checkout_create_order` Postgres RPC (migration 006): stock decrement + order + items in one transaction. Pushes to BaseLinker after (non-fatal, `blockedRetries: 0`; orphans retried by `/api/shop/orders/sync`). Rate-limited per IP (`src/lib/rateLimit.ts`). **No payment gateway yet** — orders are created as `paid` (P24 planned, env vars templated).
+- **Public product data**: always select `PUBLIC_PRODUCT_COLUMNS` (`src/lib/shop/fetchProducts.ts`) — never `select('*')` on `shop_products` in anything that reaches the client (hides `price_purchase`, `notes_internal`, connector fields).
 - **Fulfillment routing**: `src/lib/shop/cartAnalysis.ts` — determines `direct_H1`, `direct_H2`, `consolidated`, or `pickup` based on `source_warehouse` and `product_type`.
 - **`product_type` enum**: `standard | age_restricted | pickup_only` — non-standard items always force `pickup` route.
 
@@ -54,7 +55,7 @@ All content pages follow this pattern: server component fetches from Sanity (via
 - Public client (no auth needed): `src/lib/supabase/public.ts`
 - Types: `src/lib/supabase/types.ts` — manually maintained; each table requires `Relationships: []` to satisfy the `GenericTable` constraint
 - Auth middleware: `src/middleware.ts` — redirects `/konto/*` to login if unauthenticated
-- Migrations: `supabase/migrations/` — apply in order (001→002→003)
+- Migrations: `supabase/migrations/` — apply in order (001→006)
 
 ### Animation / UI Infrastructure
 - GSAP + ScrollTrigger registered in `src/lib/gsap.ts` — import from here, not directly from `gsap`
@@ -69,4 +70,6 @@ See `.env.local.example`. Key vars:
 - `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` — required for shop
 - `SUPABASE_SERVICE_ROLE_KEY` — required for sync/checkout (admin operations)
 - `BASELINKER_TOKEN` — required for live BL sync; `BASELINKER_MOCK=true` skips it
-- `SYNC_SECRET` — protects `POST /api/shop/sync`
+- `SYNC_SECRET` — protects manual `POST` sync triggers (`x-sync-secret` header)
+- `CRON_SECRET` — Vercel sends it as `Authorization: Bearer` on cron `GET` invocations of the sync routes
+- `XML_SYNC_ENABLED` — legacy XML→Supabase import (`POST /api/xml/sync`); keep `false`, BL is the source of truth

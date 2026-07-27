@@ -46,7 +46,6 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
   const [selectedCategory, setSelectedCategory] = useState<number | null>(
     catParam ? parseInt(catParam, 10) : null
   );
-  const [expanded, setExpanded] = useState<Set<number>>(new Set());
   const [page, setPage] = useState(1);
 
   // ── Filter state ────────────────────────────────────────────────────────
@@ -54,8 +53,9 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
   const [priceMin, setPriceMin] = useState('');
   const [priceMax, setPriceMax] = useState('');
 
-  // ── Mobile panels ───────────────────────────────────────────────────────
+  // ── Panel visibility ────────────────────────────────────────────────────
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
+  const [desktopPanelOpen, setDesktopPanelOpen] = useState(true);
 
   useEffect(() => {
     setSelectedCategory(catParam ? parseInt(catParam, 10) : null);
@@ -63,6 +63,15 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
   }, [catParam]);
 
   const tree = useMemo(() => buildTree(categories), [categories]);
+
+  // Which top-level branch is active (selected itself, or parent of the
+  // selected child) — its children are shown as a second pill row.
+  const activeParent = useMemo(
+    () => tree.find(({ category: parent, children }) =>
+      parent.id === selectedCategory || children.some(c => c.id === selectedCategory)
+    ) ?? null,
+    [tree, selectedCategory]
+  );
 
   // Recursively collect ALL descendant ids for any category
   const allDescendants = useMemo(() => {
@@ -126,14 +135,6 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
     setPage(1);
   }
 
-  function toggleExpanded(id: number) {
-    setExpanded(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  }
-
   function clearAllFilters() {
     setSearch('');
     selectCategory(null);
@@ -144,78 +145,74 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
 
   const hasAnyFilter = selectedCategory !== null || search !== '' || activeFilterCount > 0;
 
-  // ── Category navigation ─────────────────────────────────────────────────
-  const CategoryNav = (
-    <nav className="space-y-0.5">
-      <button
-        onClick={() => selectCategory(null)}
-        className={`w-full flex items-center justify-between px-3 py-3 font-[var(--font-mono)] text-xs tracking-[0.18em] transition-colors text-left ${
-          selectedCategory === null ? 'text-accent' : 'text-text-dim hover:text-white'
-        }`}
-      >
-        <span className="flex items-center gap-2">
-          {selectedCategory === null && <span className="text-accent">▸</span>}
-          WSZYSTKIE PRODUKTY
-        </span>
-        <span className="text-white/25 text-[10px]">{products.length}</span>
-      </button>
-
-      <div className="h-px bg-white/5 my-1" />
-
-      {tree.map(({ category: parent, children }) => {
-        const isExpanded = expanded.has(parent.id);
-        const isParentActive = selectedCategory === parent.id;
-        const hasActiveChild = children.some(c => c.id === selectedCategory);
-        const isHighlighted = isParentActive || hasActiveChild;
-
-        return (
-          <div key={parent.id}>
-            <div className="flex items-center">
-              <button
-                onClick={() => selectCategory(parent.id)}
-                className={`flex-1 text-left px-3 py-2.5 font-[var(--font-mono)] text-xs tracking-[0.15em] transition-colors ${
-                  isHighlighted ? 'text-accent' : 'text-text-dim hover:text-white'
-                }`}
-              >
-                <span className="flex items-center gap-2">
-                  {isHighlighted && <span>▸</span>}
-                  {catLabel(parent.name).toUpperCase()}
-                </span>
-              </button>
-              {children.length > 0 && (
-                <button
-                  onClick={() => toggleExpanded(parent.id)}
-                  className="px-3 py-2 text-white/25 hover:text-accent transition-colors font-[var(--font-mono)] text-xs"
-                  aria-label={isExpanded ? 'Zwiń' : 'Rozwiń'}
-                >
-                  {isExpanded ? '−' : '+'}
-                </button>
-              )}
-            </div>
-
-            {(isExpanded || isHighlighted) && children.length > 0 && (
-              <div className="ml-3 border-l border-white/8 pl-2 space-y-0.5 mb-1">
-                {children.map(child => (
-                  <button
-                    key={child.id}
-                    onClick={() => selectCategory(child.id)}
-                    className={`w-full text-left px-3 py-2 font-[var(--font-mono)] text-[11px] tracking-[0.15em] transition-colors ${
-                      selectedCategory === child.id ? 'text-accent' : 'text-text-dim/70 hover:text-white'
-                    }`}
-                  >
-                    {selectedCategory === child.id && <span className="mr-1">▸</span>}
-                    {catLabel(child.name)}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </nav>
+  // ── Category bar (top, full width) ──────────────────────────────────────
+  const CategoryPill = ({
+    active,
+    onClick,
+    children,
+    small = false,
+  }: {
+    active: boolean;
+    onClick: () => void;
+    children: React.ReactNode;
+    small?: boolean;
+  }) => (
+    <button
+      onClick={onClick}
+      className={`flex-shrink-0 whitespace-nowrap border font-[var(--font-mono)] tracking-[0.15em] transition-colors ${
+        small ? 'px-3 py-2 text-[10px]' : 'px-4 py-2.5 text-[11px]'
+      } ${
+        active
+          ? 'border-accent text-accent bg-accent/5'
+          : 'border-white/12 text-text-dim hover:border-white/25 hover:text-white'
+      }`}
+    >
+      {children}
+    </button>
   );
 
-  // ── Filter panel ────────────────────────────────────────────────────────
+  const CategoryBar = (
+    <div className="mb-8">
+      <div className="flex flex-wrap items-center gap-2 pb-3">
+        <CategoryPill active={selectedCategory === null} onClick={() => selectCategory(null)}>
+          WSZYSTKIE <span className="text-white/30 ml-1">({products.length})</span>
+        </CategoryPill>
+        {tree.map(({ category: parent, children }) => {
+          const isParentActive = selectedCategory === parent.id;
+          const hasActiveChild = children.some(c => c.id === selectedCategory);
+          return (
+            <CategoryPill
+              key={parent.id}
+              active={isParentActive || hasActiveChild}
+              onClick={() => selectCategory(parent.id)}
+            >
+              {catLabel(parent.name).toUpperCase()}
+            </CategoryPill>
+          );
+        })}
+      </div>
+
+      {activeParent && activeParent.children.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 pt-3 pb-1 border-t border-white/5">
+          <span className="flex-shrink-0 font-[var(--font-mono)] text-[9px] text-white/20 tracking-widest pr-1">
+            ▸
+          </span>
+          {activeParent.children.map(child => (
+            <CategoryPill
+              key={child.id}
+              small
+              active={selectedCategory === child.id}
+              onClick={() => selectCategory(child.id)}
+            >
+              {catLabel(child.name)}
+            </CategoryPill>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  // ── Filter panel (left sidebar) ─────────────────────────────────────────
   const FiltersPanel = (
     <div className="space-y-5">
       {/* Header */}
@@ -311,19 +308,35 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
 
       <div className="max-w-[1400px] mx-auto px-6 md:px-10 py-12">
 
+        {/* Categories — full-width wrapping grid, desktop only.
+            Long Polish category names mean this wraps to ~1 pill per row
+            on mobile (worse than useful), so mobile gets it via the
+            collapsible panel below instead. */}
+        {desktopPanelOpen && <div className="hidden md:block">{CategoryBar}</div>}
+
         {/* Toolbar */}
         <div className="flex items-center justify-between gap-4 mb-8 pb-5 border-b border-white/10">
           <div className="flex items-center gap-3">
-            {/* Mobile panel toggle */}
+            {/* Mobile categories + filters toggle */}
             <button
               onClick={() => setMobilePanelOpen(v => !v)}
               className="md:hidden font-[var(--font-mono)] text-[10px] tracking-widest border border-white/15 px-3 py-2 text-text-dim hover:border-accent/40 hover:text-accent transition-colors flex items-center gap-2"
             >
-              {mobilePanelOpen ? '[ ZAMKNIJ ]' : '[ FILTRY ]'}
-              {activeFilterCount > 0 && (
+              {mobilePanelOpen ? '[ ZAMKNIJ ]' : '[ KATEGORIE / FILTRY ]'}
+              {(activeFilterCount > 0 || selectedCategory !== null) && (
                 <span className="bg-accent text-bg text-[9px] px-1.5 py-0.5 leading-none">
-                  {activeFilterCount}
+                  {activeFilterCount + (selectedCategory !== null ? 1 : 0)}
                 </span>
+              )}
+            </button>
+            {/* Desktop category bar toggle — filters sidebar always stays visible */}
+            <button
+              onClick={() => setDesktopPanelOpen(v => !v)}
+              className="hidden md:flex font-[var(--font-mono)] text-[10px] tracking-widest border border-white/15 px-3 py-2 text-text-dim hover:border-accent/40 hover:text-accent transition-colors items-center gap-2"
+            >
+              {desktopPanelOpen ? '[ UKRYJ KATEGORIE ]' : '[ POKAŻ KATEGORIE ]'}
+              {!desktopPanelOpen && selectedCategory !== null && (
+                <span className="bg-accent text-bg text-[9px] px-1.5 py-0.5 leading-none">1</span>
               )}
             </button>
             <span className="hidden md:inline font-[var(--font-mono)] text-[10px] text-text-dim tracking-widest">
@@ -364,13 +377,15 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
           </div>
         </div>
 
-        {/* Mobile panel */}
+        {/* Mobile categories + filters panel */}
         {mobilePanelOpen && (
           <div className="md:hidden mb-6 border border-white/10 p-5 bg-bg/95 space-y-5">
-            <div className="pb-2 border-b border-white/8">
-              <span className="font-[var(--font-mono)] text-[11px] text-text-dim/60 tracking-[0.25em] uppercase">Kategorie</span>
+            <div>
+              <p className="font-[var(--font-mono)] text-[11px] text-text-dim/60 tracking-[0.25em] uppercase pb-2 mb-3 border-b border-white/8">
+                Kategorie
+              </p>
+              {CategoryBar}
             </div>
-            {CategoryNav}
             <div className="h-px bg-white/5" />
             {FiltersPanel}
             {hasAnyFilter && (
@@ -386,18 +401,10 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
 
         <div className="flex gap-10">
 
-          {/* Sidebar — desktop */}
+          {/* Sidebar — desktop, other filters. Always visible; only the
+              category bar above is hide/show-able. */}
           <aside className="hidden md:block w-60 flex-shrink-0">
-            <div className="sticky top-24 space-y-6 max-h-[calc(100vh-7rem)] overflow-y-auto pr-2 scrollbar-thin">
-              {/* Categories section */}
-              <div className="space-y-3">
-                <div className="pb-2 border-b border-white/8">
-                  <span className="font-[var(--font-mono)] text-[11px] text-text-dim/60 tracking-[0.25em] uppercase">Kategorie</span>
-                </div>
-                {CategoryNav}
-              </div>
-
-              {/* Filters section */}
+            <div className="sticky top-24">
               {FiltersPanel}
             </div>
           </aside>
