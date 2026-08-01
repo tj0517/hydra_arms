@@ -50,7 +50,7 @@ export default async function HomePage() {
     ;[services, filary, heroData, rawNews, rawBlog] = await Promise.all([
       sanityFetch<{ id: string; label: string; title: string; desc: string; tags: string[]; image?: SanityImage; imagePath?: string }[]>({ query: servicesQuery }),
       sanityFetch<{ tag: string; title: string; desc: string; image?: SanityImage }[]>({ query: distributionChannelsQuery }),
-      sanityFetch<{ heroTagline1?: string; heroTagline2?: string; hudLabel?: string; aboutText?: string; heroVideo?: string }>({ query: homePageQuery }),
+      sanityFetch<{ heroTagline1?: string; heroTagline2?: string; hudLabel?: string; aboutText?: string; heroVideo?: string; aktualosciHeading?: string; potencjalTitle?: string; potencjalBody?: string; blogHeading?: string }>({ query: homePageQuery }),
       sanityFetch<RawPost[]>({ query: latestNewsQuery }),
       sanityFetch<RawPost[]>({ query: latestBlogQuery }),
     ])
@@ -86,6 +86,10 @@ export default async function HomePage() {
       hudLabel={heroData?.hudLabel || undefined}
       aboutText={heroData?.aboutText || undefined}
       heroVideo={heroData?.heroVideo || undefined}
+      aktualosciHeading={heroData?.aktualosciHeading || undefined}
+      potencjalTitle={heroData?.potencjalTitle || undefined}
+      potencjalBody={heroData?.potencjalBody || undefined}
+      blogHeading={heroData?.blogHeading || undefined}
       recentNews={mapPosts(rawNews, 'aktualnosci')}
       recentBlog={mapPosts(rawBlog, 'blog')}
     />

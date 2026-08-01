@@ -35,6 +35,30 @@ export const homePage = defineType({
       type: 'string',
       description: 'Ścieżka do pliku video hero (np. /hero-overflow.mp4)',
     }),
+    defineField({
+      name: 'aktualosciHeading',
+      title: 'Aktualności — nagłówek sekcji',
+      type: 'string',
+      description: 'Duży nagłówek nad listą aktualności (domyślnie: Aktualności)',
+    }),
+    defineField({
+      name: 'potencjalTitle',
+      title: 'Sekcja Potencjał — tytuł',
+      type: 'string',
+      description: 'Duży animowany tytuł sekcji (domyślnie: POTENCJAŁ I ODPOWIEDZIALNOŚĆ)',
+    }),
+    defineField({
+      name: 'potencjalBody',
+      title: 'Sekcja Potencjał — treść',
+      type: 'text',
+      description: 'Akapit pod tytułem sekcji Potencjał',
+    }),
+    defineField({
+      name: 'blogHeading',
+      title: 'Blog — nagłówek sekcji',
+      type: 'string',
+      description: 'Duży nagłówek nad listą wpisów blogowych (domyślnie: Blog)',
+    }),
   ],
   preview: { select: { title: 'heroTagline1' } },
 })

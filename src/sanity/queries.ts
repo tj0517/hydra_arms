@@ -5,7 +5,11 @@ export const homePageQuery = groq`*[_type == "homePage"][0] {
   heroTagline2,
   hudLabel,
   aboutText,
-  heroVideo
+  heroVideo,
+  aktualosciHeading,
+  potencjalTitle,
+  potencjalBody,
+  blogHeading
 }`
 
 export const servicesQuery = groq`*[_type == "service"] | order(order asc) {

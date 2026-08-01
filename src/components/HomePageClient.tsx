@@ -84,6 +84,10 @@ const DEFAULT_HERO_TAGLINE2 = "Obrót nowoczesnym uzbrojeniem";
 const DEFAULT_HUD_LABEL = "// HYDRA ARMS - PL-2026";
 const DEFAULT_ABOUT_TEXT = "Realizujemy krytyczne projekty z zakresu wytwarzania uzbrojenia oraz technologii dual-use. Łączymy rygorystyczne standardy NATO z precyzją nowoczesnych technologii tworząc innowacje. Prowadzimy również działalność handlową na rynku cywilnym i specjalnym.";
 const DEFAULT_HERO_VIDEO = "/video/hero-overflow.mp4";
+const DEFAULT_AKTUALNOSCI_HEADING = "Aktualności";
+const DEFAULT_POTENCJAL_TITLE = "POTENCJAŁ I ODPOWIEDZIALNOŚĆ";
+const DEFAULT_POTENCJAL_BODY = "HYDRA ARMS to krakowski ośrodek kompetencyjny dedykowany dla sektora Security & Defense. Specjalizujemy się w wytwarzaniu zaawansowanych komponentów o wysokim stopniu skomplikowania.";
+const DEFAULT_BLOG_HEADING = "Blog";
 
 interface HomePageClientProps {
   services?: Service[]
@@ -93,6 +97,10 @@ interface HomePageClientProps {
   hudLabel?: string
   aboutText?: string
   heroVideo?: string
+  aktualosciHeading?: string
+  potencjalTitle?: string
+  potencjalBody?: string
+  blogHeading?: string
   recentNews?: PostCardData[]
   recentBlog?: PostCardData[]
 }
@@ -107,6 +115,10 @@ export default function HomePageClient({
   hudLabel = DEFAULT_HUD_LABEL,
   aboutText = DEFAULT_ABOUT_TEXT,
   heroVideo = DEFAULT_HERO_VIDEO,
+  aktualosciHeading = DEFAULT_AKTUALNOSCI_HEADING,
+  potencjalTitle = DEFAULT_POTENCJAL_TITLE,
+  potencjalBody = DEFAULT_POTENCJAL_BODY,
+  blogHeading = DEFAULT_BLOG_HEADING,
   recentNews = [],
   recentBlog = [],
 }: HomePageClientProps = {}) {
@@ -539,7 +551,7 @@ export default function HomePageClient({
           <div className="px-[clamp(32px,5vw,64px)] pt-12 md:pt-16 pb-14 md:pb-20">
             <div className="flex items-end justify-between mb-12 md:mb-12">
               <h2 className="text-[clamp(1.75rem,3.5vw,52px)] font-normal text-white leading-[1.1] tracking-[-0.5px]">
-                Aktualności
+                {aktualosciHeading}
               </h2>
               <div className="hidden sm:block">
                 <CornerCTA href="/aktualnosci" label="Wszystkie aktualności" />
@@ -607,8 +619,8 @@ export default function HomePageClient({
       {/* ─── POTENCJAŁ I OPOWIEDZIALNOŚĆ ─── */}
       <TitleLeadSection
         sectionLabel="//04 POTENCJAŁ"
-        title="POTENCJAŁ I OPOWIEDZIALNOŚĆ"
-        body="HYDRA ARMS to krakowski ośrodek kompetencyjny dedykowany dla sektora Security & Defense. Specjalizujemy się w wytwarzaniu zaawansowanych komponentów o wysokim stopniu skomplikowania."
+        title={potencjalTitle}
+        body={potencjalBody}
         ctaHref="/o-nas"
         titleClassName="text-[clamp(1.75rem,7vw,140px)] font-medium text-white leading-[1.05] tracking-[-0.5px] md:tracking-[-2px] uppercase"
       />
@@ -689,7 +701,7 @@ export default function HomePageClient({
           <div className="px-[clamp(32px,5vw,64px)] pt-12 md:pt-16 pb-14 md:pb-20">
             <div className="flex items-end justify-between mb-12 md:mb-12">
               <h2 className="text-[clamp(1.75rem,3.5vw,52px)] font-normal text-white leading-[1.1] tracking-[-0.5px]">
-                Blog
+                {blogHeading}
               </h2>
               <div className="hidden sm:block">
                 <CornerCTA href="/blog" label="Wszystkie wpisy" />

@@ -74,6 +74,11 @@ async function seed() {
     aboutText:
       'Realizujemy krytyczne projekty z zakresu wytwarzania uzbrojenia oraz technologii dual-use. Łączymy rygorystyczne standardy NATO z precyzją nowoczesnych technologii tworząc innowacje. Prowadzimy również działalność handlową na rynku cywilnym i specjalnym.',
     heroVideo: '/video/hero-overflow.mp4',
+    aktualosciHeading: 'Aktualności',
+    potencjalTitle: 'POTENCJAŁ I ODPOWIEDZIALNOŚĆ',
+    potencjalBody:
+      'HYDRA ARMS to krakowski ośrodek kompetencyjny dedykowany dla sektora Security & Defense. Specjalizujemy się w wytwarzaniu zaawansowanych komponentów o wysokim stopniu skomplikowania.',
+    blogHeading: 'Blog',
   })
   console.log('✅ homePage')
 
