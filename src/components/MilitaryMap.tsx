@@ -16,31 +16,48 @@ function getCenter(): [number, number] {
 /* Shown in place of the WebGL map when GPU acceleration is unavailable. */
 function MapFallback() {
   return (
-    <div className="relative w-full h-full bg-[#080808]">
-      {/* Subtle tech-grid */}
+    <div className="relative w-full h-full bg-[#040804]">
+      {/* Visible coordinate grid */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           backgroundImage:
-            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M 40 0 L 0 0 0 40' fill='none' stroke='%2313FF15' stroke-width='0.3'/%3E%3C/svg%3E\")",
+            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cpath d='M 60 0 L 0 0 0 60' fill='none' stroke='%2313FF15' stroke-width='0.6'/%3E%3C/svg%3E\")",
           backgroundRepeat: "repeat",
-          backgroundSize: "40px 40px",
-          opacity: 0.05,
+          backgroundSize: "60px 60px",
+          opacity: 0.18,
         }}
       />
       {/* Scanlines */}
       <div
-        className="absolute inset-0 pointer-events-none opacity-[0.03]"
+        className="absolute inset-0 pointer-events-none"
         style={{
           backgroundImage:
-            "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(19,255,21,0.15) 2px, rgba(19,255,21,0.15) 4px)",
+            "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(19,255,21,0.04) 3px, rgba(19,255,21,0.04) 4px)",
         }}
       />
+      {/* Centre crosshair */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <svg width="120" height="120" viewBox="0 0 120 120" fill="none" opacity="0.25">
+          <circle cx="60" cy="60" r="50" stroke="#13FF15" strokeWidth="0.75"/>
+          <circle cx="60" cy="60" r="30" stroke="#13FF15" strokeWidth="0.5"/>
+          <circle cx="60" cy="60" r="4"  fill="#13FF15"/>
+          <line x1="60" y1="4"  x2="60" y2="22" stroke="#13FF15" strokeWidth="1"/>
+          <line x1="60" y1="98" x2="60" y2="116" stroke="#13FF15" strokeWidth="1"/>
+          <line x1="4"  y1="60" x2="22" y2="60" stroke="#13FF15" strokeWidth="1"/>
+          <line x1="98" y1="60" x2="116" y2="60" stroke="#13FF15" strokeWidth="1"/>
+        </svg>
+      </div>
+      {/* Coordinates label */}
+      <div className="absolute bottom-4 left-4 font-[var(--font-mono)] text-[11px] text-accent/50 leading-[1.8] pointer-events-none">
+        <div>50°04&apos;33&quot;N  019°56&apos;39&quot;E</div>
+        <div>// KRAKÓW, PL</div>
+      </div>
       {/* Vignette */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: "radial-gradient(ellipse at center, transparent 40%, rgba(5,5,5,0.8) 100%)",
+          background: "radial-gradient(ellipse at center, transparent 35%, rgba(4,8,4,0.85) 100%)",
         }}
       />
     </div>
