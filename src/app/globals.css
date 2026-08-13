@@ -84,6 +84,41 @@ body:not(:has([data-studio])) input[type="submit"] {
   background: var(--color-accent);
   pointer-events: none;
   z-index: 99999;
+  will-change: transform;
+}
+
+/* ── Low-graphics mode overrides (software rendering / no GPU) ── */
+
+/* Restore visible cursor — JS dot cursor is not mounted in this mode */
+[data-low-graphics] body:not(:has([data-studio])) {
+  cursor: url('/cursor-dot.svg') 4 4, auto !important;
+}
+[data-low-graphics] body:not(:has([data-studio])) a,
+[data-low-graphics] body:not(:has([data-studio])) button,
+[data-low-graphics] body:not(:has([data-studio])) [role="button"],
+[data-low-graphics] body:not(:has([data-studio])) input[type="submit"] {
+  cursor: pointer !important;
+}
+
+/* Remove compositing-heavy blend modes */
+[data-low-graphics] .mix-blend-screen,
+[data-low-graphics] .mix-blend-multiply {
+  mix-blend-mode: normal !important;
+}
+
+/* Remove CSS filters from videos (grayscale, brightness, contrast, sepia) */
+[data-low-graphics] video {
+  filter: none !important;
+}
+
+/* Kill glitch animations that use filter keyframes */
+[data-low-graphics] .hero-video-glitch,
+[data-low-graphics] .hero-video-glitch.glitch-once {
+  animation: none !important;
+  filter: none !important;
+}
+[data-low-graphics] .scope-glitch {
+  animation: none !important;
 }
 
 ::selection {

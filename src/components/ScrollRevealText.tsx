@@ -2,6 +2,7 @@
 
 import { useRef, useEffect } from "react";
 import { gsap, ScrollTrigger } from "@/lib/gsap";
+import { useGraphicsCapability } from "@/lib/GraphicsCapabilityContext";
 
 interface ScrollRevealTextProps {
   text: string;
@@ -15,13 +16,20 @@ export default function ScrollRevealText({
   indent = 0,
 }: ScrollRevealTextProps) {
   const containerRef = useRef<HTMLParagraphElement>(null);
+  const { lowGraphicsMode } = useGraphicsCapability();
 
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // Per-word animation (not per-character) — same scroll-sync feel, ~8x fewer DOM updates per frame
     const words = containerRef.current.querySelectorAll(".reveal-word");
 
+    // In lowGraphicsMode skip scrubbed ScrollTrigger — show text at full opacity immediately
+    if (lowGraphicsMode) {
+      words.forEach((w) => ((w as HTMLElement).style.color = "var(--color-text)"));
+      return;
+    }
+
+    // Per-word animation (not per-character) — same scroll-sync feel, ~8x fewer DOM updates per frame
     gsap.fromTo(
       words,
       { color: "rgba(192, 200, 199, 0.15)" },
@@ -43,7 +51,7 @@ export default function ScrollRevealText({
         if (t.trigger === containerRef.current) t.kill();
       });
     };
-  }, [text]);
+  }, [text, lowGraphicsMode]);
 
   const wordList = text.split(" ");
 

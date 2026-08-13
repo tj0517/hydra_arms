@@ -5,6 +5,7 @@ import SmoothScroll from "@/components/SmoothScroll";
 import LoadingScreen from "@/components/LoadingScreen";
 import GlobalCursor from "@/components/GlobalCursor";
 import { CartProvider } from "@/components/shop/CartProvider";
+import { GraphicsCapabilityProvider } from "@/lib/GraphicsCapabilityContext";
 import CartTrigger from "@/components/shop/CartTrigger";
 import { sanityFetch } from "@/sanity/client";
 import { siteSettingsQuery, navigationQuery } from "@/sanity/queries";
@@ -34,16 +35,18 @@ export default async function MainLayout({
 
   return (
     <CartProvider>
-      <LoadingScreen />
-      <SmoothScroll />
-      <div className="grain" />
-      <div className="lines-grid" />
-      <GlobalCursor />
-      <Nav navLinks={navLinks} />
-      {children}
-      <NewsletterBarConditional />
-      <Footer navLinks={navLinks} siteSettings={siteSettings} />
-      <CartTrigger />
+      <GraphicsCapabilityProvider>
+        <LoadingScreen />
+        <SmoothScroll />
+        <div className="grain" />
+        <div className="lines-grid" />
+        <GlobalCursor />
+        <Nav navLinks={navLinks} />
+        {children}
+        <NewsletterBarConditional />
+        <Footer navLinks={navLinks} siteSettings={siteSettings} />
+        <CartTrigger />
+      </GraphicsCapabilityProvider>
     </CartProvider>
   );
 }

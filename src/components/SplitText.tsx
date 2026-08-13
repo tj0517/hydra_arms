@@ -2,6 +2,7 @@
 
 import { useRef, useEffect } from "react";
 import { gsap, ScrollTrigger } from "@/lib/gsap";
+import { useGraphicsCapability } from "@/lib/GraphicsCapabilityContext";
 
 interface SplitTextProps {
   children: string;
@@ -24,6 +25,7 @@ export default function SplitText({
   indent = 0,
 }: SplitTextProps) {
   const containerRef = useRef<HTMLElement>(null);
+  const { lowGraphicsMode } = useGraphicsCapability();
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -53,6 +55,16 @@ export default function SplitText({
 
     const chars = containerRef.current.querySelectorAll(".split-char");
 
+    // In lowGraphicsMode skip GSAP animation — show text immediately
+    if (lowGraphicsMode) {
+      chars.forEach((c) => {
+        const el = c as HTMLElement;
+        el.style.transform = "translateY(0)";
+        el.style.opacity = "1";
+      });
+      return;
+    }
+
     gsap.to(chars, {
       y: 0,
       opacity: 1,
@@ -66,7 +78,7 @@ export default function SplitText({
         toggleActions: "play none none none",
       },
     });
-  }, [children, delay, staggerAmount, splitBy]);
+  }, [children, delay, staggerAmount, splitBy, lowGraphicsMode]);
 
   return <Tag ref={containerRef as React.RefObject<HTMLHeadingElement>} className={className} />;
 }

@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState } from "react";
 import { gsap } from "@/lib/gsap";
+import { useGraphicsCapability } from "@/lib/GraphicsCapabilityContext";
 import SplitText from "@/components/SplitText";
 import ScrollRevealText from "@/components/ScrollRevealText";
 import dynamic from "next/dynamic";
@@ -122,6 +123,7 @@ export default function HomePageClient({
   recentNews = [],
   recentBlog = [],
 }: HomePageClientProps = {}) {
+  const { lowGraphicsMode } = useGraphicsCapability();
   const overlayRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLElement>(null);
   const coordLatRef = useRef<HTMLDivElement>(null);
@@ -240,7 +242,7 @@ export default function HomePageClient({
   /* ── Cursor → scope crosshair + video reveal ── */
   useEffect(() => {
     const hero = heroRef.current;
-    if (!hero) return;
+    if (!hero || !hasHover || lowGraphicsMode) return;
     let targetX = 0, targetY = 0, curX = 0, curY = 0;
     let active = false;
     let raf = 0;
@@ -334,8 +336,8 @@ export default function HomePageClient({
           </video>
         </div>
 
-        {/* hero-overflow — revealed by scope cursor via clip-path (desktop/hover only) */}
-        {hasHover && (
+        {/* hero-overflow — revealed by scope cursor via clip-path (desktop/hover only, GPU required) */}
+        {hasHover && !lowGraphicsMode && (
           <>
             <div
               ref={heroOverflowRef}

@@ -3,6 +3,7 @@
 import { useRef, useEffect } from "react";
 import { gsap } from "@/lib/gsap";
 import TypewriterTitle from "@/components/TypewriterTitle";
+import { useGraphicsCapability } from "@/lib/GraphicsCapabilityContext";
 
 interface SubpageHeroProps {
   subtitle: string;
@@ -12,6 +13,7 @@ interface SubpageHeroProps {
 }
 
 export default function SubpageHero({ subtitle, title, titleClass, video }: SubpageHeroProps) {
+  const { lowGraphicsMode } = useGraphicsCapability();
   const heroRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -67,7 +69,7 @@ export default function SubpageHero({ subtitle, title, titleClass, video }: Subp
     const hero = heroRef.current;
     const overlay = overlayRef.current;
     const crosshair = crosshairRef.current;
-    if (!hero || !overlay || !crosshair) return;
+    if (!hero || !overlay || !crosshair || lowGraphicsMode) return;
 
     let targetX = 0, targetY = 0, curX = 0, curY = 0;
     let active = false;
@@ -142,12 +144,13 @@ export default function SubpageHero({ subtitle, title, titleClass, video }: Subp
         <source src={video} type="video/mp4" />
       </video>
 
-      {/* backdrop-filter overlay — grayscale + dark, scope hole punched by CSS mask.
-          GPU-accelerated: no canvas draw loop needed. Always dark even before video loads. */}
+      {/* Dark overlay — in lowGraphicsMode: simple flat overlay (no backdrop-filter/mask compositing) */}
       <div
         ref={overlayRef}
         className="absolute inset-0 w-full h-full z-[2] pointer-events-none hero-video-glitch"
-        style={{
+        style={lowGraphicsMode ? {
+          background: "rgba(10,10,11,0.72)",
+        } : {
           background: "rgba(10,10,11,0.72)",
           backdropFilter: "grayscale(1) brightness(0.55)",
           WebkitBackdropFilter: "grayscale(1) brightness(0.55)",
@@ -167,39 +170,40 @@ export default function SubpageHero({ subtitle, title, titleClass, video }: Subp
       {/* Grain */}
       <div className="moving-grain !opacity-[0.06] z-[3]" />
 
-      {/* Full-width horizontal line */}
-      <div
-        ref={lineXRef}
-        className="absolute top-0 left-0 w-full h-px bg-accent/20 z-[4] pointer-events-none opacity-0 transition-opacity duration-300"
-      />
-      {/* Full-height vertical line */}
-      <div
-        ref={lineYRef}
-        className="absolute top-0 left-0 w-px h-full bg-accent/20 z-[4] pointer-events-none opacity-0 transition-opacity duration-300"
-      />
-
-      {/* Rectangular crosshair with coordinates */}
-      <div
-        ref={crosshairRef}
-        className="absolute top-0 left-0 z-[4] pointer-events-none opacity-0 transition-opacity duration-300"
-        style={{ marginLeft: -80, marginTop: -52 }}
-      >
-        <svg width="160" height="104" viewBox="0 0 160 104" fill="none">
-          <rect x="1" y="1" width="158" height="102" stroke="#a3c545" strokeWidth="0.5" opacity="0.35" />
-          <path d="M1 14 L1 1 L14 1" stroke="#a3c545" strokeWidth="1.5" fill="none" opacity="0.8" />
-          <path d="M146 1 L159 1 L159 14" stroke="#a3c545" strokeWidth="1.5" fill="none" opacity="0.8" />
-          <path d="M159 90 L159 103 L146 103" stroke="#a3c545" strokeWidth="1.5" fill="none" opacity="0.8" />
-          <path d="M14 103 L1 103 L1 90" stroke="#a3c545" strokeWidth="1.5" fill="none" opacity="0.8" />
-          <line x1="75" y1="52" x2="85" y2="52" stroke="#a3c545" strokeWidth="1" opacity="0.6" />
-          <line x1="80" y1="47" x2="80" y2="57" stroke="#a3c545" strokeWidth="1" opacity="0.6" />
-        </svg>
-        <span
-          ref={coordRef}
-          className="absolute bottom-[6px] left-[8px] font-[var(--font-mono)] text-[9px] text-accent/60 tracking-[0.1em]"
-        >
-          X:0000  Y:0000
-        </span>
-      </div>
+      {/* Scope cursor elements — skipped in lowGraphicsMode */}
+      {!lowGraphicsMode && (
+        <>
+          <div
+            ref={lineXRef}
+            className="absolute top-0 left-0 w-full h-px bg-accent/20 z-[4] pointer-events-none opacity-0 transition-opacity duration-300"
+          />
+          <div
+            ref={lineYRef}
+            className="absolute top-0 left-0 w-px h-full bg-accent/20 z-[4] pointer-events-none opacity-0 transition-opacity duration-300"
+          />
+          <div
+            ref={crosshairRef}
+            className="absolute top-0 left-0 z-[4] pointer-events-none opacity-0 transition-opacity duration-300"
+            style={{ marginLeft: -80, marginTop: -52 }}
+          >
+            <svg width="160" height="104" viewBox="0 0 160 104" fill="none">
+              <rect x="1" y="1" width="158" height="102" stroke="#a3c545" strokeWidth="0.5" opacity="0.35" />
+              <path d="M1 14 L1 1 L14 1" stroke="#a3c545" strokeWidth="1.5" fill="none" opacity="0.8" />
+              <path d="M146 1 L159 1 L159 14" stroke="#a3c545" strokeWidth="1.5" fill="none" opacity="0.8" />
+              <path d="M159 90 L159 103 L146 103" stroke="#a3c545" strokeWidth="1.5" fill="none" opacity="0.8" />
+              <path d="M14 103 L1 103 L1 90" stroke="#a3c545" strokeWidth="1.5" fill="none" opacity="0.8" />
+              <line x1="75" y1="52" x2="85" y2="52" stroke="#a3c545" strokeWidth="1" opacity="0.6" />
+              <line x1="80" y1="47" x2="80" y2="57" stroke="#a3c545" strokeWidth="1" opacity="0.6" />
+            </svg>
+            <span
+              ref={coordRef}
+              className="absolute bottom-[6px] left-[8px] font-[var(--font-mono)] text-[9px] text-accent/60 tracking-[0.1em]"
+            >
+              X:0000  Y:0000
+            </span>
+          </div>
+        </>
+      )}
 
       {/* Bottom gradient fade to bg */}
       <div className="absolute bottom-0 left-0 right-0 h-[60%] bg-gradient-to-t from-bg via-bg/80 to-transparent z-[3] pointer-events-none" />
