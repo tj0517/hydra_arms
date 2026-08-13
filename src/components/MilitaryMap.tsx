@@ -3,6 +3,7 @@
 import { useRef, useEffect, useCallback } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { useGraphicsCapability } from "@/lib/GraphicsCapabilityContext";
 
 const STORE_LOCATION: [number, number] = [19.958771349421124, 50.08282775184839];
 const DESKTOP_CENTER: [number, number] = [20.07, 50.08282775184839];
@@ -12,27 +13,75 @@ function getCenter(): [number, number] {
   return window.innerWidth < 768 ? STORE_LOCATION : DESKTOP_CENTER;
 }
 
+/* Shown in place of the WebGL map when GPU acceleration is unavailable. */
+function MapFallback() {
+  return (
+    <div className="relative w-full h-full bg-[#080808]">
+      {/* Subtle tech-grid */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage:
+            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M 40 0 L 0 0 0 40' fill='none' stroke='%2313FF15' stroke-width='0.3'/%3E%3C/svg%3E\")",
+          backgroundRepeat: "repeat",
+          backgroundSize: "40px 40px",
+          opacity: 0.05,
+        }}
+      />
+      {/* Scanlines */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-[0.03]"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(19,255,21,0.15) 2px, rgba(19,255,21,0.15) 4px)",
+        }}
+      />
+      {/* Vignette */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: "radial-gradient(ellipse at center, transparent 40%, rgba(5,5,5,0.8) 100%)",
+        }}
+      />
+    </div>
+  );
+}
+
 export default function MilitaryMap() {
+  const { lowGraphicsMode } = useGraphicsCapability();
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
 
   useEffect(() => {
-    if (!mapContainer.current || map.current) return;
+    // Skip MapLibre entirely when GPU acceleration is unavailable — the WebGL
+    // context creation attempt would throw an uncaught error (_setupPainter)
+    // that stalls other rendering work. Static fallback is shown instead.
+    if (lowGraphicsMode || !mapContainer.current || map.current) return;
 
-    map.current = new maplibregl.Map({
-      container: mapContainer.current,
-      style: "https://tiles.openfreemap.org/styles/dark",
-      center: getCenter(),
-      zoom: 11,
-      attributionControl: false,
-      dragRotate: false,
-      pitchWithRotate: false,
-      dragPan: false,
-      scrollZoom: false,
-      touchZoomRotate: false,
-      doubleClickZoom: false,
-      keyboard: false,
-    });
+    try {
+      map.current = new maplibregl.Map({
+        container: mapContainer.current,
+        style: "https://tiles.openfreemap.org/styles/dark",
+        center: getCenter(),
+        zoom: 11,
+        attributionControl: false,
+        dragRotate: false,
+        pitchWithRotate: false,
+        dragPan: false,
+        scrollZoom: false,
+        touchZoomRotate: false,
+        doubleClickZoom: false,
+        keyboard: false,
+      });
+    } catch (e) {
+      if (process.env.NODE_ENV === "development") {
+        console.warn(
+          "[HydraArms] Low graphics mode: MapLibre WebGL context failed (_setupPainter) — map not rendered.",
+          e
+        );
+      }
+      return;
+    }
 
     // Custom marker — accent green target reticle with pulse
     const accent = getComputedStyle(document.documentElement).getPropertyValue("--color-accent").trim();
@@ -94,7 +143,6 @@ export default function MilitaryMap() {
         }
       }
 
-      // Water
       if (m.getLayer("water")) {
         m.setPaintProperty("water", "fill-color", "#060903");
       }
@@ -110,13 +158,17 @@ export default function MilitaryMap() {
       map.current?.remove();
       map.current = null;
     };
-  }, []);
+  }, [lowGraphicsMode]);
 
   const handleZoom = useCallback((direction: "in" | "out") => {
     if (!map.current) return;
     const zoom = map.current.getZoom() + (direction === "in" ? 1 : -1);
     map.current.easeTo({ zoom, center: STORE_LOCATION, duration: 300 });
   }, []);
+
+  if (lowGraphicsMode) {
+    return <MapFallback />;
+  }
 
   return (
     <div className="relative w-full h-full">

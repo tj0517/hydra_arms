@@ -89,8 +89,16 @@ body:not(:has([data-studio])) input[type="submit"] {
 
 /* ── Low-graphics mode overrides (software rendering / no GPU) ── */
 
-/* Restore visible cursor — JS dot cursor is not mounted in this mode */
+/* Restore visible cursor — JS dot cursor is not mounted in this mode.
+   Body rule alone is not enough: child elements with their own cursor:none
+   (hero section via .cursor-none class, MapCrosshair via inline style) must
+   be overridden directly. !important in author CSS beats non-important inline styles. */
 [data-low-graphics] body:not(:has([data-studio])) {
+  cursor: url('/cursor-dot.svg') 4 4, auto !important;
+}
+[data-low-graphics] .cursor-none,
+[data-low-graphics] [style*="cursor: none"],
+[data-low-graphics] [style*="cursor:none"] {
   cursor: url('/cursor-dot.svg') 4 4, auto !important;
 }
 [data-low-graphics] body:not(:has([data-studio])) a,
@@ -106,9 +114,10 @@ body:not(:has([data-studio])) input[type="submit"] {
   mix-blend-mode: normal !important;
 }
 
-/* Remove CSS filters from videos (grayscale, brightness, contrast, sepia) */
+/* Simplify video filters to single grayscale — preserves B&W look, removes
+   expensive brightness/contrast/sepia compositing. */
 [data-low-graphics] video {
-  filter: none !important;
+  filter: grayscale(1) !important;
 }
 
 /* Kill glitch animations that use filter keyframes */
