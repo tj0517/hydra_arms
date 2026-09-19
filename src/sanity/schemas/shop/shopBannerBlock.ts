@@ -22,10 +22,11 @@ export const shopBannerBlock = defineType({
       options: { hotspot: true },
     }),
     defineField({
-      name: 'videoPath',
-      title: 'Ścieżka wideo (opcjonalnie)',
-      type: 'string',
-      description: 'Ścieżka do pliku MP4 (np. /promo.mp4). Jeśli podane, zastępuje zdjęcie.',
+      name: 'video',
+      title: 'Wideo tła (opcjonalnie)',
+      type: 'file',
+      description: 'Plik MP4. Jeśli dodane, zastępuje zdjęcie tła.',
+      options: { accept: 'video/mp4,video/webm' },
     }),
     defineField({
       name: 'ctaText',

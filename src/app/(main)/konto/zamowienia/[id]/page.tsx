@@ -247,8 +247,20 @@ export default async function OrderDetailPage({
           </div>
         </section>
 
-        {/* Shipping address */}
-        {addr && (
+        {/* Address / pickup notice */}
+        {addr && order.fulfillment_route === 'pickup' ? (
+          <section className="border border-blue-500/20 bg-blue-500/5 px-6 py-5 space-y-2">
+            <h2 className="font-[var(--font-mono)] text-[10px] text-blue-300 tracking-[0.25em] uppercase mb-3">Odbiór osobisty</h2>
+            <p className="text-sm text-text-dim">
+              Zamówienie przygotowane do odbioru osobistego w siedzibie HYDRA ARMS. Skontaktujemy się z Tobą w celu ustalenia terminu.
+            </p>
+            <div className="mt-2 space-y-1">
+              <p className="text-sm text-white">{addr.firstName} {addr.lastName}</p>
+              {addr.email && <p className="text-sm text-text-dim">{addr.email}</p>}
+              {addr.phone && <p className="text-sm text-text-dim">{addr.phone}</p>}
+            </div>
+          </section>
+        ) : addr && (
           <section className="border border-white/10 px-6 py-5 space-y-2">
             <h2 className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-[0.25em] uppercase mb-3">Adres dostawy</h2>
             <p className="text-sm text-white">{addr.firstName} {addr.lastName}</p>
@@ -264,10 +276,9 @@ export default async function OrderDetailPage({
           <section className="border border-white/10 px-6 py-5">
             <h2 className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-[0.25em] uppercase mb-3">Realizacja</h2>
             <p className="text-sm text-white">
-              {order.fulfillment_route === 'direct_H1' && 'Wysyłka bezpośrednia z magazynu H1'}
-              {order.fulfillment_route === 'direct_H2' && 'Wysyłka bezpośrednia z magazynu H2'}
-              {order.fulfillment_route === 'consolidated' && 'Wysyłka skonsolidowana'}
-              {order.fulfillment_route === 'pickup' && 'Odbiór osobisty'}
+              {order.fulfillment_route === 'own' && 'Wysyłka z magazynu własnego'}
+              {order.fulfillment_route === 'sourced' && 'Zamówienie u dostawcy — wysyłka przez Hydra Arms'}
+              {order.fulfillment_route === 'pickup' && 'Odbiór osobisty w Hydra Arms'}
             </p>
           </section>
         )}

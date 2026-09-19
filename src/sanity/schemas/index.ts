@@ -15,6 +15,11 @@ import { shopProductPickerBlock } from './shop/shopProductPickerBlock'
 import { shopTileGridBlock } from './shop/shopTileGridBlock'
 import { shopTextCtaBlock } from './shop/shopTextCtaBlock'
 import { shopIconStripBlock } from './shop/shopIconStripBlock'
+import { shopFaqBlock } from './shop/shopFaqBlock'
+import { shopStatsBlock } from './shop/shopStatsBlock'
+import { shopBrandsBlock } from './shop/shopBrandsBlock'
+import { shopRichTextBlock } from './shop/shopRichTextBlock'
+import { shopAlertBlock } from './shop/shopAlertBlock'
 
 export const schemaTypes = [
   siteSettings,
@@ -35,4 +40,9 @@ export const schemaTypes = [
   shopTileGridBlock,
   shopTextCtaBlock,
   shopIconStripBlock,
+  shopFaqBlock,
+  shopStatsBlock,
+  shopBrandsBlock,
+  shopRichTextBlock,
+  shopAlertBlock,
 ]

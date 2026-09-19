@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCart } from './CartProvider'
+import type { FreshProductData } from './CartProvider'
 import Link from 'next/link'
-import { analyzeCart } from '@/lib/shop/cartAnalysis'
+import { analyzeCart, mustPickup } from '@/lib/shop/cartAnalysis'
 import { createClient } from '@/lib/supabase/client'
 
 const fmt = (n: number) =>
@@ -14,7 +15,7 @@ type Step = 'shipping' | 'processing' | 'error'
 type DeliveryMode = 'pickup_all' | 'split'
 
 export default function CheckoutClient() {
-  const { items, total, clearCart, removeItem } = useCart()
+  const { items, total, clearCart, removeItem, syncCart } = useCart()
   const router = useRouter()
   const [step, setStep] = useState<Step>('shipping')
   const analysis = analyzeCart(items)
@@ -22,9 +23,15 @@ export default function CheckoutClient() {
   const [error, setError] = useState('')
   const [idempotencyKey] = useState(() => crypto.randomUUID())
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>('pickup_all')
+  const [cartAlert, setCartAlert] = useState<{
+    removedNames: string[]
+    cappedNames: string[]
+    priceChanged: boolean
+  } | null>(null)
+  const hasValidated = useRef(false)
 
-  const standardItems = items.filter(i => i.product.product_type === 'standard')
-  const restrictedItems = items.filter(i => i.product.product_type !== 'standard')
+  const standardItems = items.filter(i => !mustPickup(i.product))
+  const restrictedItems = items.filter(i => mustPickup(i.product))
   const shippingAnalysis = analyzeCart(standardItems)
 
   const [form, setForm] = useState({
@@ -53,6 +60,51 @@ export default function CheckoutClient() {
       }))
     })
   }, [])
+
+  // Reset delivery mode if cart stops being mixed (e.g. user removes restricted items)
+  useEffect(() => {
+    if (!analysis.isMixed) setDeliveryMode('pickup_all')
+  }, [analysis.isMixed])
+
+  // Validate cart against live DB once items are loaded from localStorage
+  useEffect(() => {
+    if (hasValidated.current || !items.length) return
+    hasValidated.current = true
+
+    fetch('/api/shop/cart/validate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: items.map(i => i.product.id) }),
+    })
+      .then(r => r.json())
+      .then(({ products }: { products: FreshProductData[] }) => {
+        if (!products?.length) return
+
+        const map = new Map(products.map(p => [p.id, p]))
+        const removedNames: string[] = []
+        const cappedNames: string[] = []
+        let priceChanged = false
+
+        for (const item of items) {
+          const fresh = map.get(item.product.id)
+          if (!fresh || !fresh.is_active || fresh.stock === 0) {
+            removedNames.push(item.product.name)
+          } else if (fresh.stock < item.quantity) {
+            cappedNames.push(item.product.name)
+          }
+          if (fresh && fresh.price !== item.product.price) {
+            priceChanged = true
+          }
+        }
+
+        syncCart(products)
+
+        if (removedNames.length || cappedNames.length || priceChanged) {
+          setCartAlert({ removedNames, cappedNames, priceChanged })
+        }
+      })
+      .catch(() => { /* silent — server validates at submit time */ })
+  }, [items, syncCart])
 
   function updateField(field: keyof typeof form, value: string) {
     setForm(prev => ({ ...prev, [field]: value }))
@@ -189,6 +241,31 @@ export default function CheckoutClient() {
           <h1 className="text-2xl md:text-3xl font-bold text-white mt-4 tracking-tight">Zamówienie</h1>
         </div>
 
+        {cartAlert && (cartAlert.removedNames.length > 0 || cartAlert.cappedNames.length > 0 || cartAlert.priceChanged) && (
+          <div className="mb-8 border border-yellow-500/30 bg-yellow-500/5 px-5 py-4 space-y-2">
+            <p className="font-[var(--font-mono)] text-[10px] text-yellow-400 tracking-widest uppercase">Koszyk zaktualizowany</p>
+            {cartAlert.removedNames.length > 0 && (
+              <p className="text-sm text-text-dim">
+                Usunięto niedostępne produkty: <span className="text-white">{cartAlert.removedNames.join(', ')}</span>
+              </p>
+            )}
+            {cartAlert.cappedNames.length > 0 && (
+              <p className="text-sm text-text-dim">
+                Zmniejszono ilość (brak pełnego stanu): <span className="text-white">{cartAlert.cappedNames.join(', ')}</span>
+              </p>
+            )}
+            {cartAlert.priceChanged && (
+              <p className="text-sm text-text-dim">Ceny produktów zostały zaktualizowane — suma poniżej jest aktualna.</p>
+            )}
+            <button
+              onClick={() => setCartAlert(null)}
+              className="font-[var(--font-mono)] text-[9px] text-yellow-400/60 hover:text-yellow-300 tracking-widest transition-colors"
+            >
+              ZAMKNIJ
+            </button>
+          </div>
+        )}
+
         {error && (
           <div className="mb-8 border border-red-500/30 bg-red-500/5 px-5 py-4 flex items-start gap-3">
             <span className="text-red-400 text-lg leading-none">!</span>
@@ -258,14 +335,14 @@ export default function CheckoutClient() {
           </div>
         ) : (
           <div className={`flex items-center gap-3 border px-4 py-3 mb-6 ${
-            analysis.pickup
+            analysis.route === 'pickup'
               ? 'border-blue-500/20 bg-blue-500/5'
-              : analysis.fast
+              : analysis.route === 'own'
               ? 'border-green-500/20 bg-green-500/5'
               : 'border-yellow-500/20 bg-yellow-500/5'
           }`}>
             <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
-              analysis.pickup ? 'bg-blue-400' : analysis.fast ? 'bg-green-400' : 'bg-yellow-400'
+              analysis.route === 'pickup' ? 'bg-blue-400' : analysis.route === 'own' ? 'bg-green-400' : 'bg-yellow-400'
             }`} />
             <div className="space-y-0.5">
               <p className="font-[var(--font-mono)] text-[10px] text-white tracking-widest uppercase">{analysis.label}</p>

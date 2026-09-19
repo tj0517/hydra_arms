@@ -33,6 +33,8 @@ type SiteSettings = {
   emailRd?: string;
   emailB2g?: string;
   emailHandel?: string;
+  logo?: string;
+  telefon?: string;
 } | null;
 
 export default function Footer({
@@ -58,6 +60,8 @@ export default function Footer({
   const emailRd = siteSettings?.emailRd ?? "research@hydra-arms.com";
   const emailB2g = siteSettings?.emailB2g ?? "gov@hydra-arms.com";
   const emailHandel = siteSettings?.emailHandel ?? "sprzedaz@hydra-arms.com";
+  const logoUrl = siteSettings?.logo ?? "/logo-footer.png";
+  const telefon = siteSettings?.telefon ?? "511 307 179";
   const footerRef = useRef<HTMLElement>(null);
   const [visible, setVisible] = useState(false);
 
@@ -106,11 +110,23 @@ export default function Footer({
 
           {/* ── Col 1: Company ── */}
           <div className={`transition-all duration-700 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
-            <div className="font-[var(--font-mono)] text-3xl font-bold text-white tracking-[0.15em] mb-6">
-              HYDRA<span className="text-accent footer-dot-pulse">.</span>ARMS
+            <div className="mb-6">
+              <Image
+                src={logoUrl}
+                alt={company}
+                width={220}
+                height={74}
+                className="h-14 w-auto object-contain brightness-0 invert"
+                draggable={false}
+              />
             </div>
             <div className="font-[var(--font-mono)] text-xs text-text-dim leading-relaxed space-y-1">
               <p className="text-white font-semibold text-sm">{company}</p>
+              <p className="mt-1">
+                <a href={`tel:${telefon.replace(/\s/g, "")}`} className="text-text-dim hover:text-accent transition-colors duration-300">
+                  Tel: {telefon}
+                </a>
+              </p>
               <p className="whitespace-pre-line mt-2">{adresSiedziby}</p>
               <p className="text-text-dim/60 mt-1">Sklep: {adresSklep.split("\n").join(", ")}</p>
               <div className="border-t border-white/5 my-3" />

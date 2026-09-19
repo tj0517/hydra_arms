@@ -29,6 +29,10 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'b2b.kolba.pl',
+      },
+      {
+        protocol: 'https',
         hostname: '*.baselinker.com',
       },
       {

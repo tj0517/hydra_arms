@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { addOrder } from '@/lib/baselinker/client'
 import { analyzeCart } from '@/lib/shop/cartAnalysis'
 import { ORDER_SESSION_COOKIE, appendOrderSession } from '@/lib/shop/orderSession'
 import { rateLimit, getClientIp } from '@/lib/rateLimit'
+import { SHOP_CACHE_TAG } from '@/lib/shop/fetchProducts'
 
 interface CheckoutItem {
   product_id: number
@@ -23,7 +25,7 @@ interface CheckoutBody {
     zip: string
   }
   idempotency_key?: string
-  fulfillment_route?: 'direct_H1' | 'direct_H2' | 'consolidated' | 'pickup'
+  fulfillment_route?: 'own' | 'sourced' | 'pickup'
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -32,7 +34,6 @@ const ZIP_RE = /^\d{2}-\d{3}$/
 // It doubles as the guest access token, so reject anything low-entropy.
 const IDEMPOTENCY_KEY_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(-ship|-pickup)?$/i
 
-const MAX_LINE_ITEMS = 30
 const MAX_QTY_PER_ITEM = 20
 
 export async function POST(req: NextRequest) {
@@ -50,10 +51,6 @@ export async function POST(req: NextRequest) {
     if (!body.items?.length) {
       return NextResponse.json({ error: 'Koszyk jest pusty' }, { status: 400 })
     }
-    if (body.items.length > MAX_LINE_ITEMS) {
-      return NextResponse.json({ error: 'Zbyt wiele pozycji w koszyku' }, { status: 400 })
-    }
-
     const s = body.shipping
     const isPickup = body.fulfillment_route === 'pickup'
 
@@ -138,8 +135,11 @@ export async function POST(req: NextRequest) {
       if (!product) {
         return NextResponse.json({ error: `Produkt ${item.product_id} nie istnieje lub jest nieaktywny` }, { status: 400 })
       }
-      // A product must be picked up in person when ANY restriction applies —
-      // product_type alone is not authoritative (admin may set only the flags).
+      // A product must be picked up in person when ANY restriction applies.
+      // age_min >= 18 and requires_license are ALWAYS pickup-only — age and
+      // license are verified in person at Hydra Arms. Online age verification
+      // (user_profiles.age_verified) is NOT implemented and must NOT be used
+      // here to bypass pickup enforcement.
       const mustPickup =
         product.product_type !== 'standard' ||
         product.requires_license ||
@@ -198,6 +198,9 @@ export async function POST(req: NextRequest) {
 
     const { order_id: orderId, order_total: total } = rpcData[0]
 
+    // @ts-expect-error — Next.js 16 revalidateTag signature varies; runtime works fine
+    revalidateTag(SHOP_CACHE_TAG)
+
     // Push to BaseLinker — non-fatal: checkout succeeds even if BL is unreachable.
     // blockedRetries: 0 → if BL rate-limits, fail fast instead of hanging the
     // customer's request; /api/shop/orders/sync retries orphans later.
@@ -220,7 +223,7 @@ export async function POST(req: NextRequest) {
         user_login: s.email,
         phone: s.phone || '',
         email: s.email,
-        delivery_method: isPickup ? 'Odbiór osobisty' : 'Kurier',
+        delivery_method: isPickup ? 'Odbiór osobisty' : fulfillmentRoute === 'own' ? 'Kurier — magazyn własny' : 'Kurier — zamówienie u dostawcy',
         delivery_price: 0,
         delivery_fullname: `${s.firstName} ${s.lastName}`,
         delivery_address: s.street,

@@ -1,5 +1,7 @@
 import { unstable_cache } from 'next/cache'
 import { createPublicClient } from '@/lib/supabase/public'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { getReservedQuantities } from './reservedStock'
 import type { ShopProduct, ShopCategory } from '@/lib/supabase/types'
 
 export const SHOP_CACHE_TAG = 'shop-products'
@@ -70,8 +72,21 @@ export const fetchShopData = unstable_cache(
         .limit(500),
     ])
 
+    const products = (productsResult.data ?? []) as unknown as ShopProduct[]
+
+    let reserved = new Map<number, number>()
+    try {
+      reserved = await getReservedQuantities(
+        createAdminClient(),
+        products.map(p => p.id),
+      )
+    } catch { /* service role key missing in dev — fall back to raw stock */ }
+
     return {
-      products: (productsResult.data ?? []) as unknown as ShopProduct[],
+      products: products.map(p => ({
+        ...p,
+        stock: Math.max(0, p.stock - (reserved.get(p.id) ?? 0)),
+      })),
       categories: (categoriesResult.data ?? []) as ShopCategory[],
     }
   },

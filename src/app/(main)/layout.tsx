@@ -26,6 +26,7 @@ export default async function MainLayout({
         adresSiedziby?: string; adresSklep?: string;
         emailRD?: string; emailB2G?: string; emailHandel?: string; emailBiuro?: string;
         facebookUrl?: string; instagramUrl?: string; lat?: number; lng?: number;
+        logo?: string; telefon?: string;
       }>({ query: siteSettingsQuery }),
       sanityFetch<{ links?: { href: string; label: string }[] }>({ query: navigationQuery }),
     ]);
@@ -41,7 +42,7 @@ export default async function MainLayout({
         <div className="grain" />
         <div className="lines-grid" />
         <GlobalCursor />
-        <Nav navLinks={navLinks} />
+        <Nav navLinks={navLinks} logo={siteSettings?.logo ?? undefined} />
         {children}
         <NewsletterBarConditional />
         <Footer navLinks={navLinks} siteSettings={siteSettings} />

@@ -14,7 +14,7 @@ export default function CartTrigger() {
   return (
     <button
       onClick={openCart}
-      className="fixed bottom-6 right-6 z-[500] flex items-center gap-3 bg-bg border border-accent/50 px-4 py-3 font-[var(--font-mono)] text-xs text-accent tracking-widest hover:bg-accent/5 transition-all duration-200 shadow-[0_0_20px_rgba(19,255,21,0.08)]"
+      className="group fixed bottom-6 right-6 z-[500] flex items-center gap-3 bg-bg border border-accent/50 px-4 py-3 font-[var(--font-mono)] text-xs text-accent tracking-widest hover:bg-accent hover:text-black hover:border-accent transition-all duration-200 shadow-[0_0_20px_rgba(19,255,21,0.08)]"
     >
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
         <path d="M2 2h2l1.5 6h5l1.5-5H4.5"/>
@@ -22,7 +22,7 @@ export default function CartTrigger() {
         <circle cx="10" cy="12" r="0.75" fill="currentColor"/>
       </svg>
       KOSZYK
-      <span className="w-5 h-5 bg-accent text-black text-[10px] font-bold flex items-center justify-center rounded-full leading-none">
+      <span className="w-5 h-5 bg-accent text-black group-hover:bg-black group-hover:text-accent text-[10px] font-bold flex items-center justify-center rounded-full leading-none transition-colors duration-200">
         {itemCount}
       </span>
     </button>

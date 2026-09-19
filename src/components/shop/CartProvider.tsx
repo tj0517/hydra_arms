@@ -13,6 +13,14 @@ interface CartState {
   isOpen: boolean;
 }
 
+export interface FreshProductData {
+  id: number
+  name: string
+  price: number | null
+  stock: number
+  is_active: boolean
+}
+
 type CartAction =
   | { type: 'ADD'; product: ShopProduct; quantity: number }
   | { type: 'REMOVE'; productId: number }
@@ -20,7 +28,8 @@ type CartAction =
   | { type: 'CLEAR' }
   | { type: 'OPEN' }
   | { type: 'CLOSE' }
-  | { type: 'LOAD'; items: CartEntry[] };
+  | { type: 'LOAD'; items: CartEntry[] }
+  | { type: 'SYNC'; updates: FreshProductData[] };
 
 function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
@@ -46,6 +55,23 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       return { ...state, isOpen: false };
     case 'LOAD':
       return { ...state, items: action.items };
+    case 'SYNC': {
+      const map = new Map(action.updates.map(u => [u.id, u]));
+      const newItems = state.items
+        .map(item => {
+          const fresh = map.get(item.product.id);
+          if (!fresh || !fresh.is_active) return null;
+          const cappedQty = Math.min(item.quantity, fresh.stock);
+          if (cappedQty <= 0) return null;
+          return {
+            ...item,
+            quantity: cappedQty,
+            product: { ...item.product, price: fresh.price, stock: fresh.stock },
+          };
+        })
+        .filter((item): item is CartEntry => item !== null);
+      return { ...state, items: newItems };
+    }
   }
 }
 
@@ -60,6 +86,7 @@ interface CartContextValue {
   clearCart(): void;
   openCart(): void;
   closeCart(): void;
+  syncCart(updates: FreshProductData[]): void;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -72,6 +99,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const raw = localStorage.getItem('hydra-cart');
       if (raw) dispatch({ type: 'LOAD', items: JSON.parse(raw) });
     } catch { /* ignore */ }
+  }, []);
+
+  // Sync cart across tabs — the storage event fires in every tab EXCEPT the one
+  // that made the change, so each tab stays current without polling.
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== 'hydra-cart') return;
+      try {
+        dispatch({ type: 'LOAD', items: e.newValue ? JSON.parse(e.newValue) : [] });
+      } catch { /* ignore */ }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
   }, []);
 
   useEffect(() => {
@@ -93,6 +133,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       clearCart: () => dispatch({ type: 'CLEAR' }),
       openCart: () => dispatch({ type: 'OPEN' }),
       closeCart: () => dispatch({ type: 'CLOSE' }),
+      syncCart: updates => dispatch({ type: 'SYNC', updates }),
     }}>
       {children}
     </CartContext.Provider>

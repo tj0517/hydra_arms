@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import type { ShopProduct, ShopCategory } from '@/lib/supabase/types';
 import ProductCard from './ProductCard';
 import CartDrawer from './CartDrawer';
@@ -35,37 +35,82 @@ function buildTree(categories: ShopCategory[]): CategoryNode[] {
   }));
 }
 
+type SortKey = 'name_asc' | 'name_desc' | 'price_asc' | 'price_desc' | 'newest';
+
+const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: 'name_asc',   label: 'NAZWA A→Z' },
+  { value: 'name_desc',  label: 'NAZWA Z→A' },
+  { value: 'price_asc',  label: 'CENA ↑' },
+  { value: 'price_desc', label: 'CENA ↓' },
+  { value: 'newest',     label: 'NAJNOWSZE' },
+];
+
+function useDebounce<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debounced;
+}
+
 const PAGE_SIZE = 24;
 
 export default function SklepClient({ products, categories }: SklepClientProps) {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const catParam = searchParams.get('cat');
 
-  // ── Category state ──────────────────────────────────────────────────────
-  const [search, setSearch] = useState('');
+  // ── State — initialized from URL params on mount ────────────────────────
   const [selectedCategory, setSelectedCategory] = useState<number | null>(
-    catParam ? parseInt(catParam, 10) : null
+    () => { const v = searchParams.get('cat'); return v ? parseInt(v, 10) : null; }
   );
+  const [searchInput, setSearchInput] = useState(() => searchParams.get('q') ?? '');
+  const [onlyInStock, setOnlyInStock] = useState(() => searchParams.get('stock') === '1');
+  const [priceMinInput, setPriceMinInput] = useState(() => searchParams.get('min') ?? '');
+  const [priceMaxInput, setPriceMaxInput] = useState(() => searchParams.get('max') ?? '');
+  const [sortBy, setSortBy] = useState<SortKey>(
+    () => (searchParams.get('sort') as SortKey | null) ?? 'name_asc'
+  );
+  // selectedSpecs: { [specKey]: string[] } — multi-select per key, OR within key, AND between keys
+  const [selectedSpecs, setSelectedSpecs] = useState<Record<string, string[]>>({});
   const [page, setPage] = useState(1);
-
-  // ── Filter state ────────────────────────────────────────────────────────
-  const [onlyInStock, setOnlyInStock] = useState(false);
-  const [priceMin, setPriceMin] = useState('');
-  const [priceMax, setPriceMax] = useState('');
-
-  // ── Panel visibility ────────────────────────────────────────────────────
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [desktopPanelOpen, setDesktopPanelOpen] = useState(true);
+  const [sortOpen, setSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setSelectedCategory(catParam ? parseInt(catParam, 10) : null);
-    setPage(1);
-  }, [catParam]);
+    if (!sortOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
+        setSortOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [sortOpen]);
 
+  // Debounce text and price inputs — UI updates immediately, filter/URL follow after delay
+  const search = useDebounce(searchInput, 200);
+  const priceMin = useDebounce(priceMinInput, 350);
+  const priceMax = useDebounce(priceMaxInput, 350);
+
+  // Sync ALL filter state to URL in one place — built from scratch to avoid stale reads
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (selectedCategory) params.set('cat', String(selectedCategory));
+    if (search) params.set('q', search);
+    if (onlyInStock) params.set('stock', '1');
+    if (priceMin) params.set('min', priceMin);
+    if (priceMax) params.set('max', priceMax);
+    if (sortBy !== 'name_asc') params.set('sort', sortBy);
+    const qs = params.toString();
+    router.replace(`?${qs}`, { scroll: false });
+  }, [selectedCategory, search, onlyInStock, priceMin, priceMax, sortBy, router]);
+
+  // ── Derived structures ──────────────────────────────────────────────────
   const tree = useMemo(() => buildTree(categories), [categories]);
 
-  // Which top-level branch is active (selected itself, or parent of the
-  // selected child) — its children are shown as a second pill row.
   const activeParent = useMemo(
     () => tree.find(({ category: parent, children }) =>
       parent.id === selectedCategory || children.some(c => c.id === selectedCategory)
@@ -73,7 +118,6 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
     [tree, selectedCategory]
   );
 
-  // Recursively collect ALL descendant ids for any category
   const allDescendants = useMemo(() => {
     const map = new Map<number, number[]>();
     function descendants(id: number): number[] {
@@ -92,60 +136,174 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
     return map;
   }, [categories]);
 
-  // Derive price range from actual product data
+  // Use reduce instead of spread — Math.min/max(...arr) throws on very large arrays
   const priceRange = useMemo(() => {
-    const prices = products.map(p => p.price).filter((p): p is number => p !== null && p > 0);
+    const prices = products
+      .map(p => p.price)
+      .filter((p): p is number => p !== null && p > 0);
     if (prices.length === 0) return { min: 0, max: 9999 };
-    return { min: Math.floor(Math.min(...prices)), max: Math.ceil(Math.max(...prices)) };
+    return {
+      min: Math.floor(prices.reduce((a, b) => (b < a ? b : a), Infinity)),
+      max: Math.ceil(prices.reduce((a, b) => (b > a ? b : a), -Infinity)),
+    };
   }, [products]);
 
-  const filteredProducts = useMemo(() => {
+  // ── Available spec filters ──────────────────────────────────────────────
+  // Computed from products in selected category that match category/price/stock/search
+  // (but NOT the spec filter itself — so options stay stable as you refine).
+  // Only shows keys with ≥2 distinct values (single-value keys are unfilterable).
+  const availableSpecs = useMemo(() => {
+    if (selectedCategory === null) return [];
+
     const q = search.trim().toLowerCase();
     const pMin = priceMin !== '' ? parseFloat(priceMin) : null;
     const pMax = priceMax !== '' ? parseFloat(priceMax) : null;
 
-    return products.filter(p => {
-      // Category
+    const desc = allDescendants.get(selectedCategory) ?? [];
+    const catIds = new Set([selectedCategory, ...desc]);
+
+    const base = products.filter(p => {
+      if (!catIds.has(p.category_id as number)) return false;
+      if (q && !p.name.toLowerCase().includes(q) && !(p.sku?.toLowerCase().includes(q) ?? false)) return false;
+      if (onlyInStock && p.stock <= 0) return false;
+      if (pMin !== null && (p.price === null || p.price < pMin)) return false;
+      if (pMax !== null && (p.price === null || p.price > pMax)) return false;
+      return true;
+    });
+
+    const keyValues = new Map<string, Map<string, number>>();
+    for (const p of base) {
+      if (!p.features) continue;
+      for (const [k, v] of Object.entries(p.features)) {
+        if (!keyValues.has(k)) keyValues.set(k, new Map());
+        const counts = keyValues.get(k)!;
+        counts.set(v, (counts.get(v) ?? 0) + 1);
+      }
+    }
+
+    return Array.from(keyValues.entries())
+      .filter(([, vals]) => vals.size >= 2)
+      .sort((a, b) => a[0].localeCompare(b[0], 'pl'))
+      .map(([key, valMap]) => ({
+        key,
+        values: Array.from(valMap.entries())
+          .sort((a, b) => a[0].localeCompare(b[0], 'pl'))
+          .map(([val, count]) => ({ val, count })),
+      }));
+  }, [products, selectedCategory, allDescendants, search, onlyInStock, priceMin, priceMax]);
+
+  // ── Filter + sort in one memo ───────────────────────────────────────────
+  const filteredAndSorted = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const pMin = priceMin !== '' ? parseFloat(priceMin) : null;
+    const pMax = priceMax !== '' ? parseFloat(priceMax) : null;
+    const activeSpecEntries = Object.entries(selectedSpecs).filter(([, vals]) => vals.length > 0);
+
+    const filtered = products.filter(p => {
       if (selectedCategory !== null) {
         const desc = allDescendants.get(selectedCategory) ?? [];
         const ids = new Set([selectedCategory, ...desc]);
         if (!ids.has(p.category_id as number)) return false;
       }
-      // Search
       if (q && !p.name.toLowerCase().includes(q) && !(p.sku?.toLowerCase().includes(q) ?? false)) {
         return false;
       }
-      // Availability
       if (onlyInStock && p.stock <= 0) return false;
-      // Price
       if (pMin !== null && (p.price === null || p.price < pMin)) return false;
       if (pMax !== null && (p.price === null || p.price > pMax)) return false;
+      // Spec filter: OR within key, AND between keys
+      for (const [key, selectedValues] of activeSpecEntries) {
+        const specVal = p.features?.[key];
+        if (specVal === undefined || !selectedValues.includes(specVal)) return false;
+      }
       return true;
     });
-  }, [products, selectedCategory, search, allDescendants, onlyInStock, priceMin, priceMax]);
 
-  const totalPages = Math.ceil(filteredProducts.length / PAGE_SIZE);
-  const paginated = filteredProducts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+    switch (sortBy) {
+      case 'name_desc':
+        return [...filtered].sort((a, b) => b.name.localeCompare(a.name, 'pl'));
+      case 'price_asc':
+        return [...filtered].sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity));
+      case 'price_desc':
+        return [...filtered].sort((a, b) => (b.price ?? -Infinity) - (a.price ?? -Infinity));
+      case 'newest':
+        return [...filtered].sort((a, b) => b.id - a.id);
+      default:
+        return filtered;
+    }
+  }, [products, selectedCategory, search, allDescendants, onlyInStock, priceMin, priceMax, sortBy, selectedSpecs]);
 
-  // Count active non-category filters
-  const activeFilterCount = [onlyInStock, priceMin !== '', priceMax !== ''].filter(Boolean).length;
+  const totalPages = Math.ceil(filteredAndSorted.length / PAGE_SIZE);
+  const paginated = filteredAndSorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  // Scroll to the toolbar (top of the product area) on filter/page change
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return; }
+    toolbarRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [filteredAndSorted, page]);
+
+  // Badge counts
+  const activeSpecCount = Object.values(selectedSpecs).filter(vals => vals.length > 0).length;
+  const activeFilterCount =
+    [onlyInStock, priceMinInput !== '', priceMaxInput !== ''].filter(Boolean).length + activeSpecCount;
 
   function selectCategory(id: number | null) {
     setSelectedCategory(id);
+    setSelectedSpecs({}); // specs are category-specific — reset on category change
     setPage(1);
   }
 
   function clearAllFilters() {
-    setSearch('');
-    selectCategory(null);
+    setSearchInput('');
+    setSelectedCategory(null);
     setOnlyInStock(false);
-    setPriceMin('');
-    setPriceMax('');
+    setPriceMinInput('');
+    setPriceMaxInput('');
+    setSortBy('name_asc');
+    setSelectedSpecs({});
+    setPage(1);
   }
 
-  const hasAnyFilter = selectedCategory !== null || search !== '' || activeFilterCount > 0;
+  // Used by the empty-state button — keeps category so user stays in context
+  function clearNonCategoryFilters() {
+    setSearchInput('');
+    setOnlyInStock(false);
+    setPriceMinInput('');
+    setPriceMaxInput('');
+    setSortBy('name_asc');
+    setSelectedSpecs({});
+    setPage(1);
+  }
 
-  // ── Category bar (top, full width) ──────────────────────────────────────
+  function toggleSpec(key: string, val: string) {
+    setSelectedSpecs(prev => {
+      const current = prev[key] ?? [];
+      const next = current.includes(val)
+        ? current.filter(v => v !== val)
+        : [...current, val];
+      return { ...prev, [key]: next };
+    });
+    setPage(1);
+  }
+
+  function clearSpec(key: string) {
+    setSelectedSpecs(prev => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+    setPage(1);
+  }
+
+  const hasAnyFilter =
+    selectedCategory !== null ||
+    searchInput !== '' ||
+    activeFilterCount > 0 ||
+    sortBy !== 'name_asc';
+
+  // ── Sub-components ──────────────────────────────────────────────────────
   const CategoryPill = ({
     active,
     onClick,
@@ -175,7 +333,7 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
     <div className="mb-8">
       <div className="flex flex-wrap items-center gap-2 pb-3">
         <CategoryPill active={selectedCategory === null} onClick={() => selectCategory(null)}>
-          WSZYSTKIE <span className="text-white/30 ml-1">({products.length})</span>
+          WSZYSTKIE
         </CategoryPill>
         {tree.map(({ category: parent, children }) => {
           const isParentActive = selectedCategory === parent.id;
@@ -194,9 +352,7 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
 
       {activeParent && activeParent.children.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 pt-3 pb-1 border-t border-white/5">
-          <span className="flex-shrink-0 font-[var(--font-mono)] text-[9px] text-white/20 tracking-widest pr-1">
-            ▸
-          </span>
+          <span className="flex-shrink-0 font-[var(--font-mono)] text-[9px] text-white/20 tracking-widest pr-1">▸</span>
           {activeParent.children.map(child => (
             <CategoryPill
               key={child.id}
@@ -212,10 +368,47 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
     </div>
   );
 
-  // ── Filter panel (left sidebar) ─────────────────────────────────────────
+  // Reusable checkbox row used in both stock filter and spec filters
+  const CheckRow = ({
+    checked,
+    onToggle,
+    label,
+    badge,
+  }: {
+    checked: boolean;
+    onToggle: () => void;
+    label: string;
+    badge?: string;
+  }) => (
+    <label className="flex items-center gap-2.5 cursor-pointer group">
+      <div
+        onClick={onToggle}
+        className={`w-4 h-4 border flex items-center justify-center flex-shrink-0 transition-colors ${
+          checked ? 'border-accent bg-accent/10' : 'border-white/20 group-hover:border-white/40'
+        }`}
+      >
+        {checked && (
+          <svg width="8" height="6" viewBox="0 0 8 6" fill="none">
+            <path d="M1 3L3 5L7 1" stroke="currentColor" strokeWidth="1.2" className="text-accent" />
+          </svg>
+        )}
+      </div>
+      <span
+        onClick={onToggle}
+        className={`font-[var(--font-mono)] text-[10px] tracking-[0.1em] transition-colors select-none flex-1 ${
+          checked ? 'text-white' : 'text-text-dim group-hover:text-white/70'
+        }`}
+      >
+        {label}
+        {badge !== undefined && (
+          <span className="text-white/25 ml-1">({badge})</span>
+        )}
+      </span>
+    </label>
+  );
+
   const FiltersPanel = (
     <div className="space-y-5">
-      {/* Header */}
       <div className="pb-2 border-b border-white/8 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="font-[var(--font-mono)] text-[11px] text-text-dim/60 tracking-[0.25em] uppercase">Filtry</span>
@@ -229,8 +422,10 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
           <button
             onClick={() => {
               setOnlyInStock(false);
-              setPriceMin('');
-              setPriceMax('');
+              setPriceMinInput('');
+              setPriceMaxInput('');
+              setSelectedSpecs({});
+              setPage(1);
             }}
             className="font-[var(--font-mono)] text-[9px] text-text-dim/50 hover:text-accent transition-colors tracking-widest"
           >
@@ -242,28 +437,11 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
       {/* Availability */}
       <div>
         <p className="font-[var(--font-mono)] text-[10px] text-text-dim/40 tracking-[0.3em] uppercase mb-2.5">Dostępność</p>
-        <label className="flex items-center gap-2.5 cursor-pointer group">
-          <div
-            onClick={() => { setOnlyInStock(v => !v); setPage(1); }}
-            className={`w-4 h-4 border flex items-center justify-center flex-shrink-0 transition-colors ${
-              onlyInStock ? 'border-accent bg-accent/10' : 'border-white/20 group-hover:border-white/40'
-            }`}
-          >
-            {onlyInStock && (
-              <svg width="8" height="6" viewBox="0 0 8 6" fill="none">
-                <path d="M1 3L3 5L7 1" stroke="currentColor" strokeWidth="1.2" className="text-accent" />
-              </svg>
-            )}
-          </div>
-          <span
-            onClick={() => { setOnlyInStock(v => !v); setPage(1); }}
-            className={`font-[var(--font-mono)] text-[11px] tracking-[0.15em] transition-colors select-none ${
-              onlyInStock ? 'text-white' : 'text-text-dim group-hover:text-white/70'
-            }`}
-          >
-            Tylko dostępne
-          </span>
-        </label>
+        <CheckRow
+          checked={onlyInStock}
+          onToggle={() => { setOnlyInStock(v => !v); setPage(1); }}
+          label="Tylko dostępne"
+        />
       </div>
 
       {/* Price range */}
@@ -272,8 +450,8 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
         <div className="flex items-center gap-2">
           <input
             type="number"
-            value={priceMin}
-            onChange={e => { setPriceMin(e.target.value); setPage(1); }}
+            value={priceMinInput}
+            onChange={e => { setPriceMinInput(e.target.value); setPage(1); }}
             placeholder={String(priceRange.min)}
             min={0}
             className="w-full bg-transparent border border-white/15 px-2 py-1.5 font-[var(--font-mono)] text-[11px] text-white placeholder-text-dim/30 focus:outline-none focus:border-accent/40 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -281,16 +459,16 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
           <span className="font-[var(--font-mono)] text-[10px] text-text-dim/30 flex-shrink-0">—</span>
           <input
             type="number"
-            value={priceMax}
-            onChange={e => { setPriceMax(e.target.value); setPage(1); }}
+            value={priceMaxInput}
+            onChange={e => { setPriceMaxInput(e.target.value); setPage(1); }}
             placeholder={String(priceRange.max)}
             min={0}
             className="w-full bg-transparent border border-white/15 px-2 py-1.5 font-[var(--font-mono)] text-[11px] text-white placeholder-text-dim/30 focus:outline-none focus:border-accent/40 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           />
         </div>
-        {(priceMin !== '' || priceMax !== '') && (
+        {(priceMinInput !== '' || priceMaxInput !== '') && (
           <button
-            onClick={() => { setPriceMin(''); setPriceMax(''); setPage(1); }}
+            onClick={() => { setPriceMinInput(''); setPriceMaxInput(''); setPage(1); }}
             className="mt-1.5 font-[var(--font-mono)] text-[9px] text-text-dim/40 hover:text-accent transition-colors tracking-widest"
           >
             WYCZYŚĆ CENĘ
@@ -298,6 +476,52 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
         )}
       </div>
 
+      {/* Spec filters — auto-derived from products in selected category */}
+      {availableSpecs.length > 0 && (
+        <>
+          <div className="h-px bg-white/5" />
+          <div className="space-y-5">
+            {availableSpecs.map(({ key, values }) => {
+              const selected = selectedSpecs[key] ?? [];
+              return (
+                <div key={key}>
+                  <div className="flex items-center justify-between mb-2.5">
+                    <p className="font-[var(--font-mono)] text-[10px] text-text-dim/40 tracking-[0.3em] uppercase">
+                      {key}
+                    </p>
+                    {selected.length > 0 && (
+                      <button
+                        onClick={() => clearSpec(key)}
+                        className="font-[var(--font-mono)] text-[9px] text-text-dim/40 hover:text-accent transition-colors tracking-widest"
+                      >
+                        WYCZYŚĆ
+                      </button>
+                    )}
+                  </div>
+                  <div className="space-y-1.5">
+                    {values.map(({ val, count }) => (
+                      <CheckRow
+                        key={val}
+                        checked={selected.includes(val)}
+                        onToggle={() => toggleSpec(key, val)}
+                        label={val}
+                        badge={String(count)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+
+      {/* Hint when no category selected */}
+      {selectedCategory === null && availableSpecs.length === 0 && (
+        <p className="font-[var(--font-mono)] text-[9px] text-text-dim/30 tracking-[0.15em] leading-relaxed border border-white/5 p-3">
+          Wybierz kategorię, aby zobaczyć filtry specyfikacji
+        </p>
+      )}
     </div>
   );
 
@@ -306,18 +530,14 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
     <>
       <CartDrawer />
 
-      <div className="max-w-[1400px] mx-auto px-6 md:px-10 py-12">
+      <div className="max-w-[1400px] mx-auto px-[clamp(32px,5vw,64px)] py-12">
 
-        {/* Categories — full-width wrapping grid, desktop only.
-            Long Polish category names mean this wraps to ~1 pill per row
-            on mobile (worse than useful), so mobile gets it via the
-            collapsible panel below instead. */}
         {desktopPanelOpen && <div className="hidden md:block">{CategoryBar}</div>}
 
         {/* Toolbar */}
-        <div className="flex items-center justify-between gap-4 mb-8 pb-5 border-b border-white/10">
+        <div ref={toolbarRef} className="flex items-center justify-between gap-4 mb-8 pb-5 border-b border-white/10 scroll-mt-24">
           <div className="flex items-center gap-3">
-            {/* Mobile categories + filters toggle */}
+            {/* Mobile: categories + filters toggle */}
             <button
               onClick={() => setMobilePanelOpen(v => !v)}
               className="md:hidden font-[var(--font-mono)] text-[10px] tracking-widest border border-white/15 px-3 py-2 text-text-dim hover:border-accent/40 hover:text-accent transition-colors flex items-center gap-2"
@@ -329,7 +549,7 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
                 </span>
               )}
             </button>
-            {/* Desktop category bar toggle — filters sidebar always stays visible */}
+            {/* Desktop: category bar toggle */}
             <button
               onClick={() => setDesktopPanelOpen(v => !v)}
               className="hidden md:flex font-[var(--font-mono)] text-[10px] tracking-widest border border-white/15 px-3 py-2 text-text-dim hover:border-accent/40 hover:text-accent transition-colors items-center gap-2"
@@ -340,12 +560,11 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
               )}
             </button>
             <span className="hidden md:inline font-[var(--font-mono)] text-[10px] text-text-dim tracking-widest">
-              {filteredProducts.length} PRODUKTÓW
+              {filteredAndSorted.length} PRODUKTÓW
             </span>
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Active filters summary on desktop */}
             {hasAnyFilter && (
               <button
                 onClick={clearAllFilters}
@@ -358,18 +577,63 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
               </button>
             )}
 
+            {/* Sort */}
+            <div className="relative" ref={sortRef}>
+              <button
+                onClick={() => setSortOpen(o => !o)}
+                className={`flex items-center gap-2 border font-[var(--font-mono)] text-[10px] tracking-widest px-3 py-2.5 transition-colors ${
+                  sortOpen
+                    ? 'border-accent/40 text-white'
+                    : 'border-white/15 text-text-dim hover:border-white/25 hover:text-white'
+                }`}
+              >
+                <span className="text-text-dim/50">[</span>
+                <span className={sortBy !== 'name_asc' ? 'text-accent' : ''}>
+                  {SORT_OPTIONS.find(o => o.value === sortBy)?.label}
+                </span>
+                <span className="text-text-dim/50">]</span>
+                <svg
+                  className={`shrink-0 text-text-dim/40 transition-transform duration-200 ${sortOpen ? 'rotate-180' : ''}`}
+                  width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5"
+                >
+                  <path d="M2 4l4 4 4-4"/>
+                </svg>
+              </button>
+
+              {sortOpen && (
+                <div className="absolute right-0 top-full mt-1 z-50 border border-white/15 bg-[#0a0b0a] min-w-full">
+                  {SORT_OPTIONS.map((opt, i) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => { setSortBy(opt.value); setPage(1); setSortOpen(false); }}
+                      className={`w-full text-left flex items-center justify-between gap-4 px-3 py-2 font-[var(--font-mono)] text-[10px] tracking-widest transition-colors ${
+                        i < SORT_OPTIONS.length - 1 ? 'border-b border-white/5' : ''
+                      } ${
+                        sortBy === opt.value
+                          ? 'text-accent bg-accent/5'
+                          : 'text-text-dim hover:text-white hover:bg-white/[0.03]'
+                      }`}
+                    >
+                      {opt.label}
+                      {sortBy === opt.value && <span className="text-accent text-[9px]">▸</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Search */}
             <div className="relative">
               <input
                 type="text"
-                value={search}
-                onChange={e => { setSearch(e.target.value); setPage(1); }}
+                value={searchInput}
+                onChange={e => { setSearchInput(e.target.value); setPage(1); }}
                 placeholder="SZUKAJ..."
-                className="bg-transparent border border-white/15 px-3 py-2.5 font-[var(--font-mono)] text-xs text-white placeholder-text-dim/40 tracking-widest focus:outline-none focus:border-accent/40 transition-colors w-36 sm:w-48 md:w-64"
+                className="bg-transparent border border-white/15 px-3 py-2.5 font-[var(--font-mono)] text-xs text-white placeholder-text-dim/40 tracking-widest focus:outline-none focus:border-accent/40 transition-colors w-24 sm:w-48 md:w-64"
               />
-              {search && (
+              {searchInput && (
                 <button
-                  onClick={() => setSearch('')}
+                  onClick={() => { setSearchInput(''); setPage(1); }}
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-text-dim hover:text-accent transition-colors font-[var(--font-mono)] text-xs"
                 >×</button>
               )}
@@ -377,7 +641,7 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
           </div>
         </div>
 
-        {/* Mobile categories + filters panel */}
+        {/* Mobile: categories + filters panel */}
         {mobilePanelOpen && (
           <div className="md:hidden mb-6 border border-white/10 p-5 bg-bg/95 space-y-5">
             <div>
@@ -401,15 +665,14 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
 
         <div className="flex gap-10">
 
-          {/* Sidebar — desktop, other filters. Always visible; only the
-              category bar above is hide/show-able. */}
+          {/* Sidebar — filters (always visible on desktop) */}
           <aside className="hidden md:block w-60 flex-shrink-0">
             <div className="sticky top-24">
               {FiltersPanel}
             </div>
           </aside>
 
-          {/* Main grid */}
+          {/* Product grid */}
           <div className="flex-1 min-w-0">
             {paginated.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-32 gap-4">
@@ -422,7 +685,7 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
                 <p className="font-[var(--font-mono)] text-xs text-text-dim tracking-widest">[ BRAK WYNIKÓW ]</p>
                 {hasAnyFilter && (
                   <button
-                    onClick={clearAllFilters}
+                    onClick={clearNonCategoryFilters}
                     className="font-[var(--font-mono)] text-[10px] text-accent tracking-widest hover:underline"
                   >
                     WYCZYŚĆ FILTRY
@@ -444,7 +707,8 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
                       onClick={() => setPage(p => p - 1)}
                       className="font-[var(--font-mono)] text-[10px] text-text-dim hover:text-accent disabled:opacity-20 disabled:cursor-not-allowed transition-colors tracking-widest px-3 py-2"
                     >
-                      ← POPRZEDNIA
+                      <span className="hidden sm:inline">← POPRZEDNIA</span>
+                      <span className="sm:hidden">←</span>
                     </button>
                     <div className="flex gap-1">
                       {Array.from({ length: totalPages }, (_, i) => i + 1)
@@ -477,7 +741,8 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
                       onClick={() => setPage(p => p + 1)}
                       className="font-[var(--font-mono)] text-[10px] text-text-dim hover:text-accent disabled:opacity-20 disabled:cursor-not-allowed transition-colors tracking-widest px-3 py-2"
                     >
-                      NASTĘPNA →
+                      <span className="hidden sm:inline">NASTĘPNA →</span>
+                      <span className="sm:hidden">→</span>
                     </button>
                   </div>
                 )}

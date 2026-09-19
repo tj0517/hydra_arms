@@ -5,6 +5,8 @@ import SklepClient from '@/components/shop/SklepClient';
 import ShopPageSections, { type ShopSection } from '@/components/shop/ShopPageSections';
 import { fetchShopData } from '@/lib/shop/fetchProducts';
 import type { ShopProduct, ShopCategory } from '@/lib/supabase/types';
+import { sanityFetch } from '@/sanity/client';
+import { shopPageQuery } from '@/sanity/queries';
 
 export const metadata: Metadata = {
   title: 'Sklep',
@@ -60,76 +62,6 @@ function resolveProductsForBlock(
   return pool.slice(0, limit)
 }
 
-// ── Demo sections (shown when Sanity shopPage has no content yet) ──────────────
-
-const DEMO_SECTIONS: ShopSection[] = [
-  {
-    _key: 'demo-banner',
-    _type: 'shopBannerBlock',
-    heading: 'Profesjonalne wyposażenie taktyczne',
-    subtitle: 'Sprawdzony sprzęt dla służb mundurowych i klientów indywidualnych.',
-    videoPath: '/video/hero-video.mp4',
-    ctaText: 'PRZEGLĄDAJ KATALOG',
-    ctaLink: '#catalog',
-    theme: 'dark',
-    height: 'half',
-  },
-  {
-    _key: 'demo-products',
-    _type: 'shopProductPickerBlock',
-    heading: 'Bestsellery',
-    subtitle: 'Wybór redakcji',
-    selectionMode: 'best_sellers',
-    limit: 4,
-    layout: '4col',
-    ctaText: 'Zobacz wszystkie',
-    ctaLink: '#catalog',
-  },
-  {
-    _key: 'demo-tiles',
-    _type: 'shopTileGridBlock',
-    heading: 'Kategorie',
-    subtitle: 'Przeglądaj asortyment',
-    tiles: [
-      { _key: 't1', label: 'Broń krótka', description: 'Pistolety i rewolwery' },
-      { _key: 't2', label: 'Optyka', description: 'Lunety i celowniki' },
-      { _key: 't3', label: 'Akcesoria', description: 'Kabury i wyposażenie' },
-      { _key: 't4', label: 'Amunicja', description: 'Strzelecka i szkolna' },
-    ],
-    columns: '4',
-  },
-  {
-    _key: 'demo-text',
-    _type: 'shopTextCtaBlock',
-    heading: 'Jak kupować produkty z ograniczeniem wiekowym?',
-    body: [
-      {
-        _type: 'block',
-        _key: 'b1',
-        style: 'normal',
-        markDefs: [],
-        children: [{ _type: 'span', _key: 's1', marks: [], text: 'Część produktów w naszym sklepie wymaga weryfikacji wieku lub posiadania odpowiednich uprawnień. Złóż zamówienie online — nasz zespół skontaktuje się z Tobą w celu potwierdzenia dokumentów przed wysyłką lub odbiorem osobistym.' }],
-      },
-    ],
-    ctaText: 'SKONTAKTUJ SIĘ',
-    ctaLink: '/kontakt',
-    layout: 'left',
-    background: 'dark',
-  },
-  {
-    _key: 'demo-icons',
-    _type: 'shopIconStripBlock',
-    items: [
-      { _key: 'i1', icon: 'shield', label: 'Legalna sprzedaż', subtext: 'Koncesja MSWiA' },
-      { _key: 'i2', icon: 'truck', label: 'Dostawa kurierem', subtext: 'DHL / InPost' },
-      { _key: 'i3', icon: 'package', label: 'Odbiór osobisty', subtext: 'Kraków, ul. Cechowa 44B' },
-      { _key: 'i4', icon: 'clock', label: 'Czas realizacji', subtext: '1–3 dni robocze' },
-    ],
-    layout: 'horizontal',
-    background: 'dark',
-  },
-]
-
 // ── Set to true on main/production until shop config is complete ──────────────
 const SHOP_DISABLED = false;
 
@@ -157,12 +89,12 @@ export default async function SklepPage() {
     );
   }
 
-  const [{ products, categories }] = await Promise.all([
+  const [{ products, categories }, shopPage] = await Promise.all([
     fetchShopData(),
+    sanityFetch<{ sections?: ShopSection[] }>({ query: shopPageQuery }),
   ])
 
-  // TODO: replace with Sanity CMS sections once client has configured them in Studio
-  const sections = DEMO_SECTIONS
+  const sections: ShopSection[] = shopPage?.sections ?? []
 
   // Resolve products for each product picker block (server-side)
   const resolvedProducts: Record<string, ShopProduct[]> = {}
@@ -183,7 +115,7 @@ export default async function SklepPage() {
       />
 
       {/* Catalog divider */}
-      <div id="catalog" className="max-w-[1400px] mx-auto px-6 md:px-10 scroll-mt-20">
+      <div id="catalog" className="max-w-[1400px] mx-auto px-[clamp(32px,5vw,64px)] scroll-mt-20">
         <div className="flex items-center gap-4 py-4">
           <div className="h-px flex-1 bg-white/5" />
           <span className="font-[var(--font-mono)] text-[9px] text-white/20 tracking-[0.4em]">KATALOG PRODUKTÓW</span>

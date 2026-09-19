@@ -9,6 +9,7 @@ interface OrderData {
   status: string
   total: number | null
   shipping_address: Record<string, string> | null
+  fulfillment_route: string | null
   created_at: string
   items: {
     quantity: number
@@ -143,8 +144,20 @@ export default function OrderConfirmationClient({ orderId }: { orderId: string }
           </div>
         </section>
 
-        {/* Shipping address */}
-        {addr && (
+        {/* Address / pickup notice */}
+        {addr && order.fulfillment_route === 'pickup' ? (
+          <section className="border border-blue-500/20 bg-blue-500/5 px-6 py-5 space-y-2">
+            <h2 className="font-[var(--font-mono)] text-[10px] text-blue-300 tracking-[0.25em] uppercase mb-3">Odbiór osobisty</h2>
+            <p className="text-sm text-text-dim">
+              Zamówienie przygotowane do odbioru osobistego w siedzibie HYDRA ARMS. Skontaktujemy się z Tobą w celu ustalenia terminu.
+            </p>
+            <div className="mt-2 space-y-1">
+              <p className="text-sm text-white">{addr.firstName} {addr.lastName}</p>
+              {addr.email && <p className="text-sm text-text-dim">{addr.email}</p>}
+              {addr.phone && <p className="text-sm text-text-dim">{addr.phone}</p>}
+            </div>
+          </section>
+        ) : addr && (
           <section className="border border-white/10 px-6 py-5 space-y-2">
             <h2 className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-[0.25em] uppercase mb-3">Adres dostawy</h2>
             <p className="text-sm text-white">{addr.firstName} {addr.lastName}</p>

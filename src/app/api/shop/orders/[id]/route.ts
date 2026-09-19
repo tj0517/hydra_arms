@@ -11,7 +11,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     const { data: order, error: orderError } = await supabase
       .from('orders')
-      .select('id, status, total, shipping_address, created_at, session_id, user_id')
+      .select('id, status, total, shipping_address, fulfillment_route, created_at, session_id, user_id')
       .eq('id', id)
       .single()
 

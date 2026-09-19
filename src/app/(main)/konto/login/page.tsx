@@ -26,6 +26,9 @@ export default function LoginPage() {
       return
     }
 
+    // Claim any guest orders placed with this email before the account existed
+    await fetch('/api/shop/orders/claim', { method: 'POST' }).catch(() => {})
+
     router.push('/konto')
     router.refresh()
   }

@@ -103,7 +103,9 @@ export const siteSettingsQuery = groq`*[_type == "siteSettings"][0] {
   bdo,
   uei,
   adresSiedziby,
-  adresSklep
+  adresSklep,
+  "logo": logo.asset->url,
+  telefon
 }`
 
 export const certyfikatyPageQuery = groq`*[_type == "certyfikatyPage"][0] {
@@ -185,6 +187,7 @@ export const shopPageQuery = groq`*[_type == "shopPage"][0] {
     subtitle,
     image,
     videoPath,
+    video { asset->{ url } },
     ctaText,
     ctaLink,
     ctaSecondaryText,
@@ -198,6 +201,11 @@ export const shopPageQuery = groq`*[_type == "shopPage"][0] {
     background,
     columns,
     body,
+    maxWidth,
+    message,
+    type,
+    link,
+    linkText,
     tiles[] {
       _key,
       label,
@@ -209,7 +217,13 @@ export const shopPageQuery = groq`*[_type == "shopPage"][0] {
       _key,
       icon,
       label,
-      subtext
+      subtext,
+      value,
+      name,
+      logo,
+      link,
+      question,
+      answer
     }
   }
 }`

@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { useState } from 'react'
 import { PortableText } from '@portabletext/react'
 import * as LucideIcons from 'lucide-react'
 import type { LucideProps } from 'lucide-react'
@@ -21,6 +22,7 @@ interface BannerBlock {
   subtitle?: string
   image?: SanityImage
   videoPath?: string
+  video?: { asset?: { url?: string } }
   ctaText?: string
   ctaLink?: string
   theme?: 'dark' | 'light'
@@ -73,7 +75,63 @@ interface IconStripBlock {
   background?: 'transparent' | 'dark' | 'light'
 }
 
-export type ShopSection = BannerBlock | ProductPickerBlock | TileGridBlock | TextCtaBlock | IconStripBlock
+interface FaqBlock {
+  _key: string
+  _type: 'shopFaqBlock'
+  heading?: string
+  subtitle?: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  items?: Array<{ _key: string; question?: string; answer?: any[] }>
+  background?: 'transparent' | 'dark' | 'light'
+}
+
+interface StatsBlock {
+  _key: string
+  _type: 'shopStatsBlock'
+  heading?: string
+  items?: Array<{ _key: string; value?: string; label?: string; subtext?: string }>
+  background?: 'transparent' | 'dark' | 'light'
+}
+
+interface BrandsBlock {
+  _key: string
+  _type: 'shopBrandsBlock'
+  heading?: string
+  items?: Array<{ _key: string; name?: string; logo?: SanityImage; link?: string }>
+  layout?: 'grid' | 'scroll'
+  background?: 'transparent' | 'dark' | 'light'
+}
+
+interface RichTextBlock {
+  _key: string
+  _type: 'shopRichTextBlock'
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  body?: any[]
+  layout?: 'centered' | 'left'
+  maxWidth?: 'narrow' | 'normal' | 'wide'
+  background?: 'transparent' | 'dark' | 'light'
+}
+
+interface AlertBlock {
+  _key: string
+  _type: 'shopAlertBlock'
+  message?: string
+  type?: 'info' | 'warning' | 'promo'
+  link?: string
+  linkText?: string
+}
+
+export type ShopSection =
+  | BannerBlock
+  | ProductPickerBlock
+  | TileGridBlock
+  | TextCtaBlock
+  | IconStripBlock
+  | FaqBlock
+  | StatsBlock
+  | BrandsBlock
+  | RichTextBlock
+  | AlertBlock
 
 interface Props {
   sections: ShopSection[]
@@ -104,15 +162,16 @@ function heightClass(h?: string) {
 
 function BannerSection({ block }: { block: BannerBlock }) {
   const imgUrl = block.image ? urlFor(block.image).width(1600).height(800).url() : null
+  const videoUrl = block.video?.asset?.url ?? block.videoPath ?? null
   const textColor = block.theme === 'light' ? 'text-black' : 'text-white'
   const subtitleColor = block.theme === 'light' ? 'text-black/60' : 'text-white/60'
 
   return (
     <section className={`relative w-full overflow-hidden flex items-center ${heightClass(block.height)}`}>
       {/* Background */}
-      {block.videoPath ? (
+      {videoUrl ? (
         <video
-          src={block.videoPath}
+          src={videoUrl}
           autoPlay
           muted
           loop
@@ -135,7 +194,7 @@ function BannerSection({ block }: { block: BannerBlock }) {
       <div className="absolute inset-0 bg-black/40" />
 
       {/* Content */}
-      <div className="relative z-10 max-w-[1400px] mx-auto px-6 md:px-10 w-full">
+      <div className="relative z-10 max-w-[1400px] mx-auto px-[clamp(32px,5vw,64px)] w-full">
         {block.heading && (
           <h2 className={`text-4xl md:text-6xl font-bold tracking-tight leading-tight max-w-2xl mb-4 ${textColor}`}>
             {block.heading}
@@ -181,7 +240,7 @@ function ProductPickerSection({
       : 'grid-cols-2 md:grid-cols-4'
 
   return (
-    <section className="max-w-[1400px] mx-auto px-6 md:px-10">
+    <section className="py-10 md:py-16 max-w-[1400px] mx-auto px-[clamp(32px,5vw,64px)]">
       {(block.heading || block.subtitle) && (
         <div className="flex items-end justify-between mb-6">
           <div>
@@ -227,7 +286,7 @@ function TileGridSection({ block }: { block: TileGridBlock }) {
   const cols = colsMap[block.columns ?? '4'] ?? colsMap['4']
 
   return (
-    <section className="max-w-[1400px] mx-auto px-6 md:px-10">
+    <section className="py-10 md:py-16 max-w-[1400px] mx-auto px-[clamp(32px,5vw,64px)]">
       {(block.heading || block.subtitle) && (
         <div className="mb-6">
           {block.subtitle && (
@@ -299,7 +358,7 @@ function TextCtaSection({ block }: { block: TextCtaBlock }) {
   return (
     <section className={`${bg} py-16 md:py-20`}>
       <div
-        className={`max-w-[1400px] mx-auto px-6 md:px-10 ${
+        className={`max-w-[1400px] mx-auto px-[clamp(32px,5vw,64px)] ${
           isSplit ? 'grid grid-cols-1 md:grid-cols-2 gap-12 items-center' : ''
         }`}
       >
@@ -352,7 +411,7 @@ function IconStripSection({ block }: { block: IconStripBlock }) {
 
   return (
     <section className={`${bg} py-10 md:py-12`}>
-      <div className="max-w-[1400px] mx-auto px-6 md:px-10">
+      <div className="max-w-[1400px] mx-auto px-[clamp(32px,5vw,64px)]">
         {block.heading && (
           <p className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-[0.3em] uppercase mb-6 text-center">
             {block.heading}
@@ -391,11 +450,242 @@ function IconStripSection({ block }: { block: IconStripBlock }) {
   )
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function FaqItem({ question, answer }: { question: string; answer?: any[] }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between gap-4 py-5 text-left group"
+      >
+        <span className="text-sm md:text-base font-medium text-white/90 group-hover:text-white transition-colors leading-snug">
+          {question}
+        </span>
+        <span className={`text-accent flex-shrink-0 transition-transform duration-200 ${open ? 'rotate-45' : ''}`}>
+          <LucideIcons.Plus size={16} />
+        </span>
+      </button>
+      {open && answer && (
+        <div className="pb-5 prose prose-invert prose-sm max-w-none text-text-dim [&_p]:leading-relaxed [&_ul]:mt-2 [&_li]:mt-1">
+          <PortableText value={answer} />
+        </div>
+      )}
+    </div>
+  )
+}
+
+function FaqSection({ block }: { block: FaqBlock }) {
+  if (!block.items?.length) return null
+  const bg = bgClass[block.background ?? 'transparent']
+  const hasHeader = block.heading || block.subtitle
+
+  return (
+    <section className={`${bg} py-12 md:py-20`}>
+      {hasHeader && (
+        <div className="max-w-[1400px] mx-auto px-[clamp(32px,5vw,64px)] mb-10">
+          {block.subtitle && (
+            <p className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-[0.3em] uppercase mb-2">
+              {block.subtitle}
+            </p>
+          )}
+          {block.heading && (
+            <h2 className="text-2xl md:text-4xl font-bold text-white tracking-tight leading-tight">
+              {block.heading}
+            </h2>
+          )}
+          <div className="mt-6 w-8 h-px bg-accent" />
+        </div>
+      )}
+      <div className="border-t border-white/10" />
+      {block.items.map((item) => (
+        <div key={item._key}>
+          <div className="max-w-[1400px] mx-auto px-[clamp(32px,5vw,64px)]">
+            <FaqItem question={item.question ?? ''} answer={item.answer} />
+          </div>
+          <div className="border-b border-white/10" />
+        </div>
+      ))}
+    </section>
+  )
+}
+
+function StatItem({ item, borderLeft }: { item: NonNullable<StatsBlock['items']>[number]; borderLeft?: boolean }) {
+  return (
+    <div className={`flex flex-col items-center text-center px-6 py-6 md:py-0 ${borderLeft ? 'border-l border-white/10' : ''}`}>
+      {item.value && (
+        <span className="text-4xl md:text-6xl font-bold text-accent tracking-tight leading-none whitespace-nowrap">
+          {item.value}
+        </span>
+      )}
+      {item.label && (
+        <span className="text-sm font-semibold text-white/80 mt-3">{item.label}</span>
+      )}
+      {item.subtext && (
+        <span className="font-[var(--font-mono)] text-[10px] text-text-dim mt-1">{item.subtext}</span>
+      )}
+    </div>
+  )
+}
+
+function StatsSection({ block }: { block: StatsBlock }) {
+  if (!block.items?.length) return null
+  const bg = bgClass[block.background ?? 'dark']
+  const items = block.items
+  const row1 = items.slice(0, 2)
+  const row2 = items.slice(2, 4)
+
+  return (
+    <section className={`${bg} py-14 md:py-20`}>
+      {block.heading && (
+        <p className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-[0.3em] uppercase mb-10 text-center">
+          {block.heading}
+        </p>
+      )}
+
+      {/* Mobile: two rows separated by a full-viewport border */}
+      <div className="md:hidden">
+        <div className="max-w-[1400px] mx-auto px-[clamp(32px,5vw,64px)] grid grid-cols-2">
+          {row1.map((item, i) => <StatItem key={item._key} item={item} borderLeft={i > 0} />)}
+        </div>
+        {row2.length > 0 && (
+          <>
+            <div className="border-t border-white/10" />
+            <div className="max-w-[1400px] mx-auto px-[clamp(32px,5vw,64px)] grid grid-cols-2">
+              {row2.map((item, i) => <StatItem key={item._key} item={item} borderLeft={i > 0} />)}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Desktop: single 4-col row */}
+      <div className="hidden md:block max-w-[1400px] mx-auto px-[clamp(32px,5vw,64px)]">
+        <div className="grid grid-cols-4">
+          {items.map((item, i) => <StatItem key={item._key} item={item} borderLeft={i > 0} />)}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function BrandsSection({ block }: { block: BrandsBlock }) {
+  if (!block.items?.length) return null
+  const bg = bgClass[block.background ?? 'transparent']
+  const isScroll = block.layout === 'scroll'
+
+  return (
+    <section className={`${bg} border-y border-white/[0.07] py-12 md:py-16`}>
+      <div className="max-w-[1400px] mx-auto px-[clamp(32px,5vw,64px)]">
+        {block.heading && (
+        <p className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-[0.3em] uppercase mb-3">
+          Producenci
+        </p>
+      )}
+      <div className="md:grid md:grid-cols-[1fr_2fr] md:gap-20 md:items-start">
+          {block.heading && (
+            <div className="mb-8 md:mb-0">
+              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight leading-tight">
+                {block.heading}
+              </h2>
+            </div>
+          )}
+          <div
+            className={
+              isScroll
+                ? 'flex gap-8 overflow-x-auto pb-1 scrollbar-none'
+                : 'flex flex-wrap gap-x-10 gap-y-5 items-center'
+            }
+          >
+            {block.items.map((item) => {
+              const logoUrl = item.logo ? urlFor(item.logo).height(48).url() : null
+              const inner = logoUrl ? (
+                <Image
+                  src={logoUrl}
+                  alt={item.name ?? ''}
+                  width={100}
+                  height={40}
+                  className="object-contain max-h-10 w-auto opacity-40 hover:opacity-90 transition-opacity duration-200 flex-shrink-0"
+                />
+              ) : (
+                <span className="text-lg md:text-xl font-bold uppercase tracking-[0.06em] text-white/30 hover:text-white/80 transition-colors duration-200 whitespace-nowrap">
+                  {item.name}
+                </span>
+              )
+              return item.link ? (
+                <Link key={item._key} href={item.link}>{inner}</Link>
+              ) : (
+                <div key={item._key}>{inner}</div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+const maxWidthClass: Record<string, string> = {
+  narrow: 'max-w-[640px]',
+  normal: 'max-w-[800px]',
+  wide: 'max-w-full',
+}
+
+function RichTextSection({ block }: { block: RichTextBlock }) {
+  if (!block.body?.length) return null
+  const bg = bgClass[block.background ?? 'transparent']
+  const mw = maxWidthClass[block.maxWidth ?? 'normal']
+  const isCentered = block.layout === 'centered'
+
+  return (
+    <section className={`${bg} py-12 md:py-16`}>
+      <div className="max-w-[1400px] mx-auto px-[clamp(32px,5vw,64px)]">
+        <div
+          className={`${mw} prose prose-invert prose-sm md:prose-base max-w-none text-text-dim
+            [&_h2]:text-white [&_h2]:text-2xl md:[&_h2]:text-3xl [&_h2]:font-bold [&_h2]:tracking-tight [&_h2]:mt-0 [&_h2]:mb-4
+            [&_h3]:text-white/90 [&_h3]:font-semibold [&_h3]:mt-6 [&_h3]:mb-2
+            [&_p]:leading-relaxed [&_p]:text-white/60 [&_ul]:mt-3 [&_li]:mt-1
+            [&_a]:text-accent [&_a]:no-underline hover:[&_a]:underline
+            ${isCentered ? 'mx-auto text-center' : 'border-l-2 border-accent/30 pl-6 md:pl-8'}`}
+        >
+          <PortableText value={block.body} />
+        </div>
+      </div>
+    </section>
+  )
+}
+
+const alertStyle: Record<string, string> = {
+  info: 'bg-blue-900/40 border-blue-500/30 text-blue-200',
+  warning: 'bg-yellow-900/40 border-yellow-500/30 text-yellow-200',
+  promo: 'bg-accent/10 border-accent/30 text-accent',
+}
+
+function AlertSection({ block }: { block: AlertBlock }) {
+  if (!block.message) return null
+  const style = alertStyle[block.type ?? 'info']
+
+  return (
+    <div className={`w-full border-y ${style} py-4`}>
+      <div className="max-w-[1400px] mx-auto px-[clamp(32px,5vw,64px)] flex items-center justify-center gap-4 flex-wrap text-center">
+        <span className="font-[var(--font-mono)] text-[11px] tracking-wider leading-relaxed">{block.message}</span>
+        {block.link && block.linkText && (
+          <Link
+            href={block.link}
+            className="font-[var(--font-mono)] text-[11px] tracking-wider underline underline-offset-2 hover:no-underline flex-shrink-0 whitespace-nowrap"
+          >
+            {block.linkText} →
+          </Link>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ── Main renderer ──────────────────────────────────────────────────────────────
 
 export default function ShopPageSections({ sections, resolvedProducts, categories }: Props) {
   return (
-    <div className="space-y-16 py-10">
+    <div>
       {sections.map((section) => {
         switch (section._type) {
           case 'shopBannerBlock':
@@ -415,6 +705,16 @@ export default function ShopPageSections({ sections, resolvedProducts, categorie
             return <TextCtaSection key={section._key} block={section} />
           case 'shopIconStripBlock':
             return <IconStripSection key={section._key} block={section} />
+          case 'shopFaqBlock':
+            return <FaqSection key={section._key} block={section} />
+          case 'shopStatsBlock':
+            return <StatsSection key={section._key} block={section} />
+          case 'shopBrandsBlock':
+            return <BrandsSection key={section._key} block={section} />
+          case 'shopRichTextBlock':
+            return <RichTextSection key={section._key} block={section} />
+          case 'shopAlertBlock':
+            return <AlertSection key={section._key} block={section} />
           default:
             return null
         }

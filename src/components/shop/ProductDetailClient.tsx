@@ -26,10 +26,29 @@ function sanitizeHtml(html: string): string {
     .replace(/&amp;/g, '&')
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
-    .replace(/&nbsp;/g, '\u00a0');
-  return DOMPurify.sanitize(decoded, { ALLOWED_TAGS: ['p', 'br', 'b', 'strong', 'i', 'em', 'ul', 'ol', 'li', 'span', 'h2', 'h3', 'h4', 'table', 'tr', 'td', 'th', 'tbody', 'thead'] });
+    .replace(/&nbsp;/g, ' ');
+  // BaseLinker descriptions use inline-styled spans (Tahoma, pt sizes) and embed
+  // HTML tables for "Dane techniczne". Strip inline styles so our CSS takes over,
+  // strip the table (we show features as our own clean table), then remove the
+  // orphaned "Dane techniczne:" label and empty paragraphs left behind.
+  const withoutTables = decoded.replace(/<table[\s\S]*?<\/table>/gi, '');
+  const purified = DOMPurify.sanitize(withoutTables, {
+    ALLOWED_TAGS: ['p', 'br', 'b', 'strong', 'i', 'em', 'ul', 'ol', 'li', 'span', 'h2', 'h3', 'h4'],
+    FORBID_ATTR: ['style', 'class'],
+  });
+  return purified
+    // Remove paragraphs whose only content is "Dane techniczne" (the table label)
+    .replace(/<p>[^<]*<span>[^<]*[Dd]ane\s+[Tt]echniczne[^<]*<\/span>[^<]*<\/p>/gi, '')
+    // Remove paragraphs that are empty or contain only whitespace/nbsp
+    .replace(/<p>(?:\s|&nbsp;|<span>(?:\s|&nbsp;)*<\/span>)*<\/p>/gi, '')
+    // Remove outer wrapper span if the whole thing is just a span
+    .replace(/^<span>([\s\S]*)<\/span>$/, '$1')
+    .trim();
 }
 
+function cleanName(name: string): string {
+  return name.replace(/\s+/g, ' ').trim();
+}
 
 export default function ProductDetailClient({ product, categories, related }: Props) {
   const { addItem, openCart, items } = useCart();
@@ -39,6 +58,7 @@ export default function ProductDetailClient({ product, categories, related }: Pr
   const [imgErrors, setImgErrors] = useState<Set<number>>(new Set());
 
   const images = product.images ? Object.values(product.images) : [];
+  const validImages = images.filter((_, i) => !imgErrors.has(i));
   const category = categories.find(c => c.id === product.category_id);
   const parentCategory = category?.parent_id ? categories.find(c => c.id === category.parent_id) : null;
   const outOfStock = product.stock === 0;
@@ -53,17 +73,53 @@ export default function ProductDetailClient({ product, categories, related }: Pr
   }
 
   function handleImgError(idx: number) {
-    setImgErrors(prev => new Set(prev).add(idx));
+    setImgErrors(prev => {
+      const next = new Set(prev).add(idx);
+      if (activeImg === idx) {
+        const nextValid = images.findIndex((_, i) => i !== idx && !next.has(i));
+        if (nextValid !== -1) setActiveImg(nextValid);
+      }
+      return next;
+    });
   }
 
   const hasValidImg = (idx: number) => images[idx] && !imgErrors.has(idx);
+
+  function prevImg() {
+    const valid = images.map((_, i) => i).filter(i => !imgErrors.has(i));
+    if (valid.length < 2) return;
+    const cur = valid.indexOf(activeImg);
+    setActiveImg(valid[(cur - 1 + valid.length) % valid.length]);
+  }
+
+  function nextImg() {
+    const valid = images.map((_, i) => i).filter(i => !imgErrors.has(i));
+    if (valid.length < 2) return;
+    const cur = valid.indexOf(activeImg);
+    setActiveImg(valid[(cur + 1) % valid.length]);
+  }
+
+  const cleanedDescription = product.description ? sanitizeHtml(product.description) : '';
+  const hasDesc = cleanedDescription.replace(/<[^>]*>/g, '').trim().length > 0;
+  const features = product.features && Object.keys(product.features).length > 0 ? product.features : null;
+  const extraRows: [string, string][] = [];
+  if (product.weight) extraRows.push(['Waga', `${product.weight} kg`]);
+  if (product.dimensions) {
+    const { l, w, h } = product.dimensions;
+    extraRows.push(['Wymiary', `${l} × ${w} × ${h} mm`]);
+  }
+  if (product.requires_license) extraRows.push(['Wymagane zezwolenie', product.license_category ?? 'tak']);
+  const allFeatureRows: [string, string][] = [
+    ...(features ? Object.entries(features) : []),
+    ...extraRows,
+  ];
+  const hasFeat = allFeatureRows.length > 0;
 
   return (
     <>
       <CartDrawer />
 
-
-      <div className="max-w-[1300px] mx-auto px-6 md:px-10 pt-32 pb-16">
+      <div className="max-w-[1300px] mx-auto px-[clamp(32px,5vw,64px)] pt-32 pb-16">
 
         {/* Back button */}
         <div className="mb-10">
@@ -79,7 +135,7 @@ export default function ProductDetailClient({ product, categories, related }: Pr
 
           {/* ── Gallery ── */}
           <div className="space-y-3">
-            {/* Main image */}
+            {/* Main image with arrows */}
             <div className="aspect-square bg-bg-card border border-white/10 relative overflow-hidden group">
               {hasValidImg(activeImg) ? (
                 <Image
@@ -101,9 +157,38 @@ export default function ProductDetailClient({ product, categories, related }: Pr
                 />
               )}
 
+              {/* Gallery arrows — only shown when >1 valid image */}
+              {validImages.length > 1 && (
+                <>
+                  <button
+                    onClick={prevImg}
+                    aria-label="Poprzednie zdjęcie"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center border border-white/15 bg-bg/80 text-text-dim hover:text-accent hover:border-accent/40 transition-all duration-200 opacity-0 group-hover:opacity-100 font-[var(--font-mono)] text-base"
+                  >
+                    ←
+                  </button>
+                  <button
+                    onClick={nextImg}
+                    aria-label="Następne zdjęcie"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center border border-white/15 bg-bg/80 text-text-dim hover:text-accent hover:border-accent/40 transition-all duration-200 opacity-0 group-hover:opacity-100 font-[var(--font-mono)] text-base"
+                  >
+                    →
+                  </button>
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                    {images.map((_, i) => imgErrors.has(i) ? null : (
+                      <button
+                        key={i}
+                        onClick={() => setActiveImg(i)}
+                        className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${i === activeImg ? 'bg-accent' : 'bg-white/25 hover:bg-white/50'}`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+
               {/* SKU watermark */}
               {product.sku && (
-                <span className="absolute bottom-3 right-4 font-[var(--font-mono)] text-[9px] text-white/15 tracking-widest select-none">
+                <span className="absolute top-3 right-4 font-[var(--font-mono)] text-[9px] text-white/15 tracking-widest select-none">
                   {product.sku}
                 </span>
               )}
@@ -112,7 +197,7 @@ export default function ProductDetailClient({ product, categories, related }: Pr
             {/* Thumbnails */}
             {images.length > 1 && (
               <div className="flex gap-2 flex-wrap">
-                {images.slice(0, 6).map((img, i) => {
+                {images.slice(0, 8).map((img, i) => {
                   if (imgErrors.has(i)) return null;
                   return (
                     <button
@@ -143,9 +228,9 @@ export default function ProductDetailClient({ product, categories, related }: Pr
               {category && (
                 <Link
                   href={`/sklep?cat=${category.id}`}
-                  className="font-[var(--font-mono)] text-[11px] text-text-dim tracking-[0.22em] uppercase hover:text-accent transition-colors"
+                  className="font-[var(--font-mono)] text-[11px] text-text-dim tracking-[0.22em] uppercase hover:text-accent transition-colors block truncate"
                 >
-                  {parentCategory ? `${parentCategory.name} · ` : ''}{category.name}
+                  {parentCategory ? `${cleanName(parentCategory.name)} · ` : ''}{cleanName(category.name)}
                 </Link>
               )}
               <h1 className="text-3xl md:text-4xl font-semibold text-white leading-tight">{product.name}</h1>
@@ -157,7 +242,7 @@ export default function ProductDetailClient({ product, categories, related }: Pr
             </div>
 
             {/* Price */}
-            <div className="py-4 border-t border-b border-white/8 flex items-end gap-3">
+            <div className="py-4 border-t border-b border-white/8 flex items-end gap-3 flex-wrap">
               <span className="font-[var(--font-mono)] text-4xl text-accent leading-none">
                 {fmt(product.price ?? 0)}
               </span>
@@ -167,6 +252,11 @@ export default function ProductDetailClient({ product, categories, related }: Pr
                   brutto (VAT {product.tax_rate}%)
                 </span>
               ) : null}
+              {product.price_compare && product.price_compare > (product.price ?? 0) && (
+                <span className="font-[var(--font-mono)] text-sm text-text-dim/40 line-through mb-0.5">
+                  {fmt(product.price_compare)} PLN
+                </span>
+              )}
             </div>
 
             {/* Stock */}
@@ -176,6 +266,13 @@ export default function ProductDetailClient({ product, categories, related }: Pr
                 {!outOfStock ? `W MAGAZYNIE · ${product.stock} SZT. DOSTĘPNYCH` : 'PRODUKT NIEDOSTĘPNY'}
               </span>
             </div>
+
+            {/* Short description if present */}
+            {product.short_description && (
+              <p className="text-text-dim text-sm leading-relaxed border-l-2 border-accent/30 pl-4">
+                {product.short_description}
+              </p>
+            )}
 
             {/* Type warnings */}
             {product.product_type === 'age_restricted' && (
@@ -235,35 +332,37 @@ export default function ProductDetailClient({ product, categories, related }: Pr
           </div>
         </div>
 
-        {/* Opis + Dane techniczne — side by side when both present */}
-        {(() => {
-          const hasDesc = !!product.description;
-          const hasFeat = !!(product.features && Object.keys(product.features).length > 0);
-          if (!hasDesc && !hasFeat) return null;
-          return (
-            <div className={`mt-16 pt-10 border-t border-white/8 grid grid-cols-1 gap-12 ${hasDesc && hasFeat ? 'md:grid-cols-2 md:gap-16' : ''}`}>
+        {/* ── Description + Tech specs ── */}
+        {(hasDesc || hasFeat) && (
+          <div className="mt-16 border-t border-white/8">
+            <div className={`pt-10 grid grid-cols-1 gap-12 ${hasDesc && hasFeat ? 'lg:grid-cols-[1fr_360px] lg:gap-16' : ''}`}>
               {hasDesc && (
                 <div>
-                  <div className="pb-4 mb-6 border-b border-white/8">
+                  <div className="pb-4 mb-6 border-b border-white/8 flex items-center gap-3">
                     <span className="font-[var(--font-mono)] text-xs text-text-dim/60 tracking-[0.25em] uppercase">Opis produktu</span>
                   </div>
                   <div
                     className="shop-description text-text-dim text-base leading-relaxed space-y-4"
-                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(product.description!) }}
+                    dangerouslySetInnerHTML={{ __html: cleanedDescription }}
                   />
                 </div>
               )}
               {hasFeat && (
                 <div>
-                  <div className="pb-4 mb-6 border-b border-white/8">
+                  <div className="pb-4 mb-6 border-b border-white/8 flex items-center gap-3">
                     <span className="font-[var(--font-mono)] text-xs text-text-dim/60 tracking-[0.25em] uppercase">Dane techniczne</span>
+                    <span className="font-[var(--font-mono)] text-[9px] text-text-dim/30 tracking-widest">{allFeatureRows.length} PARAMETRÓW</span>
                   </div>
                   <table className="w-full">
                     <tbody>
-                      {Object.entries(product.features!).map(([k, v]) => (
-                        <tr key={k} className="border-b border-white/5 last:border-0">
-                          <td className="py-3 pr-6 font-[var(--font-mono)] text-sm text-text-dim tracking-wider align-top w-2/5">{k}</td>
-                          <td className="py-3 text-sm text-white/80">{v}</td>
+                      {allFeatureRows.map(([k, v]) => (
+                        <tr key={k} className="border-b border-white/5 last:border-0 group/row">
+                          <td className="py-2.5 pr-4 font-[var(--font-mono)] text-[11px] text-text-dim/70 tracking-wider align-top w-[45%] group-hover/row:text-text-dim transition-colors">
+                            {k}
+                          </td>
+                          <td className="py-2.5 text-sm text-white/80 align-top group-hover/row:text-white transition-colors">
+                            {v}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -271,15 +370,15 @@ export default function ProductDetailClient({ product, categories, related }: Pr
                 </div>
               )}
             </div>
-          );
-        })()}
+          </div>
+        )}
 
         {/* Related products */}
         {related.length > 0 && (
           <div className="mt-16 pt-10 border-t border-white/8">
             <div className="pb-4 mb-8 border-b border-white/8">
               <span className="font-[var(--font-mono)] text-xs text-text-dim/60 tracking-[0.25em] uppercase">
-                {category ? `Więcej z kategorii: ${category.name}` : 'Inne produkty'}
+                {category ? `Więcej z kategorii: ${cleanName(category.name)}` : 'Inne produkty'}
               </span>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">

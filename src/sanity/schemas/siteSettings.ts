@@ -24,6 +24,8 @@ export const siteSettings = defineType({
     defineField({ name: 'uei', title: 'UEI', type: 'string' }),
     defineField({ name: 'adresSiedziby', title: 'Adres siedziby', type: 'text', rows: 3 }),
     defineField({ name: 'adresSklep', title: 'Adres sklepu stacjonarnego', type: 'text', rows: 3 }),
+    defineField({ name: 'logo', title: 'Logo (footer)', type: 'image', options: { hotspot: true } }),
+    defineField({ name: 'telefon', title: 'Numer telefonu', type: 'string' }),
   ],
   preview: { select: { title: 'companyName' } },
 })

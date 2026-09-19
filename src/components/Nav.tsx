@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -80,7 +81,7 @@ function ScrambleButton({ href, label }: { href: string; label: string }) {
   );
 }
 
-export default function Nav({ navLinks }: { navLinks?: { href: string; label: string }[] } = {}) {
+export default function Nav({ navLinks, logo }: { navLinks?: { href: string; label: string }[]; logo?: string } = {}) {
   const links = navLinks?.length ? navLinks : FLAT_LINKS;
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -115,15 +116,20 @@ export default function Nav({ navLinks }: { navLinks?: { href: string; label: st
         }`}
       >
         <div className="px-[clamp(32px,5vw,64px)] flex justify-between items-center">
-          <Link
-            href="/"
-            className="font-[var(--font-mono)] text-xl font-bold text-white tracking-[0.15em] z-[101] hover:opacity-80 transition-opacity duration-300"
-          >
-            HYDRA<span className="text-accent">.</span>ARMS
+          <Link href="/" className="z-[101] hover:opacity-80 transition-opacity duration-300">
+            <Image
+              src={logo ?? "/logo-footer.png"}
+              alt="Hydra Arms"
+              width={160}
+              height={54}
+              className="h-8 w-auto object-contain brightness-0 invert"
+              priority
+              draggable={false}
+            />
           </Link>
 
           {/* Desktop links */}
-          <ul className="hidden md:flex gap-5 lg:gap-9 list-none items-center">
+          <ul className="hidden lg:flex gap-5 lg:gap-9 list-none items-center">
             {links.map((item) => (
               <ScrambleNavLink key={item.href} href={item.href} label={item.label} active={pathname === item.href} />
             ))}
@@ -171,7 +177,7 @@ export default function Nav({ navLinks }: { navLinks?: { href: string; label: st
           {/* Mobile burger */}
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="md:hidden flex flex-col gap-1.5 z-[101]"
+            className="lg:hidden flex flex-col gap-1.5 z-[101]"
             aria-label="Menu"
           >
             <span
@@ -190,12 +196,20 @@ export default function Nav({ navLinks }: { navLinks?: { href: string; label: st
 
       {/* Mobile menu */}
       <div
-        className={`fixed inset-0 bg-bg z-[999] flex flex-col items-center justify-center gap-8 transition-all duration-500 md:hidden ${
+        className={`fixed inset-0 bg-bg z-[999] flex flex-col items-center justify-center gap-8 transition-all duration-500 lg:hidden ${
           menuOpen
             ? "opacity-100 pointer-events-auto"
             : "opacity-0 pointer-events-none"
         }`}
       >
+        <Image
+          src={logo ?? "/logo-footer.png"}
+          alt="Hydra Arms"
+          width={200}
+          height={67}
+          className="h-10 w-auto object-contain brightness-0 invert mb-4"
+          draggable={false}
+        />
         {links.map((link) => (
           <Link
             key={link.href}

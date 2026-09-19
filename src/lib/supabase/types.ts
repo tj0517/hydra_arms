@@ -1,6 +1,6 @@
 export type ProductType = 'standard' | 'age_restricted' | 'pickup_only';
-export type SourceWarehouse = 'H1' | 'H2' | 'own';
-export type FulfillmentRoute = 'direct_H1' | 'direct_H2' | 'consolidated' | 'pickup';
+export type SourceWarehouse = string; // 'own' | supplier name (e.g. 'sharg', 'kolba', 'spechurt')
+export type FulfillmentRoute = 'own' | 'sourced' | 'pickup';
 
 export interface Database {
   public: {
@@ -172,7 +172,7 @@ export interface Database {
       user_profiles: {
         Row: {
           id: string;
-          age_verified: boolean;
+          age_verified: boolean;       // schema exists; online verification NOT implemented — do not use to bypass pickup
           age_verified_at: string | null;
           verification_method: string | null;
           created_at: string;
