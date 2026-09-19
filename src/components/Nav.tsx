@@ -120,9 +120,9 @@ export default function Nav({ navLinks, logo }: { navLinks?: { href: string; lab
             <Image
               src={logo ?? "/logo-footer.png"}
               alt="Hydra Arms"
-              width={160}
-              height={54}
-              className="h-8 w-auto object-contain brightness-0 invert"
+              width={200}
+              height={67}
+              className="h-11 w-auto object-contain brightness-0 invert"
               priority
               draggable={false}
             />
@@ -207,7 +207,7 @@ export default function Nav({ navLinks, logo }: { navLinks?: { href: string; lab
           alt="Hydra Arms"
           width={200}
           height={67}
-          className="h-10 w-auto object-contain brightness-0 invert mb-4"
+          className="h-12 w-auto object-contain brightness-0 invert mb-4"
           draggable={false}
         />
         {links.map((link) => (
