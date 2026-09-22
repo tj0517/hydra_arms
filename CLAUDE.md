@@ -12,7 +12,7 @@ A session started in the parent `hydra_arms/` folder (outside this repo) is cove
 
 Every writing script also contains an in-script guard (`scripts/lib/prodGuard.ts`, HA-1.05): `assertNotProd()` in Supabase writers (passes only when `NEXT_PUBLIC_SUPABASE_URL` host is `localhost`/`127.0.0.1`) and `assertExternalProd()` in BaseLinker/Sanity writers (always requires `HA_ALLOW_PROD=1`). `playwright.config.ts` calls `assertNotProd()` at load time so no test starts against prod. To run deliberately: `HA_ALLOW_PROD=1 npx tsx scripts/<name>.ts`. Never set `HA_ALLOW_PROD` permanently.
 
-`SUPABASE_TARGET=local` only unlocks the hook's test-runner check — it does not itself point tests at a local database (that lands in HA-1.06). Until then, tests still hit prod: don't set it.
+`SUPABASE_TARGET=local` unlocks both the test-runner check and `psql`/DDL-DML commands that target an explicit local host (`127.0.0.1` or `localhost` — not subdomains). Any command that includes a prod marker (`supabase.co`, the prod project ref, or `--linked`) is still blocked even with the variable set. Until HA-1.06 lands, the local stack does not exist yet, so don't set it.
 
 ## Commands
 

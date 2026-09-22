@@ -146,6 +146,44 @@ run_case "npm test with SUPABASE_TARGET=local"          allow "npm test" SUPABAS
 run_case "npm run test:shop w/ SUPABASE_TARGET=local"   allow "npm run test:shop" SUPABASE_TARGET=local
 run_case "npm run lint is not a test run"                allow "npm run lint"
 
+echo "=== inline SUPABASE_TARGET=local bypass attempt — always blocked ==="
+run_case "inline SUPABASE_TARGET=local before psql"   block "SUPABASE_TARGET=local psql -h localhost"
+run_case "export SUPABASE_TARGET=local && psql"        block "export SUPABASE_TARGET=local && psql -h 127.0.0.1"
+run_case "env SUPABASE_TARGET=local prefix psql"       block "env SUPABASE_TARGET=local psql -h localhost"
+output="$(SUPABASE_TARGET=local bash -c 'printf "%s" "$1" | "$2"' _ \
+  '{"tool_name":"Bash","tool_input":{"command":"SUPABASE_TARGET=local psql -h localhost"}}' "$HOOK")"
+if printf '%s' "$output" | grep -q '"permissionDecision":"deny"'; then
+  PASS=$((PASS + 1)); printf 'OK   %-55s [block]\n' "inline SUPABASE_TARGET=local wins even in local session"
+else
+  FAIL=$((FAIL + 1)); printf 'FAIL %-55s expected=block got=allow\n' "inline SUPABASE_TARGET=local wins even in local session"
+fi
+
+echo "=== psql local exception (SUPABASE_TARGET=local + explicit local host) ==="
+run_case "psql 127.0.0.1 with SUPABASE_TARGET=local"    allow "psql -h 127.0.0.1 -c 'select 1'" SUPABASE_TARGET=local
+run_case "psql localhost with SUPABASE_TARGET=local"     allow "psql -h localhost -c 'select 1'" SUPABASE_TARGET=local
+run_case "psql 127.0.0.1 without SUPABASE_TARGET"        block "psql -h 127.0.0.1 -c 'select 1'"
+run_case "psql localhost without SUPABASE_TARGET"         block "psql -h localhost -c 'select 1'"
+run_case "psql prod host with SUPABASE_TARGET=local"     block "psql -h db.breqmmlcaxsvxcqlcmqc.supabase.co -c 'select 1'" SUPABASE_TARGET=local
+run_case "psql localhost.evil.co (subdomain) not local"  block "psql -h localhost.evil.co -c 'select 1'" SUPABASE_TARGET=local
+run_case "psql local + writing script compound"          block "psql -h localhost -c 'select 1' && npx tsx scripts/reset-shop-db.ts" SUPABASE_TARGET=local
+run_case "psql local + prod psql compound"               block "psql -h localhost; psql -h db.breqmmlcaxsvxcqlcmqc.supabase.co" SUPABASE_TARGET=local
+run_case "psql local; supabase db push compound"         block "psql -h localhost -c 'select 1'; supabase db push" SUPABASE_TARGET=local
+run_case "DDL against local host is allowed"             allow "psql -h 127.0.0.1 -c 'create table t (id int)'" SUPABASE_TARGET=local
+
+echo "=== DDL/DML in commit messages and PR bodies — false-alarm fix ==="
+run_case "git commit -m with revoke/grant words"         allow "git commit -m \"docs: revoke grant on next_xml_product_id\""
+run_case "git commit --allow-empty revoke grant"         allow "git commit --allow-empty -m \"test: revoke grant wording\""
+run_case "git commit -m x && psql no local var"          block "git commit -m \"x\" && psql -h localhost"
+run_case "gh pr --title drop table --body ALTER TABLE"   allow "gh pr create --title \"drop table\" --body \"ALTER TABLE foo ADD col\""
+run_case "gh pr --body fix && psql no local var"         block "gh pr create --body \"fix\" && psql -h localhost"
+run_case "heredoc to sql file with INSERT INTO"          block $'cat <<\'EOF\' > x.sql\nINSERT INTO foo\nEOF'
+run_case "git commit heredoc body with REVOKE/GRANT"     allow \
+  $'git commit -m "$(cat <<\'EOF\'\nfix: security hardening\n\nREVOKE ALL ON FUNCTION public.f() FROM PUBLIC;\nGRANT EXECUTE ON FUNCTION public.g() TO service_role;\nEOF\n)"'
+run_case "git commit heredoc body with internal quotes"  allow \
+  $'git commit -m "$(cat <<\'EOF\'\nfix: strip "grant" and \'revoke\' and psql\nEOF\n)"'
+run_case "git commit -m non-heredoc subst blocks"        block \
+  $'git commit -m "$(node -e \'INSERT INTO x\')"'
+
 echo "=== malformed input — fail closed ==="
 run_raw_case "not JSON at all"                 block "this is not json"
 run_raw_case "empty input"                     block ""

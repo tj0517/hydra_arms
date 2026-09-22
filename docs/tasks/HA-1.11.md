@@ -1,7 +1,7 @@
 ---
 id: HA-1.11
 title: Hook agenta — wyjątek dla lokalnej bazy i fałszywy alarm na treści commitów
-status: in_progress
+status: review
 difficulty: M
 model: sonnet
 model_approved: null
@@ -52,3 +52,5 @@ Hook z HA-1.04 blokuje każde `psql` i każdą komendę zawierającą DDL/DML ni
 
 ## Notatki z realizacji
 - 2026-09-22 tj: zadanie założone, bo HA-1.06 wymaga pracy agenta na lokalnej bazie bez zdejmowania ochrony produ; plik zadania zakłada agent w pierwszym commicie gałęzi (decyzja tj, odstępstwo od reguły „plik na main przed startem")
+- 2026-09-22 agent: implementacja — SUPABASE_TARGET=local inline bypass check dodany zaraz po HA_ALLOW_PROD check; IS_LOCAL variable; psql local exception (localhost/127.0.0.1, bez prod markera); SCAN_CMD z FLAT_CMD przez tr+sed stripping -m/--body/--title quoted values; _unsafe_subst guard dla niedziedzicowych podstawień; DDL scan na SCAN_CMD z local exception; 181/181 testów (22 nowe); CLAUDE.md zaktualizowany
+- 2026-09-22 agent: wpis HA-1.03 w deferred-tasks.md NIE zaktualizowany na tej gałęzi — PR #9 (HA-1.03) i ta gałąź appendują do tego samego pliku, merge conflict przy scaleniu; zostaje otwarte do załatwienia po scaleniu obu PR-ów
