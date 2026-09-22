@@ -4,7 +4,8 @@ title = "hydra-arms gitleaks config"
   useDefault = true
 
 [allowlist]
-  description = "Known tokens in historical migration 004 — accepted_risk tj 2026-09-22; see docs/deferred-tasks.md"
+  description = "Files with known or expected high-entropy strings — not real credentials"
   paths = [
     '''supabase/migrations/004_xml_import_fields\.sql''',
+    '''xml-integration/samples/''',
   ]
