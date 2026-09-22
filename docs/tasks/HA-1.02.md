@@ -1,12 +1,12 @@
 ---
 id: HA-1.02
 title: source_connectors — RLS i usunięcie tokenów z wierszy
-status: todo
+status: in_progress
 difficulty: M
-model: null
+model: sonnet
 model_approved: null
-effort: null
-branch: null
+effort: medium
+branch: fix/ha-1.02-source-connectors-lockdown
 due: null
 depends_on: [HA-1.01]
 blocked_by_questions: []
