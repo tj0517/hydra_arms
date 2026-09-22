@@ -1,7 +1,7 @@
 ---
 id: HA-1.04
 title: Guard agenta — hook blokujący zapisy na prod
-status: review
+status: done
 difficulty: M
 model: sonnet
 model_approved: true
@@ -54,3 +54,4 @@ Claude Code pracuje w tym repo w trybie `bypassPermissions` z `Bash(*)`, a `.env
 - 2026-09-22 tj: odblokowanie tylko przez zmienną środowiskową sesji; `HA_ALLOW_PROD` wpisane inline w poleceniu jest traktowane jako próba obejścia i blokowane
 - 2026-09-22 tj: skrypty piszące tylko do Sanity (`sanity-seed.ts`, `patch-homepage-fields.ts`) też trafiają na listę blokad (spójna reguła, nie tylko Supabase/BL)
 - 2026-09-22 tj: review — poprawki w tym PR (cd scripts, SUPABASE_TARGET early-allow, glob, CLAUDE.md)
+- 2026-09-22 tj: review runda 2 — przyjęte; test-guard.sh 159/159 (uruchomione w review); pozostałe warianty po `cd scripts` → deferred, zamyka HA-1.05
