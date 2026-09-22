@@ -1,0 +1,7 @@
+title = "hydra-arms gitleaks config"
+
+[allowlist]
+  description = "Known tokens in historical migration 004 — accepted_risk tj 2026-09-22; see docs/deferred-tasks.md"
+  paths = [
+    '''supabase/migrations/004_xml_import_fields\.sql''',
+  ]

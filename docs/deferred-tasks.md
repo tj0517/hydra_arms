@@ -18,3 +18,12 @@ Format: data · źródło (zadanie/raport) · co zauważono · propozycja (zadan
 - 2026-09-22 · HA-1.04 · reguła wykrywania inline `HA_ALLOW_PROD=` to prosty substring-match na całej komendzie — blokuje też niegroźne polecenia, które tylko *wspominają* ten string (np. `git commit -m "...HA_ALLOW_PROD=1..."`, złapane przy commitowaniu tego zadania). Fail-safe (nadmiarowo blokuje, nigdy nie przepuszcza), ale bywa fałszywym alarmem · zostawione świadomie — nic do zrobienia, chyba że fałszywe alarmy zaczną przeszkadzać w pracy
 - 2026-09-22 · review HA-1.04 (runda 2) · hook przepuszcza po `cd scripts`: nazwę bez `.ts` (`npx tsx reset-shop-db`), wzorzec (`reset-shop-*.ts`) i pętlę `for f in *.ts` · **zamknięte przez HA-1.05** — guard w samych skryptach, hook nie wymaga łatania
 - 2026-09-22 · HA-1.05 · skrypty ładują `.env.local` z `override: true`, więc nadpisanie inline np. `SUPABASE_SERVICE_ROLE_KEY=invalid` na linii poleceń nie działa — prawdziwy klucz z `.env.local` jest zawsze użyty; red proofy muszą używać temp dir z podstawionym `.env.local` (opisane w PR HA-1.05), nie inline override · bez zmian — zanotowane dla przyszłych testerów; `sanity-seed.ts` i `patch-homepage-fields.ts` używają `{ path: '.env.local' }` bez `override: true` — inline override działa dla nich, ale to niespójność bez wpływu na bezpieczeństwo
+- 2026-09-22 · review HA-1.05 · komunikat guarda w playwright.config.ts podpowiada „npx tsx scripts/<name>.ts” zamiast „HA_ALLOW_PROD=1 npx playwright test” · poprawić przy HA-1.06
+- 2026-09-22 · HA-1.07 · 10 linii z eslint-disable-next-line, do naprawy w HA-1.10:
+  - `src/components/LoadingScreen.tsx` (react-hooks/set-state-in-effect)
+  - `src/components/Nav.tsx` (react-hooks/set-state-in-effect)
+  - `src/components/shop/CheckoutClient.tsx` (react-hooks/set-state-in-effect)
+  - `src/lib/GraphicsCapabilityContext.tsx` (react-hooks/set-state-in-effect)
+  - `src/sanity/components/ProductPickerInput.tsx` (react-hooks/set-state-in-effect)
+  - `src/components/TacticalReadout.tsx` ×3 (react-hooks/purity)
+  - `src/components/shop/SklepClient.tsx` ×2 (react-hooks/static-components)

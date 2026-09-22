@@ -75,7 +75,7 @@ export default async function SklepPage() {
         <section className="flex flex-col items-center justify-center min-h-[40vh] py-32 gap-5 px-8">
           <div className="w-px h-20 bg-accent/10" />
           <p className="font-[var(--font-mono)] text-[10px] uppercase tracking-[0.4em] text-accent/40">
-            // WKRÓTCE
+            {'// WKRÓTCE'}
           </p>
           <p className="font-[var(--font-mono)] text-sm uppercase tracking-[0.2em] text-white/50">
             Sklep w przygotowaniu

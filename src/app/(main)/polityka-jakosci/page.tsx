@@ -85,7 +85,7 @@ export default function PolitykJakosciPage() {
           </p>
 
           <p>
-            Deklaruję rozwój i doskonalenie Systemu Zarządzania Jakością, opisanego w „Księdze Jakości"
+            Deklaruję rozwój i doskonalenie Systemu Zarządzania Jakością, opisanego w „Księdze Jakości&quot;
             jako zobowiązanie osobiste i całego personelu firmy.
           </p>
 

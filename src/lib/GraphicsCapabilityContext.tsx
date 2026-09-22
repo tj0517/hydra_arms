@@ -18,6 +18,7 @@ export function GraphicsCapabilityProvider({ children }: { children: ReactNode }
     const reason = detectSoftwareRendering();
     if (!reason) return;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, fixed in HA-1.10
     setLowGraphicsMode(true);
     document.documentElement.setAttribute("data-low-graphics", "");
 

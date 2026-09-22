@@ -21,7 +21,7 @@ export default function PolitykaPrywatnosciPage() {
 
           <Section title="§ 1. Postanowienia ogólne">
             <ol className="space-y-3 list-none">
-              <Li n="1">Administratorem danych osobowych zbieranych za pośrednictwem Serwisu Internetowego działającego pod adresem <span className="text-accent">https://hydra-arms.com</span> jest HYDRA ARMS Sp. z o.o. z siedzibą w Krakowie (30-614), ul. Cechowa 44B, wpisana do rejestru przedsiębiorców Krajowego Rejestru Sądowego pod numerem KRS: 0001111593, posiadająca numery NIP: 6793302181 oraz REGON: 528976880, o kapitale zakładowym w wysokości 5.100,00 PLN (dalej zwana: „Administratorem").</Li>
+              <Li n="1">Administratorem danych osobowych zbieranych za pośrednictwem Serwisu Internetowego działającego pod adresem <span className="text-accent">https://hydra-arms.com</span> jest HYDRA ARMS Sp. z o.o. z siedzibą w Krakowie (30-614), ul. Cechowa 44B, wpisana do rejestru przedsiębiorców Krajowego Rejestru Sądowego pod numerem KRS: 0001111593, posiadająca numery NIP: 6793302181 oraz REGON: 528976880, o kapitale zakładowym w wysokości 5.100,00 PLN (dalej zwana: „Administratorem&quot;).</Li>
               <Li n="2">
                 Kontakt z Administratorem w sprawach związanych z ochroną danych osobowych jest możliwy za pośrednictwem:
                 <ul className="mt-2 space-y-2 border-l border-accent/20 pl-6">
