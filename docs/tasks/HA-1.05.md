@@ -1,7 +1,7 @@
 ---
 id: HA-1.05
 title: Bezpiecznik prod w skryptach i testach
-status: in_progress
+status: review
 difficulty: M
 model: claude-sonnet-4-6
 model_approved: null
@@ -12,7 +12,7 @@ depends_on: []
 blocked_by_questions: []
 touches_db: false
 touches_prod: false
-pr: null
+pr: 5
 ---
 
 ## Cel
