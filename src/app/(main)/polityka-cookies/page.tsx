@@ -21,7 +21,7 @@ export default function PolitykaCookiesPage() {
 
           <Section title="§ 1. Postanowienia ogólne">
             <ol className="space-y-3 list-none">
-              <Li n="1">Serwis HYDRA ARMS działający pod adresem docelowym <span className="text-accent">https://hydra-arms.com</span> wykorzystuje technologię plików cookies (tzw. „ciasteczka") oraz podobne technologie śledzące i analityczne.</Li>
+              <Li n="1">Serwis HYDRA ARMS działający pod adresem docelowym <span className="text-accent">https://hydra-arms.com</span> wykorzystuje technologię plików cookies (tzw. „ciasteczka&quot;) oraz podobne technologie śledzące i analityczne.</Li>
               <Li n="2">Pliki cookies to małe pliki tekstowe i informacyjne wysyłane przez serwer WWW i zapisywane na urządzeniu końcowym Użytkownika (np. komputerze, laptopie, smartfonie, tablecie), z którego korzysta on podczas przeglądania stron internetowych.</Li>
               <Li n="3">Administratorem danych generowanych przez pliki cookies (w zakresie, w jakim mogą one stanowić dane osobowe lub pozwalać na identyfikację cyfrową Użytkownika) jest HYDRA ARMS Sp. z o.o. z siedzibą w Krakowie. Szczegóły w <a href="/polityka-prywatnosci" className="text-accent hover:text-white transition-colors">Polityce Prywatności</a>.</Li>
             </ol>

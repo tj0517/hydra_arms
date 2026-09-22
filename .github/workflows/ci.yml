@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Install gitleaks
+        run: |
+          VERSION="8.18.4"
+          TARBALL="gitleaks_${VERSION}_linux_x64.tar.gz"
+          curl -sSfL \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/${TARBALL}" \
+            -o /tmp/gitleaks.tar.gz
+          curl -sSfL \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_checksums.txt" \
+            -o /tmp/gitleaks-checksums.txt
+          EXPECTED=$(grep "${TARBALL}" /tmp/gitleaks-checksums.txt | awk '{print $1}')
+          ACTUAL=$(sha256sum /tmp/gitleaks.tar.gz | awk '{print $1}')
+          if [ "$EXPECTED" != "$ACTUAL" ]; then
+            echo "Checksum mismatch: expected $EXPECTED, got $ACTUAL"
+            exit 1
+          fi
+          tar xz -C /usr/local/bin -f /tmp/gitleaks.tar.gz gitleaks
+          gitleaks version
+
+      - name: Secret scan
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            LOG_OPTS="origin/${{ github.base_ref }}..HEAD"
+          else
+            BEFORE="${{ github.event.before }}"
+            if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+              LOG_OPTS="-1 HEAD"
+            else
+              LOG_OPTS="${BEFORE}..HEAD"
+            fi
+          fi
+          gitleaks detect --log-opts="$LOG_OPTS" --config .gitleaks.toml --redact

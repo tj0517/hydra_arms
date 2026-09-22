@@ -59,7 +59,7 @@ export default function NewsletterBar() {
         {/* ── Label ── */}
         <div className="shrink-0 lg:w-[190px] lg:border-r lg:border-white/10 lg:pr-8 lg:mr-8">
           <div className="font-[var(--font-mono)] text-[9px] text-accent/50 tracking-[0.22em] uppercase mb-0.5">
-            // SUBSKRYBUJ
+            {'// SUBSKRYBUJ'}
           </div>
           <div className="font-[var(--font-mono)] text-[12px] text-white tracking-[0.12em] uppercase">
             Kanał informacyjny

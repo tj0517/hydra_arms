@@ -21,9 +21,9 @@ export default function RegulaminPage() {
 
           <Section title="§ 1. Postanowienia ogólne i dane rejestrowe">
             <ol className="space-y-3 list-none">
-              <Li n="1">Sklep internetowy działający pod adresem URL <span className="text-accent">https://hydra-arms.com</span> prowadzony jest przez firmę HYDRA ARMS Sp. z o.o. z siedzibą w Krakowie (30-614), ul. Cechowa 44B, wpisaną do rejestru przedsiębiorców Krajowego Rejestru Sądowego prowadzonego przez Sąd Rejonowy dla Krakowa-Śródmieścia w Krakowie, XI Wydział Gospodarczy KRS pod numerem KRS: 0001111593, posiadającą NIP: 6793302181 oraz REGON: 528976880, o kapitale zakładowym w wysokości 5.100,00 PLN (zwaną: „Sprzedawcą").</Li>
+              <Li n="1">Sklep internetowy działający pod adresem URL <span className="text-accent">https://hydra-arms.com</span> prowadzony jest przez firmę HYDRA ARMS Sp. z o.o. z siedzibą w Krakowie (30-614), ul. Cechowa 44B, wpisaną do rejestru przedsiębiorców Krajowego Rejestru Sądowego prowadzonego przez Sąd Rejonowy dla Krakowa-Śródmieścia w Krakowie, XI Wydział Gospodarczy KRS pod numerem KRS: 0001111593, posiadającą NIP: 6793302181 oraz REGON: 528976880, o kapitale zakładowym w wysokości 5.100,00 PLN (zwaną: „Sprzedawcą&quot;).</Li>
               <Li n="2">Kontakt ze Sprzedawcą odbywa się za pośrednictwem formularza kontaktowego w witrynie, poczty elektronicznej pod adresem: <span className="text-accent">sprzedaz@hydra-arms.com</span> i telefonicznie pod numerem telefonu udostępnionym w zakładce Kontakt.</Li>
-              <Li n="3">Niniejszy Regulamin określa zasady korzystania ze Sklepu, warunki składania zamówień i zakupu towarów ogólnodostępnych, procedury obowiązkowej weryfikacji pełnoletności dla produktów z kategorii „18+", a także restrykcyjne zasady rezerwacji internetowej towarów koncesjonowanych oraz procedury reklamacyjne i zwrotów.</Li>
+              <Li n="3">Niniejszy Regulamin określa zasady korzystania ze Sklepu, warunki składania zamówień i zakupu towarów ogólnodostępnych, procedury obowiązkowej weryfikacji pełnoletności dla produktów z kategorii „18+&quot;, a także restrykcyjne zasady rezerwacji internetowej towarów koncesjonowanych oraz procedury reklamacyjne i zwrotów.</Li>
             </ol>
           </Section>
 
@@ -46,7 +46,7 @@ export default function RegulaminPage() {
                 <strong className="text-white">TOWARY 18+:</strong> Sprzedaż tych towarów dopuszczalna jest wyłącznie na rzecz osób pełnoletnich. Sprzedawca zastrzega sobie prawo do wdrożenia dwustopniowej weryfikacji wieku Klienta:
                 <ul className="mt-2 space-y-2 border-l border-accent/20 pl-6">
                   <SubLi l="a">Elektroniczne oświadczenie lub autoryzacja wieku na etapie składania zamówienia w systemie teleinformatycznym.</SubLi>
-                  <SubLi l="b">Obowiązkowa weryfikacja pełnoletności przez kuriera przy doręczeniu przesyłki (wysyłka z zastrzeżeniem opcji dostawy „do rąk własnych osoby pełnoletniej" za okazaniem dokumentu tożsamości) lub osobiście w sklepie stacjonarnym. W przypadku negatywnej weryfikacji wieku towar nie zostanie wydany, a umowa ulega rozwiązaniu z winy Klienta.</SubLi>
+                  <SubLi l="b">Obowiązkowa weryfikacja pełnoletności przez kuriera przy doręczeniu przesyłki (wysyłka z zastrzeżeniem opcji dostawy „do rąk własnych osoby pełnoletniej&quot; za okazaniem dokumentu tożsamości) lub osobiście w sklepie stacjonarnym. W przypadku negatywnej weryfikacji wieku towar nie zostanie wydany, a umowa ulega rozwiązaniu z winy Klienta.</SubLi>
                 </ul>
               </Li>
               <Li n="3">
@@ -65,7 +65,7 @@ export default function RegulaminPage() {
           <Section title="§ 4. Składanie zamówień i rezerwacji">
             <ol className="space-y-3 list-none">
               <Li n="1">Klient może składać zamówienia lub dokonywać rezerwacji przez 24 godziny na dobę, 7 dni w tygodniu za pośrednictwem interfejsu Sklepu internetowego.</Li>
-              <Li n="2">W celu złożenia zamówienia/rezerwacji, Klient kompletuje koszyk, wybiera odpowiedni dla danej kategorii towaru sposób dostawy/odbioru oraz formę płatności, a następnie zatwierdza proces przyciskiem „Zamawiam z obowiązkiem zapłaty" lub równoważnym.</Li>
+              <Li n="2">W celu złożenia zamówienia/rezerwacji, Klient kompletuje koszyk, wybiera odpowiedni dla danej kategorii towaru sposób dostawy/odbioru oraz formę płatności, a następnie zatwierdza proces przyciskiem „Zamawiam z obowiązkiem zapłaty&quot; lub równoważnym.</Li>
               <Li n="3">Wszystkie ceny podane w Sklepie są cenami brutto (zawierają podatek VAT) wyrażonymi w złotych polskich (PLN). Ceny nie zawierają kosztów dostawy, które są jawnie komunikowane w trakcie procedury składania zamówienia.</Li>
             </ol>
           </Section>

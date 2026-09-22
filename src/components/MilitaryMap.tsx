@@ -51,7 +51,7 @@ function MapFallback() {
       {/* Coordinates label */}
       <div className="absolute bottom-4 left-4 font-[var(--font-mono)] text-[11px] text-accent/50 leading-[1.8] pointer-events-none">
         <div>50°04&apos;33&quot;N  019°56&apos;39&quot;E</div>
-        <div>// KRAKÓW, PL</div>
+        <div>{'// KRAKÓW, PL'}</div>
       </div>
       {/* Vignette */}
       <div

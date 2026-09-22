@@ -419,8 +419,8 @@ export default function HomePageClient({
         {/* HUD + bottom content */}
         <div className="absolute inset-0 z-[10] pointer-events-none">
           <div className="absolute top-[100px] left-16 font-[var(--font-mono)] text-[11px] text-accent leading-[2.2] opacity-60 hidden md:block">
-            <div>// PL-2026</div>
-            <div>// KRAKÓW, PL</div>
+            <div>{'// PL-2026'}</div>
+            <div>{'// KRAKÓW, PL'}</div>
           </div>
           <div className="absolute top-[100px] right-16 font-[var(--font-mono)] text-[11px] text-accent text-right leading-[2.2] opacity-60 hidden md:block">
             <div ref={coordLatRef}>[ 050°04&apos;00&quot;N ]</div>
@@ -865,7 +865,7 @@ export default function HomePageClient({
                     {/* ─── Newsletter opt-in ─── */}
                     <div className="border border-accent/10 bg-accent/[0.02] p-4 space-y-3">
                       <div className="font-[var(--font-mono)] text-[10px] text-accent/40 tracking-[0.2em]">
-                        // SUBSKRYBUJ — KANAŁ INFORMACYJNY
+                        {'// SUBSKRYBUJ — KANAŁ INFORMACYJNY'}
                       </div>
                       <div className="flex flex-wrap gap-x-5 gap-y-2">
                         {NL_SEGMENTS.map((seg) => {
