@@ -7,7 +7,7 @@ Etap 1: bezpieczny fundament (audyt 2026-09-22). Etap 2: płatności i uruchomie
 |---|---|---|---|---|---|---|
 | HA-1.01 | Baseline schematu prod i raport rozjazdu z migracjami | done | S | — | — | — |
 | HA-1.02 | source_connectors — RLS i usunięcie tokenów z wierszy | todo | M | HA-1.01 | — | — |
-| HA-1.03 | Funkcje SECURITY DEFINER — search_path i odebranie publicznego wywołania | todo | S | HA-1.01 | — | — |
+| HA-1.03 | Funkcje SECURITY DEFINER — search_path i odebranie publicznego wywołania | review | S | HA-1.01 | — | — |
 | HA-1.04 | Guard agenta — hook blokujący zapisy na prod | done | M | — | — | — |
 | HA-1.05 | Bezpiecznik prod w skryptach i testach | done | M | — | — | — |
 | HA-1.06 | Lokalny stack Supabase z seedem; testy na lokalnej bazie | todo | L | HA-1.01, HA-1.05 | — | — |
