@@ -381,7 +381,7 @@ export default function KontaktClient({
                       {/* ─── Newsletter opt-in ─── */}
                       <div className="border border-accent/10 bg-accent/[0.02] p-4 space-y-3">
                         <div className="font-[var(--font-mono)] text-[10px] text-accent/40 tracking-[0.2em]">
-                          // SUBSKRYBUJ — KANAŁ INFORMACYJNY
+                          {'// SUBSKRYBUJ — KANAŁ INFORMACYJNY'}
                         </div>
                         <div className="flex flex-wrap gap-x-5 gap-y-2">
                           {NL_SEGMENTS.map((seg) => {
@@ -409,7 +409,7 @@ export default function KontaktClient({
                           onClick={() => setRodoOpen(o => !o)}
                           className="w-full flex items-center justify-between px-4 py-3 font-[var(--font-mono)] text-[10px] text-accent/40 hover:text-accent/70 transition-colors tracking-[0.2em] uppercase text-left"
                         >
-                          <span>// Klauzula informacyjna RODO</span>
+                          <span>{'// Klauzula informacyjna RODO'}</span>
                           <span className="ml-2 shrink-0">{rodoOpen ? '[ − ]' : '[ + ]'}</span>
                         </button>
                         {rodoOpen && (

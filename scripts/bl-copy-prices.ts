@@ -27,7 +27,7 @@ async function main() {
   // 1. Collect all product IDs
   const allIds: string[] = [];
   for (let page = 1; ; page++) {
-    const data = await blCall('getInventoryProductsList', { inventory_id: INVENTORY_ID, page }) as any;
+    const data = await blCall('getInventoryProductsList', { inventory_id: INVENTORY_ID, page }) as { products?: Record<string, unknown> };
     const ids = Object.keys(data.products ?? {});
     if (ids.length === 0) break;
     allIds.push(...ids);
@@ -43,8 +43,8 @@ async function main() {
 
   for (let i = 0; i < allIds.length; i += 100) {
     const chunk = allIds.slice(i, i + 100);
-    const data = await blCall('getInventoryProductsData', { inventory_id: INVENTORY_ID, products: chunk }) as any;
-    for (const [id, p] of Object.entries(data.products ?? {}) as [string, any][]) {
+    const data = await blCall('getInventoryProductsData', { inventory_id: INVENTORY_ID, products: chunk }) as { products?: Record<string, { prices?: Record<number, number> }> };
+    for (const [id, p] of Object.entries(data.products ?? {})) {
       const price = p.prices?.[fromGroup];
       if (price && price > 0) {
         updates[id] = { [toGroup]: price };
@@ -64,7 +64,7 @@ async function main() {
   const ids = Object.keys(updates);
   for (let i = 0; i < ids.length; i += 1000) {
     const chunk = Object.fromEntries(ids.slice(i, i + 1000).map((id) => [id, updates[id]]));
-    const res = await blCall('updateInventoryProductsPrices', { inventory_id: INVENTORY_ID, products: chunk }) as any;
+    const res = await blCall('updateInventoryProductsPrices', { inventory_id: INVENTORY_ID, products: chunk }) as { counter: number; warnings?: Record<string, unknown> };
     console.log(`  updated ${Math.min(i + 1000, ids.length)}/${ids.length}: ${res.counter} accepted`);
     if (Object.keys(res.warnings ?? {}).length) {
       console.warn('  warnings:', res.warnings);

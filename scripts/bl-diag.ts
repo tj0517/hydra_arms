@@ -21,11 +21,11 @@ async function blCall(method: string, params: Record<string, unknown> = {}) {
 const INVENTORY_ID = parseInt(process.env.BASELINKER_INVENTORY_ID ?? '35743', 10);
 
 async function main() {
-  const list = await blCall('getInventoryProductsList', { inventory_id: INVENTORY_ID, page: 1 }) as any;
+  const list = await blCall('getInventoryProductsList', { inventory_id: INVENTORY_ID, page: 1 }) as { products?: Record<string, unknown> };
   const ids = Object.keys(list.products ?? {}).slice(0, 5);
-  const data = await blCall('getInventoryProductsData', { inventory_id: INVENTORY_ID, products: ids }) as any;
+  const data = await blCall('getInventoryProductsData', { inventory_id: INVENTORY_ID, products: ids }) as { products?: Record<string, { prices?: Record<string, number>; stock?: Record<string, number>; text_fields?: { name?: string } }> };
   const products = data.products ?? {};
-  for (const [id, p] of Object.entries(products) as [string, any][]) {
+  for (const [id, p] of Object.entries(products)) {
     const total = Object.values(p.stock as Record<string, number>).reduce((a: number, v) => a + (v as number), 0);
     console.log(`${id}  price=${p.prices?.['96827'] ?? 0}  stock=${total}  name=${String(p.text_fields?.name ?? '').slice(0, 50)}`);
   }

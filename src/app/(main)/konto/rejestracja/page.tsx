@@ -13,7 +13,7 @@ function RodoKlauzula() {
         onClick={() => setOpen(o => !o)}
         className="w-full flex items-center justify-between px-4 py-3 font-[var(--font-mono)] text-[10px] text-accent/40 hover:text-accent/70 transition-colors tracking-[0.2em] uppercase text-left"
       >
-        <span>// Klauzula informacyjna RODO</span>
+        <span>{'// Klauzula informacyjna RODO'}</span>
         <span className="ml-2 shrink-0">{open ? '[ − ]' : '[ + ]'}</span>
       </button>
       {open && (
