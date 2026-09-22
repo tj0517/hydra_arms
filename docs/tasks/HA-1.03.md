@@ -1,7 +1,7 @@
 ---
 id: HA-1.03
 title: Funkcje SECURITY DEFINER — search_path i odebranie publicznego wywołania
-status: review
+status: done
 difficulty: S
 model: sonnet
 model_approved: true
@@ -52,3 +52,4 @@ Dwie funkcje działające z uprawnieniami właściciela, `create_user_profile` (
 - Deferred: maile autoryzacyjne przez domyślny SMTP Supabase → docs/deferred-tasks.md.
 - 2026-09-22 · decyzja tj: migrację 009 wdraża tj ręcznie w Supabase SQL Editor po bramce STOP (agent nie pisze na prod); pierwsze wklejenie nie weszło (brak zmian w odczycie), drugie zadziałało.
 - 2026-09-22 · 009 zastosowana na prod przez tj; `schema_migrations` nadal pusta — jak 001–008.
+- 2026-09-22 tj: review — przyjęte z uzupełnieniami; PR #9; udowodnione: anon/authenticated true→false na next_xml_product_id, search_path na obu funkcjach, ciała bez zmian, rejestracja po 009 tworzy profil (count 1); import XML po REVOKE sprawdza tj odczytem po nocnym syncu.
