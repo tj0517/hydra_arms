@@ -1,7 +1,7 @@
 ---
 id: HA-1.07
 title: CI — typy, lint, skan sekretów
-status: review
+status: done
 difficulty: M
 model: claude-sonnet-4-6
 model_approved: null
@@ -52,3 +52,4 @@ Repo nie ma żadnego CI, a tokeny w migracji 004 trafiły do publicznego repo ni
 - 2026-09-22 · finalne CI zielone (run 35736772796, PR #6): tsc ✓, lint ✓ (0 errors), gitleaks ✓.
 - 2026-09-22 · review tj (PR #6): 4 poprawki wymagane w tym samym PR bez force push. (1) Skan sekretów musi działać w trybie git (--log-opts), nie --no-git — sekret dodany i cofnięty w PR zostaje w historii git. (2) Allowlist XML zawężony do dwóch konkretnych plików (sharg_full_sample.xml, sharg_gateway_sample.xml). (3) permissions: contents: read + weryfikacja sumy kontrolnej tarballa gitleaks przed rozpakowaniem. (4) Status review, pr: 6, wpis w INDEX. Przed allowlistowaniem: reguła jwt wystrzelona na commitach b7e1059, ea4aa4f, 858deaa — pełne SHA dodane jako commits w .gitleaks.toml. Lokalny skan git-mode zielony: 8 commitów, 0 wycieków.
 - 2026-09-22 · poprawki review wdrożone (commit c01339b + 394595d). Finalne CI zielone po review (run 35741709534, PR #6): tsc ✓, lint ✓, gitleaks git-mode ✓ (checksum verified). Plik checksums ma nazwę gitleaks_VERSION_checksums.txt (nie checksums.txt) — poprawiono w 394595d.
+- 2026-09-22 tj: review runda 2 — przyjęte; skan commitów PR (log-opts), allowlist zawężony do 004 + 2 plików Sharg + 3 SHA red proof, permissions read, checksum gitleaks
