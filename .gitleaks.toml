@@ -1,5 +1,8 @@
 title = "hydra-arms gitleaks config"
 
+[extend]
+  useDefault = true
+
 [allowlist]
   description = "Known tokens in historical migration 004 — accepted_risk tj 2026-09-22; see docs/deferred-tasks.md"
   paths = [
