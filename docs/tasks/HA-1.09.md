@@ -1,12 +1,12 @@
 ---
 id: HA-1.09
 title: Higiena — server-only w kliencie admin i poprawki CLAUDE.md
-status: todo
+status: in_progress
 difficulty: S
-model: null
+model: sonnet
 model_approved: null
-effort: null
-branch: null
+effort: low
+branch: chore/ha-1.09-hygiene
 due: null
 depends_on: []
 blocked_by_questions: []
