@@ -1,7 +1,7 @@
 ---
 id: HA-1.02
 title: source_connectors — RLS i usunięcie tokenów z wierszy
-status: review
+status: done
 difficulty: M
 model: sonnet
 model_approved: null
@@ -59,3 +59,5 @@ Dowód „po" — tokeny w wierszach:
 SELECT count(*) FROM source_connectors WHERE xml_url ~ '(token|key)=' OR extra_config::text ~ '(token|key)=';
 -- result: [{"count":0}]
 ```
+
+- 2026-09-22 tj: review — przyjęte z uzupełnieniami; PR #8; udowodnione: anon 0 wierszy przed/po, count sekretów 0, 004 nietknięta, skrypt read-only; otwarte: last_synced_at po nocnym syncu (tj sprawdza odczytem).
