@@ -49,3 +49,13 @@ Migracja 004 utworzyła tabelę `source_connectors` bez RLS i wpisała do niej a
 - stała reguła: stan bazy ustalasz bieżącym odczytem, nigdy z pamięci, notatek ani pliku typów
 
 ## Notatki z realizacji
+
+- 2026-09-22 · decyzja tj: migrację 008 wdraża tj ręcznie w Supabase SQL Editor po bramce STOP (agent nie pisze na prod)
+- 2026-09-22 · 008 zastosowana na prod przez tj (SQL Editor); `schema_migrations` nadal pusta — jak 001–007
+- 2026-09-22 · kryterium `last_synced_at` po syncu otwarte do jutrzejszego cronu; tj sprawdza odczytem
+
+Dowód „po" — tokeny w wierszach:
+```sql
+SELECT count(*) FROM source_connectors WHERE xml_url ~ '(token|key)=' OR extra_config::text ~ '(token|key)=';
+-- result: [{"count":0}]
+```
