@@ -1,7 +1,7 @@
 ---
 id: HA-1.07
 title: CI — typy, lint, skan sekretów
-status: in_progress
+status: review
 difficulty: M
 model: claude-sonnet-4-6
 model_approved: null
@@ -12,7 +12,7 @@ depends_on: []
 blocked_by_questions: []
 touches_db: false
 touches_prod: false
-pr: null
+pr: 6
 ---
 
 ## Cel
@@ -50,3 +50,4 @@ Repo nie ma żadnego CI, a tokeny w migracji 004 trafiły do publicznego repo ni
 - 2026-09-22 · red proof #1 — fake secret (Supabase service_role JWT, ref: fakeprojctxforredproof) w .ts: CI oblał na Secret scan (run 35735686450, PR #6). Cofnięty. Uwaga: konfiguracja gitleaks musi zawierać [extend] useDefault = true — bez tego brak reguł wykrywania.
 - 2026-09-22 · red proof #2 — celowy błąd typów (string do number): CI oblał na Type check (run 35735920411, PR #6). Cofnięty.
 - 2026-09-22 · finalne CI zielone (run 35736772796, PR #6): tsc ✓, lint ✓ (0 errors), gitleaks ✓.
+- 2026-09-22 · review tj (PR #6): 4 poprawki wymagane w tym samym PR bez force push. (1) Skan sekretów musi działać w trybie git (--log-opts), nie --no-git — sekret dodany i cofnięty w PR zostaje w historii git. (2) Allowlist XML zawężony do dwóch konkretnych plików (sharg_full_sample.xml, sharg_gateway_sample.xml). (3) permissions: contents: read + weryfikacja sumy kontrolnej tarballa gitleaks przed rozpakowaniem. (4) Status review, pr: 6, wpis w INDEX. Przed allowlistowaniem: reguła jwt wystrzelona na commitach b7e1059, ea4aa4f, 858deaa — pełne SHA dodane jako commits w .gitleaks.toml. Lokalny skan git-mode zielony: 8 commitów, 0 wycieków.

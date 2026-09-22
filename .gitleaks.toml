@@ -4,8 +4,14 @@ title = "hydra-arms gitleaks config"
   useDefault = true
 
 [allowlist]
-  description = "Files with known or expected high-entropy strings — not real credentials"
+  description = "Known non-secrets: migration placeholder tokens and red-proof test commits"
+  commits = [
+    "b7e105981224db75eb4a6a643d02b396c7496b48",  # HA-1.07 red proof — invented value; rule: jwt
+    "ea4aa4f7539ffcba8cc023da2638e1cb886c8703",  # HA-1.07 red proof — invented value; rule: jwt
+    "858deaac64258ff925bfabb85f38837d04c4bf56",  # HA-1.07 red proof — invented value; rule: jwt
+  ]
   paths = [
     '''supabase/migrations/004_xml_import_fields\.sql''',
-    '''xml-integration/samples/''',
+    '''xml-integration/samples/sharg_full_sample\.xml''',
+    '''xml-integration/samples/sharg_gateway_sample\.xml''',
   ]
