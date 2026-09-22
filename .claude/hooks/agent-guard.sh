@@ -142,21 +142,32 @@ if printf '%s' "$CMD" | grep -Eq '(^|[;&|[:space:]])supabase[[:space:]]+migratio
 fi
 
 # --- psql / raw SQL with DDL or DML -----------------------------------------
-# Both the psql check and the DDL/DML scanner run on SCAN_CMD — a version of
-# the command with git commit and gh pr/issue message text stripped — so English
-# words like "psql", "grant", "revoke" in commit message bodies don't trigger
-# the checks (HA-1.11 false-alarm fix). Local exception: psql and DDL against
-# an explicit local host (127.0.0.1 or localhost, not subdomains) are allowed
-# when SUPABASE_TARGET=local is in the session env. Compound commands fall
-# through to all remaining checks regardless.
+# psql is checked against CMD (the raw original command) so that any psql
+# occurrence blocks regardless of message-text context — a commit message
+# containing "psql" over-blocks, which is the safe direction.
 #
-# Multi-line commands are flattened first (tr '\n' ' ') so a heredoc -m
-# argument is stripped in a single pass rather than line by line.
+# DDL/DML runs against SCAN_CMD — a sanitised copy with heredoc bodies and
+# quoted -m/--body/--title argument values stripped — so English words like
+# "grant"/"revoke" in commit messages don't trigger the scanner.
 #
-# SAFETY: if a -m/--body/--title argument contains a non-heredoc command
-# substitution ($(...) other than $(cat <<) or a backtick), do NOT strip —
-# scan the full command so injection attempts are caught.
-FLAT_CMD="$(printf '%s' "$CMD" | tr '\n' ' ')"
+# Stripping is two-stage to prevent greedy-pattern bypass:
+#   1. Remove heredoc bodies LINE-WISE with awk (<<'EOF'/<<EOF … EOF) BEFORE
+#      flattening, so shell commands after the heredoc are never hidden.
+#   2. Flatten newlines with tr, then strip remaining quoted arg values with
+#      simple [^"]*  / [^']* patterns (safe with no ".*").
+#
+# SAFETY: if a -m/--body/--title argument still contains a non-heredoc command
+# substitution after the awk pass, do NOT strip — scan the full command.
+
+# Step 1 — remove heredoc bodies only when the heredoc is inside a command
+# substitution used as a message argument ("$(cat <<'EOF'…)).  Plain file
+# heredocs (cat <<'EOF' > file.sql) are NOT stripped so their SQL is still
+# scanned by the DDL check below.
+STRIPPED_CMD="$(printf '%s' "$CMD" | awk \
+  '/"\$\(cat.*<<'"'"'?EOF'"'"'?/{in_hd=1;print;next} in_hd&&/^EOF$/{in_hd=0;print;next} in_hd{next}{print}')"
+
+# Step 2 — flatten and apply quoted-arg stripping
+FLAT_CMD="$(printf '%s' "$STRIPPED_CMD" | tr '\n' ' ')"
 
 _unsafe_subst=false
 if printf '%s' "$FLAT_CMD" | grep -Eq 'git[[:space:]]+commit'; then
@@ -177,18 +188,16 @@ fi
 if [ "$_unsafe_subst" = true ]; then
   SCAN_CMD="$FLAT_CMD"
 else
-  # The heredoc rules (with .*) must come first so that commit message bodies
-  # containing double-quoted words don't fool the simpler [^"]* rules below.
   SCAN_CMD="$(printf '%s' "$FLAT_CMD" | sed -E \
-    -e 's/(-m[[:space:]]+|--message[[:space:]]+|--message=)"[^"]*\$\(cat[[:space:]]+<<.* EOF[[:space:]]*\)"/\1"STRIPPED"/g' \
     -e 's/(-m[[:space:]]+|--message[[:space:]]+|--message=)"[^"]*"/\1"STRIPPED"/g' \
     -e 's/(-m[[:space:]]+|--message[[:space:]]+|--message=)'"'"'[^'"'"']*'"'"'/\1'"'"'STRIPPED'"'"'/g' \
-    -e 's/(--body[[:space:]]+|--body=|--title[[:space:]]+|--title=)"[^"]*\$\(cat[[:space:]]+<<.* EOF[[:space:]]*\)"/\1"STRIPPED"/g' \
     -e 's/(--body[[:space:]]+|--body=|--title[[:space:]]+|--title=)"[^"]*"/\1"STRIPPED"/g' \
     -e 's/(--body[[:space:]]+|--body=|--title[[:space:]]+|--title=)'"'"'[^'"'"']*'"'"'/\1'"'"'STRIPPED'"'"'/g')"
 fi
 
-if printf '%s' "$SCAN_CMD" | grep -Eq '(^|[;&|[:space:]])psql([[:space:]]|$)'; then
+# psql check: on CMD (not SCAN_CMD) — safe direction: over-blocks commit
+# messages that mention "psql", never under-blocks a real psql command.
+if printf '%s' "$CMD" | grep -Eq '(^|[;&|[:space:]])psql([[:space:]]|$)'; then
   if [ "$IS_LOCAL" = true ] \
      && printf '%s' "$CMD" | grep -Eq '(127\.0\.0\.1|localhost($|[^.[:alnum:]]))' \
      && ! printf '%s' "$CMD" | grep -Eq '(supabase\.co|breqmmlcaxsvxcqlcmqc|--linked)'; then
@@ -198,6 +207,7 @@ if printf '%s' "$SCAN_CMD" | grep -Eq '(^|[;&|[:space:]])psql([[:space:]]|$)'; t
   fi
 fi
 
+# DDL/DML scanner: on SCAN_CMD (stripped).
 if printf '%s' "$SCAN_CMD" | grep -Eqi '\b(insert[[:space:]]+into|update[[:space:]]+[a-z_."]+[[:space:]]+set|delete[[:space:]]+from|drop[[:space:]]+(table|database|schema|index)|alter[[:space:]]+(table|database|schema)|truncate([[:space:]]+table)?|create[[:space:]]+(table|database|schema)|grant[[:space:]]|revoke[[:space:]])\b'; then
   if [ "$IS_LOCAL" = true ] \
      && printf '%s' "$CMD" | grep -Eq '(127\.0\.0\.1|localhost($|[^.[:alnum:]]))' \

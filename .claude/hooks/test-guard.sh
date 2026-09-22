@@ -180,9 +180,17 @@ run_case "heredoc to sql file with INSERT INTO"          block $'cat <<\'EOF\' >
 run_case "git commit heredoc body with REVOKE/GRANT"     allow \
   $'git commit -m "$(cat <<\'EOF\'\nfix: security hardening\n\nREVOKE ALL ON FUNCTION public.f() FROM PUBLIC;\nGRANT EXECUTE ON FUNCTION public.g() TO service_role;\nEOF\n)"'
 run_case "git commit heredoc body with internal quotes"  allow \
-  $'git commit -m "$(cat <<\'EOF\'\nfix: strip "grant" and \'revoke\' and psql\nEOF\n)"'
+  $'git commit -m "$(cat <<\'EOF\'\nfix: strip "grant" and "revoke" words\nEOF\n)"'
 run_case "git commit -m non-heredoc subst blocks"        block \
   $'git commit -m "$(node -e \'INSERT INTO x\')"'
+run_case "heredoc commit + prod psql after (bypass attempt)" block \
+  $'git commit -m "$(cat <<\'EOF\'\nx\nEOF\n)"; psql -h db.breqmmlcaxsvxcqlcmqc.supabase.co -c "drop table orders"; echo " EOF)"' \
+  SUPABASE_TARGET=local
+run_case "heredoc commit + node INSERT after (bypass attempt)" block \
+  $'git commit -m "$(cat <<\'EOF\'\nx\nEOF\n)"; node -e "INSERT INTO x"' \
+  SUPABASE_TARGET=local
+run_case "heredoc body with EOF-like line inside — message only" allow \
+  $'git commit -m "$(cat <<\'EOF\'\nsecurity fix\n\n EOF)"\n&& echo ok\nEOF\n)"'
 
 echo "=== malformed input — fail closed ==="
 run_raw_case "not JSON at all"                 block "this is not json"
