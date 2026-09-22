@@ -10,6 +10,8 @@ To deliberately run a blocked command against prod, start the session with `HA_A
 
 A session started in the parent `hydra_arms/` folder (outside this repo) is covered by a local, untracked `../.claude/settings.json` that points at this same hook.
 
+`SUPABASE_TARGET=local` only unlocks the guard's test-runner check — it does not itself point tests at a local database (that lands in HA-1.05/HA-1.06). Until then, tests still hit prod: don't set it.
+
 ## Commands
 
 ```bash

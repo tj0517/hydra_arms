@@ -53,3 +53,4 @@ Claude Code pracuje w tym repo w trybie `bypassPermissions` z `Bash(*)`, a `.env
 - 2026-09-22 tj: red proof w kolejności — najpierw test jednostkowy (`test-guard.sh`), potem próba na żywo z nieprawidłowym kluczem (`SUPABASE_SERVICE_ROLE_KEY=invalid`)
 - 2026-09-22 tj: odblokowanie tylko przez zmienną środowiskową sesji; `HA_ALLOW_PROD` wpisane inline w poleceniu jest traktowane jako próba obejścia i blokowane
 - 2026-09-22 tj: skrypty piszące tylko do Sanity (`sanity-seed.ts`, `patch-homepage-fields.ts`) też trafiają na listę blokad (spójna reguła, nie tylko Supabase/BL)
+- 2026-09-22 tj: review — poprawki w tym PR (cd scripts, SUPABASE_TARGET early-allow, glob, CLAUDE.md)

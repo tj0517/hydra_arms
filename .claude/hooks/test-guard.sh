@@ -77,6 +77,27 @@ for script in baselinker-sync.ts bl-build-categories.ts bl-copy-prices.ts bl-tes
   run_case "multiple VAR= prefixes $script"     block "FOO=1 BAR=2 npx tsx scripts/$script"
 done
 
+echo "=== review fixes: bare filename, early-allow, glob/slash normalisation ==="
+run_case "cd scripts && bare filename (no scripts/ prefix)" \
+  block "cd scripts && npx tsx reset-shop-db.ts"
+run_case "cd scripts; node <bare filename>" \
+  block "cd scripts; node reset-shop-db.ts"
+run_case "SUPABASE_TARGET=local test run followed by writing script (compound)" \
+  block "npm test; npx tsx scripts/reset-shop-db.ts" SUPABASE_TARGET=local
+run_case "SUPABASE_TARGET=local playwright test && writing script (compound)" \
+  block "SUPABASE_TARGET=local playwright test && npx tsx scripts/reset-shop-db.ts" SUPABASE_TARGET=local
+run_case "SUPABASE_TARGET=local, only a test run (no writing script)" \
+  allow "npm test" SUPABASE_TARGET=local
+run_case "glob path scripts/reset-*.ts"        block "npx tsx scripts/reset-*.ts"
+run_case "glob path scripts/*.ts"              block "npx tsx scripts/*.ts"
+run_case "glob path with node runner"          block "node scripts/reset-?hop-db.ts"
+run_case "double slash scripts//x.ts"          block "npx tsx scripts//reset-shop-db.ts"
+run_case "triple slash scripts///x.ts"         block "npx tsx scripts///reset-shop-db.ts"
+run_case "read-only script name still allowed (basename check is exact)" \
+  allow "cd scripts && npx tsx check-db.ts"
+run_case "glob path on read-only-looking dir, no runner word" \
+  allow "ls scripts/*.ts"
+
 echo "=== supabase / psql / vercel / git push --force ==="
 run_case "supabase db push"                    block "supabase db push"
 run_case "supabase migration repair"           block "supabase migration repair"
