@@ -1,7 +1,7 @@
 ---
 id: HA-1.05
 title: Bezpiecznik prod w skryptach i testach
-status: review
+status: done
 difficulty: M
 model: claude-sonnet-4-6
 model_approved: null
@@ -49,3 +49,4 @@ Testy Playwright i skrypty w `scripts/` czytają `.env.local`, czyli pracują na
 
 - 2026-09-22 · decyzja tj: `scripts/lib/prodGuard.ts` (nie `src/lib/env/`); wszystkie 14 piszących skryptów chronione; guard uruchamiany w playwright.config.ts przy ewaluacji konfiguracji (nie w globalSetup)
 - 2026-09-22 · decyzja tj: skrypty piszące do BaseLinker/Sanity używają `assertExternalProd()` (zawsze wymaga HA_ALLOW_PROD=1); skrypty piszące do Supabase używają `assertNotProd()` (localhost/127.0.0.1 przechodzi, reszta wymaga HA_ALLOW_PROD=1); skrypty piszące do obydwu (baselinker-sync.ts, supabase-to-baselinker.ts) wywołują oba guardy
+- 2026-09-22 tj: review — przyjęte; red proofs uruchomione ręcznie przez tj (test 9/9, reset-shop-db, xml-to-baselinker, playwright — wszystkie zatrzymane przez guard przed połączeniem)
