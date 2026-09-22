@@ -50,3 +50,5 @@ Dwie funkcje działające z uprawnieniami właściciela, `create_user_profile` (
 - Red proof: `has_function_privilege('anon','public.next_xml_product_id()','EXECUTE')` = true przed, false po.
 - Rejestracja testowa (konto `64df196f-b1a5-43c1-a41d-1a62aaa094b4`): `SELECT count(*) FROM user_profiles WHERE id = '...'` → 1. ✓
 - Deferred: maile autoryzacyjne przez domyślny SMTP Supabase → docs/deferred-tasks.md.
+- 2026-09-22 · decyzja tj: migrację 009 wdraża tj ręcznie w Supabase SQL Editor po bramce STOP (agent nie pisze na prod); pierwsze wklejenie nie weszło (brak zmian w odczycie), drugie zadziałało.
+- 2026-09-22 · 009 zastosowana na prod przez tj; `schema_migrations` nadal pusta — jak 001–008.
