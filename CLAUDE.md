@@ -28,7 +28,9 @@ npx tsx scripts/check-db.ts           # Inspect Supabase DB state
 npx tsx scripts/reset-shop-db.ts      # Wipe and re-seed shop tables
 ```
 
-No test runner is configured.
+**Warning: `.env.local` points at the production database.** Do not run writing scripts or Playwright checkout flows without explicit approval.
+
+Playwright is configured: `npm run test` (all tests), `npm run test:shop` (shop suite, `tests/shop/`, port 3001). Tests currently refuse to run against prod — see the Safety section.
 
 ## Architecture
 
@@ -57,7 +59,7 @@ All content pages follow this pattern: server component fetches from Sanity (via
 - **Cart**: Client-side `useReducer` in `src/components/shop/CartProvider.tsx`, persisted to `localStorage` as `hydra-cart`.
 - **Checkout**: `POST /api/shop/checkout` — validates items/restrictions, then calls the `checkout_create_order` Postgres RPC (migration 006): stock decrement + order + items in one transaction. Pushes to BaseLinker after (non-fatal, `blockedRetries: 0`; orphans retried by `/api/shop/orders/sync`). Rate-limited per IP (`src/lib/rateLimit.ts`). **No payment gateway yet** — orders are created as `paid` (P24 planned, env vars templated).
 - **Public product data**: always select `PUBLIC_PRODUCT_COLUMNS` (`src/lib/shop/fetchProducts.ts`) — never `select('*')` on `shop_products` in anything that reaches the client (hides `price_purchase`, `notes_internal`, connector fields).
-- **Fulfillment routing**: `src/lib/shop/cartAnalysis.ts` — determines `direct_H1`, `direct_H2`, `consolidated`, or `pickup` based on `source_warehouse` and `product_type`.
+- **Fulfillment routing**: `src/lib/shop/cartAnalysis.ts` — determines `own`, `sourced`, or `pickup` (`FulfillmentRoute`) based on `source_warehouse` and `product_type`.
 - **`product_type` enum**: `standard | age_restricted | pickup_only` — non-standard items always force `pickup` route.
 
 ### Supabase
@@ -67,7 +69,7 @@ All content pages follow this pattern: server component fetches from Sanity (via
 - Public client (no auth needed): `src/lib/supabase/public.ts`
 - Types: `src/lib/supabase/types.ts` — manually maintained; each table requires `Relationships: []` to satisfy the `GenericTable` constraint
 - Auth middleware: `src/middleware.ts` — redirects `/konto/*` to login if unauthenticated
-- Migrations: `supabase/migrations/` — apply in order (001→006)
+- Migrations: `supabase/migrations/` — apply in order (001→007)
 
 ### Animation / UI Infrastructure
 - GSAP + ScrollTrigger registered in `src/lib/gsap.ts` — import from here, not directly from `gsap`
