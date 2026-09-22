@@ -1,7 +1,7 @@
 ---
 id: HA-1.01
 title: Baseline schematu prod i raport rozjazdu z migracjami
-status: in_progress
+status: review
 difficulty: S
 model: sonnet
 model_approved: null
