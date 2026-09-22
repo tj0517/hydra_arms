@@ -1,4 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
+import * as path from 'path';
+import * as dotenv from 'dotenv';
+import { assertNotProd } from './scripts/lib/prodGuard';
+
+dotenv.config({ path: path.resolve(process.cwd(), '.env.local'), override: true });
+assertNotProd();
 
 export default defineConfig({
   testDir: './tests',

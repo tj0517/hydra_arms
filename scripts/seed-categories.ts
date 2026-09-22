@@ -1,6 +1,8 @@
 import * as path from 'path';
 import * as dotenv from 'dotenv';
+import { assertNotProd } from './lib/prodGuard';
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local'), override: true });
+assertNotProd();
 import { createClient } from '@supabase/supabase-js';
 import categories from '../src/lib/baselinker/fixtures/categories.json';
 

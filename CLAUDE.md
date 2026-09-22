@@ -10,7 +10,9 @@ To deliberately run a blocked command against prod, start the session with `HA_A
 
 A session started in the parent `hydra_arms/` folder (outside this repo) is covered by a local, untracked `../.claude/settings.json` that points at this same hook.
 
-`SUPABASE_TARGET=local` only unlocks the guard's test-runner check — it does not itself point tests at a local database (that lands in HA-1.05/HA-1.06). Until then, tests still hit prod: don't set it.
+Every writing script also contains an in-script guard (`scripts/lib/prodGuard.ts`, HA-1.05): `assertNotProd()` in Supabase writers (passes only when `NEXT_PUBLIC_SUPABASE_URL` host is `localhost`/`127.0.0.1`) and `assertExternalProd()` in BaseLinker/Sanity writers (always requires `HA_ALLOW_PROD=1`). `playwright.config.ts` calls `assertNotProd()` at load time so no test starts against prod. To run deliberately: `HA_ALLOW_PROD=1 npx tsx scripts/<name>.ts`. Never set `HA_ALLOW_PROD` permanently.
+
+`SUPABASE_TARGET=local` only unlocks the hook's test-runner check — it does not itself point tests at a local database (that lands in HA-1.06). Until then, tests still hit prod: don't set it.
 
 ## Commands
 

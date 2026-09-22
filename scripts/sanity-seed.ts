@@ -12,8 +12,10 @@
 
 import { createClient } from '@sanity/client'
 import * as dotenv from 'dotenv'
+import { assertExternalProd } from './lib/prodGuard'
 
 dotenv.config({ path: '.env.local' })
+assertExternalProd('Sanity')
 
 const client = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!,
