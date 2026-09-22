@@ -1,7 +1,7 @@
 ---
 id: HA-1.09
 title: Higiena — server-only w kliencie admin i poprawki CLAUDE.md
-status: in_progress
+status: review
 difficulty: S
 model: sonnet
 model_approved: null
@@ -12,7 +12,7 @@ depends_on: []
 blocked_by_questions: []
 touches_db: false
 touches_prod: false
-pr: null
+pr: 7
 ---
 
 ## Cel
@@ -38,3 +38,5 @@ Klient z kluczem service role (`src/lib/supabase/admin.ts`) nie jest zabezpieczo
 - `src/lib/supabase/admin.ts`, `CLAUDE.md`, `src/lib/shop/cartAnalysis.ts`
 
 ## Notatki z realizacji
+
+2026-09-22 (agent): `server-only` installed and imported; CLAUDE.md corrected (test runner, routes, migrations). Red proof confirmed with `sklep/page.tsx`. Build passes. PR #7 opened.
