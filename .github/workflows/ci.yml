@@ -39,7 +39,7 @@ jobs:
             "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/${TARBALL}" \
             -o /tmp/gitleaks.tar.gz
           curl -sSfL \
-            "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/checksums.txt" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_checksums.txt" \
             -o /tmp/gitleaks-checksums.txt
           EXPECTED=$(grep "${TARBALL}" /tmp/gitleaks-checksums.txt | awk '{print $1}')
           ACTUAL=$(sha256sum /tmp/gitleaks.tar.gz | awk '{print $1}')
