@@ -5,7 +5,7 @@ Etap 1: bezpieczny fundament (audyt 2026-09-22). Etap 2: płatności i uruchomie
 
 | id | tytuł | status | trudność | zależności | pytania | due |
 |---|---|---|---|---|---|---|
-| HA-1.01 | Baseline schematu prod i raport rozjazdu z migracjami | todo | S | — | — | — |
+| HA-1.01 | Baseline schematu prod i raport rozjazdu z migracjami | in_progress | S | — | — | — |
 | HA-1.02 | source_connectors — RLS i usunięcie tokenów z wierszy | todo | M | HA-1.01 | — | — |
 | HA-1.03 | Funkcje SECURITY DEFINER — search_path i odebranie publicznego wywołania | todo | S | HA-1.01 | — | — |
 | HA-1.04 | Guard agenta — hook blokujący zapisy na prod | todo | M | — | — | — |
