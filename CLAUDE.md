@@ -2,6 +2,16 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Safety
+
+Claude Code runs here with `bypassPermissions` — `.env.local` holds the production Supabase service-role key, so a stray command can write to prod with no prompt. A `PreToolUse` hook (`.claude/hooks/agent-guard.sh`, registered in `.claude/settings.json`) blocks known prod-writing commands before they run: every writing `scripts/*.ts` (Supabase/BaseLinker/Sanity writes), `supabase db push`/`migration repair`, `psql`/raw SQL DDL-DML, `vercel env`, `git push --force`, and test runners (`playwright test`, `npm test`, `npm run test*`) unless `SUPABASE_TARGET=local` is set. Malformed hook input fails closed (blocked).
+
+To deliberately run a blocked command against prod, start the session with `HA_ALLOW_PROD=1 claude` — the hook only trusts this from the session's own environment; setting it inline in a command is treated as a bypass attempt and stays blocked. Test the guard with `bash .claude/hooks/test-guard.sh`.
+
+A session started in the parent `hydra_arms/` folder (outside this repo) is covered by a local, untracked `../.claude/settings.json` that points at this same hook.
+
+`SUPABASE_TARGET=local` only unlocks the guard's test-runner check — it does not itself point tests at a local database (that lands in HA-1.05/HA-1.06). Until then, tests still hit prod: don't set it.
+
 ## Commands
 
 ```bash
