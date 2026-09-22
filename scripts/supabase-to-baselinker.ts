@@ -9,8 +9,11 @@
 
 import * as path from 'path';
 import * as dotenv from 'dotenv';
+import { assertNotProd, assertExternalProd } from './lib/prodGuard';
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local'), override: true });
+assertNotProd();
+assertExternalProd('BaseLinker');
 
 import { createClient } from '@supabase/supabase-js';
 import { blCall } from '../src/lib/baselinker/client';

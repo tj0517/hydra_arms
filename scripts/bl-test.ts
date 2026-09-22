@@ -4,7 +4,9 @@
  */
 import * as path from 'path';
 import * as dotenv from 'dotenv';
+import { assertExternalProd } from './lib/prodGuard';
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local'), override: true });
+assertExternalProd('BaseLinker');
 
 const INVENTORY_ID = parseInt(process.env.BASELINKER_INVENTORY_ID ?? '35743', 10);
 const PRICE_GROUP  = parseInt(process.env.BASELINKER_PRICE_GROUP  ?? '23934', 10);

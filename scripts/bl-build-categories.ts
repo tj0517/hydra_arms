@@ -26,8 +26,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
+import { assertExternalProd } from './lib/prodGuard';
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local'), override: true });
+assertExternalProd('BaseLinker');
 
 const OUTPUT_PATH = path.resolve(process.cwd(), 'xml-integration/hydra-categories.json');
 const DEFAULT_TREE = path.resolve(process.cwd(), 'xml-integration/hydra-category-tree.txt');
