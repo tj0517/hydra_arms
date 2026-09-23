@@ -110,8 +110,7 @@ async function runSync() {
     log.push(`products: ${totalSynced} upserted (product_type, source_warehouse preserved)`);
 
     // Bust the shop page cache so the next visitor sees fresh stock/prices
-    // @ts-expect-error — Next.js 16 revalidateTag signature varies; runtime works fine
-    revalidateTag(SHOP_CACHE_TAG);
+    revalidateTag(SHOP_CACHE_TAG, 'max');
     log.push('cache: shop-products tag revalidated');
 
     return NextResponse.json({ ok: true, log });

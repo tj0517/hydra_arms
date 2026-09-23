@@ -1,7 +1,7 @@
 ---
 id: HA-2.01
 title: Zamówienie czeka na płatność — nowy status, BL dopiero po opłaceniu
-status: in_progress
+status: review
 difficulty: L
 model: claude-sonnet-4-6
 model_approved: null
@@ -12,7 +12,7 @@ depends_on: [HA-1.01, HA-1.06]
 blocked_by_questions: []
 touches_db: true
 touches_prod: true
-pr: null
+pr: 14
 ---
 
 ## Cel

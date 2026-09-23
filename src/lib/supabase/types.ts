@@ -379,6 +379,10 @@ export interface Database {
         };
         Returns: Array<{ order_id: string; order_total: number }>;
       };
+      mark_order_paid: {
+        Args: { p_order_id: string };
+        Returns: boolean;
+      };
     };
     Enums: {
       product_type: ProductType;

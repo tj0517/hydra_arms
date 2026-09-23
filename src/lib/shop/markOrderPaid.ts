@@ -17,8 +17,7 @@ export async function markOrderPaid(
 ): Promise<{ changed: boolean; blOrderId?: number }> {
   const supabase = createAdminClient()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: changed, error: rpcError } = await (supabase as any).rpc('mark_order_paid', {
+  const { data: changed, error: rpcError } = await supabase.rpc('mark_order_paid', {
     p_order_id: orderId,
   })
 
@@ -26,8 +25,7 @@ export async function markOrderPaid(
   if (!changed) return { changed: false }
 
   // Status just changed to paid — reserved stock window opened, bust cache.
-  // @ts-expect-error — Next.js 16 revalidateTag signature varies; runtime works fine
-  revalidateTag(SHOP_CACHE_TAG)
+  revalidateTag(SHOP_CACHE_TAG, 'max')
 
   const blStatusId = parseInt(
     process.env.BASELINKER_ORDER_STATUS_ID ?? process.env.BASELINKER_STATUS_PAID ?? '0',
@@ -105,8 +103,7 @@ export async function markOrderPaid(
       .eq('id', orderId)
 
     // BL now owns the reservation — bust cache so displayed stock is restored.
-    // @ts-expect-error — Next.js 16 revalidateTag signature varies; runtime works fine
-    revalidateTag(SHOP_CACHE_TAG)
+    revalidateTag(SHOP_CACHE_TAG, 'max')
 
     console.log(`[markOrderPaid] BL order created: ${blOrderId} → order: ${orderId}`)
     return { changed: true, blOrderId }
