@@ -1,12 +1,12 @@
 ---
 id: HA-1.06
 title: Lokalny stack Supabase z seedem; testy na lokalnej bazie
-status: todo
+status: review
 difficulty: L
-model: null
+model: claude-opus-5
 model_approved: null
 effort: null
-branch: null
+branch: chore/ha-1.06-local-supabase-stack
 due: null
 depends_on: [HA-1.01, HA-1.05, HA-1.11]
 blocked_by_questions: []
@@ -52,3 +52,4 @@ Dziś jedyną bazą jest prod, więc każdy test, każda próba migracji i każd
 ## Notatki z realizacji
 - 2026-09-22 tj: lokalny stack jak w FA/DCS (Docker, odchudzony start, guard localhost) — O-01
 - 2026-09-22 tj: env lokalny jako .env.development.local (dev i Playwright domyślnie na lokalnej bazie); najpierw HA-1.11 (hook)
+- 2026-09-23 tj: fjordanglers stack zatrzymany ręcznie; jeden stack naraz (8 GB RAM) — reguła pozostaje. Sesja uruchomiona z SUPABASE_TARGET=local.

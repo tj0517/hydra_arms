@@ -30,13 +30,16 @@ function supabaseHost(): string | null {
  * Passes when NEXT_PUBLIC_SUPABASE_URL host is localhost or 127.0.0.1.
  * Any other host (including production) requires HA_ALLOW_PROD=1.
  * Must be called after dotenv.config() so the URL is populated.
+ *
+ * @param commandHint - The command to suggest in the error message.
+ *   Override when calling from non-script contexts (e.g. playwright.config.ts).
  */
-export function assertNotProd(): void {
+export function assertNotProd(commandHint: string = 'npx tsx scripts/<name>.ts'): void {
   const host = supabaseHost();
   if (!host) {
     throw new Error(
       '[prod-guard] NEXT_PUBLIC_SUPABASE_URL is not set — cannot verify database target.\n' +
-      '  Set it in .env.local and run from the project root.'
+      '  Set it in .env.development.local (local) or .env.local (prod) and run from the project root.'
     );
   }
   if (ALLOWED_HOSTS.has(host)) {
@@ -52,7 +55,7 @@ export function assertNotProd(): void {
   throw new Error(
     `[prod-guard] Refused: NEXT_PUBLIC_SUPABASE_URL points to "${host}" which is not a local database.\n` +
     '  To run against this target deliberately:\n' +
-    '    HA_ALLOW_PROD=1 npx tsx scripts/<name>.ts\n' +
+    `    HA_ALLOW_PROD=1 ${commandHint}\n` +
     '  Do NOT set HA_ALLOW_PROD permanently.'
   );
 }
