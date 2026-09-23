@@ -28,6 +28,7 @@ export function ProductPickerInput(props: ArrayOfPrimitivesInputProps) {
     if (initialised.current) return
     initialised.current = true
     const initial = (value as unknown[] | undefined) ?? []
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, fixed in HA-1.10
     setSelected(new Set(initial.map(String)))
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 

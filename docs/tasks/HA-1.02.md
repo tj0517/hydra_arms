@@ -1,18 +1,18 @@
 ---
 id: HA-1.02
 title: source_connectors — RLS i usunięcie tokenów z wierszy
-status: todo
+status: done
 difficulty: M
-model: null
+model: sonnet
 model_approved: null
-effort: null
-branch: null
+effort: medium
+branch: fix/ha-1.02-source-connectors-lockdown
 due: null
 depends_on: [HA-1.01]
 blocked_by_questions: []
 touches_db: true
 touches_prod: true
-pr: null
+pr: 8
 ---
 
 ## Cel
@@ -50,3 +50,15 @@ Migracja 004 utworzyła tabelę `source_connectors` bez RLS i wpisała do niej a
 
 ## Notatki z realizacji
 - 2026-09-23 tj: kryterium „last_synced_at po syncu" bezprzedmiotowe — XML→Supabase sync wyłączony i nie wraca (O-18); wszystkie wiersze `never` od 004; tabela do usunięcia (zadanie po HA-1.06)
+
+- 2026-09-22 · decyzja tj: migrację 008 wdraża tj ręcznie w Supabase SQL Editor po bramce STOP (agent nie pisze na prod)
+- 2026-09-22 · 008 zastosowana na prod przez tj (SQL Editor); `schema_migrations` nadal pusta — jak 001–007
+- 2026-09-22 · kryterium `last_synced_at` po syncu otwarte do jutrzejszego cronu; tj sprawdza odczytem
+
+Dowód „po" — tokeny w wierszach:
+```sql
+SELECT count(*) FROM source_connectors WHERE xml_url ~ '(token|key)=' OR extra_config::text ~ '(token|key)=';
+-- result: [{"count":0}]
+```
+
+- 2026-09-22 tj: review — przyjęte z uzupełnieniami; PR #8; udowodnione: anon 0 wierszy przed/po, count sekretów 0, 004 nietknięta, skrypt read-only; otwarte: last_synced_at po nocnym syncu (tj sprawdza odczytem).

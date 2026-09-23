@@ -21,8 +21,8 @@ export default function RegulaminUslugPage() {
 
           <Section title="§ 1. Postanowienia ogólne">
             <ol className="space-y-3 list-none">
-              <Li n="1">Niniejszy regulamin (zwany: „Regulaminem") określa zasady korzystania ze strony internetowej <span className="text-accent">https://hydra-arms.com</span> oraz warunki zdalnego zamawiania i realizacji specjalistycznych usług inżynieryjnych, projektowych i produkcyjnych przez HYDRA ARMS Sp. z o.o. w Krakowie.</Li>
-              <Li n="2">Usługodawcą i Wykonawcą jest HYDRA ARMS Sp. z o.o. w Krakowie (30-614) przy ul. Cechowa 44B, wpisana do rejestru przedsiębiorców Krajowego Rejestru Sądowego pod numerem KRS: 0001111593, posiadająca numery NIP: 6793302181 oraz REGON: 528976880, o kapitale zakładowym w wysokości 5.100,00 PLN (zwana: „Wykonawcą").</Li>
+              <Li n="1">Niniejszy regulamin (zwany: „Regulaminem&quot;) określa zasady korzystania ze strony internetowej <span className="text-accent">https://hydra-arms.com</span> oraz warunki zdalnego zamawiania i realizacji specjalistycznych usług inżynieryjnych, projektowych i produkcyjnych przez HYDRA ARMS Sp. z o.o. w Krakowie.</Li>
+              <Li n="2">Usługodawcą i Wykonawcą jest HYDRA ARMS Sp. z o.o. w Krakowie (30-614) przy ul. Cechowa 44B, wpisana do rejestru przedsiębiorców Krajowego Rejestru Sądowego pod numerem KRS: 0001111593, posiadająca numery NIP: 6793302181 oraz REGON: 528976880, o kapitale zakładowym w wysokości 5.100,00 PLN (zwana: „Wykonawcą&quot;).</Li>
               <Li n="3">Kontakt z Wykonawcą jest możliwy za pośrednictwem adresu poczty elektronicznej: <span className="text-accent">office@hydra-arms.com</span>, formularza kontaktowego w Serwisie i pisemnie na adres siedziby.</Li>
               <Li n="4">Klientem w rozumieniu Regulaminu jest każdy podmiot składający zamówienie na usługi (w szczególności Konsument, Przedsiębiorca, Przedsiębiorca na prawach konsumenta, inna jednostka organizacyjna lub Instytucja Państwowa, w tym Siły Zbrojne RP i inne formacje mundurowe).</Li>
             </ol>

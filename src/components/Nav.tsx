@@ -103,6 +103,7 @@ export default function Nav({ navLinks, logo }: { navLinks?: { href: string; lab
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, fixed in HA-1.10
     setMenuOpen(false);
   }, [pathname]);
 

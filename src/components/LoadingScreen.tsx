@@ -26,6 +26,7 @@ export default function LoadingScreen() {
     const isSlow = conn && ["slow-2g", "2g", "3g"].includes(conn.effectiveType ?? "");
     if (isMobile || isSlow) {
       skip.current = true;
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, fixed in HA-1.10
       setRemoved(true);
       window.dispatchEvent(new Event("loadingDone"));
       return;

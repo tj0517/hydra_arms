@@ -43,11 +43,14 @@ export default function TacticalReadout() {
     return () => clearInterval(id);
   }, [active]);
 
+  // eslint-disable-next-line react-hooks/purity -- pre-existing, fixed in HA-1.10
   const tolerance = (0.001 + Math.random() * 0.004).toFixed(4);
   const batch = `HA-${2024 + Math.floor(tick / 30)}-${String((tick % 999) + 1).padStart(3, "0")}`;
+  // eslint-disable-next-line react-hooks/purity -- pre-existing, fixed in HA-1.10
   const yield_ = 96 + Math.floor(Math.random() * 4);
 
   // Production load bars per module
+  // eslint-disable-next-line react-hooks/purity -- pre-existing, fixed in HA-1.10
   const loads = modules.map((_, i) => 40 + Math.floor(Math.random() * 55));
 
   return (

@@ -63,6 +63,7 @@ export default function CheckoutClient() {
 
   // Reset delivery mode if cart stops being mixed (e.g. user removes restricted items)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, fixed in HA-1.10
     if (!analysis.isMixed) setDeliveryMode('pickup_all')
   }, [analysis.isMixed])
 

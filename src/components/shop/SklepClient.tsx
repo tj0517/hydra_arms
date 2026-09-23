@@ -332,6 +332,7 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
   const CategoryBar = (
     <div className="mb-8">
       <div className="flex flex-wrap items-center gap-2 pb-3">
+        {/* eslint-disable-next-line react-hooks/static-components -- pre-existing, fixed in HA-1.10 */}
         <CategoryPill active={selectedCategory === null} onClick={() => selectCategory(null)}>
           WSZYSTKIE
         </CategoryPill>
@@ -437,6 +438,7 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
       {/* Availability */}
       <div>
         <p className="font-[var(--font-mono)] text-[10px] text-text-dim/40 tracking-[0.3em] uppercase mb-2.5">Dostępność</p>
+        {/* eslint-disable-next-line react-hooks/static-components -- pre-existing, fixed in HA-1.10 */}
         <CheckRow
           checked={onlyInStock}
           onToggle={() => { setOnlyInStock(v => !v); setPage(1); }}
