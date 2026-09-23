@@ -1,12 +1,12 @@
 ---
 id: HA-1.08
 title: CI — testy sklepu na lokalnym stacku
-status: todo
+status: in_progress
 difficulty: M
-model: null
+model: claude-sonnet-4-6
 model_approved: null
-effort: null
-branch: null
+effort: medium
+branch: ci/ha-1.08-shop-tests
 due: null
 depends_on: [HA-1.06, HA-1.07]
 blocked_by_questions: []
@@ -42,3 +42,6 @@ Testy sklepu istnieją, ale nikt ich nie uruchamia automatycznie, a dotąd chodz
 - `tests/shop/`, `playwright.config.ts`
 
 ## Notatki z realizacji
+- 2026-09-23 tj: 3 preegzystujące testy listing.spec.ts poprawiane w HA-1.08 (opcja A)
+- 2026-09-23 tj: diff schematu lokal↔prod poza HA-1.08, zostaje w deferred (opcja A)
+- 2026-09-23 tj: test sidebaru — opcja C (jeden test, nowa nazwa, aside FILTRY + przycisk WSZYSTKIE exact); "WSZYSTKIE PRODUKTY" potwierdzone jako nieaktualne na podstawie git log

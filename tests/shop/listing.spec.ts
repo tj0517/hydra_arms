@@ -24,18 +24,21 @@ test.describe('/sklep — listing page', () => {
   test('shows product name and price on cards', async ({ page }) => {
     await goToShop(page);
 
-    const firstCard = page.locator('a[href^="/sklep/"]').first();
-    await expect(firstCard.locator('h3')).toBeVisible();
-    await expect(firstCard.getByText('PLN')).toBeVisible();
+    // h3 is inside the name link, not the image link — use CSS descendant selector
+    await expect(page.locator('a[href^="/sklep/"] h3').first()).toBeVisible();
+    // PLN span is outside the anchor links, in the price row
+    await expect(page.locator('text=PLN').first()).toBeVisible();
   });
 
-  test('category sidebar is visible on desktop', async ({ page }) => {
+  test('filters sidebar and category bar visible on desktop', async ({ page }) => {
     await goToShop(page);
 
-    // The aside is visible at 1280px (hidden md:block)
+    // Filters aside (FILTRY) is visible at 1280px (hidden md:block)
     const sidebar = page.locator('aside').first();
     await expect(sidebar).toBeVisible();
-    await expect(page.getByText('WSZYSTKIE PRODUKTY').first()).toBeVisible();
+    // Category "all" pill above the grid — text changed from "WSZYSTKIE PRODUKTY"
+    // to "WSZYSTKIE" in commit f20a13d (intentional UI refactor, not a regression)
+    await expect(page.getByRole('button', { name: 'WSZYSTKIE', exact: true }).first()).toBeVisible();
   });
 
   test('product count label is shown', async ({ page }) => {
@@ -58,7 +61,8 @@ test.describe('/sklep — listing page', () => {
     const cards = page.locator('a[href^="/sklep/"]');
     const count = await cards.count();
     if (count > 0) {
-      const firstVisible = await cards.first().locator('h3').textContent();
+      // h3 is inside the name link, not the image link — scope to name links
+      const firstVisible = await page.locator('a[href^="/sklep/"] h3').first().textContent();
       expect(firstVisible?.toLowerCase()).toContain(searchTerm.toLowerCase().slice(0, 3));
     } else {
       await expect(page.getByText('BRAK WYNIKÓW')).toBeVisible();
