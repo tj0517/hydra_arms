@@ -136,8 +136,9 @@ test.describe('checkout — pending_payment status', () => {
     const res = await request.get('/api/shop/products')
     const productsBody: { products?: ApiProduct[] } = await res.json()
     const products = productsBody?.products
-    if (!Array.isArray(products) || !products.length) { test.skip(); return }
-    const p = products[0]
+    expect(Array.isArray(products)).toBe(true)
+    expect(products!.length).toBeGreaterThan(0)
+    const p = products![0]
 
     // Temporarily set stock to 0 via service role
     await fetch(
@@ -169,6 +170,12 @@ test.describe('checkout — pending_payment status', () => {
 })
 
 test.describe('mark_order_paid — permissions', () => {
+  // On ARM/Docker local stack, calling a revoked SECURITY DEFINER function via
+  // SET ROLE crashes the PG backend (signal 11).  PostgREST then can't reconnect
+  // and returns 503 — which fails the [401,403,404] assertion.  That local failure
+  // is expected and documented; CI (x86 Linux) returns the correct 404 PGRST202
+  // (function hidden from schema cache because EXECUTE was revoked).
+
   test('anon key cannot call mark_order_paid (permission denied)', async () => {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/mark_order_paid`, {
       method: 'POST',
@@ -179,8 +186,59 @@ test.describe('mark_order_paid — permissions', () => {
       },
       body: JSON.stringify({ p_order_id: '00000000-0000-0000-0000-000000000000' }),
     })
-    // PostgREST returns 401/403/404 depending on key validity and function visibility
-    expect(res.status).not.toBe(200)
+    // 404 PGRST202 = function not in schema cache for this role (REVOKE removes it)
+    // 403 42501   = explicit permission denied (also valid on some PostgREST versions)
+    // 401         = JWT rejected before even reaching the function
+    expect([401, 403, 404]).toContain(res.status)
+    const json = await res.json() as { code?: string }
+    expect(['42501', 'PGRST202']).toContain(json.code)
+  })
+
+  test('authenticated user cannot call mark_order_paid (permission denied)', async () => {
+    // Create an ephemeral user to obtain a role=authenticated JWT.
+    const email = `perm-test-${Date.now()}@example.com`
+    const password = 'PermTest1234!'
+    const adminHeaders = {
+      'apikey': SERVICE_ROLE_KEY,
+      'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
+      'Content-Type': 'application/json',
+    }
+    const createRes = await fetch(`${SUPABASE_URL}/auth/v1/admin/users`, {
+      method: 'POST',
+      headers: adminHeaders,
+      body: JSON.stringify({ email, password, email_confirm: true }),
+    })
+    const created = await createRes.json() as { id?: string }
+    const userId = created?.id
+
+    try {
+      const signInRes = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+        method: 'POST',
+        headers: { 'apikey': ANON_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+      const { access_token } = await signInRes.json() as { access_token?: string }
+
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/mark_order_paid`, {
+        method: 'POST',
+        headers: {
+          'apikey': ANON_KEY,
+          'Authorization': `Bearer ${access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ p_order_id: '00000000-0000-0000-0000-000000000000' }),
+      })
+      expect([401, 403, 404]).toContain(res.status)
+      const json = await res.json() as { code?: string }
+      expect(['42501', 'PGRST202']).toContain(json.code)
+    } finally {
+      if (userId) {
+        await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${userId}`, {
+          method: 'DELETE',
+          headers: adminHeaders,
+        })
+      }
+    }
   })
 })
 
