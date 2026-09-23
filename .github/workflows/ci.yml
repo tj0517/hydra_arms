@@ -110,16 +110,21 @@ jobs:
       - name: Pull and cache Supabase postgres image
         if: steps.docker-cache.outputs.cache-hit != 'true'
         run: |
-          # ghcr.io applies per-IP rate limits on public images even for authenticated pulls.
-          # Retry with backoff to survive transient throttling on shared runners.
-          for i in 1 2 3 4 5; do
-            docker pull ghcr.io/supabase/postgres:17.6.1.111 && \
-              docker save ghcr.io/supabase/postgres:17.6.1.111 --output /tmp/supabase-postgres.tar && \
-              break
-            [ "$i" = "5" ] && exit 1
-            echo "Attempt $i failed, sleeping 60s..."
-            sleep 60
-          done
+          # ghcr.io applies per-IP rate limits on public images on shared runner IPs.
+          # Docker Hub mirrors the same Supabase images without IP rate limits.
+          # Pull from Docker Hub, tag as the ghcr.io path so supabase start finds it.
+          if docker pull docker.io/supabase/postgres:17.6.1.111 2>/dev/null; then
+            docker tag docker.io/supabase/postgres:17.6.1.111 ghcr.io/supabase/postgres:17.6.1.111
+          else
+            echo "Docker Hub pull failed (image may not be mirrored); falling back to ghcr.io with retries"
+            for i in 1 2 3; do
+              docker pull ghcr.io/supabase/postgres:17.6.1.111 && break
+              [ "$i" = "3" ] && exit 1
+              echo "Attempt $i failed, sleeping 120s..."
+              sleep 120
+            done
+          fi
+          docker save ghcr.io/supabase/postgres:17.6.1.111 --output /tmp/supabase-postgres.tar
 
       - name: Start local Supabase stack
         run: npm run db:start
