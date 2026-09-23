@@ -1,18 +1,18 @@
 ---
 id: HA-1.03
 title: Funkcje SECURITY DEFINER — search_path i odebranie publicznego wywołania
-status: todo
+status: done
 difficulty: S
-model: null
-model_approved: null
-effort: null
-branch: null
+model: sonnet
+model_approved: true
+effort: low
+branch: fix/ha-1.03-harden-security-definer
 due: null
 depends_on: [HA-1.01]
 blocked_by_questions: []
 touches_db: true
 touches_prod: true
-pr: null
+pr: 9
 ---
 
 ## Cel
@@ -43,3 +43,13 @@ Dwie funkcje działające z uprawnieniami właściciela, `create_user_profile` (
 - stała reguła: stan bazy ustalasz bieżącym odczytem, nigdy z pamięci, notatek ani pliku typów
 
 ## Notatki z realizacji
+
+- Migracja 009 używa `ALTER FUNCTION` (nie `CREATE OR REPLACE`) — ciała obu funkcji niezmienione, byte-identical z baseline.
+- `create_user_profile`: `search_path=public` był już ustawiony na prod (documented drift z 001) — migracja ustawia go ponownie dla odtwarzalności. REVOKE usunął otwarte granty (anon/authenticated). Trigger działa nadal (wywołanie przez executor, nie przez API).
+- `next_xml_product_id`: `search_path` nie był ustawiony. Po migracji: `proconfig = ["search_path=public"]`, `anon_exec = false`, `auth_exec = false`. Jedyny wywołujący to `xml-integration/engine.ts:227` na `getAdminClient()` (service_role) — bez zmian w kodzie.
+- Red proof: `has_function_privilege('anon','public.next_xml_product_id()','EXECUTE')` = true przed, false po.
+- Rejestracja testowa (konto `64df196f-b1a5-43c1-a41d-1a62aaa094b4`): `SELECT count(*) FROM user_profiles WHERE id = '...'` → 1. ✓
+- Deferred: maile autoryzacyjne przez domyślny SMTP Supabase → docs/deferred-tasks.md.
+- 2026-09-22 · decyzja tj: migrację 009 wdraża tj ręcznie w Supabase SQL Editor po bramce STOP (agent nie pisze na prod); pierwsze wklejenie nie weszło (brak zmian w odczycie), drugie zadziałało.
+- 2026-09-22 · 009 zastosowana na prod przez tj; `schema_migrations` nadal pusta — jak 001–008.
+- 2026-09-22 tj: review — przyjęte z uzupełnieniami; PR #9; udowodnione: anon/authenticated true→false na next_xml_product_id, search_path na obu funkcjach, ciała bez zmian, rejestracja po 009 tworzy profil (count 1); import XML po REVOKE sprawdza tj odczytem po nocnym syncu.
