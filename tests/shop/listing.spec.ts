@@ -24,10 +24,11 @@ test.describe('/sklep — listing page', () => {
   test('shows product name and price on cards', async ({ page }) => {
     await goToShop(page);
 
-    // h3 is inside the name link, not the image link — use CSS descendant selector
-    await expect(page.locator('a[href^="/sklep/"] h3').first()).toBeVisible();
-    // PLN span is outside the anchor links, in the price row
-    await expect(page.locator('text=PLN').first()).toBeVisible();
+    // Scope both assertions to the first card container so PLN cannot match
+    // "CENA (PLN)" in the filters aside or any other page element.
+    const firstCard = page.locator('.bg-bg-card').first();
+    await expect(firstCard.locator('a[href^="/sklep/"] h3')).toBeVisible();
+    await expect(firstCard.getByText('PLN', { exact: true })).toBeVisible();
   });
 
   test('filters sidebar and category bar visible on desktop', async ({ page }) => {

@@ -2,6 +2,10 @@
 
 Format: data · źródło (zadanie/raport) · co zauważono · propozycja (zadanie / nic).
 
+- 2026-09-23 · HA-1.08 · 4 testy pomijane warunkowo w CI (test.skip() wewnątrz ciała testu, seeduj dane żeby odblokować): (1) `api.spec.ts:46` i `listing.spec.ts:113` `pagination …` — seed ma 20 produktów, API zwraca do 24 na stronie, więc `total_pages < 2`; (2) `cart.spec.ts:52` `out-of-stock product cannot be added` — żaden produkt w seedzie nie ma `stock = 0`; (3) `listing.spec.ts:142` `category click filters products` — test szuka przycisków kategorii w `aside`, ale CategoryBar (z przyciskami WSZYSTKIE i kategoriami) jest poza `aside`, więc żaden pasujący przycisk nie zostaje kliknięty · naprawić seeda (więcej produktów, ≥ 1 bez stanu magazynowego) i przenieść CategoryBar do `aside` albo poprawić selektor testu · osobne zadanie
+- 2026-09-23 · HA-1.08 · 1 flaky test w CI: `cart.spec.ts:112` `adding from listing card puts item in cart` — pierwsze podejście trwa 30 s (timeout) bo `page.waitForSelector` odpala się przy zimnym starcie webServera; retry przekazuje skip (`test.skip()`) bo przycisk cart na karcie ma tylko `title="Dodaj do koszyka"`, a test szuka `hasText: 'DODAJ DO KOSZYKA'` (widoczny tekst nie istnieje w obecnym UI) · poprawić selektor testu albo dodać widoczny tekst na przycisk — osobne zadanie
+- 2026-09-23 · HA-1.08 · ostrzeżenie w CI: `actions/checkout@v4` i `actions/setup-node@v4` używają Node.js 20, który jest deprecjonowany przez GitHub Actions (od 2026-09-19 uruchamiają się na Node.js 24 domyślnie) · zmienić `node-version: 20` na `22` lub `24` w obu zadaniach ci i shop-tests; sprawdzić, czy build/testy przechodzą na nowej wersji · osobne zadanie
+
 - 2026-09-22 · wf-plan · środowisko dev (drugi projekt Supabase lub branching, preview Vercela na dev); na razie bez dev (O-02) · wrócić przed startem sprzedaży albo gdy migracje zaczną boleć
 - 2026-09-22 · wf-plan · weryfikacja wieku i uprawnień przez mObywatel (O-12) · osobne zadanie, gdy klient zdecyduje
 - 2026-09-22 · wf-plan · automatyczne anulowanie niezapłaconych zamówień po czasie · po HA-2.03, jeśli zaczną się zbierać
