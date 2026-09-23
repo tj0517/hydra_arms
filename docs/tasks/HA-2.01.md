@@ -1,12 +1,12 @@
 ---
 id: HA-2.01
 title: Zamówienie czeka na płatność — nowy status, BL dopiero po opłaceniu
-status: todo
+status: in_progress
 difficulty: L
-model: null
+model: claude-sonnet-4-6
 model_approved: null
-effort: null
-branch: null
+effort: high
+branch: feat/ha-2.01-pending-payment
 due: null
 depends_on: [HA-1.01, HA-1.06]
 blocked_by_questions: []
@@ -50,3 +50,6 @@ Dziś checkout od razu zapisuje zamówienie jako `paid`, zdejmuje stan w Supabas
 
 ## Notatki z realizacji
 - 2026-09-22 tj: stan w BL, rezerwacja po opłaceniu, w BL (O-03, O-05); zaplecze zamówień w BL (O-14)
+- 2026-09-23 tj: rezerwacja lokalna tylko w okienku opłacone-niewysłane-do-BL, dalej BL (opcja A)
+- 2026-09-23 tj: 010 wgrywa tj ręcznie na prod tuż przed merge, agent potwierdza odczytem (opcja A)
+- 2026-09-23 tj: CHECK na orders.status w 010 (opcja A)
