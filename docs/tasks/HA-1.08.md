@@ -1,7 +1,7 @@
 ---
 id: HA-1.08
 title: CI — testy sklepu na lokalnym stacku
-status: in_progress
+status: review
 difficulty: M
 model: claude-sonnet-4-6
 model_approved: null
@@ -12,7 +12,7 @@ depends_on: [HA-1.06, HA-1.07]
 blocked_by_questions: []
 touches_db: false
 touches_prod: false
-pr: null
+pr: 13
 ---
 
 ## Cel
