@@ -12,7 +12,7 @@ Etap 1: bezpieczny fundament (audyt 2026-09-22). Etap 2: płatności i uruchomie
 | HA-1.05 | Bezpiecznik prod w skryptach i testach | done | M | — | — | — |
 | HA-1.06 | Lokalny stack Supabase z seedem; testy na lokalnej bazie | done | L | HA-1.01, HA-1.05, HA-1.11 | — | — |
 | HA-1.07 | CI — typy, lint, skan sekretów | done | M | — | — | — |
-| HA-1.08 | CI — testy sklepu na lokalnym stacku | review | M | HA-1.06, HA-1.07 | — | — |
+| HA-1.08 | CI — testy sklepu na lokalnym stacku | done | M | HA-1.06, HA-1.07 | — | — |
 | HA-1.09 | Higiena — server-only w kliencie admin i poprawki CLAUDE.md | done | S | — | — | — |
 | HA-1.10 | Poprawki React — 10 wyłączonych reguł lint (efekty, czystość renderu, komponenty w renderze) | todo | M | HA-1.06, HA-1.07 | — | — |
 | HA-1.11 | Hook agenta — wyjątek dla lokalnej bazy i fałszywy alarm na treści commitów | done | M | — | — | — |

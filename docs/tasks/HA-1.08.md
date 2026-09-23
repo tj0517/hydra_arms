@@ -1,7 +1,7 @@
 ---
 id: HA-1.08
 title: CI — testy sklepu na lokalnym stacku
-status: review
+status: done
 difficulty: M
 model: claude-sonnet-4-6
 model_approved: null
@@ -44,4 +44,5 @@ Testy sklepu istnieją, ale nikt ich nie uruchamia automatycznie, a dotąd chodz
 ## Notatki z realizacji
 - 2026-09-23 tj: 3 preegzystujące testy listing.spec.ts poprawiane w HA-1.08 (opcja A)
 - 2026-09-23 tj: diff schematu lokal↔prod poza HA-1.08, zostaje w deferred (opcja A)
+- 2026-09-23 tj: odbiór PR #13 — przyjęte po jednej rundzie uzupełnień. Udowodnione: job shop-tests zielony na 63ef9a4 (run 35870117784, 4m33s), red proof (run 35864970363, fb775a0/3a94927), 3 testy listingu naprawione, asercja ceny zawężona do karty (red proof lokalnie), brak ref prod w logu CI (grep = 0). Pominięte/flaky testy i Node 20 w deferred.
 - 2026-09-23 tj: test sidebaru — opcja C (jeden test, nowa nazwa, aside FILTRY + przycisk WSZYSTKIE exact); "WSZYSTKIE PRODUKTY" potwierdzone jako nieaktualne na podstawie git log
