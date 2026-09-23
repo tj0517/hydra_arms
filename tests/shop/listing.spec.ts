@@ -44,8 +44,8 @@ test.describe('/sklep — listing page', () => {
   test('product count label is shown', async ({ page }) => {
     await goToShop(page);
 
-    // "200 PRODUKTÓW" in the toolbar — hidden md:inline means visible at 1280px
-    const label = page.locator('span').filter({ hasText: /\d+ PRODUKTÓW/ }).first();
+    // RED PROOF: wrong pattern — intentionally broken for CI failure test
+    const label = page.locator('span').filter({ hasText: /\d+ PRODUKTOW_RED_PROOF/ }).first();
     await expect(label).toBeVisible({ timeout: 5_000 });
   });
 
