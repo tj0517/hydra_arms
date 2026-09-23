@@ -1,7 +1,7 @@
 ---
 id: HA-1.06
 title: Lokalny stack Supabase z seedem; testy na lokalnej bazie
-status: review
+status: done
 difficulty: L
 model: claude-opus-5
 model_approved: null
@@ -54,3 +54,4 @@ Dziś jedyną bazą jest prod, więc każdy test, każda próba migracji i każd
 - 2026-09-22 tj: env lokalny jako .env.development.local (dev i Playwright domyślnie na lokalnej bazie); najpierw HA-1.11 (hook)
 - 2026-09-23 tj: fjordanglers stack zatrzymany ręcznie; jeden stack naraz (8 GB RAM) — reguła pozostaje. Sesja uruchomiona z SUPABASE_TARGET=local.
 - 2026-09-23 tj: zakres PR zawężony — 3 niezdane testy (listing: selektor a>h3 i tekst sidebar) zostają poza PR jako preegzystujące; zapisano w docs/deferred-tasks.md.
+- 2026-09-23 tj: odbiór PR #11 — przyjęte z uzupełnieniami. Udowodnione: db reset 001–009 + seed (wyjście), siatka /sklep z produktami z seeda (ha106-grid-viewport.png), aplikacja na 127.0.0.1 (RSC z timestampami resetu, brak *.supabase.co), guard odrzuca nielokalny host (red proof), 009 na prod (has_function_privilege = false). Kryterium testów zawężone: 3 preegzystujące błędy listing.spec.ts w deferred. Rozjazd schematu opisany z migracji i celowanych odczytów prod, bez mechanicznego diffu (deferred).
