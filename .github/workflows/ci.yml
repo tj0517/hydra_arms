@@ -63,3 +63,85 @@ jobs:
             fi
           fi
           gitleaks detect --log-opts="$LOG_OPTS" --config .gitleaks.toml --redact
+
+  shop-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 2.75.0
+
+      - name: Start local Supabase stack
+        run: npm run db:start
+
+      - name: Reset database with seed
+        run: npm run db:reset
+
+      - name: Generate .env.development.local from local stack
+        run: |
+          # supabase status -o env emits KEY="value" lines; eval sets them as shell vars
+          eval "$(supabase status -o env 2>/dev/null)"
+          test -n "$API_URL"        || { echo "API_URL missing"; exit 1; }
+          test -n "$ANON_KEY"       || { echo "ANON_KEY missing"; exit 1; }
+          test -n "$SERVICE_ROLE_KEY" || { echo "SERVICE_ROLE_KEY missing"; exit 1; }
+          # Write .env.development.local for playwright.config.ts + dev server
+          {
+            printf 'NEXT_PUBLIC_SUPABASE_URL=%s\n'       "${API_URL}"
+            printf 'NEXT_PUBLIC_SUPABASE_ANON_KEY=%s\n'  "${ANON_KEY}"
+            printf 'SUPABASE_SERVICE_ROLE_KEY=%s\n'      "${SERVICE_ROLE_KEY}"
+            printf '%s\n' \
+              'BASELINKER_MOCK=true' \
+              'BASELINKER_INVENTORY_ID=35743' \
+              'NEXT_PUBLIC_SANITY_PROJECT_ID=' \
+              'NEXT_PUBLIC_SANITY_DATASET=production' \
+              'SANITY_API_TOKEN=' \
+              'SYNC_SECRET=local-sync-secret-dev' \
+              'CRON_SECRET=local-cron-secret-dev' \
+              'XML_SYNC_ENABLED=false'
+          } > .env.development.local
+          # Propagate to GITHUB_ENV so npm run build picks up NEXT_PUBLIC_* vars
+          printf 'NEXT_PUBLIC_SUPABASE_URL=%s\n'       "${API_URL}"        >> "$GITHUB_ENV"
+          printf 'NEXT_PUBLIC_SUPABASE_ANON_KEY=%s\n'  "${ANON_KEY}"       >> "$GITHUB_ENV"
+          printf 'SUPABASE_SERVICE_ROLE_KEY=%s\n'      "${SERVICE_ROLE_KEY}" >> "$GITHUB_ENV"
+          printf '%s\n' \
+            'BASELINKER_MOCK=true' \
+            'BASELINKER_INVENTORY_ID=35743'                                 >> "$GITHUB_ENV"
+
+      - name: Build
+        run: npm run build
+
+      - name: Run shop tests
+        run: npm run test:shop
+
+      - name: Upload Playwright HTML report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
+
+      - name: Upload traces on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: test-results/
+          retention-days: 7
