@@ -68,7 +68,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: read  # needed to pull ghcr.io/supabase images without hitting the unauthenticated rate limit
 
     steps:
       - uses: actions/checkout@v4
@@ -89,42 +88,11 @@ jobs:
         with:
           version: 2.75.0
 
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Cache Supabase postgres image
-        id: docker-cache
-        uses: actions/cache@v4
-        with:
-          path: /tmp/supabase-postgres.tar
-          key: supabase-postgres-17.6.1.111
-
-      - name: Load Supabase postgres image from cache
-        if: steps.docker-cache.outputs.cache-hit == 'true'
-        run: docker load --input /tmp/supabase-postgres.tar
-
-      - name: Pull and cache Supabase postgres image
-        if: steps.docker-cache.outputs.cache-hit != 'true'
-        run: |
-          # ghcr.io applies per-IP rate limits on public images on shared runner IPs.
-          # Docker Hub mirrors the same Supabase images without IP rate limits.
-          # Pull from Docker Hub, tag as the ghcr.io path so supabase start finds it.
-          if docker pull docker.io/supabase/postgres:17.6.1.111 2>/dev/null; then
-            docker tag docker.io/supabase/postgres:17.6.1.111 ghcr.io/supabase/postgres:17.6.1.111
-          else
-            echo "Docker Hub pull failed (image may not be mirrored); falling back to ghcr.io with retries"
-            for i in 1 2 3; do
-              docker pull ghcr.io/supabase/postgres:17.6.1.111 && break
-              [ "$i" = "3" ] && exit 1
-              echo "Attempt $i failed, sleeping 120s..."
-              sleep 120
-            done
-          fi
-          docker save ghcr.io/supabase/postgres:17.6.1.111 --output /tmp/supabase-postgres.tar
+      - name: Use ECR Public for Supabase images
+        # supabase/setup-cli@v1 sets SUPABASE_INTERNAL_IMAGE_REGISTRY=ghcr.io in GITHUB_ENV.
+        # Shared runner IPs are rate-limited on ghcr.io public image pulls (429 per-IP burst).
+        # ECR Public (public.ecr.aws) is what the CLI uses locally and has no rate limits.
+        run: echo "SUPABASE_INTERNAL_IMAGE_REGISTRY=public.ecr.aws" >> "$GITHUB_ENV"
 
       - name: Start local Supabase stack
         run: npm run db:start
