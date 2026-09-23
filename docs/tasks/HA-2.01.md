@@ -54,3 +54,5 @@ Dziś checkout od razu zapisuje zamówienie jako `paid`, zdejmuje stan w Supabas
 - 2026-09-23 tj: 010 wgrywa tj ręcznie na prod tuż przed merge, agent potwierdza odczytem (opcja A)
 - 2026-09-23 tj: CHECK na orders.status w 010 (opcja A)
 - 2026-09-23 tj: plan 010 zatwierdzony (CHECK 5 statusów, default pending_payment, checkout bez dekrementu, mark_order_paid service_role) z warunkami: dowód definicji z prod, odczyt 4 zamówień prod, dostępność z tej samej liczby co wyświetlana
+- 2026-09-23 CI czerwone od otwarcia PR — przyczyna: limity pobierania obrazów z ghcr.io, rejestr zmieniony na public.ecr.aws; testy uprawnień sprawdzają katalog uprawnień (crash obrazu PG17 przy wywołaniu odebranej funkcji)
+- 2026-09-23 tj: 010 wgrane ręcznie na prod
