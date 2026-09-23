@@ -96,6 +96,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Pre-pull Supabase postgres image
+        # Warms the local Docker cache so supabase start doesn't need to pull the image
+        # (which can hit the unauthenticated IP rate limit on shared runners).
+        run: docker pull ghcr.io/supabase/postgres:17.6.1.111
+
       - name: Start local Supabase stack
         run: npm run db:start
 
