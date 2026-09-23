@@ -96,10 +96,30 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Pre-pull Supabase postgres image
-        # Warms the local Docker cache so supabase start doesn't need to pull the image
-        # (which can hit the unauthenticated IP rate limit on shared runners).
-        run: docker pull ghcr.io/supabase/postgres:17.6.1.111
+      - name: Cache Supabase postgres image
+        id: docker-cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/supabase-postgres.tar
+          key: supabase-postgres-17.6.1.111
+
+      - name: Load Supabase postgres image from cache
+        if: steps.docker-cache.outputs.cache-hit == 'true'
+        run: docker load --input /tmp/supabase-postgres.tar
+
+      - name: Pull and cache Supabase postgres image
+        if: steps.docker-cache.outputs.cache-hit != 'true'
+        run: |
+          # ghcr.io applies per-IP rate limits on public images even for authenticated pulls.
+          # Retry with backoff to survive transient throttling on shared runners.
+          for i in 1 2 3 4 5; do
+            docker pull ghcr.io/supabase/postgres:17.6.1.111 && \
+              docker save ghcr.io/supabase/postgres:17.6.1.111 --output /tmp/supabase-postgres.tar && \
+              break
+            [ "$i" = "5" ] && exit 1
+            echo "Attempt $i failed, sleeping 60s..."
+            sleep 60
+          done
 
       - name: Start local Supabase stack
         run: npm run db:start
