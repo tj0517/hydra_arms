@@ -22,7 +22,6 @@ import {
   getPrice,
   getWarehouseStock,
 } from '../src/lib/baselinker/client';
-import { getReservedQuantities } from '../src/lib/shop/reservedStock';
 import { filterHydraCategories } from '../src/lib/shop/categoryFilter';
 
 // Read after dotenv so ESM hoisting doesn't freeze the value
@@ -83,10 +82,9 @@ async function syncProducts() {
     const chunkIds = allIds.slice(i, i + CHUNK);
     const details = await getProductsData(INVENTORY_ID, chunkIds);
 
-    // Net out paid-but-unfulfilled orders so this overwrite doesn't
-    // resurrect stock that's already been sold (see getReservedQuantities).
-    const reserved = await getReservedQuantities(supabase, chunkIds.map((id) => parseInt(id, 10)));
-
+    // Write raw BL stock — reservation netting happens at display time only
+    // (fetchProducts.ts subtracts paid-not-in-BL orders). Writing raw stock
+    // here prevents double-netting and keeps the DB as the canonical BL mirror.
     const rows = Object.entries(details).map(([idStr, p]) => {
       const id = parseInt(idStr, 10);
       const tags: string[] = p.tags ?? [];
@@ -107,7 +105,7 @@ async function syncProducts() {
         features: p.text_fields.features ?? null,
         price: getPrice(p.prices),
         tax_rate: p.tax_rate,
-        stock: Math.max(0, getWarehouseStock(p.stock) - (reserved.get(id) ?? 0)),
+        stock: Math.max(0, getWarehouseStock(p.stock)),
         weight: p.weight ?? null,
         category_id: p.category_id || null,
         images: p.images && Object.keys(p.images).length > 0 ? p.images : null,

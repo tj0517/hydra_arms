@@ -7,6 +7,7 @@ const fmt = (n: number) =>
   new Intl.NumberFormat('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
 
 const STATUS_LABELS: Record<string, string> = {
+  pending_payment: 'Oczekuje na płatność',
   pending: 'Oczekuje',
   paid: 'Opłacone',
   shipped: 'Wysłane',
@@ -15,6 +16,7 @@ const STATUS_LABELS: Record<string, string> = {
 }
 
 const STATUS_COLORS: Record<string, string> = {
+  pending_payment: 'bg-yellow-400',
   pending: 'bg-yellow-500',
   paid: 'bg-accent',
   shipped: 'bg-blue-400',

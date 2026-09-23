@@ -109,6 +109,7 @@ jobs:
             printf '%s\n' \
               'BASELINKER_MOCK=true' \
               'BASELINKER_INVENTORY_ID=35743' \
+              'BASELINKER_STATUS_PAID=12345' \
               'NEXT_PUBLIC_SANITY_PROJECT_ID=' \
               'NEXT_PUBLIC_SANITY_DATASET=production' \
               'SANITY_API_TOKEN=' \
@@ -122,7 +123,8 @@ jobs:
           printf 'SUPABASE_SERVICE_ROLE_KEY=%s\n'      "${SERVICE_ROLE_KEY}" >> "$GITHUB_ENV"
           printf '%s\n' \
             'BASELINKER_MOCK=true' \
-            'BASELINKER_INVENTORY_ID=35743'                                 >> "$GITHUB_ENV"
+            'BASELINKER_INVENTORY_ID=35743' \
+            'BASELINKER_STATUS_PAID=12345'                                  >> "$GITHUB_ENV"
 
       - name: Build
         run: npm run build

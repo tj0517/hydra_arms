@@ -53,3 +53,4 @@ Dziś checkout od razu zapisuje zamówienie jako `paid`, zdejmuje stan w Supabas
 - 2026-09-23 tj: rezerwacja lokalna tylko w okienku opłacone-niewysłane-do-BL, dalej BL (opcja A)
 - 2026-09-23 tj: 010 wgrywa tj ręcznie na prod tuż przed merge, agent potwierdza odczytem (opcja A)
 - 2026-09-23 tj: CHECK na orders.status w 010 (opcja A)
+- 2026-09-23 tj: plan 010 zatwierdzony (CHECK 5 statusów, default pending_payment, checkout bez dekrementu, mark_order_paid service_role) z warunkami: dowód definicji z prod, odczyt 4 zamówień prod, dostępność z tej samej liczby co wyświetlana

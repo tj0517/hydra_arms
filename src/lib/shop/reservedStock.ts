@@ -23,8 +23,9 @@ export async function getReservedQuantities(
 
   const { data, error } = await supabase
     .from('order_items')
-    .select('product_id, quantity, orders!inner(status)')
+    .select('product_id, quantity, orders!inner(status, baselinker_order_id)')
     .eq('orders.status', 'paid')
+    .is('orders.baselinker_order_id', null)
     .in('product_id', productIds)
 
   if (error) throw new Error(`Reserved stock lookup failed: ${error.message}`)
