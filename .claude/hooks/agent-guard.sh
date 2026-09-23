@@ -82,9 +82,20 @@ if printf '%s' "$CMD" | grep -Eq '(^|[;&|[:space:]])(export[[:space:]]+)?HA_ALLO
   deny "agent-guard: blocked — HA_ALLOW_PROD referenced inline in a command is treated as a bypass attempt. Unlock only by starting the session itself with: HA_ALLOW_PROD=1 claude"
 fi
 
+# Inline SUPABASE_TARGET=local is also a bypass attempt — same rule as HA_ALLOW_PROD.
+# Only =local is the unlock value; other SUPABASE_TARGET values are not unlock paths.
+if printf '%s' "$CMD" | grep -Eq '(^|[;&|[:space:]])(export[[:space:]]+)?SUPABASE_TARGET[[:space:]]*=[[:space:]]*local([[:space:]]|$|[;&|])|(^|[;&|[:space:]])env([[:space:]]+[A-Za-z0-9_]+=[^[:space:]]*)*[[:space:]]+SUPABASE_TARGET=local([[:space:]]|$|[;&|])'; then
+  deny "agent-guard: blocked — SUPABASE_TARGET=local set inline is treated as a bypass attempt. Unlock only by starting the session itself with: SUPABASE_TARGET=local claude"
+fi
+
 IS_UNLOCKED=false
 if [ -n "${HA_ALLOW_PROD:-}" ]; then
   IS_UNLOCKED=true
+fi
+
+IS_LOCAL=false
+if [ "${SUPABASE_TARGET:-}" = "local" ]; then
+  IS_LOCAL=true
 fi
 
 # --- Test runners: separate unlock via SUPABASE_TARGET=local --------------
@@ -131,11 +142,80 @@ if printf '%s' "$CMD" | grep -Eq '(^|[;&|[:space:]])supabase[[:space:]]+migratio
 fi
 
 # --- psql / raw SQL with DDL or DML -----------------------------------------
-if printf '%s' "$CMD" | grep -Eq '(^|[;&|[:space:]])psql([[:space:]]|$)'; then
-  deny "agent-guard: blocked — psql can run arbitrary SQL against prod. Unlock deliberately: HA_ALLOW_PROD=1 claude"
+# psql is checked against CMD (the raw original command) so that any psql
+# occurrence blocks regardless of message-text context — a commit message
+# containing "psql" over-blocks, which is the safe direction.
+#
+# DDL/DML runs against SCAN_CMD — a sanitised copy with heredoc bodies and
+# quoted -m/--body/--title argument values stripped — so English words like
+# "grant"/"revoke" in commit messages don't trigger the scanner.
+#
+# Stripping is two-stage to prevent greedy-pattern bypass:
+#   1. Remove heredoc bodies LINE-WISE with awk (<<'EOF'/<<EOF … EOF) BEFORE
+#      flattening, so shell commands after the heredoc are never hidden.
+#   2. Flatten newlines with tr, then strip remaining quoted arg values with
+#      simple [^"]*  / [^']* patterns (safe with no ".*").
+#
+# SAFETY: if a -m/--body/--title argument still contains a non-heredoc command
+# substitution after the awk pass, do NOT strip — scan the full command.
+
+# Step 1 — remove heredoc bodies only when the heredoc is inside a command
+# substitution used as a message argument ("$(cat <<'EOF'…)).  Plain file
+# heredocs (cat <<'EOF' > file.sql) are NOT stripped so their SQL is still
+# scanned by the DDL check below.
+STRIPPED_CMD="$(printf '%s' "$CMD" | awk \
+  '/"\$\(cat.*<<'"'"'?EOF'"'"'?/{in_hd=1;print;next} in_hd&&/^EOF$/{in_hd=0;print;next} in_hd{next}{print}')"
+
+# Step 2 — flatten and apply quoted-arg stripping
+FLAT_CMD="$(printf '%s' "$STRIPPED_CMD" | tr '\n' ' ')"
+
+_unsafe_subst=false
+if printf '%s' "$FLAT_CMD" | grep -Eq 'git[[:space:]]+commit'; then
+  if printf '%s' "$FLAT_CMD" | grep -Eq '(-m[[:space:]]+|--message[[:space:]]+|--message=)"[^"]*(`|\$\()'; then
+    if ! printf '%s' "$FLAT_CMD" | grep -Eq '(-m[[:space:]]+|--message[[:space:]]+|--message=)"[^"]*\$\(cat[[:space:]]+<<'; then
+      _unsafe_subst=true
+    fi
+  fi
 fi
-if printf '%s' "$CMD" | grep -Eqi '\b(insert[[:space:]]+into|update[[:space:]]+[a-z_."]+[[:space:]]+set|delete[[:space:]]+from|drop[[:space:]]+(table|database|schema|index)|alter[[:space:]]+(table|database|schema)|truncate([[:space:]]+table)?|create[[:space:]]+(table|database|schema)|grant[[:space:]]|revoke[[:space:]])\b'; then
-  deny "agent-guard: blocked — command contains SQL DDL/DML against prod. Unlock deliberately: HA_ALLOW_PROD=1 claude"
+if printf '%s' "$FLAT_CMD" | grep -Eq 'gh[[:space:]]+(pr|issue)'; then
+  if printf '%s' "$FLAT_CMD" | grep -Eq '(--(body|title)[[:space:]]+|--(body|title)=)"[^"]*(`|\$\()'; then
+    if ! printf '%s' "$FLAT_CMD" | grep -Eq '(--(body|title)[[:space:]]+|--(body|title)=)"[^"]*\$\(cat[[:space:]]+<<'; then
+      _unsafe_subst=true
+    fi
+  fi
+fi
+
+if [ "$_unsafe_subst" = true ]; then
+  SCAN_CMD="$FLAT_CMD"
+else
+  SCAN_CMD="$(printf '%s' "$FLAT_CMD" | sed -E \
+    -e 's/(-m[[:space:]]+|--message[[:space:]]+|--message=)"[^"]*"/\1"STRIPPED"/g' \
+    -e 's/(-m[[:space:]]+|--message[[:space:]]+|--message=)'"'"'[^'"'"']*'"'"'/\1'"'"'STRIPPED'"'"'/g' \
+    -e 's/(--body[[:space:]]+|--body=|--title[[:space:]]+|--title=)"[^"]*"/\1"STRIPPED"/g' \
+    -e 's/(--body[[:space:]]+|--body=|--title[[:space:]]+|--title=)'"'"'[^'"'"']*'"'"'/\1'"'"'STRIPPED'"'"'/g')"
+fi
+
+# psql check: on CMD (not SCAN_CMD) — safe direction: over-blocks commit
+# messages that mention "psql", never under-blocks a real psql command.
+if printf '%s' "$CMD" | grep -Eq '(^|[;&|[:space:]])psql([[:space:]]|$)'; then
+  if [ "$IS_LOCAL" = true ] \
+     && printf '%s' "$CMD" | grep -Eq '(127\.0\.0\.1|localhost($|[^.[:alnum:]]))' \
+     && ! printf '%s' "$CMD" | grep -Eq '(supabase\.co|breqmmlcaxsvxcqlcmqc|--linked)'; then
+    : # local exception — falls through to remaining checks
+  else
+    deny "agent-guard: blocked — psql can run arbitrary SQL against prod. Set SUPABASE_TARGET=local in the session environment and use an explicit local host (127.0.0.1 or localhost) to allow local DB work. Unlock deliberately: HA_ALLOW_PROD=1 claude"
+  fi
+fi
+
+# DDL/DML scanner: on SCAN_CMD (stripped).
+if printf '%s' "$SCAN_CMD" | grep -Eqi '\b(insert[[:space:]]+into|update[[:space:]]+[a-z_."]+[[:space:]]+set|delete[[:space:]]+from|drop[[:space:]]+(table|database|schema|index)|alter[[:space:]]+(table|database|schema)|truncate([[:space:]]+table)?|create[[:space:]]+(table|database|schema)|grant[[:space:]]|revoke[[:space:]])\b'; then
+  if [ "$IS_LOCAL" = true ] \
+     && printf '%s' "$CMD" | grep -Eq '(127\.0\.0\.1|localhost($|[^.[:alnum:]]))' \
+     && ! printf '%s' "$CMD" | grep -Eq '(supabase\.co|breqmmlcaxsvxcqlcmqc|--linked)'; then
+    : # local exception — DDL/DML against local DB is allowed
+  else
+    deny "agent-guard: blocked — command contains SQL DDL/DML against prod. Unlock deliberately: HA_ALLOW_PROD=1 claude"
+  fi
 fi
 
 # --- vercel env --------------------------------------------------------------

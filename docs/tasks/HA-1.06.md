@@ -8,7 +8,7 @@ model_approved: null
 effort: null
 branch: null
 due: null
-depends_on: [HA-1.01, HA-1.05]
+depends_on: [HA-1.01, HA-1.05, HA-1.11]
 blocked_by_questions: []
 touches_db: true
 touches_prod: false
@@ -51,3 +51,4 @@ Dziś jedyną bazą jest prod, więc każdy test, każda próba migracji i każd
 
 ## Notatki z realizacji
 - 2026-09-22 tj: lokalny stack jak w FA/DCS (Docker, odchudzony start, guard localhost) — O-01
+- 2026-09-22 tj: env lokalny jako .env.development.local (dev i Playwright domyślnie na lokalnej bazie); najpierw HA-1.11 (hook)

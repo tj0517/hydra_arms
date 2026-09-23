@@ -43,6 +43,7 @@ Dwie funkcje działające z uprawnieniami właściciela, `create_user_profile` (
 - stała reguła: stan bazy ustalasz bieżącym odczytem, nigdy z pamięci, notatek ani pliku typów
 
 ## Notatki z realizacji
+- 2026-09-23 tj: kryterium „import XML po REVOKE" bezprzedmiotowe (O-18); next_xml_product_id do usunięcia razem z trasą /api/xml/sync
 
 - Migracja 009 używa `ALTER FUNCTION` (nie `CREATE OR REPLACE`) — ciała obu funkcji niezmienione, byte-identical z baseline.
 - `create_user_profile`: `search_path=public` był już ustawiony na prod (documented drift z 001) — migracja ustawia go ponownie dla odtwarzalności. REVOKE usunął otwarte granty (anon/authenticated). Trigger działa nadal (wywołanie przez executor, nie przez API).
