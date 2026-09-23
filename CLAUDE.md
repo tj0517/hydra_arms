@@ -38,7 +38,7 @@ npm run test:shop:local  # Shop E2E tests against the local stack (requires db:s
 
 **Local ↔ prod:** Start the session with `SUPABASE_TARGET=local claude` to unlock local `psql`/DDL and the test runner. Playwright loads `.env.development.local` (local keys) with `override: true` so the dev server targets `127.0.0.1` even when `.env.local` (prod) is present. To work against prod: start without `SUPABASE_TARGET=local`.
 
-Playwright is configured: `npm run test` (all tests), `npm run test:shop` / `npm run test:shop:local` (shop suite, `tests/shop/`, port 3001). Tests refuse to run against prod — see the Safety section.
+Playwright is configured: `npm run test` (all tests), `npm run test:shop` / `npm run test:shop:local` (shop suite, `tests/shop/`, port 3001). Tests refuse to run against prod — see the Safety section. The `shop-tests` CI job (`.github/workflows/ci.yml`) runs the shop suite automatically on every PR using a local Supabase stack with seed; no production secrets are used in CI.
 
 ## Architecture
 
