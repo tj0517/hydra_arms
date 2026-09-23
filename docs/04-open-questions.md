@@ -43,3 +43,5 @@ Pytania klienta O-04–O-13 przeniesione 2026-09-22 z Notion („Lista pytań �
   - 2026-09-22 tj: e-paragony przez BaseLinker (O-16).
   - **Otwarte:** dane do potwierdzeń zamówień, polityka zwrotów, dane firmy, kto przygotowuje opisy i kategorie pod SEO, zgoda na opisy produktów z hurtowni.
 - **O-17** · otwarte · tj — Czym są „Szafy” we flowcharcie (czwarta hurtownia/dostawca)? Czy potrzebny jest dla nich konektor feedu?
+- **O-18** · rozstrzygnięte · tj — Czy ścieżka XML→Supabase wraca?
+  - 2026-09-23 tj: nie. Przepływ: XML → BaseLinker (xml-to-baselinker.ts) → Supabase (/api/shop/sync) → BaseLinker (zamówienia). source_connectors, engine.ts, /api/xml/sync, next_xml_product_id do usunięcia osobnym zadaniem po HA-1.06.

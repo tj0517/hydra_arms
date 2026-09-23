@@ -49,3 +49,4 @@ Migracja 004 utworzyła tabelę `source_connectors` bez RLS i wpisała do niej a
 - stała reguła: stan bazy ustalasz bieżącym odczytem, nigdy z pamięci, notatek ani pliku typów
 
 ## Notatki z realizacji
+- 2026-09-23 tj: kryterium „last_synced_at po syncu" bezprzedmiotowe — XML→Supabase sync wyłączony i nie wraca (O-18); wszystkie wiersze `never` od 004; tabela do usunięcia (zadanie po HA-1.06)

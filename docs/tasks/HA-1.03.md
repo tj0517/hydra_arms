@@ -43,3 +43,4 @@ Dwie funkcje działające z uprawnieniami właściciela, `create_user_profile` (
 - stała reguła: stan bazy ustalasz bieżącym odczytem, nigdy z pamięci, notatek ani pliku typów
 
 ## Notatki z realizacji
+- 2026-09-23 tj: kryterium „import XML po REVOKE" bezprzedmiotowe (O-18); next_xml_product_id do usunięcia razem z trasą /api/xml/sync
