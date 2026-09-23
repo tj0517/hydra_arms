@@ -30,7 +30,15 @@ npx tsx scripts/reset-shop-db.ts      # Wipe and re-seed shop tables
 
 **Warning: `.env.local` points at the production database.** Do not run writing scripts or Playwright checkout flows without explicit approval.
 
-Playwright is configured: `npm run test` (all tests), `npm run test:shop` (shop suite, `tests/shop/`, port 3001). Tests currently refuse to run against prod — see the Safety section.
+```bash
+npm run db:start     # Start local Supabase stack (slimmed — no Studio/imgproxy/etc.)
+npm run db:reset     # Drop + re-apply all migrations + seed.sql
+npm run test:shop:local  # Shop E2E tests against the local stack (requires db:start)
+```
+
+**Local ↔ prod:** Start the session with `SUPABASE_TARGET=local claude` to unlock local `psql`/DDL and the test runner. Playwright loads `.env.development.local` (local keys) with `override: true` so the dev server targets `127.0.0.1` even when `.env.local` (prod) is present. To work against prod: start without `SUPABASE_TARGET=local`.
+
+Playwright is configured: `npm run test` (all tests), `npm run test:shop` / `npm run test:shop:local` (shop suite, `tests/shop/`, port 3001). Tests refuse to run against prod — see the Safety section.
 
 ## Architecture
 
@@ -69,7 +77,7 @@ All content pages follow this pattern: server component fetches from Sanity (via
 - Public client (no auth needed): `src/lib/supabase/public.ts`
 - Types: `src/lib/supabase/types.ts` — manually maintained; each table requires `Relationships: []` to satisfy the `GenericTable` constraint
 - Auth middleware: `src/middleware.ts` — redirects `/konto/*` to login if unauthenticated
-- Migrations: `supabase/migrations/` — apply in order (001→007)
+- Migrations: `supabase/migrations/` — apply in order (001→009)
 
 ### Animation / UI Infrastructure
 - GSAP + ScrollTrigger registered in `src/lib/gsap.ts` — import from here, not directly from `gsap`

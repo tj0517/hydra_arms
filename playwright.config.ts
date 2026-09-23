@@ -3,8 +3,11 @@ import * as path from 'path';
 import * as dotenv from 'dotenv';
 import { assertNotProd } from './scripts/lib/prodGuard';
 
-dotenv.config({ path: path.resolve(process.cwd(), '.env.local'), override: true });
-assertNotProd();
+// Load local dev env first (.env.development.local — local Supabase stack, BASELINKER_MOCK=true).
+// override: true ensures these win over anything already in process.env so the dev server
+// started by webServer below cannot accidentally pick up prod keys from .env.local.
+dotenv.config({ path: path.resolve(process.cwd(), '.env.development.local'), override: true });
+assertNotProd('npx playwright test');
 
 export default defineConfig({
   testDir: './tests',
@@ -25,6 +28,14 @@ export default defineConfig({
     url: 'http://localhost:3001',
     reuseExistingServer: !process.env.CI,
     timeout: 90_000,
-    env: { PORT: '3001' },
+    // Explicitly forward local Supabase vars so the Next.js dev server uses the
+    // local stack even if .env.local (with prod keys) is present in the project root.
+    env: {
+      PORT: '3001',
+      NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
+      SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
+      BASELINKER_MOCK: process.env.BASELINKER_MOCK ?? 'true',
+    },
   },
 });

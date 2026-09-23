@@ -9,7 +9,10 @@
     "lint": "eslint",
     "test": "playwright test",
     "test:ui": "playwright test --ui",
-    "test:shop": "playwright test tests/shop"
+    "test:shop": "playwright test tests/shop",
+    "test:shop:local": "playwright test tests/shop",
+    "db:start": "supabase start -x studio,imgproxy,mailpit,logflare,vector,edge-runtime,realtime,storage-api,postgres-meta",
+    "db:reset": "supabase db reset --local"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
