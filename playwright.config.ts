@@ -8,9 +8,13 @@ import { assertNotProd } from './scripts/lib/prodGuard';
 // started by webServer below cannot accidentally pick up prod keys from .env.local.
 dotenv.config({ path: path.resolve(process.cwd(), '.env.development.local'), override: true });
 assertNotProd('npx playwright test');
+if (!process.env.P24_CRC_KEY) {
+  throw new Error('P24_CRC_KEY must be set in .env.development.local to run shop tests (see .env.development.local.example)')
+}
 
 export default defineConfig({
   testDir: './tests',
+  testIgnore: ['**/p24-disabled.spec.ts'],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 1,
@@ -37,8 +41,9 @@ export default defineConfig({
       SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
       BASELINKER_MOCK: process.env.BASELINKER_MOCK ?? 'true',
       BASELINKER_STATUS_PAID: process.env.BASELINKER_STATUS_PAID ?? '',
+      SHOP_BASE_URL: 'http://localhost:3001',
       P24_MODE: process.env.P24_MODE ?? 'mock',
-      P24_CRC_KEY: process.env.P24_CRC_KEY ?? '',
+      P24_CRC_KEY: process.env.P24_CRC_KEY,
       P24_MERCHANT_ID: process.env.P24_MERCHANT_ID ?? '',
       P24_POS_ID: process.env.P24_POS_ID ?? '',
     },

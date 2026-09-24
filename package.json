@@ -11,6 +11,7 @@
     "test:ui": "playwright test --ui",
     "test:shop": "playwright test tests/shop",
     "test:shop:local": "playwright test tests/shop",
+    "test:p24:disabled": "playwright test --config playwright.p24-disabled.config.ts",
     "db:start": "supabase start -x studio,imgproxy,mailpit,logflare,vector,edge-runtime,realtime,storage-api,postgres-meta",
     "db:reset": "supabase db reset --local"
   },

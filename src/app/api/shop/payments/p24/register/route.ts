@@ -16,10 +16,8 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const proto = req.headers.get('x-forwarded-proto') ?? 'http'
-    const host = req.headers.get('host') ?? 'localhost:3001'
     const { paymentUrl } = await registerPayment(orderId, {
-      baseUrl: `${proto}://${host}`,
+      baseUrl: process.env.SHOP_BASE_URL ?? '',
       email,
     })
     return NextResponse.json({ payment_url: paymentUrl })

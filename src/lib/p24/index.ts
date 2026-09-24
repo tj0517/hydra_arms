@@ -1,33 +1,24 @@
 import 'server-only'
 import { timingSafeEqual } from 'crypto'
+import { getP24Mode, assertCrcKeySet } from './mode'
+export type { P24Mode } from './mode'
+export { getP24Mode }
 import {
   signRegister as _signRegister,
   signVerify as _signVerify,
   signNotification as _signNotification,
 } from './sign'
 
-export type P24Mode = 'mock' | 'sandbox' | 'production'
-
-export function getP24Mode(): P24Mode {
-  const m = process.env.P24_MODE
-  if (m === 'sandbox' || m === 'production') return m
-  return 'mock'
-}
-
-function crcKey(): string {
-  return process.env.P24_CRC_KEY ?? ''
-}
-
 // ── Sign helpers ────────────────────────────────────────────
 
 /** register sign: {"sessionId","merchantId","amount","currency","crc"} */
 export function signRegister(sessionId: string, merchantId: number, amount: number, currency: string): string {
-  return _signRegister(sessionId, merchantId, amount, currency, crcKey())
+  return _signRegister(sessionId, merchantId, amount, currency, assertCrcKeySet())
 }
 
 /** verify sign: {"sessionId","orderId","amount","currency","crc"} */
 export function signVerify(sessionId: string, orderId: number, amount: number, currency: string): string {
-  return _signVerify(sessionId, orderId, amount, currency, crcKey())
+  return _signVerify(sessionId, orderId, amount, currency, assertCrcKeySet())
 }
 
 /**
@@ -39,7 +30,7 @@ export function signNotification(
   amount: number, originAmount: number, currency: string,
   orderId: number, methodId: number, statement: string,
 ): string {
-  return _signNotification(merchantId, posId, sessionId, amount, originAmount, currency, orderId, methodId, statement, crcKey())
+  return _signNotification(merchantId, posId, sessionId, amount, originAmount, currency, orderId, methodId, statement, assertCrcKeySet())
 }
 
 /** Constant-time comparison of two hex sign strings. */
@@ -135,13 +126,14 @@ export interface RegisterParams {
 /** Register a transaction with P24. Returns the token used for the redirect URL. */
 export async function registerTransaction(params: RegisterParams): Promise<string> {
   const mode = getP24Mode()
+  if (mode === 'disabled') throw new Error('Payments not configured')
   if (mode === 'mock') {
     // Mock: return a deterministic fake token (order UUID prefix)
     return `mock-${params.orderId.slice(0, 8)}`
   }
 
-  const merchantId = parseInt(process.env.P24_MERCHANT_ID ?? '0', 10)
-  const posId = parseInt(process.env.P24_POS_ID ?? '0', 10)
+  const merchantId = parseInt(process.env.P24_MERCHANT_ID || '0', 10)
+  const posId = parseInt(process.env.P24_POS_ID || '0', 10)
   const currency = params.currency ?? 'PLN'
 
   const body = {
@@ -193,10 +185,11 @@ export async function verifyTransaction(
   sessionId: string, orderId: number, amount: number, currency: string,
 ): Promise<boolean> {
   const mode = getP24Mode()
+  if (mode === 'disabled') throw new Error('Payments not configured')
   if (mode === 'mock') return true
 
-  const merchantId = parseInt(process.env.P24_MERCHANT_ID ?? '0', 10)
-  const posId = parseInt(process.env.P24_POS_ID ?? '0', 10)
+  const merchantId = parseInt(process.env.P24_MERCHANT_ID || '0', 10)
+  const posId = parseInt(process.env.P24_POS_ID || '0', 10)
 
   const body = {
     merchantId,

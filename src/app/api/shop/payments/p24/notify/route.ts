@@ -49,22 +49,31 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Currency mismatch' }, { status: 422 })
   }
 
-  // 6. Check order status for duplicate attempt on an already-paid order
-  const { data: order } = await supabase
+  // 6. Check order status — only call P24 verify for pending_payment orders
+  const { data: order, error: orderErr } = await supabase
     .from('orders')
     .select('status')
     .eq('id', attempt.order_id)
     .single()
 
-  if (order?.status === 'paid') {
-    // Different attempt completed payment first — mark this one as duplicate, do NOT call verify
+  if (orderErr || !order) {
+    console.error('[p24/notify] failed to fetch order:', orderErr)
+    return NextResponse.json({ error: 'Order not found' }, { status: 500 })
+  }
+
+  if (order.status !== 'pending_payment') {
+    // Order is already paid, cancelled, shipped, etc. — mark attempt as duplicate, do NOT call verify
     console.warn(
-      `[p24/notify] duplicate_rejected: order=${attempt.order_id} attempt=${attempt.id} p24_orderId=${body.orderId}`,
+      `[p24/notify] duplicate_rejected: order=${attempt.order_id} status=${order.status} attempt=${attempt.id} p24_orderId=${body.orderId}`,
     )
-    await supabase
+    const { error: dupErr } = await supabase
       .from('order_payments')
       .update({ status: 'duplicate_rejected', p24_order_id: body.orderId })
       .eq('id', attempt.id)
+    if (dupErr) {
+      console.error('[p24/notify] failed to mark duplicate_rejected:', dupErr)
+      return NextResponse.json({ error: 'Failed to record duplicate' }, { status: 500 })
+    }
     return NextResponse.json({ ok: true })
   }
 
@@ -75,7 +84,7 @@ export async function POST(req: NextRequest) {
   }
 
   // 8. Mark attempt as verified, then mark order as paid
-  await supabase
+  const { error: verifyUpdateErr } = await supabase
     .from('order_payments')
     .update({
       status: 'verified',
@@ -83,6 +92,11 @@ export async function POST(req: NextRequest) {
       verified_at: new Date().toISOString(),
     })
     .eq('id', attempt.id)
+
+  if (verifyUpdateErr) {
+    console.error('[p24/notify] failed to mark attempt verified:', verifyUpdateErr)
+    return NextResponse.json({ error: 'Failed to record verification' }, { status: 500 })
+  }
 
   await markOrderPaid(attempt.order_id)
 

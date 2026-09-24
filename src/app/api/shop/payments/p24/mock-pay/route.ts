@@ -60,9 +60,8 @@ export async function POST(req: NextRequest) {
   )
 
   // Send the signed notification to the real notify endpoint
-  const proto = req.headers.get('x-forwarded-proto') ?? 'http'
-  const host = req.headers.get('host') ?? 'localhost:3001'
-  const notifyUrl = `${proto}://${host}/api/shop/payments/p24/notify`
+  const baseUrl = process.env.SHOP_BASE_URL ?? ''
+  const notifyUrl = `${baseUrl}/api/shop/payments/p24/notify`
 
   const notifyRes = await fetch(notifyUrl, {
     method: 'POST',

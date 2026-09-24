@@ -198,9 +198,7 @@ export async function POST(req: NextRequest) {
 
     // Register a P24 payment attempt and get the redirect URL
     const shipping = body.shipping
-    const proto = req.headers.get('x-forwarded-proto') ?? 'http'
-    const host = req.headers.get('host') ?? 'localhost:3001'
-    const baseUrl = `${proto}://${host}`
+    const baseUrl = process.env.SHOP_BASE_URL ?? ''
 
     let paymentUrl = `/sklep/zamowienie/${orderId}`
     try {

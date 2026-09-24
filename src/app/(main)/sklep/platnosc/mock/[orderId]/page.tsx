@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import MockPaymentClient from './MockPaymentClient'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getP24Mode } from '@/lib/p24/mode'
 
 // Only renders when P24_MODE=mock
 export default async function MockPaymentPage({
@@ -10,7 +11,7 @@ export default async function MockPaymentPage({
   params: Promise<{ orderId: string }>
   searchParams: Promise<{ sid?: string }>
 }) {
-  if (process.env.P24_MODE !== 'mock') notFound()
+  if (getP24Mode() !== 'mock') notFound()
 
   const { orderId } = await params
   const { sid: p24SessionId } = await searchParams
