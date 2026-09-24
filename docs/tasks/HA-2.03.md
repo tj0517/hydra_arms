@@ -1,12 +1,12 @@
 ---
 id: HA-2.03
 title: Płatność Przelewy24 — adapter z trybem mock
-status: todo
+status: in_progress
 difficulty: L
-model: null
+model: claude-sonnet-4-6
 model_approved: null
-effort: null
-branch: null
+effort: high
+branch: feat/ha-2.03-p24-mock
 due: null
 depends_on: [HA-2.01]
 blocked_by_questions: []
@@ -31,7 +31,8 @@ Sklep musi przyjmować płatności P24 przed końcem projektu, ale konto P24 jes
 - pełna ścieżka w trybie mock: zamówienie → strona płatności → powiadomienie → `paid` → mock BL — **jak sprawdzić:** test e2e + zrzuty z Playwright MCP + wklejony SELECT
 - red proof: powiadomienie ze złym podpisem → 4xx, status bez zmian — **jak sprawdzić:** test API
 - red proof: powiadomienie z inną kwotą niż zamówienie → odrzucone — **jak sprawdzić:** test API
-- red proof: powtórzone powiadomienie → brak drugiego pushu do BL — **jak sprawdzić:** test (liczba wywołań mocka BL = 1)
+- red proof: powtórzone powiadomienie → BL mock counter dla tego zamówienia = 1 i `baselinker_order_id` bez zmian po drugim — **jak sprawdzić:** test *(opcja B, 2026-09-24: BL mock nie miał licznika; tj dodaje licznik)*
+- red proof: BL mock counter niedostępny gdy `BASELINKER_MOCK≠true` (404) — **jak sprawdzić:** test
 - red proof: `?status=success` dopisane ręcznie do adresu powrotu nie oznacza zamówienia jako opłaconego — **jak sprawdzić:** test
 - red proof: strona mock zwraca 404, gdy `P24_MODE=production` — **jak sprawdzić:** test
 - `grep -rn P24_ src` — klucze tylko w plikach serwerowych — **jak sprawdzić:** wklejone wyjście
@@ -53,3 +54,4 @@ Sklep musi przyjmować płatności P24 przed końcem projektu, ale konto P24 jes
 
 ## Notatki z realizacji
 - 2026-09-22 tj: P24 w trakcie zakładania, musi być przed końcem projektu; zadania pracują na mocku / sztucznym webhooku (O-15)
+- 2026-09-24 tj: dowód „jeden push do BL" przez licznik wywołań w mocku BL, dostępny wyłącznie przy BASELINKER_MOCK=true (opcja B)
