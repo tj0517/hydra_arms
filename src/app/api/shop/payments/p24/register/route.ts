@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const { paymentUrl } = await registerPayment(orderId, {
-      baseUrl: process.env.SHOP_BASE_URL ?? '',
+      baseUrl: process.env.SHOP_BASE_URL,
       email,
     })
     return NextResponse.json({ payment_url: paymentUrl })

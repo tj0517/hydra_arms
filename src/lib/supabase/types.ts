@@ -427,8 +427,12 @@ export interface Database {
         Returns: number;
       };
       p24_claim_for_verify: {
-        Args: { p_order_id: string; p_attempt_id: string };
+        Args: { p_attempt_id: string; p_p24_order_id: number };
         Returns: string;
+      };
+      p24_release_claim: {
+        Args: { p_attempt_id: string };
+        Returns: void;
       };
     };
     Enums: {

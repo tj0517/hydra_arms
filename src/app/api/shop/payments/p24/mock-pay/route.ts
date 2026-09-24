@@ -8,6 +8,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
+  // Fail-closed: SHOP_BASE_URL must be set before we do anything else
+  const baseUrl = process.env.SHOP_BASE_URL
+  if (!baseUrl) {
+    return NextResponse.json({ error: 'SHOP_BASE_URL not configured' }, { status: 500 })
+  }
+
   let body: { orderId?: string; p24SessionId?: string }
   try {
     body = await req.json()
@@ -59,8 +65,6 @@ export async function POST(req: NextRequest) {
     mockP24OrderId, 25, notification.statement,
   )
 
-  // Send the signed notification to the real notify endpoint
-  const baseUrl = process.env.SHOP_BASE_URL ?? ''
   const notifyUrl = `${baseUrl}/api/shop/payments/p24/notify`
 
   const notifyRes = await fetch(notifyUrl, {

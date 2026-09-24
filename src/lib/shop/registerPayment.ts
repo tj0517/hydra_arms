@@ -11,13 +11,16 @@ import { registerTransaction, p24PaymentUrl, getP24Mode } from '@/lib/p24'
  */
 export async function registerPayment(
   orderId: string,
-  opts: { baseUrl: string; email: string; description?: string },
+  opts: { baseUrl: string | undefined; email: string; description?: string },
 ): Promise<{ paymentUrl: string; p24SessionId: string }> {
+  const baseUrl = opts.baseUrl
+  if (!baseUrl) throw new Error('SHOP_BASE_URL is not configured')
+
   const supabase = createAdminClient()
 
   const p24SessionId = crypto.randomUUID()
-  const urlReturn = `${opts.baseUrl}/sklep/zamowienie/${orderId}`
-  const urlStatus = `${opts.baseUrl}/api/shop/payments/p24/notify`
+  const urlReturn = `${baseUrl}/sklep/zamowienie/${orderId}`
+  const urlStatus = `${baseUrl}/api/shop/payments/p24/notify`
 
   // Atomically: lock order row FOR UPDATE, check pending_payment, insert attempt
   const { data: amountGrosze, error: rpcErr } = await supabase.rpc('p24_register_attempt', {
@@ -49,7 +52,7 @@ export async function registerPayment(
 
   const mode = getP24Mode()
   const paymentUrl = mode === 'mock'
-    ? `${opts.baseUrl}/sklep/platnosc/mock/${orderId}?sid=${p24SessionId}`
+    ? `${baseUrl}/sklep/platnosc/mock/${orderId}?sid=${p24SessionId}`
     : p24PaymentUrl(token)
 
   return { paymentUrl, p24SessionId }

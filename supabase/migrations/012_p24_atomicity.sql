@@ -3,10 +3,13 @@
 -- ============================================================
 -- Adds 'claiming' status so a notify handler can atomically stake
 -- its right to call P24 verify before any money-capture happens.
--- Provides two functions:
+-- Provides three functions:
 --   p24_register_attempt  — locks the order row and inserts the attempt
---   p24_claim_for_verify  — locks order+attempt, returns 'claimed' or
---                           'duplicate_rejected' without touching money
+--   p24_claim_for_verify  — locks order+attempt, writes all rejections
+--                           under the lock; returns 'claimed', 'in_progress',
+--                           'duplicate_rejected', or 'not_found'
+--   p24_release_claim     — releases a stuck 'claiming' attempt back to
+--                           'registered' under the same lock ordering
 
 -- ── 1. Extend status CHECK constraint ────────────────────────
 -- The constraint was created inline in 011 (auto-name: order_payments_status_check).
@@ -68,56 +71,90 @@ GRANT  EXECUTE ON FUNCTION public.p24_register_attempt(uuid, text, text) TO serv
 
 -- ── 3. Claim — atomic check before P24 verify ────────────────
 -- Must be called before verifyTransaction.  Returns:
---   'claimed'             — this attempt owns the verify call
---   'duplicate_rejected'  — another attempt is claiming/verified,
---                           or the order is no longer pending_payment
--- App code handles the duplicate_rejected update (preserves p24_order_id
--- from the notification body, which the SQL function does not have).
+--   'claimed'             — this attempt now owns the verify call
+--   'in_progress'         — same attempt already 'claiming' (concurrent call);
+--                           caller returns 5xx so P24 retries
+--   'duplicate_rejected'  — order not pending_payment or a rival is
+--                           claiming/verified; SQL writes status+p24_order_id
+--                           under the lock so the app never writes it
+--   'not_found'           — unknown attempt id
+--
+-- Lock ordering everywhere: orders → order_payments (prevents deadlocks).
+-- order_id is read in a non-locking SELECT first (it is an immutable FK),
+-- then the order row is locked before the attempt row.
+
+-- Drop old (uuid, uuid) overload before creating the new (uuid, bigint) one
+DROP FUNCTION IF EXISTS public.p24_claim_for_verify(uuid, uuid);
+
 CREATE OR REPLACE FUNCTION public.p24_claim_for_verify(
-  p_order_id   uuid,
-  p_attempt_id uuid
+  p_attempt_id   uuid,
+  p_p24_order_id bigint
 ) RETURNS text
 LANGUAGE plpgsql
 SECURITY INVOKER
 SET search_path = ''
 AS $$
 DECLARE
+  v_order_id       uuid;
   v_order_status   text;
   v_attempt_status text;
   v_rival_count    integer;
 BEGIN
-  -- Lock orders row first; concurrent claims for the same order queue here
-  SELECT status INTO v_order_status
-  FROM   public.orders
-  WHERE  id = p_order_id
-  FOR UPDATE;
+  -- 1. Read order_id without locking (immutable FK — safe to read before lock)
+  SELECT order_id INTO v_order_id
+  FROM   public.order_payments
+  WHERE  id = p_attempt_id;
 
-  IF NOT FOUND OR v_order_status <> 'pending_payment' THEN
-    RETURN 'duplicate_rejected';
+  IF NOT FOUND THEN
+    RETURN 'not_found';
   END IF;
 
-  -- Lock the attempt row
+  -- 2. Lock order row FIRST (consistent ordering: order → attempt everywhere)
+  SELECT status INTO v_order_status
+  FROM   public.orders
+  WHERE  id = v_order_id
+  FOR UPDATE;
+
+  -- 3. Lock this attempt row SECOND
   SELECT status INTO v_attempt_status
   FROM   public.order_payments
   WHERE  id = p_attempt_id
   FOR UPDATE;
 
-  IF NOT FOUND OR v_attempt_status <> 'registered' THEN
+  -- 4. Same attempt in 'claiming' — a concurrent handler owns it; caller must retry
+  IF v_attempt_status = 'claiming' THEN
+    RETURN 'in_progress';
+  END IF;
+
+  -- 5. Any other non-'registered' status is unexpected here (terminal states are
+  --    caught by the idempotency check in the route before claim is called)
+  IF v_attempt_status <> 'registered' THEN
+    RETURN 'in_progress';
+  END IF;
+
+  -- 6. Reject if order is no longer pending_payment; write rejection under the lock
+  IF v_order_status <> 'pending_payment' THEN
+    UPDATE public.order_payments
+    SET    status = 'duplicate_rejected', p24_order_id = p_p24_order_id
+    WHERE  id = p_attempt_id;
     RETURN 'duplicate_rejected';
   END IF;
 
-  -- Reject if any rival attempt for this order is already claiming or verified
+  -- 7. Reject if a rival attempt for this order is already claiming or verified
   SELECT COUNT(*) INTO v_rival_count
   FROM   public.order_payments
-  WHERE  order_id = p_order_id
+  WHERE  order_id = v_order_id
     AND  id       <> p_attempt_id
     AND  status   IN ('claiming', 'verified');
 
   IF v_rival_count > 0 THEN
+    UPDATE public.order_payments
+    SET    status = 'duplicate_rejected', p24_order_id = p_p24_order_id
+    WHERE  id = p_attempt_id;
     RETURN 'duplicate_rejected';
   END IF;
 
-  -- This attempt wins — advance to 'claiming' before releasing the lock
+  -- 8. All checks pass — advance to 'claiming'
   UPDATE public.order_payments
   SET    status = 'claiming'
   WHERE  id = p_attempt_id;
@@ -126,7 +163,47 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.p24_claim_for_verify(uuid, uuid) FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.p24_claim_for_verify(uuid, uuid) FROM anon;
-REVOKE ALL ON FUNCTION public.p24_claim_for_verify(uuid, uuid) FROM authenticated;
-GRANT  EXECUTE ON FUNCTION public.p24_claim_for_verify(uuid, uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.p24_claim_for_verify(uuid, bigint) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.p24_claim_for_verify(uuid, bigint) FROM anon;
+REVOKE ALL ON FUNCTION public.p24_claim_for_verify(uuid, bigint) FROM authenticated;
+GRANT  EXECUTE ON FUNCTION public.p24_claim_for_verify(uuid, bigint) TO service_role;
+
+-- ── 4. Release — return a stuck 'claiming' attempt to 'registered' ──────────
+-- Called by the notify route when verifyTransaction fails (network error,
+-- non-ok response, timeout).  Uses the same lock ordering as p24_claim_for_verify
+-- so there are no deadlocks.
+CREATE OR REPLACE FUNCTION public.p24_release_claim(
+  p_attempt_id uuid
+) RETURNS void
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = ''
+AS $$
+DECLARE
+  v_order_id uuid;
+BEGIN
+  -- Read order_id without locking (immutable FK)
+  SELECT order_id INTO v_order_id
+  FROM   public.order_payments
+  WHERE  id = p_attempt_id;
+
+  IF NOT FOUND THEN RETURN; END IF;
+
+  -- Lock order row FIRST
+  PERFORM 1
+  FROM    public.orders
+  WHERE   id = v_order_id
+  FOR UPDATE;
+
+  -- Release: only transitions 'claiming' → 'registered'
+  UPDATE public.order_payments
+  SET    status = 'registered'
+  WHERE  id = p_attempt_id
+    AND  status = 'claiming';
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.p24_release_claim(uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.p24_release_claim(uuid) FROM anon;
+REVOKE ALL ON FUNCTION public.p24_release_claim(uuid) FROM authenticated;
+GRANT  EXECUTE ON FUNCTION public.p24_release_claim(uuid) TO service_role;

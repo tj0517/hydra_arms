@@ -198,7 +198,7 @@ export async function POST(req: NextRequest) {
 
     // Register a P24 payment attempt and get the redirect URL
     const shipping = body.shipping
-    const baseUrl = process.env.SHOP_BASE_URL ?? ''
+    const baseUrl = process.env.SHOP_BASE_URL
 
     let paymentUrl = `/sklep/zamowienie/${orderId}`
     try {

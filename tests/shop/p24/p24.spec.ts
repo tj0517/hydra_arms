@@ -672,3 +672,258 @@ test.describe('p24/notify — unknown sessionId', () => {
     expect(res.status()).toBe(404)
   })
 })
+
+// ════════════════════════════════════════════════════════════════════════════
+// 13. B4 — Release / re-claim / all-rejections-in-SQL (Review Round 2)
+// ════════════════════════════════════════════════════════════════════════════
+
+// Admin helpers for direct DB manipulation in red-proof tests
+
+async function setAttemptStatus(attemptId: string, status: string) {
+  await fetch(
+    `${SUPABASE_URL}/rest/v1/order_payments?id=eq.${attemptId}`,
+    {
+      method: 'PATCH',
+      headers: { ...serviceHeaders, Prefer: 'return=minimal' },
+      body: JSON.stringify({ status }),
+    },
+  )
+}
+
+async function releaseClaimRpc(attemptId: string) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/p24_release_claim`, {
+    method: 'POST',
+    headers: serviceHeaders,
+    body: JSON.stringify({ p_attempt_id: attemptId }),
+  })
+  // void-returning functions return 204 No Content in PostgREST
+  return res.ok
+}
+
+test.describe('p24 — B4 release / re-claim / SQL rejections', () => {
+
+  // ── 13.1 ─────────────────────────────────────────────────────────────────
+  test('claiming attempt → 503 in_progress (not 200 as before)', async ({ request }) => {
+    // RED: old code (step 4: `if (attempt.status !== 'registered') return 200`)
+    //      returned 200 for a 'claiming' attempt — P24 stopped retrying, order never paid.
+    // GREEN: 'claiming' falls through to claim function → 'in_progress' → 503.
+    const { order_id: orderId } = await doCheckout(request)
+    const attempt = (await getPaymentAttempts(orderId))[0]
+
+    await setAttemptStatus(attempt.id, 'claiming')
+
+    const notification = buildNotification(attempt)
+    const res = await request.post('/api/shop/payments/p24/notify', { data: notification })
+    expect(res.status()).toBe(503)
+
+    // Attempt remains 'claiming' — status unchanged
+    expect((await getPaymentAttempts(orderId))[0].status).toBe('claiming')
+    // Order still pending
+    expect((await getOrder(orderId))?.status).toBe('pending_payment')
+  })
+
+  // ── 13.2 ─────────────────────────────────────────────────────────────────
+  test('claiming → release → retry → paid, BL=1', async ({ request }) => {
+    // Demonstrates crash-recovery: operator/system calls p24_release_claim, then
+    // the next P24 retry succeeds end-to-end.
+    const { order_id: orderId } = await doCheckout(request)
+    const attempt = (await getPaymentAttempts(orderId))[0]
+
+    // Simulate crash: attempt stuck in 'claiming'
+    await setAttemptStatus(attempt.id, 'claiming')
+
+    // Recovery: release via RPC
+    const releaseOk = await releaseClaimRpc(attempt.id)
+    expect(releaseOk).toBe(true)
+
+    // Back to 'registered'
+    expect((await getPaymentAttempts(orderId))[0].status).toBe('registered')
+
+    // Retry → full success
+    const notification = buildNotification(attempt)
+    const res = await request.post('/api/shop/payments/p24/notify', { data: notification })
+    expect(res.status()).toBe(200)
+
+    expect((await getOrder(orderId))?.status).toBe('paid')
+    expect((await getPaymentAttempts(orderId))[0].status).toBe('verified')
+    expect(await getBlMockCounter(request, orderId)).toBe(1)
+  })
+
+  // ── 13.3 ─────────────────────────────────────────────────────────────────
+  test('same notification twice in parallel → verified every run, BL=1 (×5)', async ({ request }) => {
+    // Two concurrent notifies for the same attempt.
+    // Expected: FOR UPDATE lock ensures only one claims; the other gets 'in_progress' (503).
+    // The 503 is retried; it then sees 'verified' → recovery path → 200.
+    // Final: one verify call, attempt=verified, order=paid, BL=1.
+    for (let i = 0; i < 5; i++) {
+      const { order_id: orderId } = await doCheckout(request)
+      const attempt = (await getPaymentAttempts(orderId))[0]
+      const notification = buildNotification(attempt)
+
+      const [r1, r2] = await Promise.all([
+        request.post('/api/shop/payments/p24/notify', { data: notification }),
+        request.post('/api/shop/payments/p24/notify', { data: notification }),
+      ])
+
+      const s1 = r1.status()
+      const s2 = r2.status()
+
+      // At least one must be 200 (successful claim + verify); the other may be 503 or 200
+      expect([s1, s2].some(s => s === 200)).toBe(true)
+
+      // If one got 503 (in_progress), simulate P24 retry
+      if (s1 === 503 || s2 === 503) {
+        const retry = await request.post('/api/shop/payments/p24/notify', { data: notification })
+        // Retry sees 'verified' → recovery path → 200
+        expect(retry.status()).toBe(200)
+      }
+
+      // Final state: always verified, paid, BL=1
+      expect((await getPaymentAttempts(orderId))[0].status).toBe('verified')
+      expect((await getOrder(orderId))?.status).toBe('paid')
+      expect(await getBlMockCounter(request, orderId)).toBe(1)
+    }
+  })
+
+  // ── 13.4 ─────────────────────────────────────────────────────────────────
+  test('two different attempts in parallel → one verified, one duplicate_rejected, BL=1 (×5)', async ({ request }) => {
+    // Concurrent notifies for two different attempts on the same order.
+    // Expected: the claim function's FOR UPDATE + rival-check ensures exactly
+    //   one attempt becomes 'verified' and the other 'duplicate_rejected'.
+    // SQL function writes duplicate_rejected + p24_order_id under the lock.
+    for (let i = 0; i < 5; i++) {
+      const { order_id: orderId } = await doCheckout(request)
+      const a1 = (await getPaymentAttempts(orderId))[0]
+
+      // Insert second attempt (bypasses register which would 409 on paid order)
+      const p24SessionId2 = crypto.randomUUID()
+      await fetch(`${SUPABASE_URL}/rest/v1/order_payments`, {
+        method: 'POST',
+        headers: serviceHeaders,
+        body: JSON.stringify({
+          order_id: orderId,
+          p24_session_id: p24SessionId2,
+          amount_grosz: a1.amount_grosz,
+          currency: a1.currency,
+        }),
+      })
+
+      const a2 = { p24_session_id: p24SessionId2, amount_grosz: a1.amount_grosz, currency: a1.currency }
+
+      const [r1, r2] = await Promise.all([
+        request.post('/api/shop/payments/p24/notify', { data: buildNotification(a1) }),
+        request.post('/api/shop/payments/p24/notify', { data: buildNotification(a2) }),
+      ])
+
+      // Both should eventually return 200 (one as success, one as duplicate_rejected)
+      // If one got 503 (in_progress on a rival still claiming), retry it
+      if (r1.status() === 503) {
+        await request.post('/api/shop/payments/p24/notify', { data: buildNotification(a1) })
+      }
+      if (r2.status() === 503) {
+        await request.post('/api/shop/payments/p24/notify', { data: buildNotification(a2) })
+      }
+
+      const finalAttempts = await getPaymentAttempts(orderId)
+      const a1Row = finalAttempts.find(a => a.p24_session_id === a1.p24_session_id)
+      const a2Row = finalAttempts.find(a => a.p24_session_id === p24SessionId2)
+
+      const statuses = [a1Row?.status, a2Row?.status].sort()
+      expect(statuses).toEqual(['duplicate_rejected', 'verified'])
+
+      expect((await getOrder(orderId))?.status).toBe('paid')
+      expect(await getBlMockCounter(request, orderId)).toBe(1)
+    }
+  })
+
+  // ── 13.5 ─────────────────────────────────────────────────────────────────
+  test('verified attempt + pending order → recovery markOrderPaid → paid, BL=1', async ({ request }) => {
+    // RED: old code's step 4 for 'verified' returned 200 immediately without calling
+    //      markOrderPaid → order stayed pending_payment.
+    // GREEN: step 4 for 'verified' calls markOrderPaid (idempotent) → order becomes paid.
+    const { order_id: orderId } = await doCheckout(request)
+    const attempt = (await getPaymentAttempts(orderId))[0]
+
+    // Simulate: verify succeeded but markOrderPaid was never called (e.g. process crash after
+    // the UPDATE to 'verified' but before markOrderPaid returned)
+    await fetch(
+      `${SUPABASE_URL}/rest/v1/order_payments?id=eq.${attempt.id}`,
+      {
+        method: 'PATCH',
+        headers: { ...serviceHeaders, Prefer: 'return=minimal' },
+        body: JSON.stringify({ status: 'verified', p24_order_id: 123456789 }),
+      },
+    )
+
+    // Order is still pending_payment
+    expect((await getOrder(orderId))?.status).toBe('pending_payment')
+
+    // Retry notify → step 4: 'verified' → markOrderPaid → paid
+    const notification = buildNotification(attempt)
+    const res = await request.post('/api/shop/payments/p24/notify', { data: notification })
+    expect(res.status()).toBe(200)
+
+    expect((await getOrder(orderId))?.status).toBe('paid')
+    expect(await getBlMockCounter(request, orderId)).toBe(1)
+  })
+
+  // ── 13.6 ─────────────────────────────────────────────────────────────────
+  test('p24_claim_for_verify with non-existent attempt id → not_found', async () => {
+    const fakeId = crypto.randomUUID()
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/p24_claim_for_verify`, {
+      method: 'POST',
+      headers: serviceHeaders,
+      body: JSON.stringify({ p_attempt_id: fakeId, p_p24_order_id: 123456789 }),
+    })
+    expect(res.status).toBe(200)
+    const result = await res.json()
+    expect(result).toBe('not_found')
+  })
+
+  // ── 13.7 ─────────────────────────────────────────────────────────────────
+  test('duplicate_rejected written by SQL (not app code) — p24_order_id set', async ({ request }) => {
+    // Verifies that when a rival attempt wins, the losing attempt's duplicate_rejected
+    // status AND p24_order_id are written by the SQL function under the lock,
+    // not by app code after the lock is released.
+    const { order_id: orderId } = await doCheckout(request)
+    const a1 = (await getPaymentAttempts(orderId))[0]
+
+    // Pay via a1
+    await request.post('/api/shop/payments/p24/mock-pay', {
+      data: { orderId, p24SessionId: a1.p24_session_id },
+    })
+    expect((await getOrder(orderId))?.status).toBe('paid')
+
+    // Insert a2 manually (register would 409)
+    const p24SessionId2 = crypto.randomUUID()
+    await fetch(`${SUPABASE_URL}/rest/v1/order_payments`, {
+      method: 'POST',
+      headers: serviceHeaders,
+      body: JSON.stringify({
+        order_id: orderId,
+        p24_session_id: p24SessionId2,
+        amount_grosz: a1.amount_grosz,
+        currency: a1.currency,
+      }),
+    })
+
+    const a2 = { p24_session_id: p24SessionId2, amount_grosz: a1.amount_grosz, currency: a1.currency }
+    const notification2 = buildNotification(a2)
+
+    // Notify for a2 — order already paid, SQL should write duplicate_rejected + p24_order_id
+    const res = await request.post('/api/shop/payments/p24/notify', { data: notification2 })
+    expect(res.status()).toBe(200)
+
+    const attempts = await getPaymentAttempts(orderId)
+    const a2Row = attempts.find(a => a.p24_session_id === p24SessionId2) as
+      { id: string; status: string; p24_order_id: number | null } | undefined
+
+    expect(a2Row?.status).toBe('duplicate_rejected')
+    // p24_order_id was set by SQL function under the lock (not by app code)
+    // The orderId in the notification was the mock hash of p24SessionId2
+    expect(a2Row?.p24_order_id).not.toBeNull()
+    expect(a2Row?.p24_order_id).toBeGreaterThan(0)
+
+    expect(await getBlMockCounter(request, orderId)).toBe(1)
+  })
+})

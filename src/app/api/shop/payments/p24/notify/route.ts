@@ -35,16 +35,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unknown sessionId' }, { status: 404 })
   }
 
-  // 4. Idempotency: any terminal/in-progress status — return 200 without re-processing.
-  //    'verified'           — already paid, no-op
-  //    'duplicate_rejected' — already handled as duplicate, no-op
-  //    'claiming'           — another handler won the race; stop P24 retries
-  if (attempt.status !== 'registered') {
+  // 4. Idempotency for terminal states.
+  //    'duplicate_rejected' — already handled, no-op
+  //    'verified'           — attempt paid; call markOrderPaid again (idempotent) to recover
+  //                           if a previous markOrderPaid failed after verify succeeded
+  //    'claiming'           — falls through to the claim function below (§6)
+  if (attempt.status === 'duplicate_rejected') {
     return NextResponse.json({ ok: true })
   }
+  if (attempt.status === 'verified') {
+    // Recovery path: attempt verified but order may still be pending_payment if
+    // markOrderPaid failed last time.  Calling again is idempotent.
+    try {
+      await markOrderPaid(attempt.order_id)
+    } catch (paidErr) {
+      console.error('[p24/notify] markOrderPaid failed in recovery path:', paidErr)
+      return NextResponse.json({ error: 'Failed to mark order paid' }, { status: 500 })
+    }
+    return NextResponse.json({ ok: true })
+  }
+  // 'registered' or 'claiming' falls through
 
-  // 5. Check amount and currency against the registered attempt (not orders.total —
-  //    HA-2.02 will add delivery costs and could change the order total after registration)
+  // 5. Check amount and currency against the registered attempt (not orders.total)
   if (body.amount !== attempt.amount_grosz || body.originAmount !== attempt.amount_grosz) {
     return NextResponse.json({ error: 'Amount mismatch' }, { status: 422 })
   }
@@ -53,14 +65,17 @@ export async function POST(req: NextRequest) {
   }
 
   // 6. Atomically claim this attempt for P24 verify.
-  //    Locks order + attempt rows (FOR UPDATE); returns 'claimed' only when:
-  //      - order.status === 'pending_payment'
-  //      - attempt.status === 'registered'
-  //      - no rival attempt is already claiming or verified
-  //    Any other condition returns 'duplicate_rejected' (no money captured).
+  //    New signature: (p_attempt_id uuid, p_p24_order_id bigint)
+  //    The SQL function reads order_id from the attempt, locks order FIRST then
+  //    attempt (consistent ordering), and writes all rejections under the lock.
+  //    Returns:
+  //      'claimed'            — this attempt now owns the verify call
+  //      'in_progress'        — same attempt already 'claiming' (concurrent); P24 must retry
+  //      'duplicate_rejected' — SQL wrote status+p24_order_id; nothing for us to do
+  //      'not_found'          — attempt disappeared (defensive; should not happen)
   const { data: claim, error: claimErr } = await supabase.rpc('p24_claim_for_verify', {
-    p_order_id: attempt.order_id,
     p_attempt_id: attempt.id,
+    p_p24_order_id: body.orderId,
   })
 
   if (claimErr) {
@@ -68,31 +83,47 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Claim failed' }, { status: 500 })
   }
 
-  if (claim !== 'claimed') {
-    // Order not pending_payment, or a rival attempt won — mark as duplicate, do NOT verify
+  if (claim === 'not_found') {
+    return NextResponse.json({ error: 'Unknown sessionId' }, { status: 404 })
+  }
+
+  if (claim === 'in_progress') {
+    // Same attempt is being processed by a concurrent request; return 5xx so P24 retries.
+    console.warn(`[p24/notify] in_progress: attempt=${attempt.id}`)
+    return NextResponse.json({ error: 'In progress' }, { status: 503 })
+  }
+
+  if (claim === 'duplicate_rejected') {
+    // SQL function wrote status=duplicate_rejected + p24_order_id under the lock
     console.warn(
-      `[p24/notify] duplicate_rejected: order=${attempt.order_id} claim=${claim} attempt=${attempt.id} p24_orderId=${body.orderId}`,
+      `[p24/notify] duplicate_rejected (SQL): attempt=${attempt.id} p24_orderId=${body.orderId}`,
     )
-    const { error: dupErr } = await supabase
-      .from('order_payments')
-      .update({ status: 'duplicate_rejected', p24_order_id: body.orderId })
-      .eq('id', attempt.id)
-    if (dupErr) {
-      console.error('[p24/notify] failed to mark duplicate_rejected:', dupErr)
-      return NextResponse.json({ error: 'Failed to record duplicate' }, { status: 500 })
-    }
     return NextResponse.json({ ok: true })
   }
 
+  // 'claimed' — proceed with verification
+
   // 7. Verify with P24 (mock always returns true).
-  //    Attempt is now 'claiming'; if verify fails it stays 'claiming' (requires manual review).
-  const verified = await verifyTransaction(body.sessionId, body.orderId, body.amount, body.currency)
+  //    On any failure, release the claim so P24 can retry cleanly.
+  let verified: boolean
+  try {
+    verified = await verifyTransaction(body.sessionId, body.orderId, body.amount, body.currency)
+  } catch (verifyErr) {
+    console.error('[p24/notify] verifyTransaction threw:', verifyErr)
+    const { error: releaseErr } = await supabase.rpc('p24_release_claim', { p_attempt_id: attempt.id })
+    if (releaseErr) console.error('[p24/notify] release failed after verify throw:', releaseErr)
+    return NextResponse.json({ error: 'Verification error' }, { status: 502 })
+  }
+
   if (!verified) {
+    const { error: releaseErr } = await supabase.rpc('p24_release_claim', { p_attempt_id: attempt.id })
+    if (releaseErr) console.error('[p24/notify] release failed after verify false:', releaseErr)
     return NextResponse.json({ error: 'Verification failed' }, { status: 502 })
   }
 
-  // 8. Mark attempt as verified, then mark order as paid
-  const { error: verifyUpdateErr } = await supabase
+  // 8. Conditional update: only if the attempt is still 'claiming'.
+  //    Zero rows updated is unexpected — return 5xx so P24 retries into the §4 recovery path.
+  const { data: updated, error: verifyUpdateErr } = await supabase
     .from('order_payments')
     .update({
       status: 'verified',
@@ -100,13 +131,27 @@ export async function POST(req: NextRequest) {
       verified_at: new Date().toISOString(),
     })
     .eq('id', attempt.id)
+    .eq('status', 'claiming')
+    .select('id')
 
   if (verifyUpdateErr) {
     console.error('[p24/notify] failed to mark attempt verified:', verifyUpdateErr)
     return NextResponse.json({ error: 'Failed to record verification' }, { status: 500 })
   }
 
-  await markOrderPaid(attempt.order_id)
+  if (!updated?.length) {
+    console.error('[p24/notify] attempt no longer claiming after verify:', attempt.id)
+    return NextResponse.json({ error: 'Unexpected attempt state' }, { status: 500 })
+  }
+
+  // 9. Mark the order as paid.  Failure → 5xx so P24 retries; the retry hits the
+  //    'verified' recovery path in §4 which calls markOrderPaid again (idempotent).
+  try {
+    await markOrderPaid(attempt.order_id)
+  } catch (paidErr) {
+    console.error('[p24/notify] markOrderPaid failed:', paidErr)
+    return NextResponse.json({ error: 'Failed to mark order paid' }, { status: 500 })
+  }
 
   return NextResponse.json({ ok: true })
 }
