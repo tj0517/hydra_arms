@@ -55,3 +55,7 @@ Sklep musi przyjmować płatności P24 przed końcem projektu, ale konto P24 jes
 ## Notatki z realizacji
 - 2026-09-22 tj: P24 w trakcie zakładania, musi być przed końcem projektu; zadania pracują na mocku / sztucznym webhooku (O-15)
 - 2026-09-24 tj: dowód „jeden push do BL" przez licznik wywołań w mocku BL, dostępny wyłącznie przy BASELINKER_MOCK=true (opcja B)
+- 2026-09-24 tj: migracja 011 — p24_session_id per próba płatności + p24_order_id (bigint) po opłaceniu; ponowna płatność za to samo zamówienie możliwa (opcja C)
+- 2026-09-24 tj: format podpisów P24 z oficjalnej dokumentacji (developers.przelewy24.pl), wektory testowe z dokumentacji (opcja B)
+- 2026-09-24 tj: druga udana płatność za opłacone zamówienie — nie weryfikujemy w P24 (pieniądze zostają u klienta), próba oznaczona jako duplikat + log; komunikat dla klienta → deferred HA-2.07/2.08 (opcja A)
+- 2026-09-24 tj: pełna implementacja ukończona (src/lib/p24, migracja 011, notify/mock-pay/register/dev routes, mock page, BL mock counter, seed helper test_table_privilege); testy napisane (sign.spec.ts + p24.spec.ts); weryfikacja czeka na sesję z SUPABASE_TARGET=local (npm run db:reset + npm run test:shop:local)

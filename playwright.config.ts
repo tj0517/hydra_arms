@@ -36,6 +36,11 @@ export default defineConfig({
       NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
       SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
       BASELINKER_MOCK: process.env.BASELINKER_MOCK ?? 'true',
+      BASELINKER_STATUS_PAID: process.env.BASELINKER_STATUS_PAID ?? '',
+      P24_MODE: process.env.P24_MODE ?? 'mock',
+      P24_CRC_KEY: process.env.P24_CRC_KEY ?? '',
+      P24_MERCHANT_ID: process.env.P24_MERCHANT_ID ?? '',
+      P24_POS_ID: process.env.P24_POS_ID ?? '',
     },
   },
 });

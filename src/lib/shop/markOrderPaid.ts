@@ -2,6 +2,7 @@ import 'server-only'
 import { revalidateTag } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { addOrder } from '@/lib/baselinker/client'
+import { incrementBlMockCounter } from '@/lib/baselinker/mockCounter'
 import { SHOP_CACHE_TAG } from '@/lib/shop/fetchProducts'
 
 /**
@@ -105,6 +106,9 @@ export async function markOrderPaid(
     // BL now owns the reservation — bust cache so displayed stock is restored.
     revalidateTag(SHOP_CACHE_TAG, 'max')
 
+    if (process.env.BASELINKER_MOCK === 'true') {
+      incrementBlMockCounter(orderId)
+    }
     console.log(`[markOrderPaid] BL order created: ${blOrderId} → order: ${orderId}`)
     return { changed: true, blOrderId }
   } catch (err) {
