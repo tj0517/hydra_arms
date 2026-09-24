@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { revalidateTag } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
-import { addOrder } from '@/lib/baselinker/client'
 import { analyzeCart } from '@/lib/shop/cartAnalysis'
 import { ORDER_SESSION_COOKIE, appendOrderSession } from '@/lib/shop/orderSession'
 import { rateLimit, getClientIp } from '@/lib/rateLimit'
-import { SHOP_CACHE_TAG } from '@/lib/shop/fetchProducts'
 
 interface CheckoutItem {
   product_id: number
@@ -106,13 +103,13 @@ export async function POST(req: NextRequest) {
     if (idempotencyKey) {
       const { data: existing } = await supabase
         .from('orders')
-        .select('id, total')
+        .select('id, status, total')
         .eq('session_id', idempotencyKey)
         .single()
 
       if (existing) {
         return withSessionCookie(
-          NextResponse.json({ order_id: existing.id, status: 'paid', total: existing.total, duplicate: true }),
+          NextResponse.json({ order_id: existing.id, status: existing.status, total: existing.total, duplicate: true }),
         )
       }
     }
@@ -173,12 +170,12 @@ export async function POST(req: NextRequest) {
       if (rpcError?.code === '23505') {
         const { data: existing } = await supabase
           .from('orders')
-          .select('id, total')
+          .select('id, status, total')
           .eq('session_id', sessionId)
           .single()
         if (existing) {
           return withSessionCookie(
-            NextResponse.json({ order_id: existing.id, status: 'paid', total: existing.total, duplicate: true }),
+            NextResponse.json({ order_id: existing.id, status: existing.status, total: existing.total, duplicate: true }),
           )
         }
       }
@@ -198,70 +195,14 @@ export async function POST(req: NextRequest) {
 
     const { order_id: orderId, order_total: total } = rpcData[0]
 
-    // @ts-expect-error — Next.js 16 revalidateTag signature varies; runtime works fine
-    revalidateTag(SHOP_CACHE_TAG)
-
-    // Push to BaseLinker — non-fatal: checkout succeeds even if BL is unreachable.
-    // blockedRetries: 0 → if BL rate-limits, fail fast instead of hanging the
-    // customer's request; /api/shop/orders/sync retries orphans later.
-    // Skip if no BL status is configured (avoids ERROR_BAD_ORDER_STATUS_ID).
-    // BASELINKER_STATUS_PAID is the canonical var from .env.local.example;
-    // BASELINKER_ORDER_STATUS_ID kept as an override for backwards compat.
-    const blStatusId = parseInt(
-      process.env.BASELINKER_ORDER_STATUS_ID ?? process.env.BASELINKER_STATUS_PAID ?? '0',
-      10,
-    );
-    if (blStatusId === 0) {
-      console.log('[checkout] Skipping BaseLinker push — BASELINKER_ORDER_STATUS_ID not set');
-    } else try {
-      const blOrderId = await addOrder({
-        order_status_id: blStatusId,
-        currency: 'PLN',
-        payment_method: 'Przelew',
-        payment_method_cod: 0,
-        paid: 1,
-        user_login: s.email,
-        phone: s.phone || '',
-        email: s.email,
-        delivery_method: isPickup ? 'Odbiór osobisty' : fulfillmentRoute === 'own' ? 'Kurier — magazyn własny' : 'Kurier — zamówienie u dostawcy',
-        delivery_price: 0,
-        delivery_fullname: `${s.firstName} ${s.lastName}`,
-        delivery_address: s.street,
-        delivery_city: s.city,
-        delivery_postcode: s.zip,
-        delivery_country_code: 'PL',
-        products: body.items.map(item => {
-          const product = productMap.get(item.product_id)!
-          return {
-            storage: 'db' as const,
-            storage_id: 0,
-            product_id: String(item.product_id),
-            variant_id: 0,
-            name: product.name,
-            sku: product.sku ?? '',
-            ean: product.ean ?? '',
-            quantity: item.quantity,
-            price_brutto: product.price ?? 0,
-            tax_rate: product.tax_rate ?? 23,
-          }
-        }),
-      }, { blockedRetries: 0 })
-
-      await supabase
-        .from('orders')
-        .update({ baselinker_order_id: blOrderId })
-        .eq('id', orderId)
-
-      console.log(`[checkout] BL order created: ${blOrderId} → Supabase order: ${orderId}`)
-    } catch (err) {
-      console.error('[checkout] BaseLinker push failed (non-fatal):', err)
-    }
+    // Order is pending_payment — no stock change, no BL push.
+    // Payment confirmation (HA-2.03) calls markOrderPaid(), which pushes to BL.
 
     return withSessionCookie(
       NextResponse.json({
         order_id: orderId,
         session_token: sessionId,
-        status: 'paid',
+        status: 'pending_payment',
         total,
       }),
     )

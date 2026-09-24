@@ -88,6 +88,12 @@ jobs:
         with:
           version: 2.75.0
 
+      - name: Use ECR Public for Supabase images
+        # supabase/setup-cli@v1 sets SUPABASE_INTERNAL_IMAGE_REGISTRY=ghcr.io in GITHUB_ENV.
+        # Shared runner IPs are rate-limited on ghcr.io public image pulls (429 per-IP burst).
+        # ECR Public (public.ecr.aws) is what the CLI uses locally and has no rate limits.
+        run: echo "SUPABASE_INTERNAL_IMAGE_REGISTRY=public.ecr.aws" >> "$GITHUB_ENV"
+
       - name: Start local Supabase stack
         run: npm run db:start
 
@@ -109,6 +115,7 @@ jobs:
             printf '%s\n' \
               'BASELINKER_MOCK=true' \
               'BASELINKER_INVENTORY_ID=35743' \
+              'BASELINKER_STATUS_PAID=12345' \
               'NEXT_PUBLIC_SANITY_PROJECT_ID=' \
               'NEXT_PUBLIC_SANITY_DATASET=production' \
               'SANITY_API_TOKEN=' \
@@ -122,7 +129,8 @@ jobs:
           printf 'SUPABASE_SERVICE_ROLE_KEY=%s\n'      "${SERVICE_ROLE_KEY}" >> "$GITHUB_ENV"
           printf '%s\n' \
             'BASELINKER_MOCK=true' \
-            'BASELINKER_INVENTORY_ID=35743'                                 >> "$GITHUB_ENV"
+            'BASELINKER_INVENTORY_ID=35743' \
+            'BASELINKER_STATUS_PAID=12345'                                  >> "$GITHUB_ENV"
 
       - name: Build
         run: npm run build

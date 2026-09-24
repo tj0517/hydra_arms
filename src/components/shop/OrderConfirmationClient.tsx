@@ -172,8 +172,14 @@ export default function OrderConfirmationClient({ orderId }: { orderId: string }
         <section className="border border-white/10 px-6 py-5">
           <h2 className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-[0.25em] uppercase mb-3">Status</h2>
           <div className="flex items-center gap-3">
-            <span className="w-2 h-2 rounded-full bg-accent" />
-            <span className="text-sm text-white capitalize">{order.status === 'paid' ? 'Opłacone' : order.status}</span>
+            <span className={`w-2 h-2 rounded-full ${order.status === 'pending_payment' ? 'bg-yellow-500' : 'bg-accent'}`} />
+            <span className="text-sm text-white capitalize">{{
+              pending_payment: 'Czeka na płatność',
+              paid: 'Opłacone',
+              shipped: 'Wysłane',
+              delivered: 'Dostarczone',
+              cancelled: 'Anulowane',
+            }[order.status] ?? order.status}</span>
           </div>
         </section>
 

@@ -119,3 +119,17 @@ VALUES
   -- ── pickup_only / sharg ─────────────────────────────────────────────────
   (307001, 35743, 'KD-KA-001', '5901234567015', 'Kaburka udowa pistolet Glock 17/19 Czarna',
    249.00, 23, 16, 0.45, 7005, 'pickup_only', TRUE, 'sharg', 0, TRUE, FALSE);
+
+-- ── Test helper ───────────────────────────────────────────────────────────────
+-- Wraps has_function_privilege so permission tests can verify REVOKE without
+-- calling the revoked function directly (PG17.6.1.111 Docker crashes with SIGSEGV
+-- when PostgREST does SET LOCAL ROLE + calls a revoked SECURITY DEFINER function).
+-- NOT a migration — seed only (test environment).
+CREATE OR REPLACE FUNCTION public.test_fn_privilege(role_name text, func_sig text)
+RETURNS boolean
+LANGUAGE sql
+AS $$
+  SELECT has_function_privilege(role_name, func_sig, 'EXECUTE');
+$$;
+REVOKE ALL ON FUNCTION public.test_fn_privilege(text, text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.test_fn_privilege(text, text) TO service_role;

@@ -11,7 +11,6 @@ import {
   getWarehouseStock,
 } from '@/lib/baselinker/client';
 import { isSyncAuthorized, isCronAuthorized } from '@/lib/apiAuth';
-import { getReservedQuantities } from '@/lib/shop/reservedStock';
 import { filterHydraCategories } from '@/lib/shop/categoryFilter';
 
 const CHUNK = 100;
@@ -75,10 +74,9 @@ async function runSync() {
       const chunkIds = allIds.slice(i, i + CHUNK);
       const details = await getProductsData(INVENTORY_ID, chunkIds);
 
-      // Net out paid-but-unfulfilled orders so this overwrite doesn't
-      // resurrect stock that's already been sold (see getReservedQuantities).
-      const reserved = await getReservedQuantities(supabase, chunkIds.map((id) => parseInt(id, 10)));
-
+      // Write raw BL stock — reservation netting happens at display time only
+      // (fetchProducts.ts subtracts paid-not-in-BL orders). Writing raw stock
+      // here prevents double-netting and keeps the DB as the canonical BL mirror.
       const rows = Object.entries(details).map(([idStr, p]) => {
         const id = parseInt(idStr, 10);
         return {
@@ -91,7 +89,7 @@ async function runSync() {
           features: p.text_fields.features ?? null,
           price: getPrice(p.prices),
           tax_rate: p.tax_rate,
-          stock: Math.max(0, getWarehouseStock(p.stock) - (reserved.get(id) ?? 0)),
+          stock: Math.max(0, getWarehouseStock(p.stock)),
           weight: p.weight ?? null,
           category_id: p.category_id || null,
           images: p.images && Object.keys(p.images).length > 0 ? p.images : null,
@@ -112,8 +110,7 @@ async function runSync() {
     log.push(`products: ${totalSynced} upserted (product_type, source_warehouse preserved)`);
 
     // Bust the shop page cache so the next visitor sees fresh stock/prices
-    // @ts-expect-error — Next.js 16 revalidateTag signature varies; runtime works fine
-    revalidateTag(SHOP_CACHE_TAG);
+    revalidateTag(SHOP_CACHE_TAG, 'max');
     log.push('cache: shop-products tag revalidated');
 
     return NextResponse.json({ ok: true, log });

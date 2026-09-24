@@ -37,11 +37,12 @@ async function runOrderSync() {
     console.log('[orders/sync] Phase A skipped — BASELINKER_STATUS_PAID not set')
   }
 
+  // Only retry paid orders — pending_payment orders must not go to BL before payment.
   const { data: orphaned } = await supabase
     .from('orders')
     .select('id, shipping_address, fulfillment_route')
     .is('baselinker_order_id', null)
-    .neq('status', 'cancelled')
+    .eq('status', 'paid')
     .gt('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
 
   phaseA.found = orphaned?.length ?? 0
@@ -152,7 +153,7 @@ async function runOrderSync() {
     if (!blOrder) continue
 
     const statusName = statusMap.get(blOrder.order_status_id) ?? ''
-    const newStatus = mapBLStatus(statusName)
+    const newStatus = mapBLStatus(statusName) as import('@/lib/supabase/types').OrderStatus
     const newTracking = blOrder.delivery_tracking_number || null
     const newCarrier = blOrder.delivery_package_module || null
 

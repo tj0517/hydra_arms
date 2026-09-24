@@ -1,18 +1,18 @@
 ---
 id: HA-2.01
 title: Zamówienie czeka na płatność — nowy status, BL dopiero po opłaceniu
-status: todo
+status: done
 difficulty: L
-model: null
+model: claude-sonnet-4-6
 model_approved: null
-effort: null
-branch: null
+effort: high
+branch: feat/ha-2.01-pending-payment
 due: null
 depends_on: [HA-1.01, HA-1.06]
 blocked_by_questions: []
 touches_db: true
 touches_prod: true
-pr: null
+pr: 14
 ---
 
 ## Cel
@@ -50,3 +50,10 @@ Dziś checkout od razu zapisuje zamówienie jako `paid`, zdejmuje stan w Supabas
 
 ## Notatki z realizacji
 - 2026-09-22 tj: stan w BL, rezerwacja po opłaceniu, w BL (O-03, O-05); zaplecze zamówień w BL (O-14)
+- 2026-09-23 tj: rezerwacja lokalna tylko w okienku opłacone-niewysłane-do-BL, dalej BL (opcja A)
+- 2026-09-23 tj: 010 wgrywa tj ręcznie na prod tuż przed merge, agent potwierdza odczytem (opcja A)
+- 2026-09-23 tj: CHECK na orders.status w 010 (opcja A)
+- 2026-09-23 tj: plan 010 zatwierdzony (CHECK 5 statusów, default pending_payment, checkout bez dekrementu, mark_order_paid service_role) z warunkami: dowód definicji z prod, odczyt 4 zamówień prod, dostępność z tej samej liczby co wyświetlana
+- 2026-09-23 CI czerwone od otwarcia PR — przyczyna: limity pobierania obrazów z ghcr.io, rejestr zmieniony na public.ecr.aws; testy uprawnień sprawdzają katalog uprawnień (crash obrazu PG17 przy wywołaniu odebranej funkcji)
+- 2026-09-23 tj: 010 wgrane ręcznie na prod
+- 2026-09-24 tj: odbiór PR #14 — przyjęte. Udowodnione: pending_payment bez dekrementu i bez BL (test), mark_order_paid tylko service_role (false ×4 lokalnie i na prod), idempotencja (true→false), orders/sync pomija pending_payment, rezerwacja odejmowana raz (wyświetlanie), ostatnia sztuka blokowana, CHECK statusów; 010 na prod zweryfikowane odczytem (constraint, default, SECURITY DEFINER + search_path, md5 checkout_create_order = lokalnie); CI zielone na 81f4c21 (run 35917635536).

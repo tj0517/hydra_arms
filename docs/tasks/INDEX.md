@@ -16,7 +16,7 @@ Etap 1: bezpieczny fundament (audyt 2026-09-22). Etap 2: płatności i uruchomie
 | HA-1.09 | Higiena — server-only w kliencie admin i poprawki CLAUDE.md | done | S | — | — | — |
 | HA-1.10 | Poprawki React — 10 wyłączonych reguł lint (efekty, czystość renderu, komponenty w renderze) | todo | M | HA-1.06, HA-1.07 | — | — |
 | HA-1.11 | Hook agenta — wyjątek dla lokalnej bazy i fałszywy alarm na treści commitów | done | M | — | — | — |
-| HA-2.01 | Zamówienie czeka na płatność — nowy status, BL dopiero po opłaceniu | todo | L | HA-1.01, HA-1.06 | — | — |
+| HA-2.01 | Zamówienie czeka na płatność — nowy status, BL dopiero po opłaceniu | done | L | HA-1.01, HA-1.06 | — | — |
 | HA-2.02 | Koszty i metody dostawy w checkoucie | todo | M | HA-2.01 | O-10 | — |
 | HA-2.03 | Płatność Przelewy24 — adapter z trybem mock | todo | L | HA-2.01 | — | — |
 | HA-2.04 | Filtr asortymentu w imporcie | todo | M | HA-1.05 | O-04 | — |

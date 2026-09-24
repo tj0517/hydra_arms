@@ -1,6 +1,7 @@
 export type ProductType = 'standard' | 'age_restricted' | 'pickup_only';
 export type SourceWarehouse = string; // 'own' | supplier name (e.g. 'sharg', 'kolba', 'spechurt')
 export type FulfillmentRoute = 'own' | 'sourced' | 'pickup';
+export type OrderStatus = 'pending_payment' | 'paid' | 'shipped' | 'delivered' | 'cancelled';
 
 export interface Database {
   public: {
@@ -232,7 +233,7 @@ export interface Database {
           user_id: string | null;
           session_id: string | null;
           baselinker_order_id: number | null;
-          status: string;
+          status: OrderStatus;
           shipping_address: Record<string, unknown> | null;
           total: number | null;
           fulfillment_route: FulfillmentRoute | null;
@@ -247,7 +248,7 @@ export interface Database {
           user_id?: string | null;
           session_id?: string | null;
           baselinker_order_id?: number | null;
-          status?: string;
+          status?: OrderStatus;
           shipping_address?: Record<string, unknown> | null;
           total?: number | null;
           fulfillment_route?: FulfillmentRoute | null;
@@ -262,7 +263,7 @@ export interface Database {
           user_id?: string | null;
           session_id?: string | null;
           baselinker_order_id?: number | null;
-          status?: string;
+          status?: OrderStatus;
           shipping_address?: Record<string, unknown> | null;
           total?: number | null;
           fulfillment_route?: FulfillmentRoute | null;
@@ -377,6 +378,10 @@ export interface Database {
           p_items: Array<{ product_id: number; quantity: number }>;
         };
         Returns: Array<{ order_id: string; order_total: number }>;
+      };
+      mark_order_paid: {
+        Args: { p_order_id: string };
+        Returns: boolean;
       };
     };
     Enums: {
