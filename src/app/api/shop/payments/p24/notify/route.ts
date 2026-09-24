@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid notification body' }, { status: 400 })
   }
 
-  // 2. Verify CRC signature (constant-time)
+  // 2. Verify CRC signature (constant-time); assertCrcKeySet() throws if key empty → 500
   if (!verifyNotifySign(body)) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
   }
@@ -35,8 +35,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unknown sessionId' }, { status: 404 })
   }
 
-  // 4. Idempotency: already verified — return 200 without re-processing
-  if (attempt.status === 'verified') {
+  // 4. Idempotency: any terminal/in-progress status — return 200 without re-processing.
+  //    'verified'           — already paid, no-op
+  //    'duplicate_rejected' — already handled as duplicate, no-op
+  //    'claiming'           — another handler won the race; stop P24 retries
+  if (attempt.status !== 'registered') {
     return NextResponse.json({ ok: true })
   }
 
@@ -49,22 +52,26 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Currency mismatch' }, { status: 422 })
   }
 
-  // 6. Check order status — only call P24 verify for pending_payment orders
-  const { data: order, error: orderErr } = await supabase
-    .from('orders')
-    .select('status')
-    .eq('id', attempt.order_id)
-    .single()
+  // 6. Atomically claim this attempt for P24 verify.
+  //    Locks order + attempt rows (FOR UPDATE); returns 'claimed' only when:
+  //      - order.status === 'pending_payment'
+  //      - attempt.status === 'registered'
+  //      - no rival attempt is already claiming or verified
+  //    Any other condition returns 'duplicate_rejected' (no money captured).
+  const { data: claim, error: claimErr } = await supabase.rpc('p24_claim_for_verify', {
+    p_order_id: attempt.order_id,
+    p_attempt_id: attempt.id,
+  })
 
-  if (orderErr || !order) {
-    console.error('[p24/notify] failed to fetch order:', orderErr)
-    return NextResponse.json({ error: 'Order not found' }, { status: 500 })
+  if (claimErr) {
+    console.error('[p24/notify] p24_claim_for_verify failed:', claimErr)
+    return NextResponse.json({ error: 'Claim failed' }, { status: 500 })
   }
 
-  if (order.status !== 'pending_payment') {
-    // Order is already paid, cancelled, shipped, etc. — mark attempt as duplicate, do NOT call verify
+  if (claim !== 'claimed') {
+    // Order not pending_payment, or a rival attempt won — mark as duplicate, do NOT verify
     console.warn(
-      `[p24/notify] duplicate_rejected: order=${attempt.order_id} status=${order.status} attempt=${attempt.id} p24_orderId=${body.orderId}`,
+      `[p24/notify] duplicate_rejected: order=${attempt.order_id} claim=${claim} attempt=${attempt.id} p24_orderId=${body.orderId}`,
     )
     const { error: dupErr } = await supabase
       .from('order_payments')
@@ -77,7 +84,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true })
   }
 
-  // 7. Verify with P24 (mock always returns true)
+  // 7. Verify with P24 (mock always returns true).
+  //    Attempt is now 'claiming'; if verify fails it stays 'claiming' (requires manual review).
   const verified = await verifyTransaction(body.sessionId, body.orderId, body.amount, body.currency)
   if (!verified) {
     return NextResponse.json({ error: 'Verification failed' }, { status: 502 })
