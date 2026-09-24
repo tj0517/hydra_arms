@@ -1,7 +1,7 @@
 ---
 id: HA-2.03
 title: Płatność Przelewy24 — adapter z trybem mock
-status: review
+status: done
 difficulty: L
 model: claude-sonnet-4-6
 model_approved: null
@@ -63,3 +63,4 @@ Sklep musi przyjmować płatności P24 przed końcem projektu, ale konto P24 jes
 - 2026-09-24 tj: review 1 — odesłane: fail-open trybu mock/CRC, adresy z nagłówka Host, verify dla zamówień nie-pending, wyścigi rejestracji i dwóch prób (opcja A+)
 - 2026-09-24 tj: review 2 — odesłane: brak zwolnienia rezerwacji po nieudanym verify, odrzucenia poza blokadą, zamówienie utknięte po udanym verify, SHOP_BASE_URL bez fail-closed
 - 2026-09-24 tj: review 3 — odesłane: zrzuty pokazują „Nie znaleziono zamówienia", shop-tests w CI czerwone od ec38083 (main zielony), brak automatycznego odblokowania zawieszonej rezerwacji
+- 2026-09-24 tj: odbiór PR #15 po 3 rundach — przyjęte. Udowodnione: podpisy P24 zgodne z wektorami z dokumentacji (test na kodzie produkcyjnym, red przez zamianę kluczy), fail-closed trybu/CRC/SHOP_BASE_URL, weryfikacja podpisu/kwoty/waluty, verify tylko dla pending_payment, atomowa rejestracja i przejęcie (012), zwolnienie po nieudanym verify i automatyczne przejęcie zawieszonej rezerwacji, odzysk po nieudanym markOrderPaid, duplikaty bez verify, licznik BL = 1, brak dostępu anon/authenticated, RESTRICT; zrzuty UI obejrzane; CI zielone (run 35995455509); 011+012 na prod zweryfikowane odczytem. Deferred: 404 licznika BL bez red proofu, flaky build fontów w CI.
