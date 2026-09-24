@@ -11,13 +11,19 @@
 --   p24_release_claim     — releases a stuck 'claiming' attempt back to
 --                           'registered' under the same lock ordering
 
--- ── 1. Extend status CHECK constraint ────────────────────────
+-- ── 1. Extend status CHECK constraint + add claimed_at ───────
 -- The constraint was created inline in 011 (auto-name: order_payments_status_check).
 ALTER TABLE public.order_payments
   DROP CONSTRAINT order_payments_status_check;
 ALTER TABLE public.order_payments
   ADD CONSTRAINT order_payments_status_check
   CHECK (status IN ('registered', 'claiming', 'verified', 'duplicate_rejected'));
+
+-- claimed_at: set when the attempt enters 'claiming'.  Enables stale-claim
+-- auto-recovery: if the notify function crashed before releasing, a later
+-- notification can re-claim once claimed_at is older than the stale threshold.
+ALTER TABLE public.order_payments
+  ADD COLUMN IF NOT EXISTS claimed_at timestamptz;
 
 -- ── 2. Registration — atomic lock+check+insert ───────────────
 -- Locks the orders row FOR UPDATE so a concurrent registration
@@ -72,12 +78,18 @@ GRANT  EXECUTE ON FUNCTION public.p24_register_attempt(uuid, text, text) TO serv
 -- ── 3. Claim — atomic check before P24 verify ────────────────
 -- Must be called before verifyTransaction.  Returns:
 --   'claimed'             — this attempt now owns the verify call
---   'in_progress'         — same attempt already 'claiming' (concurrent call);
---                           caller returns 5xx so P24 retries
+--   'in_progress'         — same attempt already 'claiming' (fresh — within
+--                           threshold); caller returns 5xx so P24 retries
 --   'duplicate_rejected'  — order not pending_payment or a rival is
 --                           claiming/verified; SQL writes status+p24_order_id
 --                           under the lock so the app never writes it
 --   'not_found'           — unknown attempt id
+--
+-- Stale-claim recovery: if the same attempt is 'claiming' but its claimed_at
+-- is older than STALE_THRESHOLD, the function that claimed it has either
+-- crashed or been killed by Vercel (maxDuration = 15 s on notify route, so
+-- any attempt older than 20 s is definitively abandoned).  We re-claim it
+-- rather than returning 'in_progress', so P24's next retry completes it.
 --
 -- Lock ordering everywhere: orders → order_payments (prevents deadlocks).
 -- order_id is read in a non-locking SELECT first (it is an immutable FK),
@@ -95,10 +107,14 @@ SECURITY INVOKER
 SET search_path = ''
 AS $$
 DECLARE
-  v_order_id       uuid;
-  v_order_status   text;
-  v_attempt_status text;
-  v_rival_count    integer;
+  -- 20 s > notify route maxDuration (15 s) + 5 s margin
+  STALE_THRESHOLD constant interval := '20 seconds';
+
+  v_order_id        uuid;
+  v_order_status    text;
+  v_attempt_status  text;
+  v_attempt_claimed timestamptz;
+  v_rival_count     integer;
 BEGIN
   -- 1. Read order_id without locking (immutable FK — safe to read before lock)
   SELECT order_id INTO v_order_id
@@ -116,13 +132,22 @@ BEGIN
   FOR UPDATE;
 
   -- 3. Lock this attempt row SECOND
-  SELECT status INTO v_attempt_status
+  SELECT status, claimed_at INTO v_attempt_status, v_attempt_claimed
   FROM   public.order_payments
   WHERE  id = p_attempt_id
   FOR UPDATE;
 
-  -- 4. Same attempt in 'claiming' — a concurrent handler owns it; caller must retry
+  -- 4. Same attempt in 'claiming':
+  --    • stale (claimed_at older than threshold) → re-claim; the original
+  --      handler is definitively gone (Vercel killed it or it crashed)
+  --    • fresh → return 'in_progress' so P24 retries later
   IF v_attempt_status = 'claiming' THEN
+    IF v_attempt_claimed IS NULL OR v_attempt_claimed < NOW() - STALE_THRESHOLD THEN
+      UPDATE public.order_payments
+      SET    claimed_at = NOW()
+      WHERE  id = p_attempt_id;
+      RETURN 'claimed';
+    END IF;
     RETURN 'in_progress';
   END IF;
 
@@ -154,9 +179,9 @@ BEGIN
     RETURN 'duplicate_rejected';
   END IF;
 
-  -- 8. All checks pass — advance to 'claiming'
+  -- 8. All checks pass — advance to 'claiming', stamp claimed_at
   UPDATE public.order_payments
-  SET    status = 'claiming'
+  SET    status = 'claiming', claimed_at = NOW()
   WHERE  id = p_attempt_id;
 
   RETURN 'claimed';

@@ -3,6 +3,11 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { parseNotifyBody, verifyNotifySign, verifyTransaction } from '@/lib/p24'
 import { markOrderPaid } from '@/lib/shop/markOrderPaid'
 
+// Vercel function max duration.  The stale-claim threshold in p24_claim_for_verify
+// is set to maxDuration + 5 s (20 s total) so a crashed/killed handler releases
+// the 'claiming' lock automatically on the next P24 retry.
+export const maxDuration = 15
+
 export async function POST(req: NextRequest) {
   let raw: unknown
   try {

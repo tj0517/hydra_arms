@@ -285,6 +285,7 @@ export interface Database {
           currency: string;
           status: 'registered' | 'claiming' | 'verified' | 'duplicate_rejected';
           verified_at: string | null;
+          claimed_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -297,6 +298,7 @@ export interface Database {
           currency?: string;
           status?: 'registered' | 'claiming' | 'verified' | 'duplicate_rejected';
           verified_at?: string | null;
+          claimed_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -309,6 +311,7 @@ export interface Database {
           currency?: string;
           status?: 'registered' | 'claiming' | 'verified' | 'duplicate_rejected';
           verified_at?: string | null;
+          claimed_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };

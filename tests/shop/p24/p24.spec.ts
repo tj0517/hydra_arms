@@ -68,7 +68,7 @@ async function getOrder(orderId: string) {
 
 async function getPaymentAttempts(orderId: string) {
   const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/order_payments?order_id=eq.${orderId}&select=id,p24_session_id,amount_grosz,currency,status,p24_order_id&order=created_at.asc`,
+    `${SUPABASE_URL}/rest/v1/order_payments?order_id=eq.${orderId}&select=id,p24_session_id,amount_grosz,currency,status,p24_order_id,claimed_at&order=created_at.asc`,
     { headers: serviceHeaders },
   )
   return res.json() as Promise<Array<{
@@ -690,6 +690,17 @@ async function setAttemptStatus(attemptId: string, status: string) {
   )
 }
 
+async function setAttemptClaimedAt(attemptId: string, claimedAt: string) {
+  await fetch(
+    `${SUPABASE_URL}/rest/v1/order_payments?id=eq.${attemptId}`,
+    {
+      method: 'PATCH',
+      headers: { ...serviceHeaders, Prefer: 'return=minimal' },
+      body: JSON.stringify({ claimed_at: claimedAt }),
+    },
+  )
+}
+
 async function releaseClaimRpc(attemptId: string) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/p24_release_claim`, {
     method: 'POST',
@@ -711,6 +722,8 @@ test.describe('p24 — B4 release / re-claim / SQL rejections', () => {
     const attempt = (await getPaymentAttempts(orderId))[0]
 
     await setAttemptStatus(attempt.id, 'claiming')
+    // Set claimed_at to NOW so it is fresh (within threshold) — simulates a concurrent live handler
+    await setAttemptClaimedAt(attempt.id, new Date().toISOString())
 
     const notification = buildNotification(attempt)
     const res = await request.post('/api/shop/payments/p24/notify', { data: notification })
@@ -729,8 +742,9 @@ test.describe('p24 — B4 release / re-claim / SQL rejections', () => {
     const { order_id: orderId } = await doCheckout(request)
     const attempt = (await getPaymentAttempts(orderId))[0]
 
-    // Simulate crash: attempt stuck in 'claiming'
+    // Simulate crash: attempt stuck in 'claiming' (fresh — to test explicit release path)
     await setAttemptStatus(attempt.id, 'claiming')
+    await setAttemptClaimedAt(attempt.id, new Date().toISOString())
 
     // Recovery: release via RPC
     const releaseOk = await releaseClaimRpc(attempt.id)
@@ -925,5 +939,32 @@ test.describe('p24 — B4 release / re-claim / SQL rejections', () => {
     expect(a2Row?.p24_order_id).toBeGreaterThan(0)
 
     expect(await getBlMockCounter(request, orderId)).toBe(1)
+  })
+
+  // ── 13.8 ─────────────────────────────────────────────────────────────────
+  test('stale claiming (claimed_at in past) → auto-re-claim → verified, paid, BL=1 (no manual release)', async ({ request }) => {
+    // RED: before this change, a 'claiming' attempt always returned 'in_progress'
+    //      regardless of claimed_at. A crashed handler would block the attempt forever.
+    // GREEN: p24_claim_for_verify re-claims if claimed_at < NOW() - 20 s (STALE_THRESHOLD).
+    const { order_id: orderId } = await doCheckout(request)
+    const attempt = (await getPaymentAttempts(orderId))[0]
+
+    // Simulate a crashed handler: set status='claiming' with claimed_at 60 s in the past
+    await setAttemptStatus(attempt.id, 'claiming')
+    await setAttemptClaimedAt(attempt.id, new Date(Date.now() - 60_000).toISOString())
+
+    // No manual release — the next notification must auto-re-claim and complete
+    const notification = buildNotification(attempt)
+    const res = await request.post('/api/shop/payments/p24/notify', { data: notification })
+    expect(res.status()).toBe(200)
+
+    const order = await getOrder(orderId)
+    expect(order?.status).toBe('paid')
+    expect(await getBlMockCounter(request, orderId)).toBe(1)
+
+    const updatedAttempts = await getPaymentAttempts(orderId)
+    const a = updatedAttempts.find(a => a.id === attempt.id) as
+      { id: string; status: string; claimed_at: string | null } | undefined
+    expect(a?.status).toBe('verified')
   })
 })
