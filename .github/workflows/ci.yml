@@ -121,7 +121,12 @@ jobs:
               'SANITY_API_TOKEN=' \
               'SYNC_SECRET=local-sync-secret-dev' \
               'CRON_SECRET=local-cron-secret-dev' \
-              'XML_SYNC_ENABLED=false'
+              'XML_SYNC_ENABLED=false' \
+              'P24_MODE=mock' \
+              'P24_CRC_KEY=ci-mock-crc-key' \
+              'P24_MERCHANT_ID=999999' \
+              'P24_POS_ID=999999' \
+              'SHOP_BASE_URL=http://localhost:3001'
           } > .env.development.local
           # Propagate to GITHUB_ENV so npm run build picks up NEXT_PUBLIC_* vars
           printf 'NEXT_PUBLIC_SUPABASE_URL=%s\n'       "${API_URL}"        >> "$GITHUB_ENV"
