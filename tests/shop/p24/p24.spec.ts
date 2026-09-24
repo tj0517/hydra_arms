@@ -502,15 +502,16 @@ test.describe('p24/register — retry behaviour', () => {
 // ════════════════════════════════════════════════════════════════════════════
 
 test.describe('order confirmation — URL params ignored', () => {
-  test('?status=success on pending_payment order → page shows DB status', async ({ page, request }) => {
-    const { order_id: orderId } = await doCheckout(request)
+  test('?status=success on pending_payment order → page shows DB status', async ({ page }) => {
+    // Use page.request so the session cookie set by checkout is visible to the page
+    const { order_id: orderId } = await doCheckout(page.request)
 
     // Navigate with forged success param — the page must NOT show a success state
     await page.goto(`/sklep/zamowienie/${orderId}?status=success`, { waitUntil: 'networkidle' })
 
     // The confirmation page fetches the real order via /api/shop/orders/{id}
     // Order is pending_payment → page must show the pending message
-    const pendingText = page.locator('text=Czeka na płatność')
+    const pendingText = page.locator('text=Czeka na płatność').first()
     await expect(pendingText).toBeVisible({ timeout: 10000 })
 
     // Pay now section visible for pending_payment
@@ -527,8 +528,8 @@ test.describe('order_payments — DB permissions', () => {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/order_payments?limit=1`, {
       headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` },
     })
-    // PostgREST returns 403 when the role has no SELECT privilege on the table
-    expect(res.status).toBe(403)
+    // PostgREST returns 401 (permission denied) when the role has no SELECT privilege
+    expect([401, 403]).toContain(res.status)
   })
 
   test('anon cannot INSERT into order_payments', async () => {

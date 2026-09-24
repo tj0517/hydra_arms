@@ -1,7 +1,7 @@
 ---
 id: HA-2.03
 title: Płatność Przelewy24 — adapter z trybem mock
-status: in_progress
+status: review
 difficulty: L
 model: claude-sonnet-4-6
 model_approved: null
@@ -59,3 +59,4 @@ Sklep musi przyjmować płatności P24 przed końcem projektu, ale konto P24 jes
 - 2026-09-24 tj: format podpisów P24 z oficjalnej dokumentacji (developers.przelewy24.pl), wektory testowe z dokumentacji (opcja B)
 - 2026-09-24 tj: druga udana płatność za opłacone zamówienie — nie weryfikujemy w P24 (pieniądze zostają u klienta), próba oznaczona jako duplikat + log; komunikat dla klienta → deferred HA-2.07/2.08 (opcja A)
 - 2026-09-24 tj: pełna implementacja ukończona (src/lib/p24, migracja 011, notify/mock-pay/register/dev routes, mock page, BL mock counter, seed helper test_table_privilege); testy napisane (sign.spec.ts + p24.spec.ts); weryfikacja czeka na sesję z SUPABASE_TARGET=local (npm run db:reset + npm run test:shop:local)
+- 2026-09-24 claude: refaktor sign.spec.ts — wyodrębniony src/lib/p24/sign.ts (bez server-only, bez process.env); sign.spec.ts importuje realne funkcje; red proof udowodniony (zamiana kolejności kluczy → hash ≠ oczekiwany); naprawa mock-pay (P24_MERCHANT_ID='' → parseInt('') = NaN → ?? zmieniono na ||); naprawa test forged-URL (page.request cookie-sharing); wszystkie testy P24 green; cart.spec.ts flaky (istniejący problem z banerem cookies, nie dotyczy P24)

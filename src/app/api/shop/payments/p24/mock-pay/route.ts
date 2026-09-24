@@ -34,8 +34,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Payment attempt not found' }, { status: 404 })
   }
 
-  const merchantId = parseInt(process.env.P24_MERCHANT_ID ?? '999999', 10)
-  const posId = parseInt(process.env.P24_POS_ID ?? '999999', 10)
+  const merchantId = parseInt(process.env.P24_MERCHANT_ID || '999999', 10)
+  const posId = parseInt(process.env.P24_POS_ID || '999999', 10)
   // Fake but stable P24 orderId for the mock — use a hash-derived number
   const mockP24OrderId = Math.abs(
     [...p24SessionId].reduce((acc, c) => (acc * 31 + c.charCodeAt(0)) | 0, 0),

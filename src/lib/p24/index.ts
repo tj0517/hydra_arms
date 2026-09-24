@@ -1,8 +1,10 @@
 import 'server-only'
-import { createHash, timingSafeEqual } from 'crypto'
-
-// P24 REST API v1 — signatures per developers.przelewy24.pl
-// All signs: SHA-384 hex of JSON.stringify({...fields, crc}) with keys in exact documented order.
+import { timingSafeEqual } from 'crypto'
+import {
+  signRegister as _signRegister,
+  signVerify as _signVerify,
+  signNotification as _signNotification,
+} from './sign'
 
 export type P24Mode = 'mock' | 'sandbox' | 'production'
 
@@ -10,10 +12,6 @@ export function getP24Mode(): P24Mode {
   const m = process.env.P24_MODE
   if (m === 'sandbox' || m === 'production') return m
   return 'mock'
-}
-
-function sha384hex(s: string): string {
-  return createHash('sha384').update(s, 'utf8').digest('hex')
 }
 
 function crcKey(): string {
@@ -24,12 +22,12 @@ function crcKey(): string {
 
 /** register sign: {"sessionId","merchantId","amount","currency","crc"} */
 export function signRegister(sessionId: string, merchantId: number, amount: number, currency: string): string {
-  return sha384hex(JSON.stringify({ sessionId, merchantId, amount, currency, crc: crcKey() }))
+  return _signRegister(sessionId, merchantId, amount, currency, crcKey())
 }
 
 /** verify sign: {"sessionId","orderId","amount","currency","crc"} */
 export function signVerify(sessionId: string, orderId: number, amount: number, currency: string): string {
-  return sha384hex(JSON.stringify({ sessionId, orderId, amount, currency, crc: crcKey() }))
+  return _signVerify(sessionId, orderId, amount, currency, crcKey())
 }
 
 /**
@@ -41,10 +39,7 @@ export function signNotification(
   amount: number, originAmount: number, currency: string,
   orderId: number, methodId: number, statement: string,
 ): string {
-  return sha384hex(JSON.stringify({
-    merchantId, posId, sessionId, amount, originAmount, currency,
-    orderId, methodId, statement, crc: crcKey(),
-  }))
+  return _signNotification(merchantId, posId, sessionId, amount, originAmount, currency, orderId, methodId, statement, crcKey())
 }
 
 /** Constant-time comparison of two hex sign strings. */
