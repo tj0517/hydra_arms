@@ -21,9 +21,11 @@ Pytania klienta O-04–O-13 przeniesione 2026-09-22 z Notion („Lista pytań �
 
 ## Klienta (Hydra Arms)
 
-- **O-04** · częściowo · klient · blokuje HA-2.04 — Filtr asortymentu.
+- **O-04** · rozstrzygnięte · klient/tj — Filtr asortymentu.
   - 2026-09-22 tj: kategorie według drzewa 01–15 (`xml-integration/hydra-category-tree.txt`), kontekst z analizy popularności kategorii (arkusz tj, 2026-09-15).
-  - **Otwarte:** próg cenowy (globalny czy per kategoria/hurtownia), czy „na stanie” to stan hurtowni czy magazynu własnego, które hurtownie publikujemy.
+  - 2026-09-24 tj: klient wskazał jako istotną analizę z 15.09 (`docs/research/analiza_popularnosci_kategorii.xlsx`, arkusz „Podkategorie i filtry”, kolumna „Inspiracja rynkowa”). Na start import tylko podkategorii P1, które występują u co najmniej jednej z naszych hurtowni. Mapowanie P1 → drzewo 01–15 powstaje w HA-2.04.
+  - 2026-09-24 tj: „na stanie” = model mieszany. Produkt wchodzi, gdy ma stan > 0 w magazynie Hydry albo w hurtowni; sklep pokazuje różny czas dostawy zależnie od źródła (osobne zadanie, do /wf-plan).
+  - 2026-09-24 tj: hurtownie: Sharg, Spechurt, Kolba (Szafy poza zakresem do rozstrzygnięcia O-17; „SpecShop” w arkuszu = Spechurt). Próg cenowy na start wyłączony (0 zł), ustawialny w konfiguracji reguł.
 - **O-05** · rozstrzygnięte · klient — Źródło własnego stanu magazynowego?
   - 2026-09-22 tj: BaseLinker.
 - **O-06** · rozstrzygnięte · klient — Dropshipping?

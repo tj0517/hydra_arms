@@ -20,13 +20,12 @@ Sklep ma dziś filtry kategorii, wyszukiwarki, dostępności i przedziału ceny 
 
 ## Zakres
 - [ ] odczyt stanu bieżącego: filtry w `SklepClient.tsx` i `src/lib/shop/categoryFilter.ts`, jakie pola produktu mamy w `shop_products` (marka/producent, parametry), co dają feedy (Sharg gateway: parametry; Kolba, Spechurt: sprawdź `xml-integration/SCHEMAS.md`), arkusz „Podkategorie i filtry” (P1 = 175 wierszy)
-- [ ] mapowanie P1 (35 kategorii znormalizowanych) → drzewo 15 działów Hydry, zapisane w repo (`docs/research/taksonomia-p1.md` lub JSON obok `category-map.json`); wiersze bez odpowiednika wypisane
+- [ ] korzysta z mapowania P1 → drzewo 01–15 z HA-2.04 (nie tworzy własnego)
 - [ ] filtry uniwersalne: marka, wysyłka / tylko odbiór osobisty (z `mustPickup`); dane marki z BL/feedów (kolumna + sync, migracja, jeśli potrzebna)
 - [ ] filtry kluczowe per dział tylko tam, gdzie pokrycie danymi ≥ próg ustalony z tj (w raporcie tabela: dział → filtr → % produktów z wartością)
 - [ ] filtry w URL (spójnie z obecnymi), działają z `PUBLIC_PRODUCT_COLUMNS`
 
 ## Gotowe, gdy
-- mapowanie P1 → działy istnieje i obejmuje wszystkie 175 wierszy P1 (zmapowane albo jawnie „brak odpowiednika”) — **jak sprawdzić:** liczba wierszy w pliku + lista braków w raporcie
 - filtr marki i filtr „wysyłka / tylko odbiór” działają na lokalnej bazie z seedem — **jak sprawdzić:** test e2e + zrzuty z Playwright MCP
 - tabela pokrycia danymi dla każdego proponowanego filtra kluczowego — **jak sprawdzić:** tabela w raporcie z liczbami z zapytania na lokalnej bazie po imporcie próbki
 - klient nie dostaje nowych kolumn spoza listy publicznych (np. `price_purchase`) — **jak sprawdzić:** `git diff main -- 'src/**' | grep -n "select('\*')"` pusto; nowe pola dopisane jawnie do `PUBLIC_PRODUCT_COLUMNS`
@@ -48,3 +47,4 @@ Sklep ma dziś filtry kategorii, wyszukiwarki, dostępności i przedziału ceny 
 
 ## Notatki z realizacji
 - 2026-09-22 tj: filtry dla podkategorii P1 jako zadanie etapu 2 (analiza z 2026-09-15)
+- 2026-09-24 tj: mapowanie P1 → 01–15 przeniesione do HA-2.04

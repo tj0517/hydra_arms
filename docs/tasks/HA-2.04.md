@@ -2,29 +2,31 @@
 id: HA-2.04
 title: Filtr asortymentu w imporcie
 status: todo
-difficulty: M
+difficulty: L
 model: null
 model_approved: null
 effort: null
 branch: null
 due: null
 depends_on: [HA-1.05]
-blocked_by_questions: [O-04]
+blocked_by_questions: []
 touches_db: true
 touches_prod: true
 pr: null
 ---
 
 ## Cel
-Trzy hurtownie mają około 29 tys. pozycji, a klient nie chce całego asortymentu. Kategorie wyznacza drzewo 01–15 (`xml-integration/hydra-category-tree.txt`). Plan BL zostanie podniesiony tak, żeby produkty się zmieściły (O-08), a stan prowadzimy w BL (O-05). Sukces: import przepuszcza tylko produkty spełniające reguły ustalone z klientem (O-04, np. stan > 0, cena ≥ próg, kategoria z listy, wybrane hurtownie), reguły są w jednym, czytelnym miejscu, a przed zapisem widać podgląd: ile produktów wejdzie, a ile odpadnie.
+Trzy hurtownie mają około 29 tys. pozycji, a klient nie chce całego asortymentu. Kategorie wyznacza drzewo 01–15 (`xml-integration/hydra-category-tree.txt`). Plan BL zostanie podniesiony tak, żeby produkty się zmieściły (O-08), a stan prowadzimy w BL (O-05). Sukces: import przepuszcza tylko produkty spełniające reguły ustalone z klientem (O-04): podkategoria P1 z analizy z 15.09, występująca u co najmniej jednej z naszych hurtowni; stan > 0 w magazynie Hydry albo w hurtowni (model mieszany); hurtownie Sharg, Spechurt, Kolba; próg cenowy na start wyłączony (0 zł), ale ustawialny. Reguły są w jednym, czytelnym miejscu, a przed zapisem widać podgląd: ile produktów wejdzie, a ile odpadnie.
 
 ## Zakres
-- [ ] odczyt stanu bieżącego: gdzie dziś zapada decyzja o imporcie (`scripts/xml-to-baselinker.ts`, filtr obronny Sharg, `xml-integration/engine.ts`, `/api/shop/sync`), odpowiedź O-04 (próg cenowy, „na stanie”, hurtownie)
+- [ ] odczyt stanu bieżącego: gdzie dziś zapada decyzja o imporcie (`scripts/xml-to-baselinker.ts`, filtr obronny Sharg, `xml-integration/engine.ts`, `/api/shop/sync`), decyzje O-04 (rozstrzygnięte 2026-09-24)
+- [ ] mapowanie podkategorii P1 (175 wierszy arkusza „Podkategorie i filtry”) → drzewo 01–15, zapisane w repo (`docs/research/taksonomia-p1.md` lub JSON obok `category-map.json`); wiersze bez odpowiednika wypisane (przeniesione z HA-2.10)
 - [ ] jedna konfiguracja reguł (plik lub tabela) + funkcja filtra z testami jednostkowymi
 - [ ] tryb podglądu (`--dry-run`): liczby per hurtownia i kategoria, bez zapisu do BL
 
 ## Gotowe, gdy
-- testy jednostkowe filtra: produkt poniżej progu, bez stanu, spoza kategorii i z wyłączonej hurtowni odpada; poprawny przechodzi — **jak sprawdzić:** wklejony wynik testów
+- mapowanie P1 → drzewo 01–15 obejmuje wszystkie 175 wierszy P1 (zmapowane albo jawnie „brak odpowiednika”) — **jak sprawdzić:** liczba wierszy w pliku + lista braków w raporcie
+- testy jednostkowe filtra: produkt poniżej progu, bez stanu nigdzie, spoza P1 i z wyłączonej hurtowni odpada; przechodzi produkt ze stanem tylko u Hydry i produkt ze stanem tylko w hurtowni — **jak sprawdzić:** wklejony wynik testów
 - podgląd na aktualnych feedach pokazuje liczby per hurtownia i kategoria drzewa — **jak sprawdzić:** wklejone podsumowanie `--dry-run` (odczyt feedów, bez zapisu)
 - reguły da się zmienić bez zmiany kodu filtra — **jak sprawdzić:** zmiana progu w konfiguracji zmienia wynik podglądu (wklejone oba wyniki)
 
@@ -44,3 +46,6 @@ Trzy hurtownie mają około 29 tys. pozycji, a klient nie chce całego asortymen
 - `scripts/xml-to-baselinker.ts`, `xml-integration/category-map.json`
 
 ## Notatki z realizacji
+- 2026-09-24 tj: zakres asortymentu = podkategorie P1 dostępne u naszych hurtowni; mapowanie P1 → 01–15 w tym zadaniu (M → L) (O-04)
+- 2026-09-24 tj: hurtownie Sharg, Spechurt, Kolba (bez Szaf do O-17); próg cenowy na start 0 zł, ustawialny (O-04 rozstrzygnięte)
+- 2026-09-24 tj: „na stanie” = model mieszany (stan Hydry albo hurtowni); prezentacja czasu dostawy wg źródła poza zakresem (O-04)
