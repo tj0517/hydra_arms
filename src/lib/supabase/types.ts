@@ -275,6 +275,48 @@ export interface Database {
         };
         Relationships: [];
       };
+      order_payments: {
+        Row: {
+          id: string;
+          order_id: string;
+          p24_session_id: string;
+          p24_order_id: number | null;
+          amount_grosz: number;
+          currency: string;
+          status: 'registered' | 'claiming' | 'verified' | 'duplicate_rejected';
+          verified_at: string | null;
+          claimed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          order_id: string;
+          p24_session_id: string;
+          p24_order_id?: number | null;
+          amount_grosz: number;
+          currency?: string;
+          status?: 'registered' | 'claiming' | 'verified' | 'duplicate_rejected';
+          verified_at?: string | null;
+          claimed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          order_id?: string;
+          p24_session_id?: string;
+          p24_order_id?: number | null;
+          amount_grosz?: number;
+          currency?: string;
+          status?: 'registered' | 'claiming' | 'verified' | 'duplicate_rejected';
+          verified_at?: string | null;
+          claimed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       order_items: {
         Row: {
           id: string;
@@ -383,6 +425,18 @@ export interface Database {
         Args: { p_order_id: string };
         Returns: boolean;
       };
+      p24_register_attempt: {
+        Args: { p_order_id: string; p_session_id: string; p_currency: string };
+        Returns: number;
+      };
+      p24_claim_for_verify: {
+        Args: { p_attempt_id: string; p_p24_order_id: number };
+        Returns: string;
+      };
+      p24_release_claim: {
+        Args: { p_attempt_id: string };
+        Returns: void;
+      };
     };
     Enums: {
       product_type: ProductType;
@@ -396,3 +450,4 @@ export type ShopCategory = Database['public']['Tables']['shop_categories']['Row'
 export type CartItem = Database['public']['Tables']['cart_items']['Row'];
 export type Order = Database['public']['Tables']['orders']['Row'];
 export type OrderItem = Database['public']['Tables']['order_items']['Row'];
+export type OrderPayment = Database['public']['Tables']['order_payments']['Row'];

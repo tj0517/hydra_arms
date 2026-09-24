@@ -167,7 +167,7 @@ export default function CheckoutClient() {
         }
 
         clearCart()
-        router.push(`/sklep/zamowienie/${shipData.order_id}`)
+        router.push(shipData.payment_url ?? `/sklep/zamowienie/${shipData.order_id}`)
       } else {
         // Single order — pickup all (or all-standard cart)
         const res = await fetch('/api/shop/checkout', {
@@ -190,7 +190,7 @@ export default function CheckoutClient() {
         }
 
         clearCart()
-        router.push(`/sklep/zamowienie/${data.order_id}`)
+        router.push(data.payment_url ?? `/sklep/zamowienie/${data.order_id}`)
       }
     } catch {
       setStep('error')
@@ -221,10 +221,7 @@ export default function CheckoutClient() {
         <div className="max-w-lg mx-auto text-center space-y-6">
           <div className="w-12 h-12 border border-accent/40 border-t-accent rounded-full animate-spin mx-auto" />
           <p className="font-[var(--font-mono)] text-xs text-text-dim tracking-[0.2em] uppercase">
-            Przetwarzanie płatności...
-          </p>
-          <p className="font-[var(--font-mono)] text-[10px] text-text-dim/60 tracking-wider">
-            SYMULACJA — automatyczna akceptacja
+            Tworzenie zamówienia...
           </p>
         </div>
       </main>

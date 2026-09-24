@@ -133,3 +133,14 @@ AS $$
 $$;
 REVOKE ALL ON FUNCTION public.test_fn_privilege(text, text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.test_fn_privilege(text, text) TO service_role;
+
+-- Wraps has_table_privilege so permission tests can verify REVOKE on tables.
+-- NOT a migration — seed only (test environment).
+CREATE OR REPLACE FUNCTION public.test_table_privilege(role_name text, tbl text, priv text)
+RETURNS boolean
+LANGUAGE sql
+AS $$
+  SELECT has_table_privilege(role_name, tbl, priv);
+$$;
+REVOKE ALL ON FUNCTION public.test_table_privilege(text, text, text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.test_table_privilege(text, text, text) TO service_role;

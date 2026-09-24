@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { analyzeCart } from '@/lib/shop/cartAnalysis'
 import { ORDER_SESSION_COOKIE, appendOrderSession } from '@/lib/shop/orderSession'
 import { rateLimit, getClientIp } from '@/lib/rateLimit'
+import { registerPayment } from '@/lib/shop/registerPayment'
 
 interface CheckoutItem {
   product_id: number
@@ -195,8 +196,21 @@ export async function POST(req: NextRequest) {
 
     const { order_id: orderId, order_total: total } = rpcData[0]
 
-    // Order is pending_payment — no stock change, no BL push.
-    // Payment confirmation (HA-2.03) calls markOrderPaid(), which pushes to BL.
+    // Register a P24 payment attempt and get the redirect URL
+    const shipping = body.shipping
+    const baseUrl = process.env.SHOP_BASE_URL
+
+    let paymentUrl = `/sklep/zamowienie/${orderId}`
+    try {
+      const reg = await registerPayment(orderId, {
+        baseUrl,
+        email: shipping.email,
+      })
+      paymentUrl = reg.paymentUrl
+    } catch (regErr) {
+      // Non-fatal: order is created; client falls back to confirmation page
+      console.error('[checkout] payment registration failed:', regErr)
+    }
 
     return withSessionCookie(
       NextResponse.json({
@@ -204,6 +218,7 @@ export async function POST(req: NextRequest) {
         session_token: sessionId,
         status: 'pending_payment',
         total,
+        payment_url: paymentUrl,
       }),
     )
   } catch {

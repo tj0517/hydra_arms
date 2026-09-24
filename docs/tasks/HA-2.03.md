@@ -1,18 +1,18 @@
 ---
 id: HA-2.03
 title: Płatność Przelewy24 — adapter z trybem mock
-status: todo
+status: done
 difficulty: L
-model: null
+model: claude-sonnet-4-6
 model_approved: null
-effort: null
-branch: null
+effort: high
+branch: feat/ha-2.03-p24-mock
 due: null
 depends_on: [HA-2.01]
 blocked_by_questions: []
 touches_db: true
 touches_prod: false
-pr: null
+pr: 15
 ---
 
 ## Cel
@@ -31,7 +31,8 @@ Sklep musi przyjmować płatności P24 przed końcem projektu, ale konto P24 jes
 - pełna ścieżka w trybie mock: zamówienie → strona płatności → powiadomienie → `paid` → mock BL — **jak sprawdzić:** test e2e + zrzuty z Playwright MCP + wklejony SELECT
 - red proof: powiadomienie ze złym podpisem → 4xx, status bez zmian — **jak sprawdzić:** test API
 - red proof: powiadomienie z inną kwotą niż zamówienie → odrzucone — **jak sprawdzić:** test API
-- red proof: powtórzone powiadomienie → brak drugiego pushu do BL — **jak sprawdzić:** test (liczba wywołań mocka BL = 1)
+- red proof: powtórzone powiadomienie → BL mock counter dla tego zamówienia = 1 i `baselinker_order_id` bez zmian po drugim — **jak sprawdzić:** test *(opcja B, 2026-09-24: BL mock nie miał licznika; tj dodaje licznik)*
+- red proof: BL mock counter niedostępny gdy `BASELINKER_MOCK≠true` (404) — **jak sprawdzić:** test
 - red proof: `?status=success` dopisane ręcznie do adresu powrotu nie oznacza zamówienia jako opłaconego — **jak sprawdzić:** test
 - red proof: strona mock zwraca 404, gdy `P24_MODE=production` — **jak sprawdzić:** test
 - `grep -rn P24_ src` — klucze tylko w plikach serwerowych — **jak sprawdzić:** wklejone wyjście
@@ -53,3 +54,13 @@ Sklep musi przyjmować płatności P24 przed końcem projektu, ale konto P24 jes
 
 ## Notatki z realizacji
 - 2026-09-22 tj: P24 w trakcie zakładania, musi być przed końcem projektu; zadania pracują na mocku / sztucznym webhooku (O-15)
+- 2026-09-24 tj: dowód „jeden push do BL" przez licznik wywołań w mocku BL, dostępny wyłącznie przy BASELINKER_MOCK=true (opcja B)
+- 2026-09-24 tj: migracja 011 — p24_session_id per próba płatności + p24_order_id (bigint) po opłaceniu; ponowna płatność za to samo zamówienie możliwa (opcja C)
+- 2026-09-24 tj: format podpisów P24 z oficjalnej dokumentacji (developers.przelewy24.pl), wektory testowe z dokumentacji (opcja B)
+- 2026-09-24 tj: druga udana płatność za opłacone zamówienie — nie weryfikujemy w P24 (pieniądze zostają u klienta), próba oznaczona jako duplikat + log; komunikat dla klienta → deferred HA-2.07/2.08 (opcja A)
+- 2026-09-24 tj: pełna implementacja ukończona (src/lib/p24, migracja 011, notify/mock-pay/register/dev routes, mock page, BL mock counter, seed helper test_table_privilege); testy napisane (sign.spec.ts + p24.spec.ts); weryfikacja czeka na sesję z SUPABASE_TARGET=local (npm run db:reset + npm run test:shop:local)
+- 2026-09-24 claude: refaktor sign.spec.ts — wyodrębniony src/lib/p24/sign.ts (bez server-only, bez process.env); sign.spec.ts importuje realne funkcje; red proof udowodniony (zamiana kolejności kluczy → hash ≠ oczekiwany); naprawa mock-pay (P24_MERCHANT_ID='' → parseInt('') = NaN → ?? zmieniono na ||); naprawa test forged-URL (page.request cookie-sharing); wszystkie testy P24 green; cart.spec.ts flaky (istniejący problem z banerem cookies, nie dotyczy P24)
+- 2026-09-24 tj: review 1 — odesłane: fail-open trybu mock/CRC, adresy z nagłówka Host, verify dla zamówień nie-pending, wyścigi rejestracji i dwóch prób (opcja A+)
+- 2026-09-24 tj: review 2 — odesłane: brak zwolnienia rezerwacji po nieudanym verify, odrzucenia poza blokadą, zamówienie utknięte po udanym verify, SHOP_BASE_URL bez fail-closed
+- 2026-09-24 tj: review 3 — odesłane: zrzuty pokazują „Nie znaleziono zamówienia", shop-tests w CI czerwone od ec38083 (main zielony), brak automatycznego odblokowania zawieszonej rezerwacji
+- 2026-09-24 tj: odbiór PR #15 po 3 rundach — przyjęte. Udowodnione: podpisy P24 zgodne z wektorami z dokumentacji (test na kodzie produkcyjnym, red przez zamianę kluczy), fail-closed trybu/CRC/SHOP_BASE_URL, weryfikacja podpisu/kwoty/waluty, verify tylko dla pending_payment, atomowa rejestracja i przejęcie (012), zwolnienie po nieudanym verify i automatyczne przejęcie zawieszonej rezerwacji, odzysk po nieudanym markOrderPaid, duplikaty bez verify, licznik BL = 1, brak dostępu anon/authenticated, RESTRICT; zrzuty UI obejrzane; CI zielone (run 35995455509); 011+012 na prod zweryfikowane odczytem. Deferred: 404 licznika BL bez red proofu, flaky build fontów w CI.

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
@@ -23,10 +24,12 @@ const fmt = (n: number) =>
   new Intl.NumberFormat('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
 
 export default function OrderConfirmationClient({ orderId }: { orderId: string }) {
+  const router = useRouter()
   const [order, setOrder] = useState<OrderData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [retrying, setRetrying] = useState(false)
 
   useEffect(() => {
     fetch(`/api/shop/orders/${orderId}`)
@@ -182,6 +185,41 @@ export default function OrderConfirmationClient({ orderId }: { orderId: string }
             }[order.status] ?? order.status}</span>
           </div>
         </section>
+
+        {/* Pay now — shown for pending_payment orders */}
+        {order.status === 'pending_payment' && (
+          <section className="border border-yellow-500/20 bg-yellow-500/5 px-6 py-5 space-y-3">
+            <p className="font-[var(--font-mono)] text-[10px] text-yellow-400 tracking-[0.2em] uppercase">
+              Zamówienie czeka na płatność
+            </p>
+            <button
+              onClick={async () => {
+                setRetrying(true)
+                try {
+                  const addr = order.shipping_address
+                  const res = await fetch('/api/shop/payments/p24/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      orderId,
+                      email: addr?.email ?? '',
+                    }),
+                  })
+                  const data = await res.json()
+                  if (!res.ok) throw new Error(data.error ?? 'Błąd rejestracji')
+                  router.push(data.payment_url)
+                } catch (err) {
+                  alert(err instanceof Error ? err.message : 'Błąd płatności')
+                  setRetrying(false)
+                }
+              }}
+              disabled={retrying}
+              className="w-full py-4 bg-accent text-black font-[var(--font-mono)] text-xs tracking-[0.2em] uppercase hover:bg-accent/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {retrying ? 'PRZEKIEROWANIE...' : 'ZAPŁAĆ TERAZ'}
+            </button>
+          </section>
+        )}
 
         <div className="flex items-center justify-center gap-4 pt-4 flex-wrap">
           <Link

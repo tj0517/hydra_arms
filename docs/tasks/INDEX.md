@@ -18,7 +18,7 @@ Etap 1: bezpieczny fundament (audyt 2026-09-22). Etap 2: płatności i uruchomie
 | HA-1.11 | Hook agenta — wyjątek dla lokalnej bazy i fałszywy alarm na treści commitów | done | M | — | — | — |
 | HA-2.01 | Zamówienie czeka na płatność — nowy status, BL dopiero po opłaceniu | done | L | HA-1.01, HA-1.06 | — | — |
 | HA-2.02 | Koszty i metody dostawy w checkoucie | todo | M | HA-2.01 | O-10 | — |
-| HA-2.03 | Płatność Przelewy24 — adapter z trybem mock | todo | L | HA-2.01 | — | — |
+| HA-2.03 | Płatność Przelewy24 — adapter z trybem mock | done | L | HA-2.01 | — | — |
 | HA-2.04 | Filtr asortymentu w imporcie | todo | M | HA-1.05 | O-04 | — |
 | HA-2.05 | Marże per hurtownia (i ewentualnie per kategoria) | todo | S | HA-2.04 | O-07 | — |
 | HA-2.06 | Compliance — wymuszony odbiór osobisty dla kategorii 01/02 i potwierdzenie 18+ | todo | M | HA-1.06 | O-11 | — |
