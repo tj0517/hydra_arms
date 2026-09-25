@@ -20,6 +20,7 @@ pr: null
 
 ## Zakres
 - [ ] odczyt stanu: `src/lib/baselinker/client.ts`, `scripts/baselinker-sync.ts` (warunek `approved`), `xml-integration/assortment-rules.ts`, `assortment-filter.ts`
+- [ ] tj uruchamia `npx tsx scripts/bl-verify-categories.ts` (plik) i na kopii z jednym zmienionym ID (red proof); jeśli skrypt padnie na kształcie odpowiedzi BL — poprawka w tym zadaniu
 - [ ] skrypt tylko do odczytu (np. `scripts/bl-inventory-report.ts`) przez klienta, który udostępnia wyłącznie metody `get*`. Uruchamia tj
 - [ ] liczby: produkty w katalogu; per magazyn (H1 Kolba, H2 Sharg, H3 Spechurt, Hydra); per tag (`auto`/`review`/`flag`/`approved`/`age_18`/brak); per dział Hydry (przez `hydra-categories.json`)
 - [ ] ile produktów nie przeszłoby przez filtr z HA-2.04 (dział spoza P1, działy 01/02), z czego ile ma `approved` (czyli jest widocznych w sklepie)
@@ -29,6 +30,9 @@ pr: null
 - raport z liczbami w repo — **jak sprawdzić:** plik raportu + wklejony wynik skryptu (uruchomionego przez tj)
 - skrypt nie może zapisać — **jak sprawdzić:** test: wywołanie metody zapisującej przez klienta tylko do odczytu rzuca błąd (red proof, `npm run test:unit`)
 - liczba produktów spoza P1 z tagiem `approved` podana wprost — **jak sprawdzić:** osobna linia w raporcie
+- zgodność `hydra-categories.json` z BaseLinkerem (przeniesione z HA-2.13) — **jak sprawdzić:** wklejony wynik `bl-verify-categories.ts` (tj): 0 rozjazdów albo ich lista; w nagłówku `BASELINKER_MOCK: false`, `Inventory ID : 107789`
+- lista tagów importu obecnych i brakujących w BL (przeniesione z HA-2.13) — **jak sprawdzić:** w tym samym wyniku
+- red proof `bl-verify-categories.ts` (przeniesione z HA-2.13): podmieniony ID w kopii → rozjazd i exit ≠ 0 — **jak sprawdzić:** wklejony wynik na zepsutej kopii
 
 ## Poza zakresem
 - usuwanie, ukrywanie albo przetagowanie produktów → decyzja tj po raporcie (nowe pytanie lub zadanie)
@@ -45,3 +49,4 @@ pr: null
 
 ## Notatki z realizacji
 - 2026-09-25 tj: log importu z 24.07 na serwerze: katalog 107789, magazyn Spechurtu `bl_148604`, 0 produktów w BL przed importem.
+- 2026-09-25 tj: konto BaseLinker zablokowane (`ERROR_USER_ACCOUNT_BLOCKED`); zadanie czeka na odblokowanie. Przejęło weryfikację na żywo z HA-2.13.
