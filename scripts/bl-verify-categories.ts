@@ -35,6 +35,32 @@ const normNum = (n: string) => n.trim().replace(/^0+(?=\d)/, '');
 
 interface BLTag { tag_id: number; name: string }
 
+/**
+ * Build a map of normalised number → expected BL category name.
+ * Uses the same logic as parseTree in bl-build-categories.ts.
+ * The "00" entry is added manually (it is prepended by that script, not in the txt).
+ */
+function buildExpectedNames(txt: string): Map<string, string> {
+  const result = new Map<string, string>();
+  for (const rawLine of txt.split(/\r?\n/)) {
+    const cleaned = rawLine.replace(/[│├└┬─]/g, ' ').trim();
+    const m = cleaned.match(/^(\d{1,2}(?:\.\d+)*)\.?\s+(.+)$/);
+    if (!m) continue;
+    const num = m[1];
+    const name = m[2]
+      .replace(/\s*\([^)]*\)/g, ' ')
+      .replace(/[()]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (!name) continue;
+    const isRoot = num.split('.').length === 1;
+    const blName = isRoot ? `${num}. ${name}` : `${num} ${name}`;
+    result.set(normNum(num), blName);
+  }
+  result.set('0', '00. DO PRZYPISANIA'); // added by bl-build-categories.ts, not in txt
+  return result;
+}
+
 async function main() {
   const isMock = process.env.BASELINKER_MOCK === 'true';
   const inventoryId = parseInt(process.env.BASELINKER_INVENTORY_ID ?? '35743', 10);
@@ -78,9 +104,11 @@ async function main() {
 
   console.log(`JSON: ${numToId.size} entries (${path.relative(process.cwd(), jsonPath)})`);
 
-  // ── Load tree numbers ──────────────────────────────────────────────────────────
+  // ── Load tree numbers and expected names ───────────────────────────────────────
 
-  const treeNums = parseHydraTreeNumbers(fs.readFileSync(TXT_PATH, 'utf8'));
+  const treeTxt = fs.readFileSync(TXT_PATH, 'utf8');
+  const treeNums = parseHydraTreeNumbers(treeTxt);
+  const expectedNames = buildExpectedNames(treeTxt);
   console.log(`Tree: ${treeNums.size} numbers from ${path.relative(process.cwd(), TXT_PATH)}\n`);
 
   // ── Fetch BL categories ────────────────────────────────────────────────────────
@@ -92,19 +120,21 @@ async function main() {
   console.log(`BL returned ${blCats.length} categories\n`);
 
   const blById = new Map(blCats.map((c) => [c.category_id, c]));
-  const idToBlNum = new Map(blCats.map((c) => [c.category_id, c]));
 
   // ── Category checks ────────────────────────────────────────────────────────────
 
   let mismatches = 0;
-  const report = (label: string, lines: string[]) => {
+  let informational = 0;
+
+  const report = (label: string, lines: string[], isInfo = false) => {
     if (lines.length === 0) { console.log(`${label}: OK ✓`); return; }
     console.log(`\n--- ${label} (${lines.length}) ---`);
     lines.forEach((l) => console.log(`  ${l}`));
-    mismatches += lines.length;
+    if (isInfo) informational += lines.length;
+    else mismatches += lines.length;
   };
 
-  // 1. Numbers with ID in JSON but category not in BL
+  // 1. IDs in JSON but category not found in BL
   const idsNotInBL: string[] = [];
   for (const [num, id] of numToId) {
     if (!blById.has(id)) {
@@ -113,7 +143,7 @@ async function main() {
   }
   report('IDs in JSON but missing from BL', idsNotInBL);
 
-  // 2. Numbers in tree but no ID in JSON
+  // 2. Numbers in tree (and "00") but no ID in JSON
   const numsWithoutId: string[] = [];
   for (const num of treeNums) {
     if (!numToId.has(num)) numsWithoutId.push(num);
@@ -121,32 +151,44 @@ async function main() {
   if (!numToId.has('0')) numsWithoutId.push('0 (from "00")');
   report('Numbers in tree but no ID in JSON', numsWithoutId);
 
-  // 3. BL category IDs not referenced in JSON (informational only — BL may have old categories)
+  // 3. Name mismatches: expected blName (from tree) vs BL category name
+  const nameMismatches: string[] = [];
+  for (const [num, id] of numToId) {
+    const cat = blById.get(id);
+    if (!cat) continue; // already counted in check 1
+    const expected = expectedNames.get(num);
+    if (expected !== undefined && cat.name !== expected) {
+      nameMismatches.push(`num=${num} id=${id}: BL="${cat.name}" ≠ expected="${expected}"`);
+    }
+  }
+  report('Name mismatches (BL name ≠ expected from tree)', nameMismatches);
+
+  // 4. Parent-ID consistency
+  const parentMismatches: string[] = [];
+  for (const [num, id] of numToId) {
+    const cat = blById.get(id);
+    if (!cat) continue;
+    const segments = num.split('.');
+    if (segments.length <= 1) continue; // root — parent_id is 0, not checked
+    const rawParent = segments.slice(0, -1).join('.');
+    const parentNorm = normNum(rawParent.padStart(segments.length === 2 ? 2 : 0, '0'));
+    const expectedParentId = numToId.get(parentNorm);
+    if (expectedParentId !== undefined && cat.parent_id !== expectedParentId) {
+      parentMismatches.push(
+        `num=${num} id=${id} — parent_id in BL=${cat.parent_id} ≠ expected=${expectedParentId} (${rawParent})`
+      );
+    }
+  }
+  report('Parent-ID mismatches (BL parent ≠ expected from tree structure)', parentMismatches);
+
+  // 5. BL categories not referenced in JSON — informational, not a mismatch
   const blIdsNotInJson: string[] = [];
   for (const cat of blCats) {
     if (!idToNum.has(cat.category_id)) {
       blIdsNotInJson.push(`id=${cat.category_id} name="${cat.name}" parent=${cat.parent_id}`);
     }
   }
-  report('BL category IDs not referenced in JSON (orphaned in BL)', blIdsNotInJson);
-
-  // 4. Parent-ID consistency: parent of "1.1" must be ID of "01"
-  const parentMismatches: string[] = [];
-  for (const [num, id] of numToId) {
-    const cat = blById.get(id);
-    if (!cat) continue;
-    const segments = num.split('.');
-    if (segments.length <= 1) continue; // root — parent_id is 0, skip
-    const rawParent = segments.slice(0, -1).join('.');
-    const parentNorm = normNum(rawParent.padStart(segments.length === 2 ? 2 : 0, '0'));
-    const expectedParentId = numToId.get(parentNorm);
-    if (expectedParentId !== undefined && cat.parent_id !== expectedParentId) {
-      parentMismatches.push(
-        `num=${num} id=${id} name="${cat.name}" — parent_id in BL=${cat.parent_id} ≠ expected=${expectedParentId} (${rawParent})`
-      );
-    }
-  }
-  report('Parent-ID mismatches (BL parent ≠ expected from tree structure)', parentMismatches);
+  report('BL categories not referenced in JSON (informational)', blIdsNotInJson, true);
 
   // ── Tags check ─────────────────────────────────────────────────────────────────
 
@@ -183,11 +225,12 @@ async function main() {
     process.exit(1);
   }
 
+  const infoNote = informational > 0 ? ` (${informational} BL categories not in JSON — informational)` : '';
   if (mismatches === 0) {
-    console.log('RESULT: 0 mismatches ✓');
+    console.log(`RESULT: 0 mismatches ✓${infoNote}`);
     process.exit(0);
   } else {
-    console.log(`RESULT: ${mismatches} mismatch(es) — see above`);
+    console.log(`RESULT: ${mismatches} mismatch(es)${infoNote} — see above`);
     process.exit(1);
   }
 }
