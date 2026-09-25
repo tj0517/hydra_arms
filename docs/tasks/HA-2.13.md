@@ -1,14 +1,14 @@
 ---
 id: HA-2.13
 title: hydra-categories.json w repo i weryfikacja z BaseLinker
-status: in_progress
+status: review
 difficulty: S
 model: claude-sonnet-4-6
 model_approved: null
 effort: low
 branch: chore/ha-2.13-hydra-categories
 due: null
-pr: null
+pr: 19
 ---
 
 # HA-2.13 — hydra-categories.json w repo i weryfikacja z BaseLinker
