@@ -50,6 +50,18 @@ export function getMockResponse(method: string, params: Record<string, unknown>)
       return { status: 'SUCCESS', products: result };
     }
 
+    case 'getInventoryTags':
+      return {
+        status: 'SUCCESS',
+        tags: [
+          { tag_id: 1, name: 'auto' },
+          { tag_id: 2, name: 'review' },
+          { tag_id: 3, name: 'flag' },
+          { tag_id: 4, name: 'age_18' },
+          // 'approved' intentionally absent — mock simulates a missing tag
+        ],
+      };
+
     case 'addOrder':
       return { status: 'SUCCESS', order_id: Math.floor(Math.random() * 900000) + 100000 };
 
