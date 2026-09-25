@@ -107,6 +107,23 @@ export async function getProductsData(inventoryId: number, ids: string[]): Promi
   return data.products ?? {};
 }
 
+/**
+ * Fetch per-warehouse stock for up to 1 000 products.
+ * Returns { [product_id]: { stock: { [warehouse_id]: quantity } } }.
+ * Use to check Hydra's own warehouse (BASELINKER_WAREHOUSE_HYDRA) in the
+ * assortment filter without making a full write-path BL call.
+ */
+export async function getInventoryProductsStock(
+  inventoryId: number,
+  ids: string[],
+): Promise<Record<string, { stock: Record<string, number> }>> {
+  const data = await blCall('getInventoryProductsStock', {
+    inventory_id: inventoryId,
+    products: ids,
+  }) as { products?: Record<string, { stock: Record<string, number> }> };
+  return data.products ?? {};
+}
+
 /** Extract first image URL from BL images map, or null */
 export function firstImage(images: Record<string, string> | null | undefined): string | null {
   if (!images) return null;
