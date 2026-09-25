@@ -2,6 +2,7 @@
 
 Format: data · źródło (zadanie/raport) · co zauważono · propozycja (zadanie / nic).
 
+- 2026-09-25 · HA-2.04 · dry-run na realnych feedach (tj, 2026-09-25): Kolba 13 882 w feedzie → 0 przyjętych (category-map.json ma 1 kolba_rule + 2 kolba_brands; 11 563 bez mapowania); Spechurt 0 produktów (whitelist IP — ERR105, zob. PROBLEMY-feedow-xml.md); Sharg 2 241 przyjętych z 8 989 (1 974 w sekcji 13 Noże/Multitoole); parametry Sharg scalone dla 0/8 989 produktów; zmiana zachowania: produkty bez mapowania są teraz odrzucane filtrem, a nie importowane jako „00. DO PRZYPISANIA" — rozbudować category-map.json dla Kolby przed live importem
 - 2026-09-25 · HA-2.04 · `hydra-categories.json` nie jest w repo i nie ma go na maszynie tj — drzewo kategorii BL musi zostać zbudowane (`scripts/bl-build-categories.ts`, zapis do prod BL, decyzja tj) przed pierwszym live importem; rozważyć commitowanie `hydra-categories.json` po jego zbudowaniu
 - 2026-09-25 · HA-2.04 · `test:unit` nie jest uruchamiane w CI (shop-tests używa Playwright/Supabase; osobna pula nie istnieje) — dodać job unit-tests do `.github/workflows/ci.yml` po HA-1.06 (lokalna baza stabilna); polecenie: `npx tsx --test xml-integration/__tests__/**/*.test.ts`
 - 2026-09-24 · HA-2.03 · endpoint notify powinien akceptować połączenia wyłącznie z adresów IP serwerów P24 (dokumentacja: sekcja „Server IP addresses"); blokada na poziomie middleware lub weryfikacji nagłówka — przed HA-2.08 (sandbox), najlepiej razem z konfiguracją Vercela lub edge middleware

@@ -1,7 +1,7 @@
 ---
 id: HA-2.04
 title: Filtr asortymentu w imporcie
-status: review
+status: done
 difficulty: L
 model: claude-sonnet-4-6
 model_approved: null
@@ -52,3 +52,4 @@ Trzy hurtownie mają około 29 tys. pozycji, a klient nie chce całego asortymen
 - 2026-09-25 claude: własny stan Hydry (BASELINKER_WAREHOUSE_HYDRA) nie jest jeszcze skonfigurowany; do czasu jego ustawienia dry-run i import traktują własny stan jako 0 z wyraźnym ostrzeżeniem; część mieszanego modelu aktywuje się po dodaniu zmiennej do .env.local
 - 2026-09-25 claude: broń czarnoprochowa (gałąź 01/02, Kolba) wykluczona z allowedHydraNums do rozstrzygnięcia O-11 (compliance); wiersze do przywrócenia: 1.1, 1.1.2, 1.2, 1.3, 2.6
 - 2026-09-25 claude: isP1() zmienione na exact match (bez prefix-matching na węzłach rodzicach); filtr assortmentu NIE stosowany w trybie sync (tylko import)
+- 2026-09-25 tj: odebrane (PR #17). Udowodnione: mapowanie 175 P1, filtr + testy, dry-run na realnych feedach (tj: 22 871 → 2 241, tylko Sharg), sync bez filtra. Braki danych (Kolba, Spechurt) → deferred.

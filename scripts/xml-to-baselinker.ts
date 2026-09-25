@@ -389,7 +389,7 @@ async function fetchAndParse(connectorName: ConnectorName): Promise<NormalizedPr
   const connector = connectors[connectorName];
 
   const url = connector.config.xml_url;
-  console.log(`\nFetching feed: ${url.slice(0, 80)}…`);
+  console.log(`\nFetching feed: ${url.split('?')[0]}…`);
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Feed fetch failed: HTTP ${res.status} ${res.statusText}`);
   const xml = await res.text();
@@ -435,7 +435,7 @@ async function mergeShargParameters(
       console.warn('[sharg] Gateway manifest has no parameters_url — skipping parameters');
       return;
     }
-    console.log(`  parameters feed: ${parametersUrl.slice(0, 80)}…`);
+    console.log(`  parameters feed: ${parametersUrl.split('?')[0]}…`);
   } catch (err) {
     console.warn(`[sharg] Gateway fetch failed: ${err instanceof Error ? err.message : err} — skipping parameters`);
     return;
