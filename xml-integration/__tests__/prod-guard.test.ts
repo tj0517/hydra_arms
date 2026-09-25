@@ -30,8 +30,9 @@ function runGuard(withAllowProd: boolean): { exitCode: number; output: string } 
       stdio: ['pipe', 'pipe', 'pipe'],
     });
     return { exitCode: 0, output: out };
-  } catch (e: any) {
-    return { exitCode: e.status ?? 1, output: (e.stdout ?? '') + (e.stderr ?? '') };
+  } catch (e) {
+    const err = e as { status?: number; stdout?: string; stderr?: string };
+    return { exitCode: err.status ?? 1, output: (err.stdout ?? '') + (err.stderr ?? '') };
   }
 }
 
