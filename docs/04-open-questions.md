@@ -47,3 +47,7 @@ Pytania klienta O-04–O-13 przeniesione 2026-09-22 z Notion („Lista pytań �
 - **O-17** · otwarte · tj — Czym są „Szafy” we flowcharcie (czwarta hurtownia/dostawca)? Czy potrzebny jest dla nich konektor feedu?
 - **O-18** · rozstrzygnięte · tj — Czy ścieżka XML→Supabase wraca?
   - 2026-09-23 tj: nie. Przepływ: XML → BaseLinker (xml-to-baselinker.ts) → Supabase (/api/shop/sync) → BaseLinker (zamówienia). source_connectors, engine.ts, /api/xml/sync, next_xml_product_id do usunięcia osobnym zadaniem po HA-1.06.
+- **O-19** · otwarte · tj · blokuje HA-2.15 — Serwer importu 51.83.134.183 (OVH, Ubuntu 26.04, Node 20, 3,7 GB RAM).
+  - 2026-09-25 tj: dostęp `ssh ubuntu@` kluczem (alias `hydra-srv`); feed Spechurtu działa tylko stąd (HTTP 200, 17 MB); na serwerze klon repo z lipca i `.env.local`.
+  - **Otwarte:** czy serwer zostaje na stałe i kto za niego płaci; czy akceptujemy klucze produkcyjne (Supabase service role, BaseLinker) w `.env.local` na serwerze, z dostępem przez konto `ubuntu`.
+- **O-20** · otwarte · klient — ASG, łucznictwo i myślistwo nie mają gałęzi w drzewie 01–15 (HA-2.04: samo ASG to ok. 1–2 tys. produktów we wszystkich trzech hurtowniach). Dodajemy gałęzie (zmiana drzewa i kategorii w BL) czy zostają poza sklepem?
