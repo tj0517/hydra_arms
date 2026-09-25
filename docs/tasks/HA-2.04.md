@@ -1,7 +1,7 @@
 ---
 id: HA-2.04
 title: Filtr asortymentu w imporcie
-status: in_progress
+status: review
 difficulty: L
 model: claude-sonnet-4-6
 model_approved: null
@@ -12,7 +12,7 @@ depends_on: [HA-1.05]
 blocked_by_questions: []
 touches_db: true
 touches_prod: true
-pr: null
+pr: 17
 ---
 
 ## Cel
