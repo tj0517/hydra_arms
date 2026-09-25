@@ -8,12 +8,15 @@
  * for this path.
  *
  * Usage:
- *   npx tsx scripts/xml-to-baselinker.ts <kolba|sharg|spechurt> [import|sync]
+ *   npx tsx scripts/xml-to-baselinker.ts <kolba|sharg|spechurt> [import|sync] [--dry-run]
+ *   npx tsx scripts/xml-to-baselinker.ts --dry-run           # all three suppliers
  *
  *   import  (default) — full upsert: creates missing products, updates existing
  *                       (addInventoryProduct, 1 call/product — run rarely, e.g. weekly cron)
  *   sync              — stock + price refresh only for products already in BL
  *                       (updateInventoryProductsStock/Prices, batched — run often)
+ *   --dry-run         — preview admitted/dropped counts per supplier and Hydra section,
+ *                       no BL writes, no HA_ALLOW_PROD required
  *
  * Key behaviours:
  *   - Upsert key: EAN first, fallback SKU — no duplicates across runs
@@ -47,9 +50,12 @@ import * as dotenv from 'dotenv';
 import { assertExternalProd } from './lib/prodGuard';
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local'), override: true });
-assertExternalProd('BaseLinker');
+// assertExternalProd is called inside runImport() and runSync() — NOT here.
+// Dry-run reads feeds + optionally reads BL stock; it never writes to BL.
 
 import type { NormalizedProduct } from '../xml-integration/types';
+import { filterProduct } from '../xml-integration/assortment-filter';
+import { ASSORTMENT_RULES } from '../xml-integration/assortment-rules';
 
 const CONNECTOR_NAMES = ['kolba', 'sharg', 'spechurt'] as const;
 type ConnectorName = (typeof CONNECTOR_NAMES)[number];
@@ -81,7 +87,8 @@ interface Env {
   markupPct: number;
 }
 
-function loadEnv(connectorName: ConnectorName): Env {
+/** Full env validation — required for import and sync (write paths only). */
+function loadWriteEnv(connectorName: ConnectorName): Env {
   const inventoryId = parseInt(process.env.BASELINKER_INVENTORY_ID ?? '35743', 10);
   if (isNaN(inventoryId)) {
     console.error('[error] BASELINKER_INVENTORY_ID must be set to a numeric BL inventory ID');
@@ -125,6 +132,19 @@ function loadEnv(connectorName: ConnectorName): Env {
   }
 
   return { inventoryId, priceGroup, priceGroupPurchase, warehouse, markupPct };
+}
+
+/** Minimal env for dry-run: just the BL inventory ID. */
+function loadDryRunEnv(): { inventoryId: number; hydraWarehouseId: string | null } {
+  const inventoryId = parseInt(process.env.BASELINKER_INVENTORY_ID ?? '35743', 10);
+  const hydraWarehouseId = process.env.BASELINKER_WAREHOUSE_HYDRA ?? null;
+
+  if (hydraWarehouseId !== null && !/^bl_\d+$/.test(hydraWarehouseId)) {
+    console.error(`[error] BASELINKER_WAREHOUSE_HYDRA="${hydraWarehouseId}" is not a valid BL warehouse (expected: bl_<id>)`);
+    process.exit(1);
+  }
+
+  return { inventoryId, hydraWarehouseId };
 }
 
 // ── Pricing ───────────────────────────────────────────────────────────────────
@@ -448,6 +468,7 @@ async function mergeShargParameters(
 // ── Mode: import — full upsert via addInventoryProduct ────────────────────────
 
 async function runImport(connectorName: ConnectorName, env: Env, limit: number | null): Promise<void> {
+  assertExternalProd('BaseLinker');
   const bl = await import('../src/lib/baselinker/client');
 
   const tree = new HydraTree(loadJson<Record<string, number>>(
@@ -482,6 +503,52 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
     statusCounts[r.status]++;
   }
   console.log(`\nCategory resolution: ${statusCounts.auto} auto (leaf), ${statusCounts.review} review (parent/unsure), ${statusCounts.flag} flag (→ 00. DO PRZYPISANIA)`);
+
+  // ── Assortment filter ────────────────────────────────────────────────────────
+  // Fetch Hydra own-warehouse stock for products already in BL.
+  const hydraWarehouseId = process.env.BASELINKER_WAREHOUSE_HYDRA ?? null;
+  if (!hydraWarehouseId) {
+    console.warn('[assortment] BASELINKER_WAREHOUSE_HYDRA not set — Hydra own stock treated as 0');
+    console.warn('             Own-stock path activates once the variable is added to .env.local');
+  }
+  const hydraStockById = new Map<number, number>();
+  if (hydraWarehouseId) {
+    const matchedIds = [...new Set(
+      products.map((p) => findExistingId(p, index)).filter((id): id is number => id !== undefined),
+    )];
+    if (matchedIds.length > 0) {
+      console.log(`\nFetching Hydra own-stock for ${matchedIds.length} matched products…`);
+      for (let i = 0; i < matchedIds.length; i += 1000) {
+        const chunk = matchedIds.slice(i, i + 1000).map(String);
+        const stockData = await bl.getInventoryProductsStock(env.inventoryId, chunk);
+        for (const [id, item] of Object.entries(stockData)) {
+          hydraStockById.set(Number(id), item.stock?.[hydraWarehouseId] ?? 0);
+        }
+        await sleep(RATE_LIMIT_MS);
+      }
+    }
+  }
+
+  const filterCounts: Record<string, number> = {};
+  const filteredProducts: NormalizedProduct[] = [];
+  for (const p of products) {
+    const r = resolved.get(p)!;
+    const existingId = findExistingId(p, index);
+    const hydraOwnStock = existingId !== undefined ? (hydraStockById.get(existingId) ?? 0) : 0;
+    const { price } = computeSellingPrice(p, env.markupPct);
+    const fr = filterProduct(p, r.hydraNum, p.stock ?? 0, hydraOwnStock, price, ASSORTMENT_RULES);
+    filterCounts[fr.reason] = (filterCounts[fr.reason] ?? 0) + 1;
+    if (fr.allowed) filteredProducts.push(p);
+  }
+  const admitted = filteredProducts.length;
+  const dropped = products.length - admitted;
+  console.log(`\nAssortment filter: ${admitted} admitted, ${dropped} dropped`);
+  if (dropped > 0) {
+    for (const [reason, count] of Object.entries(filterCounts).filter(([r]) => r !== 'ok')) {
+      console.log(`  ${reason.padEnd(20)}: ${count}`);
+    }
+  }
+  products = filteredProducts;
   if (unknownNums.size > 0) {
     console.warn(`  ⚠ category-map.json points at numbers missing from hydra-categories.json: ${[...unknownNums].join(', ')}`);
   }
@@ -556,6 +623,7 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
 // ── Mode: sync — bulk stock + price refresh for products already in BL ────────
 
 async function runSync(connectorName: ConnectorName, env: Env, limit: number | null): Promise<void> {
+  assertExternalProd('BaseLinker');
   const bl = await import('../src/lib/baselinker/client');
   let products = await fetchAndParse(connectorName);
   if (limit !== null) {
@@ -567,6 +635,59 @@ async function runSync(connectorName: ConnectorName, env: Env, limit: number | n
   console.log('\nLoading existing BL products (match index)…');
   const index = await loadExistingProducts(bl.getProductsList, env.inventoryId);
   console.log(`  ${index.total} products in BL`);
+
+  // ── Assortment filter ────────────────────────────────────────────────────────
+  const hydraWarehouseId = process.env.BASELINKER_WAREHOUSE_HYDRA ?? null;
+  if (!hydraWarehouseId) {
+    console.warn('[assortment] BASELINKER_WAREHOUSE_HYDRA not set — Hydra own stock treated as 0');
+  }
+  const hydraStockById = new Map<number, number>();
+  if (hydraWarehouseId) {
+    const matchedIds = [...new Set(
+      products.map((p) => findExistingId(p, index)).filter((id): id is number => id !== undefined),
+    )];
+    if (matchedIds.length > 0) {
+      console.log(`Fetching Hydra own-stock for ${matchedIds.length} matched products…`);
+      for (let i = 0; i < matchedIds.length; i += 1000) {
+        const chunk = matchedIds.slice(i, i + 1000).map(String);
+        const stockData = await bl.getInventoryProductsStock(env.inventoryId, chunk);
+        for (const [id, item] of Object.entries(stockData)) {
+          hydraStockById.set(Number(id), item.stock?.[hydraWarehouseId] ?? 0);
+        }
+        await sleep(RATE_LIMIT_MS);
+      }
+    }
+  }
+  // Resolve categories (needed for P1 filter)
+  const categoryMap = loadJson<CategoryMapFile>(
+    CATEGORY_MAP_PATH,
+    'create the supplier→Hydra category dictionary (see xml-integration/category-map.json)',
+  );
+  const tree = new HydraTree(loadJson<Record<string, number>>(
+    HYDRA_CATEGORIES_PATH,
+    'run `npx tsx scripts/bl-build-categories.ts` first to build the Hydra tree in BL',
+  ));
+  const unknownNums = new Set<string>();
+  const filterCounts: Record<string, number> = {};
+  const filteredProducts: NormalizedProduct[] = [];
+  for (const p of products) {
+    const r = resolveCategory(p, categoryMap, tree, unknownNums);
+    const existingId = findExistingId(p, index);
+    const hydraOwnStock = existingId !== undefined ? (hydraStockById.get(existingId) ?? 0) : 0;
+    const { price } = computeSellingPrice(p, env.markupPct);
+    const fr = filterProduct(p, r.hydraNum, p.stock ?? 0, hydraOwnStock, price, ASSORTMENT_RULES);
+    filterCounts[fr.reason] = (filterCounts[fr.reason] ?? 0) + 1;
+    if (fr.allowed) filteredProducts.push(p);
+  }
+  const admitted = filteredProducts.length;
+  const dropped = products.length - admitted;
+  console.log(`\nAssortment filter: ${admitted} admitted, ${dropped} dropped`);
+  if (dropped > 0) {
+    for (const [reason, count] of Object.entries(filterCounts).filter(([r]) => r !== 'ok')) {
+      console.log(`  ${reason.padEnd(20)}: ${count}`);
+    }
+  }
+  products = filteredProducts;
 
   const stockUpdates: Record<string, Record<string, number>> = {};
   const priceUpdates: Record<string, Record<string, number>> = {};
@@ -618,23 +739,180 @@ async function runSync(connectorName: ConnectorName, env: Env, limit: number | n
   }
 }
 
+// ── Mode: dry-run — filter preview, no BL writes ──────────────────────────────
+
+const SECTION_LABELS: Record<string, string> = {
+  '1':  'Broń palna',          '2':  'Amunicja',              '3':  'Optyka',
+  '4':  'Części i tuning',     '5':  'Magazynki',             '6':  'Oporządzenie',
+  '7':  'Czyszczenie',         '8':  '—',                     '9':  'Ochrona',
+  '10': 'Akcesoria strzel.',   '11': 'Wiatrówki',             '12': 'Odzież/Obuwie',
+  '13': 'Noże/Multitoole',     '14': 'Survival/Medycyna',     '15': 'Samoobrona',
+  '0':  'DO PRZYPISANIA',
+};
+
+async function runDryRun(connectors: readonly ConnectorName[], limit: number | null): Promise<void> {
+  const { inventoryId, hydraWarehouseId } = loadDryRunEnv();
+
+  if (!hydraWarehouseId) {
+    console.warn('[dry-run] BASELINKER_WAREHOUSE_HYDRA not set — Hydra own stock treated as 0 for all products');
+    console.warn('          Own-stock path activates once the variable is added to .env.local');
+  } else if (!process.env.BASELINKER_TOKEN) {
+    console.error('[error] BASELINKER_WAREHOUSE_HYDRA is set but BASELINKER_TOKEN is missing');
+    process.exit(1);
+  }
+
+  const tree = new HydraTree(loadJson<Record<string, number>>(
+    HYDRA_CATEGORIES_PATH,
+    'run `npx tsx scripts/bl-build-categories.ts` first',
+  ));
+  const categoryMap = loadJson<CategoryMapFile>(CATEGORY_MAP_PATH, 'see xml-integration/category-map.json');
+
+  // Load BL index once (needed for own-stock lookup, re-used across connectors)
+  let blIndex: BLIndex | null = null;
+  let blReadCalls = 0;
+  if (hydraWarehouseId) {
+    const bl = await import('../src/lib/baselinker/client');
+    console.log('\nLoading BL product index for own-stock lookup…');
+    blIndex = await loadExistingProducts(bl.getProductsList, inventoryId);
+    blReadCalls += Math.ceil(blIndex.total / 1000) || 1;
+    console.log(`  ${blIndex.total} products in BL`);
+  }
+
+  const summary: Array<{ connector: string; feed: number; admitted: number; dropped: number }> = [];
+  const sectionAdmitted: Record<string, number> = {};
+  const totalDropReasons: Record<string, number> = {};
+
+  for (const connectorName of connectors) {
+    console.log(`\n─── ${connectorName.toUpperCase()} ───`);
+    const products = limit !== null
+      ? (await fetchAndParse(connectorName)).slice(0, limit)
+      : await fetchAndParse(connectorName);
+
+    // Fetch Hydra own-stock for matched products in this feed
+    const hydraStockById = new Map<number, number>();
+    if (hydraWarehouseId && blIndex) {
+      const bl = await import('../src/lib/baselinker/client');
+      const matchedIds = [...new Set(
+        products.map((p) => findExistingId(p, blIndex!)).filter((id): id is number => id !== undefined),
+      )];
+      if (matchedIds.length > 0) {
+        console.log(`  Fetching own-stock for ${matchedIds.length} matched products…`);
+        for (let i = 0; i < matchedIds.length; i += 1000) {
+          const chunk = matchedIds.slice(i, i + 1000).map(String);
+          const stockData = await bl.getInventoryProductsStock(inventoryId, chunk);
+          blReadCalls++;
+          for (const [id, item] of Object.entries(stockData)) {
+            hydraStockById.set(Number(id), item.stock?.[hydraWarehouseId] ?? 0);
+          }
+          await sleep(RATE_LIMIT_MS);
+        }
+      }
+    }
+
+    const unknownNums = new Set<string>();
+    let admitted = 0;
+    const dropReasons: Record<string, number> = {};
+
+    for (const p of products) {
+      const r = resolveCategory(p, categoryMap, tree, unknownNums);
+      const existingId = blIndex ? findExistingId(p, blIndex) : undefined;
+      const hydraOwnStock = existingId !== undefined ? (hydraStockById.get(existingId) ?? 0) : 0;
+      // Price for filter: use purchase price as-is (markup unknown in dry-run).
+      // minPricePln = 0 by default so this only matters if rules are changed.
+      const price = p.price_purchase ?? p.price_gross;
+      const fr = filterProduct(p, r.hydraNum, p.stock ?? 0, hydraOwnStock, price, ASSORTMENT_RULES);
+
+      if (fr.allowed) {
+        admitted++;
+        const section = r.hydraNum ? normNum(r.hydraNum).split('.')[0] : '0';
+        sectionAdmitted[section] = (sectionAdmitted[section] ?? 0) + 1;
+      } else {
+        dropReasons[fr.reason] = (dropReasons[fr.reason] ?? 0) + 1;
+        totalDropReasons[fr.reason] = (totalDropReasons[fr.reason] ?? 0) + 1;
+      }
+    }
+
+    const dropped = products.length - admitted;
+    console.log(`  feed: ${products.length}  →  admitted: ${admitted}  dropped: ${dropped}`);
+    for (const [reason, count] of Object.entries(dropReasons)) {
+      console.log(`    ${reason.padEnd(20)}: ${count}`);
+    }
+    summary.push({ connector: connectorName, feed: products.length, admitted, dropped });
+  }
+
+  // ── Summary ────────────────────────────────────────────────────────────────
+  console.log('\n' + '═'.repeat(54));
+  console.log('DRY-RUN SUMMARY');
+  console.log('═'.repeat(54));
+  const totalFeed = summary.reduce((s, r) => s + r.feed, 0);
+  const totalAdmitted = summary.reduce((s, r) => s + r.admitted, 0);
+  const totalDropped = summary.reduce((s, r) => s + r.dropped, 0);
+  console.log(`${'TOTAL'.padEnd(12)} feed: ${totalFeed}   admitted: ${totalAdmitted}   dropped: ${totalDropped}`);
+  for (const r of summary) {
+    console.log(`  ${r.connector.padEnd(10)} feed: ${String(r.feed).padStart(6)}   admitted: ${String(r.admitted).padStart(6)}   dropped: ${String(r.dropped).padStart(6)}`);
+  }
+
+  if (totalAdmitted > 0) {
+    console.log('\nAdmitted by Hydra section (top-level):');
+    for (const [sec, count] of Object.entries(sectionAdmitted).sort((a, b) => Number(a[0]) - Number(b[0]))) {
+      const label = SECTION_LABELS[sec] ?? sec;
+      console.log(`  ${sec.padEnd(3)} ${label.padEnd(18)} : ${count}`);
+    }
+  }
+
+  if (totalDropped > 0) {
+    console.log('\nDropped by reason:');
+    for (const [reason, count] of Object.entries(totalDropReasons)) {
+      console.log(`  ${reason.padEnd(20)}: ${count}`);
+    }
+  }
+
+  if (blReadCalls > 0) {
+    console.log(`\nBaseLinker read calls made: ${blReadCalls}`);
+  }
+
+  if (!hydraWarehouseId) {
+    console.log('\n⚠ Hydra own stock NOT checked (BASELINKER_WAREHOUSE_HYDRA not set).');
+    console.log('  Mixed-stock model activates once the variable is configured.');
+  }
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 async function main() {
   const positional = process.argv.slice(2).filter((a) => !a.startsWith('--'));
   const flags = process.argv.slice(2).filter((a) => a.startsWith('--'));
 
-  const connectorName = positional[0] as ConnectorName | undefined;
-  const mode = positional[1] ?? 'import';
-
+  const isDryRun = flags.includes('--dry-run');
   const limitFlag = flags.find((f) => f.startsWith('--limit='));
   const limit = limitFlag ? parseInt(limitFlag.split('=')[1], 10) : null;
 
+  if (isDryRun) {
+    const connectorArg = positional[0] as ConnectorName | undefined;
+    const connectors: readonly ConnectorName[] =
+      connectorArg && CONNECTOR_NAMES.includes(connectorArg)
+        ? [connectorArg]
+        : CONNECTOR_NAMES;
+
+    console.log(`\nXML → BaseLinker (dry-run)`);
+    console.log(`  connectors: ${connectors.join(', ')}`);
+    if (limit !== null) console.log(`  limit     : ${limit} products per supplier`);
+    await runDryRun(connectors, limit);
+    return;
+  }
+
+  const connectorName = positional[0] as ConnectorName | undefined;
+  const mode = positional[1] ?? 'import';
+
   if (!connectorName || !CONNECTOR_NAMES.includes(connectorName) || !['import', 'sync'].includes(mode)) {
-    console.error('Usage: npx tsx scripts/xml-to-baselinker.ts <kolba|sharg|spechurt> [import|sync] [--limit=N]');
-    console.error('  import (default) — full upsert into BL catalogue (slow, run rarely)');
-    console.error('  sync             — stock + price refresh only (batched, run often)');
-    console.error('  --limit=N        — only import/sync the first N products with stock > 0');
+    console.error('Usage:');
+    console.error('  npx tsx scripts/xml-to-baselinker.ts <kolba|sharg|spechurt> [import|sync] [--limit=N]');
+    console.error('  npx tsx scripts/xml-to-baselinker.ts [<connector>] --dry-run [--limit=N]');
+    console.error('');
+    console.error('  import   (default) — full upsert into BL catalogue (slow, run rarely)');
+    console.error('  sync               — stock + price refresh only (batched, run often)');
+    console.error('  --dry-run          — preview admitted/dropped counts, no BL writes');
+    console.error('  --limit=N          — limit to N products per supplier');
     process.exit(1);
   }
 
@@ -643,7 +921,7 @@ async function main() {
     process.exit(1);
   }
 
-  const env = loadEnv(connectorName);
+  const env = loadWriteEnv(connectorName);
 
   console.log(`\nXML → BaseLinker (${mode})`);
   console.log(`  connector : ${connectorName}`);

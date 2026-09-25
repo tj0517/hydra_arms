@@ -1,12 +1,12 @@
 ---
 id: HA-2.04
 title: Filtr asortymentu w imporcie
-status: todo
+status: in_progress
 difficulty: L
-model: null
+model: claude-sonnet-4-6
 model_approved: null
-effort: null
-branch: null
+effort: high
+branch: feat/ha-2.04-assortment-filter
 due: null
 depends_on: [HA-1.05]
 blocked_by_questions: []
@@ -49,3 +49,4 @@ Trzy hurtownie mają około 29 tys. pozycji, a klient nie chce całego asortymen
 - 2026-09-24 tj: zakres asortymentu = podkategorie P1 dostępne u naszych hurtowni; mapowanie P1 → 01–15 w tym zadaniu (M → L) (O-04)
 - 2026-09-24 tj: hurtownie Sharg, Spechurt, Kolba (bez Szaf do O-17); próg cenowy na start 0 zł, ustawialny (O-04 rozstrzygnięte)
 - 2026-09-24 tj: „na stanie” = model mieszany (stan Hydry albo hurtowni); prezentacja czasu dostawy wg źródła poza zakresem (O-04)
+- 2026-09-25 claude: własny stan Hydry (BASELINKER_WAREHOUSE_HYDRA) nie jest jeszcze skonfigurowany; do czasu jego ustawienia dry-run i import traktują własny stan jako 0 z wyraźnym ostrzeżeniem; część mieszanego modelu aktywuje się po dodaniu zmiennej do .env.local
