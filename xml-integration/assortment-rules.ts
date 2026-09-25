@@ -13,8 +13,9 @@
 export interface AssortmentRules {
   /**
    * Hydra tree numbers in scope (P1, wholesaler-present).
-   * A product is in scope when its resolved Hydra number equals one of these
-   * or is a descendant — e.g. resolved "4.6.1" matches rule "04".
+   * A product is in scope when its resolved Hydra number exactly matches one of
+   * these (after stripping leading zeros).  Parent entries like "04" admit only
+   * products mapped to that exact node; children must be listed explicitly.
    * Numbers from docs/research/taksonomia-p1.md; "brak" rows are excluded.
    */
   allowedHydraNums: readonly string[];
@@ -125,13 +126,10 @@ export const ASSORTMENT_RULES: AssortmentRules = {
     '15.2.1', // Pałki Teleskopowe Hartowane
     '15.3',   // Paralizatory
 
-    // ── 01. BROŃ CZARNOPROCHOWA (Kolba) ──────────────────────────────────────
-    // Licensed/restricted — require additional compliance review (HA-2.06).
-    '1.1',    // Broń Krótka (parent; pistolety czarnoprochowe)
-    '1.1.2',  // Rewolwery (w tym czarnoprochowe)
-    '1.2',    // Broń Długa (parent; karabiny czarnoprochowe)
-    '1.3',    // Strzelby Gładkolufowe (w tym czarnoprochowe)
-    '2.6',    // Elementy Koncesjonowane do Elaboracji (kapiszony)
+    // ── WYKLUCZONE PENDING O-11 ───────────────────────────────────────────────
+    // Broń czarnoprochowa (gałąź 01/02, Kolba) wykluczona do czasu rozstrzygnięcia
+    // wymagań compliance / licencjonowania w O-11.
+    // Wiersze do przywrócenia po O-11: '1.1', '1.1.2', '1.2', '1.3', '2.6'
   ] as const,
 
   enabledSuppliers: ['kolba', 'sharg', 'spechurt'] as const,

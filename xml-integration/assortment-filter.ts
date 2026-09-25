@@ -32,16 +32,14 @@ function normNum(n: string): string {
 }
 
 /**
- * Return true when productNum is equal to any P1 node or is a descendant of one.
- * e.g. "4.6.1" matches rule "04" (normalised: "4"), "3.4.1" matches rule "3.4.1" exactly.
+ * Return true when hydraNum exactly matches one of the allowed P1 nodes
+ * (after stripping leading zeros).  Prefix / descendant matching is intentionally
+ * excluded: parent entries like "04" or "11.1" admit only products mapped to that
+ * exact node; children must be listed explicitly.
  */
 function isP1(hydraNum: string, allowedNums: readonly string[]): boolean {
   const n = normNum(hydraNum);
-  for (const p1 of allowedNums) {
-    const p = normNum(p1);
-    if (n === p || n.startsWith(p + '.')) return true;
-  }
-  return false;
+  return allowedNums.some((p1) => normNum(p1) === n);
 }
 
 /**

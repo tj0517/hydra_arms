@@ -636,59 +636,6 @@ async function runSync(connectorName: ConnectorName, env: Env, limit: number | n
   const index = await loadExistingProducts(bl.getProductsList, env.inventoryId);
   console.log(`  ${index.total} products in BL`);
 
-  // ── Assortment filter ────────────────────────────────────────────────────────
-  const hydraWarehouseId = process.env.BASELINKER_WAREHOUSE_HYDRA ?? null;
-  if (!hydraWarehouseId) {
-    console.warn('[assortment] BASELINKER_WAREHOUSE_HYDRA not set — Hydra own stock treated as 0');
-  }
-  const hydraStockById = new Map<number, number>();
-  if (hydraWarehouseId) {
-    const matchedIds = [...new Set(
-      products.map((p) => findExistingId(p, index)).filter((id): id is number => id !== undefined),
-    )];
-    if (matchedIds.length > 0) {
-      console.log(`Fetching Hydra own-stock for ${matchedIds.length} matched products…`);
-      for (let i = 0; i < matchedIds.length; i += 1000) {
-        const chunk = matchedIds.slice(i, i + 1000).map(String);
-        const stockData = await bl.getInventoryProductsStock(env.inventoryId, chunk);
-        for (const [id, item] of Object.entries(stockData)) {
-          hydraStockById.set(Number(id), item.stock?.[hydraWarehouseId] ?? 0);
-        }
-        await sleep(RATE_LIMIT_MS);
-      }
-    }
-  }
-  // Resolve categories (needed for P1 filter)
-  const categoryMap = loadJson<CategoryMapFile>(
-    CATEGORY_MAP_PATH,
-    'create the supplier→Hydra category dictionary (see xml-integration/category-map.json)',
-  );
-  const tree = new HydraTree(loadJson<Record<string, number>>(
-    HYDRA_CATEGORIES_PATH,
-    'run `npx tsx scripts/bl-build-categories.ts` first to build the Hydra tree in BL',
-  ));
-  const unknownNums = new Set<string>();
-  const filterCounts: Record<string, number> = {};
-  const filteredProducts: NormalizedProduct[] = [];
-  for (const p of products) {
-    const r = resolveCategory(p, categoryMap, tree, unknownNums);
-    const existingId = findExistingId(p, index);
-    const hydraOwnStock = existingId !== undefined ? (hydraStockById.get(existingId) ?? 0) : 0;
-    const { price } = computeSellingPrice(p, env.markupPct);
-    const fr = filterProduct(p, r.hydraNum, p.stock ?? 0, hydraOwnStock, price, ASSORTMENT_RULES);
-    filterCounts[fr.reason] = (filterCounts[fr.reason] ?? 0) + 1;
-    if (fr.allowed) filteredProducts.push(p);
-  }
-  const admitted = filteredProducts.length;
-  const dropped = products.length - admitted;
-  console.log(`\nAssortment filter: ${admitted} admitted, ${dropped} dropped`);
-  if (dropped > 0) {
-    for (const [reason, count] of Object.entries(filterCounts).filter(([r]) => r !== 'ok')) {
-      console.log(`  ${reason.padEnd(20)}: ${count}`);
-    }
-  }
-  products = filteredProducts;
-
   const stockUpdates: Record<string, Record<string, number>> = {};
   const priceUpdates: Record<string, Record<string, number>> = {};
   let matched = 0, unmatched = 0, priceFallbacks = 0, priceZeros = 0;
@@ -809,6 +756,12 @@ async function runDryRun(connectors: readonly ConnectorName[], limit: number | n
       }
     }
 
+    const markupRaw = process.env[MARKUP_ENV[connectorName]];
+    const markupPct = markupRaw ? parseFloat(markupRaw) : NaN;
+    if (isNaN(markupPct) && ASSORTMENT_RULES.minPricePln > 0) {
+      console.warn(`[dry-run] ${MARKUP_ENV[connectorName]} not set — price filter skipped for ${connectorName} (minPricePln=${ASSORTMENT_RULES.minPricePln})`);
+    }
+
     const unknownNums = new Set<string>();
     let admitted = 0;
     const dropReasons: Record<string, number> = {};
@@ -817,9 +770,9 @@ async function runDryRun(connectors: readonly ConnectorName[], limit: number | n
       const r = resolveCategory(p, categoryMap, tree, unknownNums);
       const existingId = blIndex ? findExistingId(p, blIndex) : undefined;
       const hydraOwnStock = existingId !== undefined ? (hydraStockById.get(existingId) ?? 0) : 0;
-      // Price for filter: use purchase price as-is (markup unknown in dry-run).
-      // minPricePln = 0 by default so this only matters if rules are changed.
-      const price = p.price_purchase ?? p.price_gross;
+      // Selling price = purchase price + markup (same formula as import).
+      // Falls back to feed gross price when markup env var is not set.
+      const price = !isNaN(markupPct) ? computeSellingPrice(p, markupPct).price : (p.price_purchase ?? p.price_gross);
       const fr = filterProduct(p, r.hydraNum, p.stock ?? 0, hydraOwnStock, price, ASSORTMENT_RULES);
 
       if (fr.allowed) {

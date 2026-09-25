@@ -50,3 +50,5 @@ Trzy hurtownie mają około 29 tys. pozycji, a klient nie chce całego asortymen
 - 2026-09-24 tj: hurtownie Sharg, Spechurt, Kolba (bez Szaf do O-17); próg cenowy na start 0 zł, ustawialny (O-04 rozstrzygnięte)
 - 2026-09-24 tj: „na stanie” = model mieszany (stan Hydry albo hurtowni); prezentacja czasu dostawy wg źródła poza zakresem (O-04)
 - 2026-09-25 claude: własny stan Hydry (BASELINKER_WAREHOUSE_HYDRA) nie jest jeszcze skonfigurowany; do czasu jego ustawienia dry-run i import traktują własny stan jako 0 z wyraźnym ostrzeżeniem; część mieszanego modelu aktywuje się po dodaniu zmiennej do .env.local
+- 2026-09-25 claude: broń czarnoprochowa (gałąź 01/02, Kolba) wykluczona z allowedHydraNums do rozstrzygnięcia O-11 (compliance); wiersze do przywrócenia: 1.1, 1.1.2, 1.2, 1.3, 2.6
+- 2026-09-25 claude: isP1() zmienione na exact match (bez prefix-matching na węzłach rodzicach); filtr assortmentu NIE stosowany w trybie sync (tylko import)

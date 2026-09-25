@@ -232,8 +232,8 @@ Wiersze, dla których w drzewie Hydra nie istnieje żaden węzeł (liść ani ga
 | | Wiersze |
 |---|---|
 | Wszystkich P1 | 175 |
-| Zmapowane do liścia drzewa | ~100 |
-| Zmapowane do węzła rodzica (→ tag `review`) | ~35 |
+| Zmapowane do liścia drzewa | 131 |
+| Zmapowane do węzła rodzica (→ tag `review`) | 27 |
 | Brak odpowiednika w drzewie | 17 |
 | Spośród „brak" — obecne u naszych hurtowni | 15 |
 | P1 bez żadnej z naszych hurtowni (poza zakresem importu) | 15 |

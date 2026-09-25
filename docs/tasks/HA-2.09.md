@@ -19,6 +19,7 @@ pr: null
 Po akceptacji P24 sklep ma zacząć realną sprzedaż. To moment, w którym zamówienia stają się danymi klientów i pieniędzy: nie wolno ich zmieniać ani usuwać, a każda pomyłka w konfiguracji kosztuje realne pieniądze. Sukces: produkcyjne klucze P24, BL na żywo, tryb weryfikacji wyłączony, zamówienia chronione, a pierwsze prawdziwe zamówienie przechodzi całą ścieżkę.
 
 ## Zakres
+- [ ] BASELINKER_WAREHOUSE_HYDRA ustawione (magazyn własny Hydry w BL) — bez tego model mieszany z O-04 działa jak „tylko stan hurtowni"
 - [ ] odczyt stanu bieżącego: `P24_MODE=production` możliwy (konto P24 aktywne), status wszystkich zależności, env Production w Vercelu (nazwy), crony, `BASELINKER_MOCK`, advisory Supabase (wklejone przez agenta)
 - [ ] checklista przełączenia (runbook) w `docs/go-live.md`: kolejność kroków, kto robi, jak cofnąć; w tym elementy konfigurowane w BaseLinkerze, nie w kodzie: automatyzacje zaplecza z flowchartu (O-14) i integracja e-paragonów (O-16)
 - [ ] ochrona `orders`/`order_items` przed zmianą historii (np. brak UPDATE/DELETE poza statusem przez service role), migracja

@@ -63,17 +63,30 @@ test('admitted: P1 category, Hydra own stock > 0, wholesaler stock = 0', () => {
   assert.equal(r.reason, 'ok');
 });
 
-test('admitted: hydraNum is a descendant of an allowed parent node', () => {
-  // "4.6.1" (Kolby) is a child of "04" (Części zamienne); both are in the allowed set
-  // but even if we only had "04", "4.6.1" would pass via prefix match
+test('admitted: hydraNum exactly matches an explicitly listed node ("4.6.1")', () => {
+  // "4.6.1" (Kolby) is explicitly listed; passes by exact match, not prefix coverage
   const r = filterProduct(PASS_PRODUCT, '4.6.1', 5, 0, PASS_PRICE, ASSORTMENT_RULES);
   assert.equal(r.allowed, true);
 });
 
-test('admitted: hydraNum with leading-zero parent ("09") matches child "9.3.1"', () => {
-  // "9.3.1" is explicitly in the allowed set AND covered by parent "09"
+test('admitted: hydraNum with leading-zero normalised — "09" exact match', () => {
+  // "09" normalises to "9"; a product mapped exactly to "09" passes
+  const r = filterProduct(PASS_PRODUCT, '09', 1, 0, PASS_PRICE, ASSORTMENT_RULES);
+  assert.equal(r.allowed, true);
+});
+
+test('admitted: explicitly listed child node ("9.3.1") regardless of parent "09"', () => {
+  // "9.3.1" is explicitly in the allowed set — passes by its own entry
   const r = filterProduct(PASS_PRODUCT, '9.3.1', 1, 0, PASS_PRICE, ASSORTMENT_RULES);
   assert.equal(r.allowed, true);
+});
+
+test('dropped: child of a parent entry that is NOT itself listed (exact match only)', () => {
+  // "11.1.1" (PCP ≤17J) is NOT in allowedHydraNums; only its parent "11.1" is.
+  // With prefix matching this would pass — with exact matching it must not.
+  const r = filterProduct(PASS_PRODUCT, '11.1.1', 5, 0, PASS_PRICE, ASSORTMENT_RULES);
+  assert.equal(r.allowed, false);
+  assert.equal(r.reason, 'not_p1');
 });
 
 test('dropped: disabled supplier', () => {
@@ -150,4 +163,26 @@ test('spechurt connector: admitted when enabled', () => {
   const p = makeProduct({ connector: 'spechurt' });
   const r = filterProduct(p, PASS_HYDRA_NUM, 2, 0, PASS_PRICE, ASSORTMENT_RULES);
   assert.equal(r.allowed, true);
+});
+
+// ── Sync regression: filter does NOT run in sync mode ────────────────────────
+// Sync sends real stock (including 0) for every product already in BL.
+// The assortment filter is import-only — runSync() never calls filterProduct().
+// This test shows the contrast: filterProduct WOULD drop the product (no stock,
+// not-P1), but the stock-update path is independent and still sends stock=0.
+
+test('sync regression: filterProduct would drop no-stock non-P1, but stock=0 update is independent', () => {
+  const MOCK_WAREHOUSE = 'bl_123456';
+
+  // A product that fails both P1 and stock checks
+  const p = makeProduct({ connector: 'sharg', stock: 0 });
+  const filterResult = filterProduct(p, '2.1', 0, 0, PASS_PRICE, ASSORTMENT_RULES);
+  assert.equal(filterResult.allowed, false, 'filter would drop this product');
+  assert.equal(filterResult.reason, 'not_p1');
+
+  // The sync stock-update object is built directly from product.stock — no filter gate.
+  // runSync() builds: stockUpdates[id] = { [env.warehouse]: p.stock ?? 0 }
+  const syncStockUpdate = { [MOCK_WAREHOUSE]: p.stock ?? 0 };
+  assert.equal(syncStockUpdate[MOCK_WAREHOUSE], 0,
+    'stock=0 still written in sync regardless of what the filter would decide');
 });

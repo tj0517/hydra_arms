@@ -2,6 +2,7 @@
 
 Format: data · źródło (zadanie/raport) · co zauważono · propozycja (zadanie / nic).
 
+- 2026-09-25 · HA-2.04 · `test:unit` nie jest uruchamiane w CI (shop-tests używa Playwright/Supabase; osobna pula nie istnieje) — dodać job unit-tests do `.github/workflows/ci.yml` po HA-1.06 (lokalna baza stabilna); polecenie: `npx tsx --test xml-integration/__tests__/**/*.test.ts`
 - 2026-09-24 · HA-2.03 · endpoint notify powinien akceptować połączenia wyłącznie z adresów IP serwerów P24 (dokumentacja: sekcja „Server IP addresses"); blokada na poziomie middleware lub weryfikacji nagłówka — przed HA-2.08 (sandbox), najlepiej razem z konfiguracją Vercela lub edge middleware
 - 2026-09-24 · HA-2.03 · HA-2.07/2.08 — komunikat dla klienta + ręczna obsługa płatności `duplicate_rejected` (pieniądze zostają u klienta w P24 do czasu obsługi; potrzebny zwrot lub potwierdzenie przez panel P24)
 - 2026-09-24 · HA-2.03 · src/lib/p24/index.ts: cztery ?? → mające uśpiony błąd NaN: `parseInt(process.env.P24_MERCHANT_ID || '0', 10)` i `parseInt(process.env.P24_POS_ID || '0', 10)` w registerTransaction (l. 143–144) i verifyTransaction (l. 198–199) — naprawione w review 1 (|| zamiast ??) — wpis zachowany jako ślad historyczny; oryginalne ?? mogły dać parseInt('') = NaN przy P24_MERCHANT_ID='' (tylko tryb sandbox/production, nie mock)
