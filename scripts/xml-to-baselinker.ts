@@ -56,6 +56,7 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env.local'), override: true 
 import type { NormalizedProduct } from '../xml-integration/types';
 import { filterProduct } from '../xml-integration/assortment-filter';
 import { ASSORTMENT_RULES } from '../xml-integration/assortment-rules';
+import { HydraTreeFromTxt } from '../xml-integration/hydra-tree-txt';
 
 const CONNECTOR_NAMES = ['kolba', 'sharg', 'spechurt'] as const;
 type ConnectorName = (typeof CONNECTOR_NAMES)[number];
@@ -207,6 +208,7 @@ function findExistingId(p: NormalizedProduct, index: BLIndex): number | undefine
 //   xml-integration/category-map.json     — supplier category/brand/rule → Hydra number
 
 const HYDRA_CATEGORIES_PATH = path.resolve(process.cwd(), 'xml-integration/hydra-categories.json');
+const HYDRA_TREE_TXT_PATH = path.resolve(process.cwd(), 'xml-integration/hydra-category-tree.txt');
 const CATEGORY_MAP_PATH = path.resolve(process.cwd(), 'xml-integration/category-map.json');
 
 const UNASSIGNED_NUM = '00'; // "00. DO PRZYPISANIA"
@@ -708,10 +710,13 @@ async function runDryRun(connectors: readonly ConnectorName[], limit: number | n
     process.exit(1);
   }
 
-  const tree = new HydraTree(loadJson<Record<string, number>>(
-    HYDRA_CATEGORIES_PATH,
-    'run `npx tsx scripts/bl-build-categories.ts` first',
-  ));
+  if (!fs.existsSync(HYDRA_TREE_TXT_PATH)) {
+    console.error('[error] xml-integration/hydra-category-tree.txt not found');
+    process.exit(1);
+  }
+  const treeFromTxt = new HydraTreeFromTxt(fs.readFileSync(HYDRA_TREE_TXT_PATH, 'utf8'));
+  const tree = treeFromTxt as unknown as HydraTree;
+  console.log(`Hydra tree: ${treeFromTxt.size} nodes (from hydra-category-tree.txt)`);
   const categoryMap = loadJson<CategoryMapFile>(CATEGORY_MAP_PATH, 'see xml-integration/category-map.json');
 
   // Load BL index once (needed for own-stock lookup, re-used across connectors)
@@ -728,6 +733,8 @@ async function runDryRun(connectors: readonly ConnectorName[], limit: number | n
   const summary: Array<{ connector: string; feed: number; admitted: number; dropped: number }> = [];
   const sectionAdmitted: Record<string, number> = {};
   const totalDropReasons: Record<string, number> = {};
+  const totalUnknownNums = new Set<string>();
+  let totalFlagCount = 0;
 
   for (const connectorName of connectors) {
     console.log(`\n─── ${connectorName.toUpperCase()} ───`);
@@ -764,10 +771,12 @@ async function runDryRun(connectors: readonly ConnectorName[], limit: number | n
 
     const unknownNums = new Set<string>();
     let admitted = 0;
+    let flagCount = 0;
     const dropReasons: Record<string, number> = {};
 
     for (const p of products) {
       const r = resolveCategory(p, categoryMap, tree, unknownNums);
+      if (r.status === 'flag') flagCount++;
       const existingId = blIndex ? findExistingId(p, blIndex) : undefined;
       const hydraOwnStock = existingId !== undefined ? (hydraStockById.get(existingId) ?? 0) : 0;
       // Selling price = purchase price + markup (same formula as import).
@@ -784,11 +793,19 @@ async function runDryRun(connectors: readonly ConnectorName[], limit: number | n
         totalDropReasons[fr.reason] = (totalDropReasons[fr.reason] ?? 0) + 1;
       }
     }
+    for (const n of unknownNums) totalUnknownNums.add(n);
+    totalFlagCount += flagCount;
 
     const dropped = products.length - admitted;
     console.log(`  feed: ${products.length}  →  admitted: ${admitted}  dropped: ${dropped}`);
     for (const [reason, count] of Object.entries(dropReasons)) {
       console.log(`    ${reason.padEnd(20)}: ${count}`);
+    }
+    if (flagCount > 0) {
+      console.log(`  no category mapping (→ DO PRZYPISANIA): ${flagCount}`);
+    }
+    if (unknownNums.size > 0) {
+      console.log(`  dict nums not in tree: ${[...unknownNums].sort().join(', ')}`);
     }
     summary.push({ connector: connectorName, feed: products.length, admitted, dropped });
   }
@@ -817,6 +834,17 @@ async function runDryRun(connectors: readonly ConnectorName[], limit: number | n
     console.log('\nDropped by reason:');
     for (const [reason, count] of Object.entries(totalDropReasons)) {
       console.log(`  ${reason.padEnd(20)}: ${count}`);
+    }
+  }
+
+  if (totalFlagCount > 0) {
+    console.log(`\nNo category mapping (→ 00. DO PRZYPISANIA): ${totalFlagCount}`);
+  }
+
+  if (totalUnknownNums.size > 0) {
+    console.log(`\nDictionary numbers missing from tree (${totalUnknownNums.size}):`);
+    for (const n of [...totalUnknownNums].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))) {
+      console.log(`  ${n}`);
     }
   }
 
