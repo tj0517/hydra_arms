@@ -1,1 +1,72 @@
-<i>POL: [ ERR105 ] - Błędny klucz API lub adres IP. <small>Obecne łączysz się z IP: 83.25.13.208</small> <br /><br /> ENG: [ ERR105 ] - Wrong API key or IP address. <small>You are currently connecting from IP: 83.25.13.208</small></i>
+<?xml version="1.0" ?>
+<produkty generated="2026-09-26 12:02:47">
+<produkt>
+          <id>16433</id>
+          <kzs>1014002147709</kzs>
+          <ean>022886254490</ean>
+          <producent>Condor</producent>
+          <nazwa>Condor - Czapka Flex Cap - Czarny - 161080-002</nazwa>
+          <dlugi_opis>Czapka z daszkiem Flex Cap firmy Condor, wykonana z rozciągliwej tkaniny. &lt;br&gt;&lt;br&gt;  Posiada sześć otworów wentylacyjnych oraz trzy rzepy pozwalające na zastosowanie indywidualnych oznaczeń. &lt;br&gt;&lt;br&gt;  W przedniej części podklejono dodatkową, chroniącą głowę warstwę sztywnej tkaniny. &lt;br&gt;&lt;br&gt;  - Materiał: 100% poliester &lt;br&gt; - Wymiary rzepów Velcro: &lt;br&gt; &amp;nbsp; - Front: 80 x 50 mm &lt;br&gt; &amp;nbsp; - Góra: 25 x 25 mm &lt;br&gt; &amp;nbsp; - Tył: 125 x 25 mm &lt;br&gt; - Logo Condor na przednim rzepie &lt;br&gt;&lt;br&gt;  Dostępna w dwóch rozmiarach: &lt;br&gt; S - 7" - 7 3/8" &lt;br&gt; L - 7 3/8" - 7 3/4" &lt;br&gt;&lt;br&gt;  Kolor: czarny &lt;br&gt;&lt;br&gt;</dlugi_opis>
+          <kategoria>Czapki, nakrycia głowy</kategoria>
+          <waga>0.11</waga>
+          <zdjecia>
+              <zdjecie pozycja="1">https://b2b.spechurt.eu/hpeciai/42288f81f79877cb379d881dca64a1c8/16433_1.jpg</zdjecie>
+          </zdjecia>
+<warianty>
+<wariant>
+                    <wariant_id>16433-27</wariant_id>
+                    <wariant_kzs>1014002147709</wariant_kzs>
+                    <wariant_ean>022886254490</wariant_ean>
+                    <wariant_nazwa>rozmiar</wariant_nazwa>
+                    <wariant_wartosc>S/M</wariant_wartosc>
+                    <wariant_stan_magazynowy>3</wariant_stan_magazynowy>
+                </wariant>
+<wariant>
+                    <wariant_id>16433-28</wariant_id>
+                    <wariant_kzs>1016002147703</wariant_kzs>
+                    <wariant_ean>022886254544</wariant_ean>
+                    <wariant_nazwa>rozmiar</wariant_nazwa>
+                    <wariant_wartosc>L/XL</wariant_wartosc>
+                    <wariant_stan_magazynowy>7</wariant_stan_magazynowy>
+                </wariant>
+</warianty>
+<stan_magazynowy>10</stan_magazynowy>
+            <cena_zewnetrzna>79</cena_zewnetrzna>
+            <cena_zewnetrzna_hurt>45.9</cena_zewnetrzna_hurt>
+            <vat>0.23</vat>
+          </produkt>
+<produkt>
+          <id>17613</id>
+          <kzs>1000000108637</kzs>
+          <ean></ean>
+          <producent>Condor</producent>
+          <nazwa>Condor - Torba reklamowa na ramię - Szary</nazwa>
+          <dlugi_opis>Torba reklamowa na ramię z logo firmy Condor Outdoor na klapie. &lt;br&gt;&lt;br&gt; Posiada jeden główny przedział. Na froncie naszyty jest organizer przeznaczony na drobne przedmioty, przybory do pisania, itp. &lt;br&gt;&lt;br&gt; Torba zamykana jest na solidną kompozytową klamrę. Regulowana długość paska na ramię. &lt;br&gt;&lt;br&gt; Kolor: szary &lt;br&gt; Waga: 245g &lt;br&gt;&lt;br&gt; UWAGA: Torba nieprzeznaczona do sprzedaży detalicznej. &lt;br&gt;&lt;br&gt;</dlugi_opis>
+          <kategoria>Plecaki i torby</kategoria>
+          <waga>0.26</waga>
+          <zdjecia>
+              <zdjecie pozycja="1">https://b2b.spechurt.eu/hpeciai/e96b5e645a3e59a497dc47fa04120f74/17613_1.jpg</zdjecie>
+          </zdjecia>
+<stan_magazynowy>6</stan_magazynowy>
+            <cena_zewnetrzna>68</cena_zewnetrzna>
+            <cena_zewnetrzna_hurt>31.5</cena_zewnetrzna_hurt>
+            <vat>0.23</vat>
+          </produkt>
+<produkt>
+          <id>1094</id>
+          <kzs>1000000002188</kzs>
+          <ean>4046872186585</ean>
+          <producent>Mil-Tec</producent>
+          <nazwa>Mil-Tec - Karabinek aluminiowy zakręcany Lock - 60 mm - 15922060</nazwa>
+          <dlugi_opis>Karabinek aluminiowy w kolorze&lt;br&gt; woodland (kamuflaż leśny), z dodatkowym&lt;br&gt; zabezpieczeniem przed otwarciem, w postaci&lt;br&gt; specjalnej nakrętki, nakręcanej na dźwignię.&lt;br&gt;&lt;br&gt; Bardzo lekki. Idealny do zawieszenia kluczy, &lt;br&gt; a także oporządzenia do plecaka, paska itp.&lt;br&gt;&lt;br&gt; Wielkość: 60mm. &lt;br&gt;&lt;br&gt; Karabińczyk nie jest przeznaczony do wspinaczki.</dlugi_opis>
+          <kategoria>Karabinki i klamry</kategoria>
+          <waga>0.01</waga>
+          <zdjecia>
+              <zdjecie pozycja="1">https://b2b.spechurt.eu/hpeciai/9e3cf1f4eb80716484e13ce70a470aee/1094_1.jpg</zdjecie>
+          </zdjecia>
+<stan_magazynowy>41</stan_magazynowy>
+            <cena_zewnetrzna>14</cena_zewnetrzna>
+            <cena_zewnetrzna_hurt>9.9</cena_zewnetrzna_hurt>
+            <vat>0.23</vat>
+          </produkt>
+</produkty>

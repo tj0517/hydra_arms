@@ -12,7 +12,9 @@
  * Schema verified against real HEAVY sample (SCHEMAS.md).
  *
  * Key observations:
- * - Most text fields use CDATA; numeric/id fields are plain text
+ * - Text fields are plain text with entity-escaped HTML (&lt;p&gt;...&lt;/p&gt;),
+ *   not CDATA (verified on the real feed 2026-09-26, 0 CDATA occurrences —
+ *   val() still handles this via its plain-string branch)
  * - EAN uses leading zeros (022886...) — must be kept as string
  * - waga is in kg → multiply by 1000 for weight_g
  * - vat is a decimal fraction (0.23) → multiply by 100 for tax_rate

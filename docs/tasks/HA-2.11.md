@@ -49,3 +49,6 @@ Feed Spechurtu działa tylko z serwera 51.83.134.183 (whitelista IP), z Maca Spe
 
 ## Notatki z realizacji
 - 2026-09-25 tj: feed Spechurtu dostępny z serwera 51.83.134.183 (ssh `ubuntu@`, alias `hydra-srv`): HTTP 200, 17 MB. Z Maca ERR105. Import 24.07 z serwera: 6 854 produkty, 3 185 auto / 3 604 review / 65 flag.
+- 2026-09-26 tj: „działa bez sieci" = brak pobierania feedu hurtowni; odczyt własnego stanu w BaseLinkerze (read-only) zostaje.
+- 2026-09-26 tj: liczba produktów liczona przez `grep -o '<produkt[ >]' <plik> | wc -l`, nie `grep -c` (`grep -c` liczy linie, a jednoliniowy XML dałby 1).
+- 2026-09-26 tj: sample zastąpiony prawdziwym fragmentem, z anonimizowanymi cenami i stanami.
