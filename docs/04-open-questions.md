@@ -51,3 +51,5 @@ Pytania klienta O-04–O-13 przeniesione 2026-09-22 z Notion („Lista pytań �
   - 2026-09-25 tj: dostęp `ssh ubuntu@` kluczem (alias `hydra-srv`); feed Spechurtu działa tylko stąd (HTTP 200, 17 MB); na serwerze klon repo z lipca i `.env.local`.
   - **Otwarte:** czy serwer zostaje na stałe i kto za niego płaci; czy akceptujemy klucze produkcyjne (Supabase service role, BaseLinker) w `.env.local` na serwerze, z dostępem przez konto `ubuntu`.
 - **O-20** · otwarte · klient — ASG, łucznictwo i myślistwo nie mają gałęzi w drzewie 01–15 (HA-2.04: samo ASG to ok. 1–2 tys. produktów we wszystkich trzech hurtowniach). Dodajemy gałęzie (zmiana drzewa i kategorii w BL) czy zostają poza sklepem?
+- **O-21** · otwarte · klient · blokuje HA-2.14, HA-2.15 — Dostęp do BaseLinkera klienta (konto, inventory ID, magazyny, grupy cen).
+  - 2026-09-26 tj: obecny BaseLinker (w tym import z 24.07, katalog 107789) to sandbox tj; konta klienta jeszcze nie otrzymał. Inwentaryzacja (HA-2.14) i import na żywo (HA-2.15) dopiero na koncie klienta.

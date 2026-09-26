@@ -9,7 +9,7 @@ effort: null
 branch: null
 due: null
 depends_on: [HA-2.13]
-blocked_by_questions: []
+blocked_by_questions: [O-21]
 touches_db: false
 touches_prod: true
 pr: null
@@ -50,3 +50,4 @@ pr: null
 ## Notatki z realizacji
 - 2026-09-25 tj: log importu z 24.07 na serwerze: katalog 107789, magazyn Spechurtu `bl_148604`, 0 produktów w BL przed importem.
 - 2026-09-25 tj: konto BaseLinker zablokowane (`ERROR_USER_ACCOUNT_BLOCKED`); zadanie czeka na odblokowanie. Przejęło weryfikację na żywo z HA-2.13.
+- 2026-09-26 tj: obecny BaseLinker to sandbox tj, nie konto klienta — inwentaryzacja sandboxa nie daje wiedzy potrzebnej przed importem z filtrem. Zadanie odłożone do dostępu do BL klienta (O-21).
