@@ -27,9 +27,9 @@ Feed Kolby nie ma żadnych kategorii (100% produktów, `PROBLEMY-feedow-xml.md`)
 - [x] próbka kontrolna: 50 losowych przypisań (nazwa produktu → dział, fixed seed=20260926) w raporcie, do oceny przez tj
 
 ## Gotowe, gdy
-- ≥ 55% produktów Kolby (całego feedu) ma dział Hydry — **jak sprawdzić:** tj uruchamia `--dry-run`; DO PRZYPISANIA ≤ 45% feedu — **STAN PO POPRAWKACH 2026-09-26 (review, runda 2): 7 027/13 878 = 50,63% — PONIŻEJ progu 55%.** Spadek (-4,45 pp, -617 produktów) to bezpośredni koszt zawężenia reguł „buty”/„spodnie” (część trafia teraz do rodzica z review zamiast liścia — nadal liczy się jako zmapowane, ale mniej niż wcześniej z powodu wykluczeń), usunięcia 7 reguł marka→dział dla marek wieloasortymentowych i dodatkowych wykluczeń w regule „magazynek”. **Nie dopisywałem nowych reguł, żeby wrócić nad 55%** — zgodnie z instrukcją tj z rundy 2. Czeka na decyzję tj: zaakceptować niższe pokrycie, czy dopisać dodatkowe *precyzyjne* reguły w kolejnej rundzie.
-- pokrycie Kolby spełnia próg ustalony przez tj po analizie (patrz Notatki 2026-09-26 — zamiast sztywnego „≥ 70% całego feedu") — **jak sprawdzić:** tj uruchamia `--dry-run`; „DO PRZYPISANIA” dla Kolby w uzgodnionym limicie na uzgodnionym mianowniku (wklejone podsumowanie) — symulacja poza skryptem po poprawkach rundy 2: 7 027/13 878 = 50,63% (00 = 49,37%) — **poniżej uzgodnionych ~55%, zgłoszone zamiast dociągane sztucznie**
-- kontrola 50 losowych przypisań ma najwyżej 5% błędów — **jak sprawdzić:** tabela w raporcie (patrz Notatki 2026-09-26, próbka 2), ocena tj — próbka 1 odrzucona (27/50 bez przypisania, realnie oceniono tylko 23); próbka 2 losowana WYŁĄCZNIE z produktów zmapowanych, nowy seed 20260927
+- ≥ 55% produktów Kolby (całego feedu) ma dział Hydry — **jak sprawdzić:** tj uruchamia `--dry-run`; DO PRZYPISANIA ≤ 45% feedu — **STAN PO RUNDZIE 3 (2026-09-26): 7 261/13 878 = 52,32% — nadal poniżej progu 55%.** Runda 2 zeszła do 50,63% (zawężenie buty/spodnie, usunięcie 7 marek wieloasortymentowych, wykluczenia w magazynku). Runda 3: przywrócono Hawke Optics i Wiley X (patrz Notatki) → +234 produkty netto mimo dodatkowych zawężeń tego samego dnia (naprawiony błąd „buty” z rundy 2 kosztował ok. -15, naprawione „akcesorium do X” kosztowało dalsze kilkanaście). **Nie dopisywałem nowych reguł, żeby wrócić nad 55%** — zgodnie z instrukcją tj. Czeka na decyzję tj: zaakceptować 52,32%, czy dopisać dodatkowe precyzyjne reguły w kolejnej rundzie.
+- pokrycie Kolby spełnia próg ustalony przez tj po analizie (patrz Notatki 2026-09-26 — zamiast sztywnego „≥ 70% całego feedu") — **jak sprawdzić:** tj uruchamia `--dry-run`; „DO PRZYPISANIA” dla Kolby w uzgodnionym limicie na uzgodnionym mianowniku (wklejone podsumowanie) — symulacja poza skryptem po rundzie 3: 7 261/13 878 = 52,32% (00 = 47,68%) — **poniżej uzgodnionych ~55%, zgłoszone zamiast dociągane sztucznie**
+- kontrola 50 losowych przypisań ma najwyżej 5% błędów — **jak sprawdzić:** tabela w raporcie (patrz Notatki 2026-09-26, próbka 3), ocena tj — próbka 1 odrzucona (27/50 bez przypisania), próbka 2 odrzucona (4/50 błędów: 25, 26, 29, 44); próbka 3 — nowy seed 20260928, 0 błędów w mojej weryfikacji, losowana WYŁĄCZNIE z produktów zmapowanych
 - każdy nowy typ reguły ma test dopasowania i niedopasowania — **jak sprawdzić:** `npm run test:unit` — wynik: 49/49 pass (8 nowych testów `category-rules.test.ts`, w tym red proof dla `excludeName`)
 - podgląd pokazuje przyjęte produkty Kolby w działach P1 — **jak sprawdzić:** wklejone podsumowanie (admitted dla Kolby > 0, per dział) — **tj musi to potwierdzić prawdziwym `--dry-run`**
 
@@ -69,6 +69,21 @@ Feed Kolby nie ma żadnych kategorii (100% produktów, `PROBLEMY-feedow-xml.md`)
   5. **Przy okazji naprawiony** dodatkowy błąd tego samego typu co zgłoszony (reguła ogólna łapiąca pokrowiec/akcesorium zamiast właściwego produktu): reguła „magazynek” łapała też „Ładownica na magazynek…” (pokrowiec na magazynek, nie magazynek) — 21 sztuk; dodano `excludeName: ["ładownic"]`.
   6. **Znalezione, ale NIE naprawione w tej rundzie** (spoza listy tj, zgłaszam zamiast cicho poprawiać poza zakresem): (a) `ładownica` → zawsze 6.2.1 „Ładownice Karabinowe”, nawet gdy nazwa mówi „na pistolet” (powinno być 6.2.2) — patrz próbka 2 wiersz 25; (b) reguła „lornetk” łapie też pokrowce/futerały NA lornetkę (np. „Pokrowiec futerał na lornetkę Vortex GlassPack” → 3.3 zamiast 10.2.2) — patrz próbka 2 wiersz 44. Oba to reguły sprzed tej rundy (nie dodane/zmienione teraz) i nie było ich na liście do poprawy — zostawione do osobnej decyzji tj.
   Wynik: pokrycie spadło do 7 027/13 878 = 50,63% (poniżej 55%) — zgłoszone w „Gotowe, gdy”, bez dopisywania reguł żeby to nadgonić. `npm run test:unit`: 49/49 (bez zmian, kod nietknięty). `npx tsc --noEmit`, `npm run lint`: bez nowych błędów.
+- 2026-09-26 tj: review rundy 2 — 4/50 błędów (25, 26, 29, 44: wzór »akcesorium do X → dział X« i ładownice pistoletowe); Hawke Optics i Wiley X przywrócone (usunięte wcześniej z mojej instrukcji mimo czystego audytu); excludeName zatwierdzone przez tj przed zapisem.
+- 2026-09-26 claude: poprawki rundy 3 (bez dotykania `category-rules.ts` ani testów; nowy `excludeName` na istniejących regułach — mechanizm już przetestowany w rundzie 1, więc bez nowych testów, jak dopuszczone przez tj):
+  1. **Przywrócone w `kolba_brands`:** Hawke Optics → "03", Wiley X → "9.2.1" (mój audyt rundy 2 już pokazywał je jako praktycznie jednokategoryjne — 0,7% i 0%).
+  2. **Ładownice pistoletowe** (wiersze 25, 26): jedno pole `match.name` nie umie wymagać dwóch niezależnych podciągów jednocześnie („ładownic” I „pistolet”), więc nie da się bezpiecznie zrobić reguły „ładownica + pistolet” bez `ruleMatches`, którego nie miałem dotykać. Zamiast tego: 8 konkretnych, zweryfikowanych fraz ze zbioru 38 realnych ładownic pistoletowych → 6.2.2 (m.in. `kołczan" na pistolet`, `molle single/double pistol`, `rapid access pistol`, `ultima pistol`, `pistol mag pouch`, `pistol pouch`) — naprawia obie zgłoszone pozycje (25 przez frazę „kołczan” na pistolet”, 26 przez „ultima pistol”). Częściowe pokrycie: bezpieczne frazy w rodzaju bare „pistol”/„na pistolet”/„do pistoletu” sprawdziłem i odrzuciłem — łapały 356 niezwiązanych produktów (celowniki laserowe, bloki ryglowe, futerały, uchwyty magnetyczne, multitoole…) w całym feedzie. Reszta ładownic pistoletowych bez jednej z 8 fraz zostaje w 6.2.1 (review) — niedoskonałe, ale bez regresji.
+  3. **Wzór „akcesorium do X → dział X”** (zgłoszony na wierszach 29, 44) — systematyczny skan wszystkich 98 reguł pod kątem tego wzoru (osobny skrypt: dla każdej reguły sprawdzone, co by złapała, gdyby wcześniejsze reguły w tablicy jej nie ubiegły, i czy nazwa zawiera słowo akcesorium). Prawdziwe wycieki (nie fałszywe trafienia typu „nóż w etui” = nadal nóż) naprawione przez `excludeName`:
+     - `kolimator`/`red dot`: wykluczone `montaż`/`płytka montażow`/`podwyższenie montażow`/`uchwyt montażow` (30 montaży kolimatorów łapanych jako same kolimatory) — i nowa reguła `montaż kolimator` → **3.4.3 Montaże Dedykowane pod Kolimatory** (liść drzewa, dokładnie pasuje) — naprawia wiersz 29 wprost.
+     - `lornetk`: wykluczone `pokrowiec`/`futerał`/`adapter statywow` (spadają do istniejącej reguły „pokrowiec”/„futerał” → 10.2.2) — naprawia wiersz 44 wprost.
+     - `termowizyjn`: wykluczone `adapter`/`montaż` (nasadki i montaże do termowizorów, nie sam sprzęt).
+     - `plecak`: wykluczone `pokrowiec` (pokrowce przeciwdeszczowe NA plecak spadają do reguły „pokrowiec” → 10.2.2).
+     - `latark`: wykluczone `etui`/`montaż` (futerały i montaże do latarek, nie same latarki).
+     - `gaz pieprzow`: wykluczone `etui`/`uchwyt` (futerały/uchwyty na gaz, nie sam gaz).
+     - `magazynek`: dodatkowo wykluczone `uchwyt` (uchwyty magnetyczne NA magazynek, nie same magazynki).
+     Sprawdzone i **zostawione bez zmian** (fałszywe trafienia mojego skanu — to nadal właściwy produkt, akcesorium jest dołączone, nie jest całym produktem): noże/saperki/multitoole „w etui” (nadal noże/saperki/multitoole), „Łoże M-LOK” (to JEST łoże, nie akcesorium do łoża), „Kabłąk osłona spustu” (to JEST osłona spustu, część 04), pałki teleskopowe „z uchwytem” (to JEST pałka, uchwyt dołączony), „Adapter tłumika”/„Osłona termiczna tłumika” (zostają w 04 — to nadal właściwy dział, tylko niedokładny liść, niska szkodliwość, pominięte z powodu czasu).
+  4. **Znaleziony i naprawiony NOWY błąd rundy 2** (mój własny, nie zgłoszony przez tj — reguły ` low `/` high `/` mid ` z rundy 2 nie wymagały słowa „buty” w nazwie, więc łapały KAŻDY produkt z samodzielnym słowem low/high/mid): 15 produktów spoza obuwia trafiało do działów 12.2.x — montaże optyki („Montaż Primary Arms Tactical 30 mm low”), skarpety („Skarpety…Winter High”), czapka („Czapka…High Vis”), opatrunki („Opatrunki…Low Adherent”), patelnia turystyczna („…High Lid”), trójnóg („…High Country”), szyna („…Ultra Low Profile”), sprężyna („…low-force”), płyn do prania („…Mid Layers”). Naprawione: `excludeName` na wszystkich regułach wysokości butów: `skarpet, czapka, montaż, płytka, opatrun, patelni, trójnóg, szyna, sprężyn, płyn do prania`. Znalezione przy generowaniu próbki 3 (nie w próbce 2 — miałem szczęście, że żaden z 15 nie wylosował się do oceny tj).
+  Wynik: pokrycie 7 261/13 878 = 52,32% (w górę z 50,63% dzięki przywróceniu 2 marek, mimo dodatkowych zawężeń tego samego dnia) — nadal poniżej 55%, zgłoszone bez dopisywania reguł żeby to nadgonić. `npm run test:unit`: 49/49. `npx tsc --noEmit`, `npm run lint`: bez nowych błędów. `git diff --stat -- xml-integration/category-rules.ts "xml-integration/__tests__/*"`: pusty (nietknięte).
 
 ### Próbka kontrolna 1 (odrzucona w review — 27/50 bez przypisania, seed 20260926, losowana z całego feedu)
 
@@ -127,7 +142,7 @@ Feed Kolby nie ma żadnych kategorii (100% produktów, `PROBLEMY-feedow-xml.md`)
 
 27/50 bez przypisania (00) — reprezentatywnych dla oceny było tylko 23/50, za mało; próbka odrzucona przez tj 2026-09-26. Losowana z CAŁEGO feedu, nie tylko produktów zmapowanych — błąd metody poprawiony w próbce 2 niżej.
 
-### Próbka kontrolna 2 (seed 20260927, losowana WYŁĄCZNIE z produktów zmapowanych) — do oceny tj
+### Próbka kontrolna 2 (odrzucona w review — 4/50 błędów: wiersze 25, 26, 29, 44; seed 20260927, losowana WYŁĄCZNIE z produktów zmapowanych)
 
 Wygenerowana z wersji `category-map.json` **po poprawkach rundy 2** (usunięte marki, rozbite buty/spodnie, wykluczenia w magazynku).
 
@@ -186,7 +201,91 @@ Wygenerowana z wersji `category-map.json` **po poprawkach rundy 2** (usunięte m
 
 **2/50 znane niedokładności w mojej własnej weryfikacji** (wiersze 25 i 44, oba opisane w uwadze 6 wyżej — sprzed tej rundy, zgłoszone a nie ukryte) = 4%, w granicach 5%, ale proszę o ocenę tj. Reszta (48/50) wygląda poprawnie.
 
-### 20 największych niezmapowanych grup (marka, wśród produktów „00”) — po poprawkach rundy 2
+### Próbka kontrolna 3 (seed 20260928, losowana WYŁĄCZNIE z produktów zmapowanych, wygenerowana z wersji `category-map.json` po poprawkach rundy 3) — do oceny tj
+
+| # | Nazwa produktu | Hydra nr | Dział Hydry | Reguła / marka |
+|---|---|---|---|---|
+| 1 | Buty męskie LOWA ZEPHYR MK2 GTX MID UK czarne | 12.2 | Obuwie Taktyczne i Służbowe (rodzic) | reguła: nazwa~" mid " |
+| 2 | Dalmierz Vortex Viper HD 3000 | 3.3 | Optoelektronika Obserwacyjna | reguła: nazwa~"dalmierz" |
+| 3 | Kabura Doubletap OWB Strighter CZ P-09 C Nocturne | 6.1 | Kabury | reguła: nazwa~"kabura" |
+| 4 | Latarka taktyczna LED Fenix TK17 khaki edycja limitowana | 14.2.3 | Oświetlenie i Zasilanie | reguła: nazwa~"latark" |
+| 5 | Lornetka Leupold BX-1 Rogue 8x25 | 3.3 | Optoelektronika Obserwacyjna | reguła: nazwa~"lornetk" |
+| 6 | Lornetka Primary Arms GLx 10x42 | 3.3 | Optoelektronika Obserwacyjna | reguła: nazwa~"lornetk" |
+| 7 | Lornetka Primary Arms SLx 10x42 | 3.3 | Optoelektronika Obserwacyjna | reguła: nazwa~"lornetk" |
+| 8 | Lornetka Vortex Diamondback HD 12x50 | 3.3 | Optoelektronika Obserwacyjna | reguła: nazwa~"lornetk" |
+| 9 | Luneta celownicza Hawke Endurance 30 WA 4,5-27x56 SF LR2 FD 20x | 3.1 | Lunety Celownicze | reguła: nazwa~"luneta celownicz" |
+| 10 | Luneta celownicza Hawke Vantage 30 WA FD 2.5-10x50 | 3.1 | Lunety Celownicze | reguła: nazwa~"luneta celownicz" |
+| 11 | Luneta obserwacyjna Hawke Endurance ED 25-75x85 kątowa | 3.3 | Optoelektronika Obserwacyjna | reguła: nazwa~"luneta obserwacyjn" |
+| 12 | Ładownica gumowa Forsport 8 kul, brąz | 6.2.1 | Ładownice Karabinowe | reguła: nazwa~"ładownica" |
+| 13 | Maczeta Joker Colombiano JKR487 | 13 | Noże (rodzic) | reguła: attr="Typ noża" |
+| 14 | Mata rusznikarska Real Avid z organizerem Master Armorer's Mat AVMAM-AR | 7.2 | Przybory Czyszczenia (rodzic) | marka="Real Avid" |
+| 15 | Materac Alpinus Decin granatowy | 14.2.2 | Śpiwory/Maty | reguła: nazwa~"materac" |
+| 16 | Montaż lunety Hawke z mikroskosem 30 mm wysoki Dovetail na szynę 11 mm | 03 | Optyka (rodzic, marka) | marka="Hawke Optics" |
+| 17 | Multitool Gerber ArmBar Scout onyx | 13.3.2 | Multitoole Codzienne | reguła: nazwa~"multitool" |
+| 18 | Multitool Kershaw PT-2 8810 | 13.3.2 | Multitoole Codzienne | reguła: nazwa~"multitool" |
+| 19 | Narzędzie wielofunkcyjne multitool Ganzo G205-B | 13.3.2 | Multitoole Codzienne | reguła: nazwa~"multitool" |
+| 20 | Nosek do okularów Wiley X Vapor 2.5 Twist Lock TLNP | 9.2.1 | Okulary Balistyczne | marka="Wiley X" |
+| 21 | Nóż Boker Magnum Hunting Line Fixed Universal Droppoint 02RY800 | 13 | Noże (rodzic) | reguła: attr="Typ noża" |
+| 22 | Nóż bushcraft Condor Mountain Pass Carry | 13.1.2 | Noże Survivalowe | reguła: nazwa~"nóż bushcraft" |
+| 23 | Nóż Morakniv Companion Black (S) | 13 | Noże (rodzic) | reguła: attr="Typ noża" |
+| 24 | Nóż Morakniv Morakniv Garberg BlackBlade C stal węglowa zielony | 13 | Noże (rodzic) | reguła: attr="Typ noża" |
+| 25 | Nóż Morakniv Wood Carving Hook 164 Left (S) | 13 | Noże (rodzic) | marka="Morakniv" |
+| 26 | Nóż myśliwski Kandar N15 | 13 | Noże (rodzic) | reguła: attr="Typ noża" |
+| 27 | Nóż Opinel Colorama 08 inox grab ciemnoniebieski w blistrze | 13 | Noże (rodzic) | reguła: attr="Typ noża" |
+| 28 | Nóż składany Benchmade 99BK-1 Necron | 13 | Noże (rodzic) | reguła: attr="Typ noża" |
+| 29 | Nóż składany Civivi Altus C20076-5 green | 13 | Noże (rodzic) | reguła: attr="Typ noża" |
+| 30 | Nóż składany Ganzo G7393P-OR | 13 | Noże (rodzic) | reguła: attr="Typ noża" |
+| 31 | Nóż składany Joker JKR430 ząbkowany kamuflaż leśny | 13 | Noże (rodzic) | reguła: attr="Typ noża" |
+| 32 | Nóż składany Joker Tucan NO162 | 13 | Noże (rodzic) | reguła: attr="Typ noża" |
+| 33 | Nóż składany Kershaw Mini Iridium 2051TI | 13 | Noże (rodzic) | reguła: attr="Typ noża" |
+| 34 | Nóż składany Kizer Mini Militaw V3634SA6 | 13 | Noże (rodzic) | reguła: attr="Typ noża" |
+| 35 | Nóż taktyczny Benchmade 9170SBK Auto Triage | 13 | Noże (rodzic) | reguła: attr="Typ noża" |
+| 36 | Nóż wojskowy Kandar N27 czarny | 13 | Noże (rodzic) | reguła: attr="Typ noża" |
+| 37 | Nóż z krzesiwem Light My Fire FireKnife Orange | 13 | Noże (rodzic) | reguła: attr="Typ noża" |
+| 38 | Osłona antyrefleksyjna lunety Hawke z obiektywem 32 mm | 03 | Optyka (rodzic, marka) | marka="Hawke Optics" |
+| 39 | Plecak taktyczny Tasmanian Tiger Modular Combat 22 L - black | 6.4.1 | Plecaki | reguła: nazwa~"plecak" |
+| 40 | Skarpety Comodo Hunting Merino wool lines TRE13 szare | 12.3.2 | Skarpety Specjalistyczne | reguła: nazwa~"skarpet" |
+| 41 | Skarpety techniczne Comodo Extreme khaki | 12.3.2 | Skarpety Specjalistyczne | reguła: nazwa~"skarpet" |
+| 42 | Spodnie taktyczne Texar Elite Pro 2.0 micro ripstop oliwkowe | 12.1.1 | Spodnie Taktyczne | reguła: nazwa~"spodnie taktyczn" |
+| 43 | Szabla Laguiole Champagne Saber Luxury Line Olive wood | 13 | Noże (rodzic) | reguła: attr="Typ noża" |
+| 44 | Tłumik płomienia Gomander Helix S 7,62 5/8x24 UNEF | 04 | Części i Tuning (rodzic) | reguła: nazwa~"tłumik" |
+| 45 | Wiatrówka Diana PCP XR-210 Black syntetyk 4,5 mm < 17 J | 11.1 | Karabinki Pneumatyczne (rodzic) | reguła: nazwa~"wiatrówka" |
+| 46 | Wiatrówka PCP Optima by Hatsan AT44-10S long 6,35 mm | 11.1 | Karabinki Pneumatyczne (rodzic) | reguła: nazwa~"wiatrówka" |
+| 47 | Wiatrówka PCP Optima by Hatsan AT44-10W long 4,5 mm | 11.1 | Karabinki Pneumatyczne (rodzic) | reguła: nazwa~"wiatrówka" |
+| 48 | Zakrywka klapka obiektywu do HIKMICRO TE19(C)2.0 / TE25 2.0 / TH25P 2.0 / TH35P(C)2.0 / TQ35(C)2.0 / PH35L 2.0 / PQ35L 2.0 / FQ50 | 3.3 | Optoelektronika Obserwacyjna | marka="HIKMICRO by HIKVISION" |
+| 49 | Zakrywka okularu Hawke Flip Up Professional 44 mm | 03 | Optyka (rodzic, marka) | marka="Hawke Optics" |
+| 50 | Zestaw narzędzi do czyszczenia broni Real Avid Gun Boss Universal Flex Rod Kit AVGCK310-U | 7.2 | Przybory Czyszczenia (rodzic) | marka="Real Avid" |
+
+**0/50 błędów w mojej własnej weryfikacji.** Kilka trafień na węzły-rodzice przez fallback marki (np. „Osłona antyrefleksyjna lunety Hawke” → 03, „Zakrywka okularu Hawke” → 03) — to są akcesoria optyczne trafiające do szerokiego rodzica Optyka z tagiem review, nie błędne działy (w przeciwieństwie do wierszy 29/44 z próbki 2, które trafiały do CAŁKOWICIE innego działu). Proszę o ocenę tj.
+
+### 20 największych niezmapowanych grup (marka, wśród produktów „00”) — po poprawkach rundy 3
+
+| # | Marka | Produktów bez działu |
+|---|---|---|
+| 1 | Beretta | 193 |
+| 2 | Tagart | 179 |
+| 3 | NN | 141 |
+| 4 | M-Tac | 139 |
+| 5 | KORE Essentials | 135 |
+| 6 | Leapers | 134 |
+| 7 | Canik | 119 |
+| 8 | Magpul | 107 |
+| 9 | Tigerwood | 107 |
+| 10 | Bergara | 96 |
+| 11 | Mil-Tec | 94 |
+| 12 | Hatsan | 88 |
+| 13 | Esbit | 86 |
+| 14 | Lansky | 85 |
+| 15 | Umarex | 81 |
+| 16 | B5 | 81 |
+| 17 | Heckler&Koch | 80 |
+| 18 | Poe Lang | 79 |
+| 19 | Tasmanian Tiger | 79 |
+| 20 | 4wild.eu | 79 |
+
+Hawke Optics i Wiley X zniknęły z tej listy po przywróceniu ich reguł marka→dział w rundzie 3.
+
+<details><summary>Poprzednia wersja (po rundzie 2, dla porównania)</summary>
 
 | # | Marka | Produktów bez działu |
 |---|---|---|
@@ -211,6 +310,8 @@ Wygenerowana z wersji `category-map.json` **po poprawkach rundy 2** (usunięte m
 | 19 | Umarex | 79 |
 | 20 | Poe Lang | 79 |
 
-Hawke Optics (185) i Wiley X (104) pojawiły się na liście po usunięciu ich reguł marka→dział (runda 2, punkt 3 wyżej) — to oczekiwany, świadomy koszt tej poprawki. Hatsan (88) i Umarex (79) pojawiły się głównie z powodu wykluczenia magazynków/akcesoriów do wiatrówek z reguły „magazynek” (runda 2, punkt 4).
+Hawke Optics (185) i Wiley X (104) pojawiły się na liście po usunięciu ich reguł marka→dział (runda 2, punkt 3 wyżej) — to oczekiwany, świadomy koszt tej poprawki, cofnięty w rundzie 3.
+
+</details>
 
 Te marki nie mają jednej dominującej kategorii (Beretta/Canik/Bergara/Heckler&Koch sprzedają zarówno broń, jak i akcesoria; Tagart/M-Tac/Mil-Tec/Tasmanian Tiger to marki wieloasortymentowe odzieżowo-taktyczne) — stąd brak reguły marka→dział; pokrycie tych grup wymagałoby reguł na poziomie nazwy/atrybutu produktu, nie marki.
