@@ -1,7 +1,7 @@
 ---
 id: HA-2.11
 title: Spechurt — podgląd i walidacja na aktualnym feedzie z serwera
-status: review
+status: done
 difficulty: S
 model: claude-sonnet-5
 model_approved: null
@@ -52,7 +52,7 @@ Feed Spechurtu działa tylko z serwera 51.83.134.183 (whitelista IP), z Maca Spe
 - 2026-09-26 tj: „działa bez sieci" = brak pobierania feedu hurtowni; odczyt własnego stanu w BaseLinkerze (read-only) zostaje.
 - 2026-09-26 tj: liczba produktów liczona przez `grep -o '<produkt[ >]' <plik> | wc -l`, nie `grep -c` (`grep -c` liczy linie, a jednoliniowy XML dałby 1).
 - 2026-09-26 tj: sample zastąpiony prawdziwym fragmentem, z anonimizowanymi cenami i stanami.
-- 2026-09-26 tj: kategoria „Impregnacja i pielęgnacja" (5 produktów) → 12.2.3 Akcesoria do Obuwia (opis liścia w drzewie wprost wymienia „preparaty do impregnacji").
+- 2026-09-26 claude (approved by tj 2026-09-26): kategoria „Impregnacja i pielęgnacja" (5 produktów) → 12.2.3 Akcesoria do Obuwia (opis liścia w drzewie wprost wymienia „preparaty do impregnacji").
 - 2026-09-26 tj: CDATA poprawić w tym PR (SCHEMAS.md §3 + komentarz w `connectors/spechurt.ts`), bez zmiany logiki parsera. Zrobione.
 - 2026-09-26 claude: walidacja na realnym pliku z serwera (`~/Downloads/spechurt-2026-09-26.xml`, 17 MB, plik poza repo):
   - `grep -o '<produkt[ >]' <plik> | wc -l` = **6 188**; sparsowanych = **6 188**; różnica = 0; 0 błędów parsowania (bez try/catch throw)
@@ -82,3 +82,4 @@ Feed Spechurtu działa tylko z serwera 51.83.134.183 (whitelista IP), z Maca Spe
   # 3. poza --dry-run — oczekiwany błąd: [error] --from-file is only valid together with --dry-run
   npx tsx scripts/xml-to-baselinker.ts spechurt import --from-file=spechurt:xml-integration/samples/spechurt_sample.xml
   ```
+- 2026-09-26 tj: odbiór PR #20 — udowodnione: podgląd z pliku (2030 przyjętych), 6188 = 6188, test:unit uruchomiony przez tj (41/41 pass), red proofy --from-file (3/3), dokumentacja (grep). Próbka zanonimizowana, URL-e bez klucza.
