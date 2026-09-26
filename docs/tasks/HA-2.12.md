@@ -1,7 +1,7 @@
 ---
 id: HA-2.12
 title: Kategoryzacja Kolby — reguły do drzewa Hydry
-status: review
+status: done
 difficulty: L
 model: opus
 model_approved: null
@@ -27,9 +27,8 @@ Feed Kolby nie ma żadnych kategorii (100% produktów, `PROBLEMY-feedow-xml.md`)
 - [x] próbka kontrolna: 50 losowych przypisań (nazwa produktu → dział, fixed seed=20260926) w raporcie, do oceny przez tj
 
 ## Gotowe, gdy
-- ≥ 55% produktów Kolby (całego feedu) ma dział Hydry — **jak sprawdzić:** tj uruchamia `--dry-run`; DO PRZYPISANIA ≤ 45% feedu — **STAN PO RUNDZIE 3 (2026-09-26): 7 261/13 878 = 52,32% — nadal poniżej progu 55%.** Runda 2 zeszła do 50,63% (zawężenie buty/spodnie, usunięcie 7 marek wieloasortymentowych, wykluczenia w magazynku). Runda 3: przywrócono Hawke Optics i Wiley X (patrz Notatki) → +234 produkty netto mimo dodatkowych zawężeń tego samego dnia (naprawiony błąd „buty” z rundy 2 kosztował ok. -15, naprawione „akcesorium do X” kosztowało dalsze kilkanaście). **Nie dopisywałem nowych reguł, żeby wrócić nad 55%** — zgodnie z instrukcją tj. Czeka na decyzję tj: zaakceptować 52,32%, czy dopisać dodatkowe precyzyjne reguły w kolejnej rundzie.
-- pokrycie Kolby spełnia próg ustalony przez tj po analizie (patrz Notatki 2026-09-26 — zamiast sztywnego „≥ 70% całego feedu") — **jak sprawdzić:** tj uruchamia `--dry-run`; „DO PRZYPISANIA” dla Kolby w uzgodnionym limicie na uzgodnionym mianowniku (wklejone podsumowanie) — symulacja poza skryptem po rundzie 3: 7 261/13 878 = 52,32% (00 = 47,68%) — **poniżej uzgodnionych ~55%, zgłoszone zamiast dociągane sztucznie**
-- kontrola 50 losowych przypisań ma najwyżej 5% błędów — **jak sprawdzić:** tabela w raporcie (patrz Notatki 2026-09-26, próbka 3), ocena tj — próbka 1 odrzucona (27/50 bez przypisania), próbka 2 odrzucona (4/50 błędów: 25, 26, 29, 44); próbka 3 — nowy seed 20260928, 0 błędów w mojej weryfikacji, losowana WYŁĄCZNIE z produktów zmapowanych
+- ≥ 52% produktów Kolby (całego feedu) ma dział Hydry — **jak sprawdzić:** tj uruchamia `--dry-run`; DO PRZYPISANIA ≤ 48% feedu — **wynik (dry-run tj, po rundzie 3):** 6 617 niezmapowane z 13 878 → 52,32% zmapowane (7 261), 3 217 przyjętych (admitted) w działach P1
+- kontrola 50 losowych przypisań ma najwyżej 5% błędów — **jak sprawdzić:** tabela w raporcie (patrz Notatki 2026-09-26) — próbka 1 odrzucona (27/50 bez przypisania), próbka 2 odrzucona (4/50 błędów: 25, 26, 29, 44); **próbka 3: 2/50 błędów (20, 48), ocena tj**
 - każdy nowy typ reguły ma test dopasowania i niedopasowania — **jak sprawdzić:** `npm run test:unit` — wynik: 49/49 pass (8 nowych testów `category-rules.test.ts`, w tym red proof dla `excludeName`)
 - podgląd pokazuje przyjęte produkty Kolby w działach P1 — **jak sprawdzić:** wklejone podsumowanie (admitted dla Kolby > 0, per dział) — **tj musi to potwierdzić prawdziwym `--dry-run`**
 
@@ -84,6 +83,7 @@ Feed Kolby nie ma żadnych kategorii (100% produktów, `PROBLEMY-feedow-xml.md`)
      Sprawdzone i **zostawione bez zmian** (fałszywe trafienia mojego skanu — to nadal właściwy produkt, akcesorium jest dołączone, nie jest całym produktem): noże/saperki/multitoole „w etui” (nadal noże/saperki/multitoole), „Łoże M-LOK” (to JEST łoże, nie akcesorium do łoża), „Kabłąk osłona spustu” (to JEST osłona spustu, część 04), pałki teleskopowe „z uchwytem” (to JEST pałka, uchwyt dołączony), „Adapter tłumika”/„Osłona termiczna tłumika” (zostają w 04 — to nadal właściwy dział, tylko niedokładny liść, niska szkodliwość, pominięte z powodu czasu).
   4. **Znaleziony i naprawiony NOWY błąd rundy 2** (mój własny, nie zgłoszony przez tj — reguły ` low `/` high `/` mid ` z rundy 2 nie wymagały słowa „buty” w nazwie, więc łapały KAŻDY produkt z samodzielnym słowem low/high/mid): 15 produktów spoza obuwia trafiało do działów 12.2.x — montaże optyki („Montaż Primary Arms Tactical 30 mm low”), skarpety („Skarpety…Winter High”), czapka („Czapka…High Vis”), opatrunki („Opatrunki…Low Adherent”), patelnia turystyczna („…High Lid”), trójnóg („…High Country”), szyna („…Ultra Low Profile”), sprężyna („…low-force”), płyn do prania („…Mid Layers”). Naprawione: `excludeName` na wszystkich regułach wysokości butów: `skarpet, czapka, montaż, płytka, opatrun, patelni, trójnóg, szyna, sprężyn, płyn do prania`. Znalezione przy generowaniu próbki 3 (nie w próbce 2 — miałem szczęście, że żaden z 15 nie wylosował się do oceny tj).
   Wynik: pokrycie 7 261/13 878 = 52,32% (w górę z 50,63% dzięki przywróceniu 2 marek, mimo dodatkowych zawężeń tego samego dnia) — nadal poniżej 55%, zgłoszone bez dopisywania reguł żeby to nadgonić. `npm run test:unit`: 49/49. `npx tsc --noEmit`, `npm run lint`: bez nowych błędów. `git diff --stat -- xml-integration/category-rules.ts "xml-integration/__tests__/*"`: pusty (nietknięte).
+- 2026-09-26 tj: odbiór PR #21 po 3 rundach — próg pokrycia obniżony z ~55% do ~52% (decyzja tj: kolejne rundy dają coraz mniej, resztę przejmie narzędzie AI z deferred); udowodnione: dry-run tj 52,32% (6617/13878 bez działu), 3217 przyjętych w P1, test:unit 49/49 (tj), próbka 3 2/50 (ocena tj). excludeName zatwierdzone przez tj przed zapisem.
 
 ### Próbka kontrolna 1 (odrzucona w review — 27/50 bez przypisania, seed 20260926, losowana z całego feedu)
 
@@ -201,7 +201,7 @@ Wygenerowana z wersji `category-map.json` **po poprawkach rundy 2** (usunięte m
 
 **2/50 znane niedokładności w mojej własnej weryfikacji** (wiersze 25 i 44, oba opisane w uwadze 6 wyżej — sprzed tej rundy, zgłoszone a nie ukryte) = 4%, w granicach 5%, ale proszę o ocenę tj. Reszta (48/50) wygląda poprawnie.
 
-### Próbka kontrolna 3 (seed 20260928, losowana WYŁĄCZNIE z produktów zmapowanych, wygenerowana z wersji `category-map.json` po poprawkach rundy 3) — do oceny tj
+### Próbka kontrolna 3 (zaakceptowana — 2/50 błędów: wiersze 20, 48; seed 20260928, losowana WYŁĄCZNIE z produktów zmapowanych)
 
 | # | Nazwa produktu | Hydra nr | Dział Hydry | Reguła / marka |
 |---|---|---|---|---|
@@ -256,7 +256,9 @@ Wygenerowana z wersji `category-map.json` **po poprawkach rundy 2** (usunięte m
 | 49 | Zakrywka okularu Hawke Flip Up Professional 44 mm | 03 | Optyka (rodzic, marka) | marka="Hawke Optics" |
 | 50 | Zestaw narzędzi do czyszczenia broni Real Avid Gun Boss Universal Flex Rod Kit AVGCK310-U | 7.2 | Przybory Czyszczenia (rodzic) | marka="Real Avid" |
 
-**0/50 błędów w mojej własnej weryfikacji.** Kilka trafień na węzły-rodzice przez fallback marki (np. „Osłona antyrefleksyjna lunety Hawke” → 03, „Zakrywka okularu Hawke” → 03) — to są akcesoria optyczne trafiające do szerokiego rodzica Optyka z tagiem review, nie błędne działy (w przeciwieństwie do wierszy 29/44 z próbki 2, które trafiały do CAŁKOWICIE innego działu). Proszę o ocenę tj.
+**0/50 błędów w mojej własnej weryfikacji.** Kilka trafień na węzły-rodzice przez fallback marki (np. „Osłona antyrefleksyjna lunety Hawke” → 03, „Zakrywka okularu Hawke” → 03) — to są akcesoria optyczne trafiające do szerokiego rodzica Optyka z tagiem review, nie błędne działy (w przeciwieństwie do wierszy 29/44 z próbki 2, które trafiały do CAŁKOWICIE innego działu).
+
+**Ocena tj: 2/50 błędów** — wiersz 20 (Wiley X nosek do okularów → 9.2.1) i wiersz 48 (HIKMICRO zakrywka obiektywu → 3.3), oba akcesoria trafiające do działu produktu przez fallback marki (nie przez `excludeName` regułę nazwy — brand fallback nie ma tego mechanizmu). Graniczne, nie policzone jako błąd: wiersz 12 (ładownica na śruty jako „karabinowa”), wiersz 43 (szabla kolekcjonerska w dziale noży — kwestia asortymentu, nie kategorii). Zaakceptowane — patrz `docs/deferred-tasks.md` (2026-09-26, akcesoria łapane przez reguły marki).
 
 ### 20 największych niezmapowanych grup (marka, wśród produktów „00”) — po poprawkach rundy 3
 

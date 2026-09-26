@@ -2,6 +2,7 @@
 
 Format: data · źródło (zadanie/raport) · co zauważono · propozycja (zadanie / nic).
 
+- 2026-09-26 · review HA-2.12 · brand rules still map accessories into product nodes (Wiley X nose pads → 9.2.1, HIKMICRO lens caps → 3.3, Hawke mounts/caps → 03 parent); pistol pouches only partly split (rule format can't require two substrings) · candidate input for the AI-assisted catalogue tool, or excludeName on brand rules
 - 2026-09-26 · review HA-2.12 · tj: narzędzie do katalogu wspomagane AI (offline, nie w czasie importu): proponuje działy Hydry dla niezmapowanych produktów, uzupełnia braki jak brakujący EAN, przesyła niepewne przypadki do klienta do decyzji; zatwierdzone wyniki stają się danymi deterministycznymi. Szersze niż kategoryzacja — zaplanować jako osobne zadanie.
 - 2026-09-26 · HA-2.12 · analiza pełnego feedu Kolby pokazała, że część nazw produktów to towar spoza asortymentu obronnego/outdoorowego (wędzarnie, żywność typu gulasz/baton, medale, maskotki, breloki) — to nie jest problem kategoryzacji (te produkty nie trafiają do żadnego działu Hydry i tak), ale sygnał, że filtr asortymentu może kiedyś potrzebować dodatkowej reguły „nie nasz towar" niezależnej od drzewa kategorii · nic teraz — obserwować przy HA-2.15 (import na serwerze)
 - 2026-09-26 · review HA-2.12 · Opinel w `kolba_brands` mapuje też noże kuchenne (nie tylko taktyczne/survivalowe) do „13” — poprawny dział drzewa, ale inny segment rynku niż reszta asortymentu Hydry; podobnie jak wpis wyżej, to kwestia dopasowania asortymentu, nie kategoryzacji · nic teraz
