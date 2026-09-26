@@ -60,6 +60,7 @@ import type { NormalizedProduct } from '../xml-integration/types';
 import { filterProduct } from '../xml-integration/assortment-filter';
 import { ASSORTMENT_RULES } from '../xml-integration/assortment-rules';
 import { HydraTreeFromTxt } from '../xml-integration/hydra-tree-txt';
+import { ruleMatches, type CategoryRule } from '../xml-integration/category-rules';
 
 const CONNECTOR_NAMES = ['kolba', 'sharg', 'spechurt'] as const;
 type ConnectorName = (typeof CONNECTOR_NAMES)[number];
@@ -222,12 +223,6 @@ const AGE_18_BRANCH = '15';  // gaz / pałki / paralizatory → tag age_18
 type StatusTag = 'auto' | 'review' | 'flag';
 const IMPORT_OWNED_TAGS = new Set<string>(['auto', 'review', 'flag', 'age_18']);
 
-interface CategoryRule {
-  match: { attr?: string; value?: string; name?: string };
-  cat: string;
-  review?: boolean; // force `review` even when cat is a leaf (unsure rule)
-}
-
 interface CategoryMapFile {
   spechurt?: Record<string, string>;
   sharg?: Record<string, string>;
@@ -277,19 +272,6 @@ function loadJson<T>(file: string, hint: string): T {
     process.exit(1);
   }
   return JSON.parse(fs.readFileSync(file, 'utf8')) as T;
-}
-
-function ruleMatches(rule: CategoryRule, p: NormalizedProduct): boolean {
-  const { attr, value, name } = rule.match;
-  if (!attr && !name) return false; // empty rule never matches
-
-  if (attr) {
-    const attrValue = p.features[attr];
-    if (attrValue === undefined) return false;
-    if (value && !attrValue.toLowerCase().includes(value.toLowerCase())) return false;
-  }
-  if (name && !p.name.toLowerCase().includes(name.toLowerCase())) return false;
-  return true;
 }
 
 interface ResolvedCategory {

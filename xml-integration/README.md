@@ -49,7 +49,7 @@ npx tsx scripts/xml-import.ts sharg:incremental
 
 | Connector | URL type | Products | Status | Notes |
 |---|---|---|---|---|
-| **Kolba** | Simple XML | ~thousands | ✅ Ready | No images in feed. Many products are bundles ("3 x ..."). |
+| **Kolba** | Simple XML | ~13,900 | ✅ Ready | No images in feed. Many products are bundles ("3 x ..."). Categorisation: deterministic rules in `category-map.json` (HA-2.12) cover ~55% of the feed; ASG/archery/hunting have no Hydra branch yet (O-20) and stay unmapped. |
 | **Sharg** | IOF 3.0 | 8,381 | ✅ Ready | Three feed types. Has images, variants (sizes), change feeds. |
 | **Spechurt** | HEAVY (custom) | ~6,200 | ✅ Ready | Access works only from the whitelisted import server (51.83.134.183) — from the Mac it returns ERR105. Preview it locally with `--from-file` (below) using a file fetched on the server. Import/sync from the server → HA-2.15. |
 

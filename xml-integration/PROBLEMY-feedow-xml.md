@@ -28,7 +28,7 @@
 | # | Problem | Skala (pełny plik) | Skutek | Czyja akcja |
 |---|---|---|---|---|
 | 1 | **Rozmiar 62,8 MB** | 13 687 produktów | Nie przejdzie przez Automatyzer (limit 10 MB) ani web_fetch; pobieranie musi być **strumieniowe po stronie serwera**; cron ściąga 62 MB/dobę | My (konektor) |
-| 2 | **Brak kategorii** | 100% | Kategoryzacja w całości po naszej stronie | My (drzewo + reguły) |
+| 2 | **Brak kategorii w feedzie** | 100% (feed nie ma kategorii) | Kategoryzacja w całości po naszej stronie — HA-2.12 (2026-09-26): deterministyczne reguły w `category-map.json` (marka, atrybut, słowa w nazwie) pokrywają ~55% pełnego feedu (13 878 produktów); reszta trafia do „00. DO PRZYPISANIA" (m.in. ASG/łucznictwo/myślistwo — brak gałęzi w drzewie, O-20) | My (drzewo + reguły) |
 | 3 | **Brak stawki VAT** | 100% | Trzeba przyjąć domyślną (23%) lub mapować | My |
 | 4 | **EAN pusty** | 2 789 = **14%** | Brak klucza → ryzyko duplikatów | My + (klient: czy Kolba uzupełni EAN?) |
 | 5 | **Brak ceny zakupu** (`cena_brutto_hurt` 0/pusta) | 1 001 = **~7%** | Nie da się policzyć ceny sprzedaży | My + klient |
