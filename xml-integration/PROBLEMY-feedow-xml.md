@@ -41,16 +41,23 @@
 
 ---
 
-## SPECHURT (plik HEAVY) — najpierw w ogóle brak dostępu
+## SPECHURT (plik HEAVY) — dostęp działa z serwera 51.83.134.183, z Maca ERR105
+
+> Zweryfikowane na realnym pliku 2026-09-26 (z serwera 51.83.134.183, 17 MB, 6 188 `<produkt>`):
+> parser sparsował wszystkie 6 188 pozycji bez błędów (`diff = 0`). Puste EAN: 413 (6,7%),
+> zerowy/pusty stan: 1 578 (25,5%), pusta/zerowa cena zakupu: 0. Pola tekstowe to plain text
+> z HTML zescapowanym encjami, **nie CDATA** (0 wystąpień w pliku) — dokumentacja poniżej i w
+> `SCHEMAS.md`/`connectors/spechurt.ts` była w tym błędna, poprawiono w HA-2.11. Liczba
+> produktów niższa niż w imporcie z lipca (6 854) — zmiana po stronie dostawcy, nie zbadana
+> dalej (poza zakresem HA-2.11).
 
 | # | Problem | Skutek | Czyja akcja |
 |---|---|---|---|
-| 1 | **Brak dostępu — whitelista IP** — `ERR105` zweryfikowane 2× z dwóch różnych IP (83.25.13.208 oraz 37.31.147.160 z przeglądarki) | Nie mamy ani jednego realnego rekordu — feed nigdy nie pobrany, z żadnego naszego IP | **Klient → SPECHURT:** zgłosić docelowe stałe IP (lub IP BaseLinkera) na whitelistę |
+| 1 | **Dostęp działa tylko z serwera 51.83.134.183 (whitelista IP)** — z Maca (i każdego innego IP) `ERR105` | Podgląd/import lokalny wymaga pliku pobranego na serwerze i skopiowanego na Maca (`--from-file`, patrz README) | Zamknięte — HA-2.11. Import/cron na serwerze → HA-2.15 |
 | 2 | **Stan generowany raz na dobę** (3:00–4:00) | Brak stanów w czasie zbliskim rzeczywistemu → ryzyko przesprzedaży | My (bufor bezpieczeństwa) |
-| 3 | **EAN opcjonalny** („jeśli produkt go posiada") | Część bez klucza EAN | My (fallback na SKU) |
+| 3 | **EAN opcjonalny** — 6,7% pustych na realnym pliku | Część bez klucza EAN | My (fallback na SKU) |
 | 4 | Pole **`kzs` wycofywane** | Nie opierać klucza na `kzs` | My |
-| 5 | **Ceny tylko brutto**; brak deklaracji kodowania w odpowiedzi | Netto trzeba liczyć z VAT; pilnować UTF-8 | My |
-| 6 | Literówki/niespójności w dokumentacji (`wariant_wariant_stan_magazynowy`, urwane tagi) | Realny plik trzeba zwalidować po pierwszym pobraniu | My (walidacja) |
+| 5 | **Ceny tylko brutto** | Netto trzeba liczyć z VAT | My |
 
 ---
 
@@ -64,6 +71,6 @@
 ## Co blokuje start (skrót dla klienta)
 
 1. **Sharg** — działa (zweryfikowane); potwierdzić tylko, że pobieranie automatyczne/serwerowe jest dozwolone (cron).
-2. **SPECHURT** — zgłosić IP na whitelistę (potwierdzone: blokuje każde nasze IP).
+2. **SPECHURT** — dostęp działa z serwera 51.83.134.183 (whitelista IP potwierdzona); z Maca nadal ERR105. Podgląd lokalny → `--from-file` (HA-2.11); import/cron na serwerze → HA-2.15.
 3. **Kolba** — plik publiczny, ale 62,8 MB → pobieranie strumieniowe po naszej stronie (Automatyzer odpada, limit 10 MB); braki kategorii/VAT/EAN do obsłużenia w mapowaniu.
 4. Wspólnie: reguła marży, kto robi przegląd produktów (kategorie/wiek/licencje).

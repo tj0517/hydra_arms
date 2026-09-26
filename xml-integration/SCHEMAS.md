@@ -116,19 +116,19 @@ Feed całej hurtowni (militaria + fitness/uroda itd. — **filtrować do defence
 ## 3. SPECHURT — plik HEAVY
 
 **Root:** `<produkty generated="...">` → `<produkt>`
-**Dostęp:** whitelista IP (serwer 51.83.134.183). Odświeżanie co ~3 h.
-**Cechy:** ceny tylko brutto; `kzs` wycofywane; warianty rozpisane (z per-wariant stanem).
+**Dostęp:** działa z serwera 51.83.134.183 (whitelista IP); z Maca ERR105. Odświeżanie co ~3 h.
+**Cechy:** ceny tylko brutto; `kzs` wycofywane; warianty rozpisane (z per-wariant stanem); pola tekstowe to plain text z HTML zescapowanym encjami (`&lt;p&gt;...&lt;/p&gt;`), **nie CDATA** — zweryfikowane na realnym pliku 2026-09-26 (0 wystąpień CDATA w 17 MB).
 
 ```xml
-<produkty generated="2026-07-20 15:02:56">
+<produkty generated="2026-09-26 12:02:47">
   <produkt>
     <id>171</id>
     <sku>171</sku>                                <!-- = id -->
     <kzs>1197002035587</kzs>                       <!-- WYCOFYWANY -->
     <ean>022886426026</ean>
-    <producent><![CDATA[Condor]]></producent>
-    <nazwa><![CDATA[Condor - Pas taktyczny Rigger Belt - Czarny - RB-002]]></nazwa>
-    <dlugi_opis><![CDATA[...]]></dlugi_opis>
+    <producent>Condor</producent>
+    <nazwa>Condor - Pas taktyczny Rigger Belt - Czarny - RB-002</nazwa>
+    <dlugi_opis>&lt;p&gt;...&lt;/p&gt;</dlugi_opis>
     <kategoria>A/B/C</kategoria>
     <waga>0.35</waga>                              <!-- kg -->
     <zdjecia>

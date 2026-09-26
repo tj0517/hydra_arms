@@ -17,6 +17,9 @@
  *                       (updateInventoryProductsStock/Prices, batched — run often)
  *   --dry-run         — preview admitted/dropped counts per supplier and Hydra section,
  *                       no BL writes, no HA_ALLOW_PROD required
+ *   --from-file=<connector>:<path> — dry-run only: read that connector's feed from a
+ *                       local file instead of fetching it (e.g. Spechurt, IP-whitelisted
+ *                       to the import server — see xml-integration/README.md)
  *
  * Key behaviours:
  *   - Upsert key: EAN first, fallback SKU — no duplicates across runs
@@ -382,18 +385,25 @@ function toBLProduct(
 
 // ── Fetch + parse feed via connector ──────────────────────────────────────────
 
-async function fetchAndParse(connectorName: ConnectorName): Promise<NormalizedProduct[]> {
+async function fetchAndParse(connectorName: ConnectorName, fromFilePath?: string): Promise<NormalizedProduct[]> {
   // Dynamic import: connector configs build feed URLs from env at module load,
   // so dotenv must run first
   const { connectors } = await import('../xml-integration/connectors');
   const connector = connectors[connectorName];
 
-  const url = connector.config.xml_url;
-  console.log(`\nFetching feed: ${url.split('?')[0]}…`);
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Feed fetch failed: HTTP ${res.status} ${res.statusText}`);
-  const xml = await res.text();
-  console.log(`Received ${(xml.length / 1024 / 1024).toFixed(1)} MB`);
+  let xml: string;
+  if (fromFilePath) {
+    console.log(`\nReading feed from file: ${fromFilePath}…`);
+    xml = fs.readFileSync(fromFilePath, 'utf8');
+    console.log(`Read ${(xml.length / 1024 / 1024).toFixed(1)} MB`);
+  } else {
+    const url = connector.config.xml_url;
+    console.log(`\nFetching feed: ${url.split('?')[0]}…`);
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Feed fetch failed: HTTP ${res.status} ${res.statusText}`);
+    xml = await res.text();
+    console.log(`Received ${(xml.length / 1024 / 1024).toFixed(1)} MB`);
+  }
 
   const products = connector.parse(xml);
   console.log(`Parsed ${products.length} products`);
@@ -699,7 +709,11 @@ const SECTION_LABELS: Record<string, string> = {
   '0':  'DO PRZYPISANIA',
 };
 
-async function runDryRun(connectors: readonly ConnectorName[], limit: number | null): Promise<void> {
+async function runDryRun(
+  connectors: readonly ConnectorName[],
+  limit: number | null,
+  fromFile: { connector: ConnectorName; path: string } | null,
+): Promise<void> {
   const { inventoryId, hydraWarehouseId } = loadDryRunEnv();
 
   if (!hydraWarehouseId) {
@@ -738,9 +752,10 @@ async function runDryRun(connectors: readonly ConnectorName[], limit: number | n
 
   for (const connectorName of connectors) {
     console.log(`\n─── ${connectorName.toUpperCase()} ───`);
+    const filePath = fromFile && fromFile.connector === connectorName ? fromFile.path : undefined;
     const products = limit !== null
-      ? (await fetchAndParse(connectorName)).slice(0, limit)
-      : await fetchAndParse(connectorName);
+      ? (await fetchAndParse(connectorName, filePath)).slice(0, limit)
+      : await fetchAndParse(connectorName, filePath);
 
     // Fetch Hydra own-stock for matched products in this feed
     const hydraStockById = new Map<number, number>();
@@ -868,6 +883,28 @@ async function main() {
   const limitFlag = flags.find((f) => f.startsWith('--limit='));
   const limit = limitFlag ? parseInt(limitFlag.split('=')[1], 10) : null;
 
+  const fromFileFlag = flags.find((f) => f.startsWith('--from-file='));
+  if (fromFileFlag && !isDryRun) {
+    console.error('[error] --from-file is only valid together with --dry-run');
+    process.exit(1);
+  }
+  let fromFile: { connector: ConnectorName; path: string } | null = null;
+  if (fromFileFlag) {
+    const raw = fromFileFlag.slice('--from-file='.length);
+    const sepIdx = raw.indexOf(':');
+    const connectorRaw = sepIdx >= 0 ? raw.slice(0, sepIdx) : '';
+    const filePath = sepIdx >= 0 ? raw.slice(sepIdx + 1) : '';
+    if (!connectorRaw || !CONNECTOR_NAMES.includes(connectorRaw as ConnectorName)) {
+      console.error(`[error] --from-file=<connector>:<path> — unknown connector "${connectorRaw}" (expected: ${CONNECTOR_NAMES.join('|')})`);
+      process.exit(1);
+    }
+    if (!filePath || !fs.existsSync(filePath)) {
+      console.error(`[error] --from-file: file not found: "${filePath}"`);
+      process.exit(1);
+    }
+    fromFile = { connector: connectorRaw as ConnectorName, path: filePath };
+  }
+
   if (isDryRun) {
     const connectorArg = positional[0] as ConnectorName | undefined;
     const connectors: readonly ConnectorName[] =
@@ -878,7 +915,8 @@ async function main() {
     console.log(`\nXML → BaseLinker (dry-run)`);
     console.log(`  connectors: ${connectors.join(', ')}`);
     if (limit !== null) console.log(`  limit     : ${limit} products per supplier`);
-    await runDryRun(connectors, limit);
+    if (fromFile) console.log(`  from-file : ${fromFile.connector} ← ${fromFile.path}`);
+    await runDryRun(connectors, limit, fromFile);
     return;
   }
 
@@ -888,12 +926,13 @@ async function main() {
   if (!connectorName || !CONNECTOR_NAMES.includes(connectorName) || !['import', 'sync'].includes(mode)) {
     console.error('Usage:');
     console.error('  npx tsx scripts/xml-to-baselinker.ts <kolba|sharg|spechurt> [import|sync] [--limit=N]');
-    console.error('  npx tsx scripts/xml-to-baselinker.ts [<connector>] --dry-run [--limit=N]');
+    console.error('  npx tsx scripts/xml-to-baselinker.ts [<connector>] --dry-run [--limit=N] [--from-file=<connector>:<path>]');
     console.error('');
     console.error('  import   (default) — full upsert into BL catalogue (slow, run rarely)');
     console.error('  sync               — stock + price refresh only (batched, run often)');
     console.error('  --dry-run          — preview admitted/dropped counts, no BL writes');
     console.error('  --limit=N          — limit to N products per supplier');
+    console.error('  --from-file=<connector>:<path> — read that connector\'s feed from disk instead of fetching (--dry-run only)');
     process.exit(1);
   }
 

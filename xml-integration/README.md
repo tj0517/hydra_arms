@@ -13,7 +13,8 @@ xml-integration/
   connectors/
     kolba.ts            Kolba B2B parser
     sharg.ts            Sharg IOF 3.0 parser (full + light + gateway)
-    spechurt.ts         Spechurt stub (BLOCKED — IP whitelist needed)
+    spechurt.ts         Spechurt parser — feed only reachable from the whitelisted
+                         import server (51.83.134.183); ERR105 from the Mac
     index.ts            Connector registry
   samples/              Raw XML samples saved during development (gitignored)
   README.md             This file
@@ -23,8 +24,12 @@ xml-integration/
 
 ## Running imports
 
+> ⚠ This section documents `scripts/xml-import.ts` (the deprecated `xml-integration/engine.ts`
+> path — see O-18 in `docs/deferred-tasks.md`). The current pipeline is
+> `scripts/xml-to-baselinker.ts` (see CLAUDE.md and "Spechurt access" below).
+
 ```bash
-# All active connectors (skips spechurt until IP whitelisted)
+# All active connectors
 npx tsx scripts/xml-import.ts
 
 # Single connector
@@ -46,7 +51,7 @@ npx tsx scripts/xml-import.ts sharg:incremental
 |---|---|---|---|---|
 | **Kolba** | Simple XML | ~thousands | ✅ Ready | No images in feed. Many products are bundles ("3 x ..."). |
 | **Sharg** | IOF 3.0 | 8,381 | ✅ Ready | Three feed types. Has images, variants (sizes), change feeds. |
-| **Spechurt** | Unknown | ? | ⛔ Blocked | IP 83.25.13.208 not whitelisted. Contact Spechurt. |
+| **Spechurt** | HEAVY (custom) | ~6,200 | ✅ Ready | Access works only from the whitelisted import server (51.83.134.183) — from the Mac it returns ERR105. Preview it locally with `--from-file` (below) using a file fetched on the server. Import/sync from the server → HA-2.15. |
 
 ---
 
@@ -150,12 +155,30 @@ The engine handles the rest — matching, deduplication, review flags, locking.
 
 ---
 
-## Spechurt unblocking
+## Spechurt access
 
-Error received: `[ ERR105 ] - Błędny klucz API lub adres IP`
-Our IP: `83.25.13.208`
+The feed (`https://b2b.spechurt.pl/xml_heavy_export.php?key=...`) only answers requests
+from the whitelisted import server (51.83.134.183, alias `hydra-srv`). From the Mac (or
+any other IP) it returns `[ ERR105 ] - Błędny klucz API lub adres IP`, an HTML error page,
+not the feed. This has been true since access was first requested; it is not a bug to fix
+here. Import/sync running from the server itself is HA-2.15.
 
-Steps:
-1. Email Spechurt support asking them to whitelist this IP
-2. Once whitelisted, download sample and implement `connectors/spechurt.ts`
-3. Remove the `throw` in the connector's `parse()` method
+To preview Spechurt locally without server access, fetch the current file on the server
+and read it from disk with `--dry-run --from-file` (see below).
+
+### Dry-run preview from a local file (`--from-file`)
+
+`scripts/xml-to-baselinker.ts --dry-run` normally fetches every connector's feed over the
+network. `--from-file=<connector>:<path>` reads that one connector's feed from a local file
+instead — useful for Spechurt, whose feed can't be fetched from the Mac. Only valid together
+with `--dry-run`; everything else (filter, category mapping, the read-only BaseLinker
+own-stock lookup when `BASELINKER_WAREHOUSE_HYDRA` is set) behaves exactly as in a normal
+dry-run. Does not require `SPECHURT_KEY`.
+
+```bash
+# 1. On the server (you fetch it — see docs/tasks/HA-2.11.md for the exact commands):
+#    ssh hydra-srv; curl the feed to a file; scp it to the Mac, outside the repo.
+
+# 2. Preview it locally:
+npx tsx scripts/xml-to-baselinker.ts spechurt --dry-run --from-file=spechurt:~/Downloads/spechurt-2026-09-26.xml
+```
