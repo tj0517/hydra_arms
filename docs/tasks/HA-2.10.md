@@ -1,7 +1,7 @@
 ---
 id: HA-2.10
 title: Filtry katalogu dla podkategorii P1
-status: review
+status: done
 difficulty: L
 model: claude-sonnet-5
 model_approved: null
@@ -59,3 +59,4 @@ cron `/api/shop/sync` (upsert z nieistniejącym polem). Kolejność:
 - 2026-09-30: PR #25 — filtry uniwersalne (marka, dostawa) gotowe i przetestowane lokalnie; filtry kluczowe i próg pokrycia czekają na decyzję tj (patrz raport w sesji) i O-22
 - 2026-09-30 tj: filtry kluczowe odłożone w całości — pokrycie danymi ~0% we wszystkich działach w zakresie (prod i próbki feedów), nie ma czego filtrować; wrócić po realnym imporcie BL, który wypełni `features`/`brand` dla tych działów. Próg liczbowy niepotrzebny na razie.
 - 2026-09-30 tj: review rundy 1 (PR #25) — zaakceptowane z poprawkami: kolejność wdrożenia (migracja na prod → weryfikacja → merge, patrz sekcja wyżej), log błędu zapytania produktów zamiast cichego połykania, `brand` na stronie produktu (regresja — sync usuwa „Marka"/„Producent" z `features`, a `ProductDetailClient.tsx` nie renderował `brand`), higiena `INDEX.md`/frontmatter. Runda 2 w toku na tym samym branchu.
+- 2026-09-30 tj: odebrane (PR #25). Udowodnione: filtry marka i dostawa (e2e + red proofs: nieznane marka/dostawa ignorowane, produkt z odbiorem nie wchodzi pod wysyłkę), Producent na stronie produktu, brak nowych kolumn spoza PUBLIC_PRODUCT_COLUMNS, działy 01/02/15 w deferred (O-22). Filtry kluczowe odłożone (pokrycie ~0%). Kolejność: migracja 014 na prod przed merge'em. Model: Sonnet medium (prompt zakładał Opus high).
