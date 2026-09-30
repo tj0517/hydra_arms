@@ -151,6 +151,36 @@ export function getWarehouseStock(stock: Record<string, number>): number {
 }
 
 /**
+ * BL text_fields.features keys that hold a brand/manufacturer name.
+ * Kolba's feed carries a "Producent" attribute alongside (and distinct from)
+ * "Marka" — the latter is stripped before import (used only for category
+ * resolution, see xml-to-baselinker.ts), so "Producent" is what actually
+ * reaches BL's features today. Checked in this order; first match wins.
+ */
+const BRAND_FEATURE_KEYS = ['Marka', 'Producent'] as const;
+
+/**
+ * Split a brand/manufacturer name out of BL's free-text features map, so it
+ * can live in its own `shop_products.brand` column instead of only inside
+ * the untyped `features` JSON (HA-2.10). Returns the remaining features with
+ * the brand key(s) removed, or null if nothing is left.
+ */
+export function extractBrand(
+  features: Record<string, string> | null | undefined,
+): { brand: string | null; features: Record<string, string> | null } {
+  if (!features) return { brand: null, features: null };
+  const rest = { ...features };
+  let brand: string | null = null;
+  for (const key of BRAND_FEATURE_KEYS) {
+    if (rest[key]) {
+      brand = brand ?? rest[key];
+      delete rest[key];
+    }
+  }
+  return { brand, features: Object.keys(rest).length > 0 ? rest : null };
+}
+
+/**
  * Add or update a single product in a BL inventory (full import path — slow, rate-limited).
  * Pass `productId` to update an existing product instead of creating a new one.
  * Per BL docs the product fields (sku, ean, prices, stock, text_fields, images, …)

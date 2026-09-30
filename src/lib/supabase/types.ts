@@ -81,6 +81,8 @@ export interface Database {
           // ── Shipping (migration 004) ─────────────────────────────────────
           dimensions: { l: number; w: number; h: number } | null;
           shipping_class: string;
+          // ── Filters (migration 014) ──────────────────────────────────────
+          brand: string | null;
         };
         Insert: {
           id: number;
@@ -124,6 +126,7 @@ export interface Database {
           meta_description?: string | null;
           dimensions?: { l: number; w: number; h: number } | null;
           shipping_class?: string;
+          brand?: string | null;
         };
         Update: {
           id?: number;
@@ -167,6 +170,7 @@ export interface Database {
           meta_description?: string | null;
           dimensions?: { l: number; w: number; h: number } | null;
           shipping_class?: string;
+          brand?: string | null;
         };
         Relationships: [];
       };

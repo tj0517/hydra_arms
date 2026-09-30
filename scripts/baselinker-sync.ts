@@ -21,6 +21,7 @@ import {
   getProductsData,
   getPrice,
   getWarehouseStock,
+  extractBrand,
 } from '../src/lib/baselinker/client';
 import { filterHydraCategories } from '../src/lib/shop/categoryFilter';
 
@@ -95,6 +96,7 @@ async function syncProducts() {
         ? 'pickup_only'
         : 'standard';
 
+      const { brand, features } = extractBrand(p.text_fields.features);
       return {
         id,
         inventory_id: INVENTORY_ID,
@@ -102,7 +104,8 @@ async function syncProducts() {
         ean: p.ean || null,
         name: p.text_fields.name,
         description: p.text_fields.description ?? null,
-        features: p.text_fields.features ?? null,
+        features,
+        brand,
         price: getPrice(p.prices),
         tax_rate: p.tax_rate,
         stock: Math.max(0, getWarehouseStock(p.stock)),

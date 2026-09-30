@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import type { ShopProduct, ShopCategory } from '@/lib/supabase/types';
+import { mustPickup } from '@/lib/shop/cartAnalysis';
 import ProductCard from './ProductCard';
 import CartDrawer from './CartDrawer';
 
@@ -56,6 +57,17 @@ function useDebounce<T>(value: T, delay: number): T {
 
 const PAGE_SIZE = 24;
 
+// URL value ↔ label for the universal "shippable / pickup only" filter (dostawa=).
+// Values are the known set the ?dostawa= param is validated against.
+type DeliveryMode = 'wysylka' | 'odbior';
+const DELIVERY_MODE_LABELS: Record<DeliveryMode, string> = {
+  wysylka: 'Wysyłka kurierem',
+  odbior: 'Tylko odbiór osobisty',
+};
+function isDeliveryMode(v: string | null): v is DeliveryMode {
+  return v === 'wysylka' || v === 'odbior';
+}
+
 export default function SklepClient({ products, categories }: SklepClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -73,6 +85,16 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
   );
   // selectedSpecs: { [specKey]: string[] } — multi-select per key, OR within key, AND between keys
   const [selectedSpecs, setSelectedSpecs] = useState<Record<string, string[]>>({});
+  // Universal filters (HA-2.10). Validated against the known set on read — an
+  // unknown ?marka=/?dostawa= value is dropped rather than applied.
+  const [selectedBrand, setSelectedBrand] = useState<string | null>(() => {
+    const v = searchParams.get('marka');
+    if (!v) return null;
+    return products.some(p => p.brand === v) ? v : null;
+  });
+  const [deliveryMode, setDeliveryMode] = useState<DeliveryMode | null>(
+    () => { const v = searchParams.get('dostawa'); return isDeliveryMode(v) ? v : null; }
+  );
   const [page, setPage] = useState(1);
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [desktopPanelOpen, setDesktopPanelOpen] = useState(true);
@@ -104,9 +126,11 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
     if (priceMin) params.set('min', priceMin);
     if (priceMax) params.set('max', priceMax);
     if (sortBy !== 'name_asc') params.set('sort', sortBy);
+    if (selectedBrand) params.set('marka', selectedBrand);
+    if (deliveryMode) params.set('dostawa', deliveryMode);
     const qs = params.toString();
     router.replace(`?${qs}`, { scroll: false });
-  }, [selectedCategory, search, onlyInStock, priceMin, priceMax, sortBy, router]);
+  }, [selectedCategory, search, onlyInStock, priceMin, priceMax, sortBy, selectedBrand, deliveryMode, router]);
 
   // ── Derived structures ──────────────────────────────────────────────────
   const tree = useMemo(() => buildTree(categories), [categories]);
@@ -192,6 +216,34 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
       }));
   }, [products, selectedCategory, allDescendants, search, onlyInStock, priceMin, priceMax]);
 
+  // ── Available brands ─────────────────────────────────────────────────────
+  // Universal filter (HA-2.10) — unlike spec filters, shown shop-wide, not
+  // gated on a selected category. Narrowed by every other active filter
+  // except brand itself, so the currently selected brand never disappears.
+  const availableBrands = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const pMin = priceMin !== '' ? parseFloat(priceMin) : null;
+    const pMax = priceMax !== '' ? parseFloat(priceMax) : null;
+    const desc = selectedCategory !== null ? (allDescendants.get(selectedCategory) ?? []) : [];
+    const catIds = selectedCategory !== null ? new Set([selectedCategory, ...desc]) : null;
+
+    const counts = new Map<string, number>();
+    for (const p of products) {
+      if (!p.brand) continue;
+      if (catIds && !catIds.has(p.category_id as number)) continue;
+      if (q && !p.name.toLowerCase().includes(q) && !(p.sku?.toLowerCase().includes(q) ?? false)) continue;
+      if (onlyInStock && p.stock <= 0) continue;
+      if (pMin !== null && (p.price === null || p.price < pMin)) continue;
+      if (pMax !== null && (p.price === null || p.price > pMax)) continue;
+      if (deliveryMode === 'wysylka' && mustPickup(p)) continue;
+      if (deliveryMode === 'odbior' && !mustPickup(p)) continue;
+      counts.set(p.brand, (counts.get(p.brand) ?? 0) + 1);
+    }
+    return Array.from(counts.entries())
+      .sort((a, b) => a[0].localeCompare(b[0], 'pl'))
+      .map(([brand, count]) => ({ brand, count }));
+  }, [products, selectedCategory, allDescendants, search, onlyInStock, priceMin, priceMax, deliveryMode]);
+
   // ── Filter + sort in one memo ───────────────────────────────────────────
   const filteredAndSorted = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -211,6 +263,9 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
       if (onlyInStock && p.stock <= 0) return false;
       if (pMin !== null && (p.price === null || p.price < pMin)) return false;
       if (pMax !== null && (p.price === null || p.price > pMax)) return false;
+      if (selectedBrand && p.brand !== selectedBrand) return false;
+      if (deliveryMode === 'wysylka' && mustPickup(p)) return false;
+      if (deliveryMode === 'odbior' && !mustPickup(p)) return false;
       // Spec filter: OR within key, AND between keys
       for (const [key, selectedValues] of activeSpecEntries) {
         const specVal = p.features?.[key];
@@ -231,7 +286,7 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
       default:
         return filtered;
     }
-  }, [products, selectedCategory, search, allDescendants, onlyInStock, priceMin, priceMax, sortBy, selectedSpecs]);
+  }, [products, selectedCategory, search, allDescendants, onlyInStock, priceMin, priceMax, sortBy, selectedSpecs, selectedBrand, deliveryMode]);
 
   const totalPages = Math.ceil(filteredAndSorted.length / PAGE_SIZE);
   const paginated = filteredAndSorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -247,7 +302,8 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
   // Badge counts
   const activeSpecCount = Object.values(selectedSpecs).filter(vals => vals.length > 0).length;
   const activeFilterCount =
-    [onlyInStock, priceMinInput !== '', priceMaxInput !== ''].filter(Boolean).length + activeSpecCount;
+    [onlyInStock, priceMinInput !== '', priceMaxInput !== '', selectedBrand !== null, deliveryMode !== null]
+      .filter(Boolean).length + activeSpecCount;
 
   function selectCategory(id: number | null) {
     setSelectedCategory(id);
@@ -263,6 +319,8 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
     setPriceMaxInput('');
     setSortBy('name_asc');
     setSelectedSpecs({});
+    setSelectedBrand(null);
+    setDeliveryMode(null);
     setPage(1);
   }
 
@@ -274,6 +332,8 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
     setPriceMaxInput('');
     setSortBy('name_asc');
     setSelectedSpecs({});
+    setSelectedBrand(null);
+    setDeliveryMode(null);
     setPage(1);
   }
 
@@ -426,6 +486,8 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
               setPriceMinInput('');
               setPriceMaxInput('');
               setSelectedSpecs({});
+              setSelectedBrand(null);
+              setDeliveryMode(null);
               setPage(1);
             }}
             className="font-[var(--font-mono)] text-[9px] text-text-dim/50 hover:text-accent transition-colors tracking-widest"
@@ -445,6 +507,49 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
           label="Tylko dostępne"
         />
       </div>
+
+      {/* Delivery mode — universal filter (HA-2.10), derived from mustPickup() */}
+      <div>
+        <p className="font-[var(--font-mono)] text-[10px] text-text-dim/40 tracking-[0.3em] uppercase mb-2.5">Dostawa</p>
+        <div className="space-y-1.5">
+          {(Object.keys(DELIVERY_MODE_LABELS) as DeliveryMode[]).map(mode => (
+            <CheckRow
+              key={mode}
+              checked={deliveryMode === mode}
+              onToggle={() => { setDeliveryMode(prev => (prev === mode ? null : mode)); setPage(1); }}
+              label={DELIVERY_MODE_LABELS[mode]}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Brand — universal filter (HA-2.10), shop-wide (not category-gated) */}
+      {availableBrands.length > 0 && (
+        <div>
+          <div className="flex items-center justify-between mb-2.5">
+            <p className="font-[var(--font-mono)] text-[10px] text-text-dim/40 tracking-[0.3em] uppercase">Marka</p>
+            {selectedBrand !== null && (
+              <button
+                onClick={() => { setSelectedBrand(null); setPage(1); }}
+                className="font-[var(--font-mono)] text-[9px] text-text-dim/40 hover:text-accent transition-colors tracking-widest"
+              >
+                WYCZYŚĆ
+              </button>
+            )}
+          </div>
+          <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+            {availableBrands.map(({ brand, count }) => (
+              <CheckRow
+                key={brand}
+                checked={selectedBrand === brand}
+                onToggle={() => { setSelectedBrand(prev => (prev === brand ? null : brand)); setPage(1); }}
+                label={brand}
+                badge={String(count)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Price range */}
       <div>

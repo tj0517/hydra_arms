@@ -1,12 +1,12 @@
 ---
 id: HA-2.10
 title: Filtry katalogu dla podkategorii P1
-status: todo
+status: in_progress
 difficulty: L
 model: null
 model_approved: null
 effort: null
-branch: null
+branch: feat/ha-2.10-p1-filters
 due: null
 depends_on: [HA-2.04]
 blocked_by_questions: []

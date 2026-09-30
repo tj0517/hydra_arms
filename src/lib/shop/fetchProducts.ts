@@ -19,6 +19,7 @@ export const PUBLIC_PRODUCT_COLUMNS = [
   'description',
   'short_description',
   'features',
+  'brand',
   'price',
   'price_compare',
   'tax_rate',
