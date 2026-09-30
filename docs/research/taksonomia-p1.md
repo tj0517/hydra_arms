@@ -13,7 +13,7 @@ Kolumny: Lp · Kategoria (arkusz) · Podkategoria · Hydra numer · Hydra nazwa 
 - Węzeł rodzic (np. `04`) → tag `review` w imporcie.
 
 
-> **Korekta 2026-09-29** (`analiza_popularnosci_kategorii_korekta.xlsx`, arkusz „Podkategorie - korekta”): klient przebudował broń palną, amunicję i broń czarnoprochową (nowe podkategorie wg mechanizmu działania), zmienił „Samoobrona” → „Akcesoria do samoobrony” (+ BAS), usunął „Kolekcjonerstwo i militaria”, dodał „Markery pneumatyczne (RAM)” i „Magazynki pozostałe”. Nowy arkusz nie ma kolumn P1/P2/P3 ani „Inspiracja rynkowa”. Wiersze oznaczone **[korekta]** są nieaktualne do czasu O-21/O-22/O-23 — mapowanie trzeba odtworzyć po odpowiedzi klienta.
+> **Korekta 2026-09-29** (`analiza_popularnosci_kategorii_korekta.xlsx`, arkusz „Podkategorie - korekta”): klient przebudował broń palną, amunicję i broń czarnoprochową (nowe podkategorie wg mechanizmu działania), zmienił „Samoobrona” → „Akcesoria do samoobrony” (+ BAS), usunął „Kolekcjonerstwo i militaria”, dodał „Markery pneumatyczne (RAM)” i „Magazynki pozostałe”. Nowy arkusz nie ma kolumn P1/P2/P3 ani „Inspiracja rynkowa”. Wiersze oznaczone **[korekta]** są nieaktualne do czasu O-22/O-23/O-24 — mapowanie trzeba odtworzyć po odpowiedzi klienta.
 
 ---
 
