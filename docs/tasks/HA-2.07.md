@@ -12,7 +12,7 @@ depends_on: [HA-2.03]
 blocked_by_questions: []
 touches_db: true
 touches_prod: false
-pr: null
+pr: 24
 ---
 
 ## Cel
