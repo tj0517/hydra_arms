@@ -9,7 +9,7 @@ effort: null
 branch: null
 due: null
 depends_on: [HA-2.03, HA-2.07]
-blocked_by_questions: [O-09, O-13]
+blocked_by_questions: [O-09]
 touches_db: false
 touches_prod: true
 pr: null
@@ -43,3 +43,4 @@ P24 weryfikuje sklep przed aktywacją: sprawdza pełną ścieżkę zamówienia, 
 - `docs/04-open-questions.md` → O-09, O-13
 
 ## Notatki z realizacji
+- 2026-09-30 tj: O-13 rozstrzygnięte — dane firmy są na stronie, zwroty w `legal/Regulamin sklepu.docx` (§ 6), opisy produktów z BaseLinkera.
