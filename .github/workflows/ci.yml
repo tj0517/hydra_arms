@@ -96,13 +96,19 @@ jobs:
         run: echo "SUPABASE_INTERNAL_IMAGE_REGISTRY=public.ecr.aws" >> "$GITHUB_ENV"
 
       # `npm run db:start` (supabase start -x studio,imgproxy,mailpit,logflare,vector,
-      # edge-runtime,realtime,storage-api,postgres-meta) only ever launches 4 containers:
-      # db (postgres), rest (postgrest), auth (gotrue), kong. Anonymous pulls of those 4
-      # images from shared GitHub runner IPs hit per-IP rate/data limits on both ghcr.io
-      # and public.ecr.aws (`toomanyrequests: Data limit exceeded`, seen 2026-09-30 on
-      # PRs #25 and #26) — caching them removes the job's dependency on either registry's
-      # limits, and a same-run fallback (public.ecr.aws -> ghcr.io -> docker.io) covers a
-      # cold cache without needing any secret or registry login.
+      # edge-runtime,realtime,storage-api,postgres-meta) launches 4 long-running
+      # containers (db/postgres, rest/postgrest, auth/gotrue, kong) — but `db:reset`
+      # right after it ALSO briefly runs one-shot migration containers for two of the
+      # *excluded* services (realtime, storage-api still apply their own schema
+      # migrations even though their long-running service never starts), confirmed by
+      # watching `docker events` through a full db:start + db:reset run with every
+      # Supabase image removed first. So 6 images total, not 4. Anonymous pulls of
+      # these from shared GitHub runner IPs hit per-IP rate/data limits on both
+      # ghcr.io and public.ecr.aws (`toomanyrequests: Data limit exceeded`, seen
+      # 2026-09-30 on PRs #25, #26 and this PR's own first run) — caching them removes
+      # the job's dependency on either registry's limits, and a same-run fallback
+      # (public.ecr.aws -> ghcr.io -> docker.io) covers a cold cache without needing
+      # any secret or registry login.
       - name: Determine Supabase Docker images
         id: images
         run: |
@@ -115,6 +121,8 @@ jobs:
             "supabase/postgrest:v14.5"
             "supabase/gotrue:v2.188.1"
             "supabase/kong:2.8.1"
+            "supabase/realtime:v2.73.2"
+            "supabase/storage-api:v1.54.0"
           )
           printf '%s\n' "${IMAGES[@]}" > /tmp/supabase-images.list
           HASH=$(md5sum /tmp/supabase-images.list | cut -d' ' -f1)
