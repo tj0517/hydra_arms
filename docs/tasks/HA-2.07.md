@@ -9,7 +9,7 @@ effort: null
 branch: null
 due: null
 depends_on: [HA-2.03]
-blocked_by_questions: [O-13]
+blocked_by_questions: []
 touches_db: false
 touches_prod: false
 pr: null
@@ -42,3 +42,4 @@ Klient po zakupie nie dostaje żadnego maila, a sklep z płatnościami musi potw
 - HA-2.03 (notify P24)
 
 ## Notatki z realizacji
+- 2026-09-30 tj: O-13 rozstrzygnięte — dane firmy są na stronie, zwroty w `legal/Regulamin sklepu.docx` (§ 6), opisy produktów z BaseLinkera.

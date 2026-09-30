@@ -12,6 +12,9 @@ Kolumny: Lp · Kategoria (arkusz) · Podkategoria · Hydra numer · Hydra nazwa 
 - `brak` = brak odpowiadającego węzła w drzewie 01–15.  
 - Węzeł rodzic (np. `04`) → tag `review` w imporcie.
 
+
+> **Korekta 2026-09-29** (`analiza_popularnosci_kategorii_korekta.xlsx`, arkusz „Podkategorie - korekta”): klient przebudował broń palną, amunicję i broń czarnoprochową (nowe podkategorie wg mechanizmu działania), zmienił „Samoobrona” → „Akcesoria do samoobrony” (+ BAS), usunął „Kolekcjonerstwo i militaria”, dodał „Markery pneumatyczne (RAM)” i „Magazynki pozostałe”. Nowy arkusz nie ma kolumn P1/P2/P3 ani „Inspiracja rynkowa”. Wiersze oznaczone **[korekta]** są nieaktualne do czasu O-21/O-22/O-23 — mapowanie trzeba odtworzyć po odpowiedzi klienta.
+
 ---
 
 ## Brak odpowiednika w drzewie 01–15 — 17 wierszy
@@ -25,8 +28,8 @@ Wiersze, dla których w drzewie Hydra nie istnieje żaden węzeł (liść ani ga
 | 143 | Myślistwo | Nęciska i karmidła | ✓ | ✓ | — | brak gałęzi myślistwo |
 | 144 | Myślistwo | Akcesoria dla psa myśliwskiego | ✓ | ✓ | — | brak gałęzi myślistwo |
 | 145 | Myślistwo | Pastorały i krzesła | ✓ | ✓ | — | brak gałęzi myślistwo |
-| 254 | Kolekcjonerstwo i militaria | Repliki broni | — | — | — | category-map.json → 00; brak naszych hurtowni |
-| 257 | Kolekcjonerstwo i militaria | Oznaki i naszywki | — | — | — | category-map.json → 00; brak naszych hurtowni |
+| 254 | Kolekcjonerstwo i militaria | Repliki broni | — | — | — | category-map.json → 00; brak naszych hurtowni; **[korekta]** |
+| 257 | Kolekcjonerstwo i militaria | Oznaki i naszywki | — | — | — | category-map.json → 00; brak naszych hurtowni; **[korekta]** |
 | 287 | Łucznictwo | Łuki bloczkowe | — | ✓ | — | brak gałęzi łucznictwo; category-map.json → 00 |
 | 288 | Łucznictwo | Łuki refleksyjne | — | ✓ | — | brak gałęzi łucznictwo |
 | 289 | Łucznictwo | Łuki tradycyjne | — | ✓ | — | brak gałęzi łucznictwo |
@@ -54,11 +57,11 @@ Wiersze, dla których w drzewie Hydra nie istnieje żaden węzeł (liść ani ga
 | 3 | Wyposażenie strzeleckie i trening | Zbijaki i amunicja treningowa | 10.3.3 | Cele Stalowe i Reaktory | ✓ | ✓ | ✓ | zbijaki = popery; amunicja treningowa może też trafiać do 02 |
 | 4 | Wyposażenie strzeleckie i trening | Flagi bezpieczeństwa | 10.3.4 | Cele Papierowe i Akcesoria | ✓ | ✓ | ✓ | brak liścia; review |
 | 5 | Wyposażenie strzeleckie i trening | Maty strzeleckie | 10.3.4 | Cele Papierowe i Akcesoria | ✓ | ✓ | ✓ | brak liścia; review |
-| 11 | Broń palna | Pistolety samopowtarzalne | 1.1.1 | Pistolety Samopowtarzalne | — | — | — | koncesja; brak naszych hurtowni |
-| 12 | Broń palna | Rewolwery | 1.1.2 | Rewolwery | — | — | — | koncesja; brak naszych hurtowni |
-| 13 | Broń palna | Karabinki samopowtarzalne | 1.2.1 | Karabiny i Karabinki Samopowtarzalne | — | — | — | koncesja; brak naszych hurtowni |
-| 14 | Broń palna | Karabiny powtarzalne | 1.2.2 | Karabiny i Karabinki Powtarzalne | — | — | — | koncesja; brak naszych hurtowni |
-| 15 | Broń palna | Strzelby | 1.3 | Strzelby Gładkolufowe | — | — | — | koncesja; brak naszych hurtowni |
+| 11 | Broń palna | Pistolety samopowtarzalne | 1.1.1 | Pistolety Samopowtarzalne | — | — | — | koncesja; brak naszych hurtowni; **[korekta]** |
+| 12 | Broń palna | Rewolwery | 1.1.2 | Rewolwery | — | — | — | koncesja; brak naszych hurtowni; **[korekta]** |
+| 13 | Broń palna | Karabinki samopowtarzalne | 1.2.1 | Karabiny i Karabinki Samopowtarzalne | — | — | — | koncesja; brak naszych hurtowni; **[korekta]** |
+| 14 | Broń palna | Karabiny powtarzalne | 1.2.2 | Karabiny i Karabinki Powtarzalne | — | — | — | koncesja; brak naszych hurtowni; **[korekta]** |
+| 15 | Broń palna | Strzelby | 1.3 | Strzelby Gładkolufowe | — | — | — | koncesja; brak naszych hurtowni; **[korekta]** |
 | 19 | Części i tuning broni | Lufy | 04 | Części Zamienne i Tuning Broni | — | — | ✓ | brak liścia lufy; rodzic → review |
 | 20 | Części i tuning broni | Zamki, suwadła i BCG | 04 | Części Zamienne i Tuning Broni | — | — | ✓ | brak liścia; rodzic → review |
 | 21 | Części i tuning broni | Spusty | 04 | Części Zamienne i Tuning Broni | — | — | ✓ | rodzic → review |
@@ -139,11 +142,11 @@ Wiersze, dla których w drzewie Hydra nie istnieje żaden węzeł (liść ani ga
 | 162 | Montaże optyki | Bazy montażowe | 3.4.4 | Bazy i Szyny Montażowe | ✓ | ✓ | ✓ | |
 | 163 | Montaże optyki | Szyny | 3.4.4 | Bazy i Szyny Montażowe | ✓ | ✓ | ✓ | Picatinny / Weaver |
 | 164 | Montaże optyki | Płytki do kolimatorów | 3.4.3 | Montaże Dedykowane pod Kolimatory | ✓ | ✓ | ✓ | |
-| 169 | Amunicja i elaboracja | Amunicja pistoletowa | 2.1 | Amunicja Pistoletowa i Rewolwerowa | — | — | — | koncesja; brak naszych hurtowni |
-| 170 | Amunicja i elaboracja | Amunicja karabinowa | 2.2 | Amunicja Pośrednia i Karabinowa | — | — | — | koncesja; brak naszych hurtowni |
-| 171 | Amunicja i elaboracja | Amunicja strzelbowa | 2.3 | Amunicja Śrutowa | — | — | — | koncesja; brak naszych hurtowni |
-| 172 | Amunicja i elaboracja | Amunicja bocznego zapłonu | 2.4 | Amunicja Bocznego Zapłonu | — | — | — | koncesja; brak naszych hurtowni |
-| 173 | Amunicja i elaboracja | Amunicja myśliwska | 02 | Amunicja i Elementy Rechargingu | — | — | — | spans wiele kalibrów; rodzic → review; brak naszych hurtowni |
+| 169 | Amunicja i elaboracja | Amunicja pistoletowa | 2.1 | Amunicja Pistoletowa i Rewolwerowa | — | — | — | koncesja; brak naszych hurtowni; **[korekta]** |
+| 170 | Amunicja i elaboracja | Amunicja karabinowa | 2.2 | Amunicja Pośrednia i Karabinowa | — | — | — | koncesja; brak naszych hurtowni; **[korekta]** |
+| 171 | Amunicja i elaboracja | Amunicja strzelbowa | 2.3 | Amunicja Śrutowa | — | — | — | koncesja; brak naszych hurtowni; **[korekta]** |
+| 172 | Amunicja i elaboracja | Amunicja bocznego zapłonu | 2.4 | Amunicja Bocznego Zapłonu | — | — | — | koncesja; brak naszych hurtowni; **[korekta]** |
+| 173 | Amunicja i elaboracja | Amunicja myśliwska | 02 | Amunicja i Elementy Rechargingu | — | — | — | spans wiele kalibrów; rodzic → review; brak naszych hurtowni; **[korekta]** |
 | 184 | Multitoole i narzędzia outdoor | Multitoole kombinerkowe | 13.3.2 | Multitoole Codzienne | ✓ | ✓ | ✓ | |
 | 185 | Multitoole i narzędzia outdoor | Scyzoryki | 13.2 | Noże Składane | ✓ | ✓ | ✓ | konwencja z category-map.json |
 | 186 | Multitoole i narzędzia outdoor | Narzędzia brelokowe | 13.3 | Narzędzia Wielofunkcyjne i Multitool-e | ✓ | ✓ | ✓ | brak liścia; rodzic → review |
@@ -174,16 +177,16 @@ Wiersze, dla których w drzewie Hydra nie istnieje żaden węzeł (liść ani ga
 | 234 | Termowizja i noktowizja | Nasadki termowizyjne | 3.3 | Optoelektronika Obserwacyjna i Celownicza | ✓ | ✓ | — | clip-on thermal; brak liścia; review |
 | 235 | Termowizja i noktowizja | Noktowizory cyfrowe | 3.3 | Optoelektronika Obserwacyjna i Celownicza | ✓ | ✓ | — | |
 | 236 | Termowizja i noktowizja | Noktowizory analogowe | 3.3 | Optoelektronika Obserwacyjna i Celownicza | ✓ | ✓ | — | |
-| 242 | Broń czarnoprochowa | Rewolwery czarnoprochowe | 1.1.2 | Rewolwery | — | ✓ | — | |
-| 243 | Broń czarnoprochowa | Pistolety czarnoprochowe | 1.1 | Broń Krótka | — | ✓ | — | brak liścia black powder pistol; rodzic → review |
-| 244 | Broń czarnoprochowa | Karabiny czarnoprochowe | 1.2 | Broń Długa | — | ✓ | — | brak liścia black powder rifle; rodzic → review |
-| 245 | Broń czarnoprochowa | Strzelby czarnoprochowe | 1.3 | Strzelby Gładkolufowe | — | ✓ | — | |
-| 246 | Broń czarnoprochowa | Kapiszony | 2.6 | Elementy Koncesjonowane do Elaboracji | — | ✓ | — | spłonki do broni czarnoprochowej |
-| 253 | Kolekcjonerstwo i militaria | Broń zdezaktywowana | 1.4 | Broń Kolekcjonerska i Historyczna | — | — | — | brak naszych hurtowni |
-| 254 | Kolekcjonerstwo i militaria | Repliki broni | brak | — | — | — | — | category-map.json → 00; brak naszych hurtowni |
-| 255 | Kolekcjonerstwo i militaria | Hełmy militarne | 9.3.4 | Hełmy Balistyczne | — | — | — | brak naszych hurtowni |
-| 256 | Kolekcjonerstwo i militaria | Mundury | 12.1 | Odzież Taktyczna i Mundurowa | — | — | — | brak naszych hurtowni |
-| 257 | Kolekcjonerstwo i militaria | Oznaki i naszywki | brak | — | — | — | — | category-map.json → 00; brak naszych hurtowni |
+| 242 | Broń czarnoprochowa | Rewolwery czarnoprochowe | 1.1.2 | Rewolwery | — | ✓ | — | **[korekta]** |
+| 243 | Broń czarnoprochowa | Pistolety czarnoprochowe | 1.1 | Broń Krótka | — | ✓ | — | brak liścia black powder pistol; rodzic → review; **[korekta]** |
+| 244 | Broń czarnoprochowa | Karabiny czarnoprochowe | 1.2 | Broń Długa | — | ✓ | — | brak liścia black powder rifle; rodzic → review; **[korekta]** |
+| 245 | Broń czarnoprochowa | Strzelby czarnoprochowe | 1.3 | Strzelby Gładkolufowe | — | ✓ | — | **[korekta]** |
+| 246 | Broń czarnoprochowa | Kapiszony | 2.6 | Elementy Koncesjonowane do Elaboracji | — | ✓ | — | spłonki do broni czarnoprochowej; **[korekta]** |
+| 253 | Kolekcjonerstwo i militaria | Broń zdezaktywowana | 1.4 | Broń Kolekcjonerska i Historyczna | — | — | — | brak naszych hurtowni; **[korekta]** |
+| 254 | Kolekcjonerstwo i militaria | Repliki broni | brak | — | — | — | — | category-map.json → 00; brak naszych hurtowni; **[korekta]** |
+| 255 | Kolekcjonerstwo i militaria | Hełmy militarne | 9.3.4 | Hełmy Balistyczne | — | — | — | brak naszych hurtowni; **[korekta]** |
+| 256 | Kolekcjonerstwo i militaria | Mundury | 12.1 | Odzież Taktyczna i Mundurowa | — | — | — | brak naszych hurtowni; **[korekta]** |
+| 257 | Kolekcjonerstwo i militaria | Oznaki i naszywki | brak | — | — | — | — | category-map.json → 00; brak naszych hurtowni; **[korekta]** |
 | 263 | Medycyna i pierwsza pomoc | Apteczki | 14.1.1 | Indywidualne Apteczki Taktyczne | — | — | ✓ | |
 | 264 | Medycyna i pierwsza pomoc | IFAK | 14.1.1 | Indywidualne Apteczki Taktyczne | — | — | ✓ | IFAK wymienione w opisie 14.1.1 |
 | 265 | Medycyna i pierwsza pomoc | Stazy taktyczne | 14.1.2 | Wyposażenie Hemostatyczne | — | — | ✓ | CAT Gen7 / SOFTT-W w opisie 14.1.2 |
@@ -204,11 +207,11 @@ Wiersze, dla których w drzewie Hydra nie istnieje żaden węzeł (liść ani ga
 | 302 | Elektronika, nawigacja i łączność | Radiotelefony | 14.4.2 | Radiokomunikacja | — | — | ✓ | |
 | 303 | Elektronika, nawigacja i łączność | PTT i zestawy słuchawkowe | 14.4.2 | Radiokomunikacja | — | — | ✓ | ochronniki ze zintegrowanym radiem w opisie 14.4.2 |
 | 304 | Elektronika, nawigacja i łączność | Powerbanki | 14.2.3 | Oświetlenie i Zasilanie | — | — | ✓ | powerbanki w opisie 14.2.3 |
-| 311 | Samoobrona | Gaz pieprzowy — strumień | 15.1.1 | Gazy Pieprzowe Ręczne | ✓ | ✓ | ✓ | strumień w opisie 15.1.1 |
-| 312 | Samoobrona | Gaz pieprzowy — stożek / chmura | 15.1.1 | Gazy Pieprzowe Ręczne | ✓ | ✓ | ✓ | Fog w opisie 15.1.1 |
-| 313 | Samoobrona | Gaz pieprzowy — żel / pianka | 15.1.1 | Gazy Pieprzowe Ręczne | ✓ | ✓ | ✓ | Foam w opisie 15.1.1 |
-| 314 | Samoobrona | Paralizatory | 15.3 | Paralizatory | ✓ | ✓ | ✓ | |
-| 315 | Samoobrona | Pałki teleskopowe | 15.2.1 | Pałki Teleskopowe Hartowane | ✓ | ✓ | ✓ | |
+| 311 | Samoobrona | Gaz pieprzowy — strumień | 15.1.1 | Gazy Pieprzowe Ręczne | ✓ | ✓ | ✓ | strumień w opisie 15.1.1; **[korekta]** |
+| 312 | Samoobrona | Gaz pieprzowy — stożek / chmura | 15.1.1 | Gazy Pieprzowe Ręczne | ✓ | ✓ | ✓ | Fog w opisie 15.1.1; **[korekta]** |
+| 313 | Samoobrona | Gaz pieprzowy — żel / pianka | 15.1.1 | Gazy Pieprzowe Ręczne | ✓ | ✓ | ✓ | Foam w opisie 15.1.1; **[korekta]** |
+| 314 | Samoobrona | Paralizatory | 15.3 | Paralizatory | ✓ | ✓ | ✓ | **[korekta]** |
+| 315 | Samoobrona | Pałki teleskopowe | 15.2.1 | Pałki Teleskopowe Hartowane | ✓ | ✓ | ✓ | **[korekta]** |
 | 321 | Airsoft / ASG | Karabinki AEG | brak | — | ✓ | ✓ | ✓ | brak gałęzi ASG; category-map.json → 00 |
 | 322 | Airsoft / ASG | Karabinki GBB | brak | — | ✓ | ✓ | ✓ | brak gałęzi ASG |
 | 323 | Airsoft / ASG | Pistolety GBB i CO₂ | brak | — | ✓ | ✓ | ✓ | brak gałęzi ASG |
