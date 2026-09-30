@@ -109,7 +109,7 @@ jobs:
           # Bump these alongside the Supabase CLI version above — the CLI hardcodes
           # these exact image tags per its own version, they aren't configurable.
           # Written to a plain file (not a step output) so later steps read it with a
-          # normal `read`, instead of splicing a multi-line value through `${{ }}`.
+          # normal `read`, instead of interpolating a multi-line value via an expression.
           IMAGES=(
             "supabase/postgres:17.6.1.111"
             "supabase/postgrest:v14.5"
