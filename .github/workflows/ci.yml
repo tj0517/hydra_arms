@@ -90,9 +90,108 @@ jobs:
 
       - name: Use ECR Public for Supabase images
         # supabase/setup-cli@v1 sets SUPABASE_INTERNAL_IMAGE_REGISTRY=ghcr.io in GITHUB_ENV.
-        # Shared runner IPs are rate-limited on ghcr.io public image pulls (429 per-IP burst).
-        # ECR Public (public.ecr.aws) is what the CLI uses locally and has no rate limits.
+        # We always tag images as public.ecr.aws/... below (cache load or fallback pull),
+        # so `supabase start` finds them locally under this reference and never has to
+        # pull over the network itself.
         run: echo "SUPABASE_INTERNAL_IMAGE_REGISTRY=public.ecr.aws" >> "$GITHUB_ENV"
+
+      # `npm run db:start` (supabase start -x studio,imgproxy,mailpit,logflare,vector,
+      # edge-runtime,realtime,storage-api,postgres-meta) launches 4 long-running
+      # containers (db/postgres, rest/postgrest, auth/gotrue, kong) — but `db:reset`
+      # right after it ALSO briefly runs one-shot migration containers for two of the
+      # *excluded* services (realtime, storage-api still apply their own schema
+      # migrations even though their long-running service never starts), confirmed by
+      # watching `docker events` through a full db:start + db:reset run with every
+      # Supabase image removed first. So 6 images total, not 4. Anonymous pulls of
+      # these from shared GitHub runner IPs hit per-IP rate/data limits on both
+      # ghcr.io and public.ecr.aws (`toomanyrequests: Data limit exceeded`, seen
+      # 2026-09-30 on PRs #25, #26 and this PR's own first run) — caching them removes
+      # the job's dependency on either registry's limits, and a same-run fallback
+      # (public.ecr.aws -> ghcr.io -> docker.io) covers a cold cache without needing
+      # any secret or registry login.
+      - name: Determine Supabase Docker images
+        id: images
+        run: |
+          # Bump these alongside the Supabase CLI version above — the CLI hardcodes
+          # these exact image tags per its own version, they aren't configurable.
+          # Written to a plain file (not a step output) so later steps read it with a
+          # normal `read`, instead of interpolating a multi-line value via an expression.
+          IMAGES=(
+            "supabase/postgres:17.6.1.111"
+            "supabase/postgrest:v14.5"
+            "supabase/gotrue:v2.188.1"
+            "supabase/kong:2.8.1"
+            "supabase/realtime:v2.73.2"
+            "supabase/storage-api:v1.54.0"
+          )
+          printf '%s\n' "${IMAGES[@]}" > /tmp/supabase-images.list
+          HASH=$(md5sum /tmp/supabase-images.list | cut -d' ' -f1)
+          echo "key=supabase-docker-images-cli2.75.0-${HASH}" >> "$GITHUB_OUTPUT"
+
+      - name: Restore cached Supabase Docker images
+        id: image-cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/supabase-images-cache
+          key: ${{ steps.images.outputs.key }}
+
+      - name: Load cached Supabase Docker images
+        if: steps.image-cache.outputs.cache-hit == 'true'
+        run: gunzip -c /tmp/supabase-images-cache/images.tar.gz | docker load
+
+      - name: Pull Supabase Docker images (cache miss — try public.ecr.aws, then ghcr.io, then docker.io)
+        if: steps.image-cache.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          REGISTRIES=(public.ecr.aws ghcr.io docker.io)
+
+          # public.ecr.aws and ghcr.io mirror the supabase/<name>:<tag> path exactly.
+          # Docker Hub doesn't: supabase/postgrest and supabase/kong don't exist there
+          # at all — postgrest ships as postgrest/postgrest, kong as the official kong
+          # image (no namespace). Resolve those per-image so the docker.io fallback is
+          # actually reachable instead of failing on a path that was never published.
+          docker_io_path() {
+            case "$1" in
+              supabase/postgrest:*) echo "postgrest/${1#supabase/}" ;;
+              supabase/kong:*)      echo "${1#supabase/kong:}" | sed 's/^/kong:/' ;;
+              *)                    echo "$1" ;;
+            esac
+          }
+
+          TAGGED=()
+          while IFS= read -r img; do
+            [ -z "$img" ] && continue
+            pulled=""
+            for reg in "${REGISTRIES[@]}"; do
+              if [ "$reg" = "docker.io" ]; then
+                full="${reg}/$(docker_io_path "$img")"
+              else
+                full="${reg}/${img}"
+              fi
+              for attempt in 1 2; do
+                echo "Pulling ${full} (attempt ${attempt})..."
+                if docker pull "$full"; then
+                  pulled="$full"
+                  break 2
+                fi
+                sleep 5
+              done
+            done
+            if [ -z "$pulled" ]; then
+              echo "::error::Failed to pull ${img} from all registries (public.ecr.aws, ghcr.io, docker.io)"
+              exit 1
+            fi
+            echo "==> ${img} pulled from ${pulled%%/*}"
+            target="public.ecr.aws/${img}"
+            if [ "$pulled" != "$target" ]; then
+              docker tag "$pulled" "$target"
+            fi
+            TAGGED+=("$target")
+          done < /tmp/supabase-images.list
+
+          mkdir -p /tmp/supabase-images-cache
+          docker save "${TAGGED[@]}" | gzip > /tmp/supabase-images-cache/images.tar.gz
+          du -sh /tmp/supabase-images-cache/images.tar.gz
 
       - name: Start local Supabase stack
         run: npm run db:start
