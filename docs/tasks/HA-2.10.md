@@ -1,7 +1,7 @@
 ---
 id: HA-2.10
 title: Filtry katalogu dla podkategorii P1
-status: in_progress
+status: review
 difficulty: L
 model: null
 model_approved: null
@@ -9,10 +9,10 @@ effort: null
 branch: feat/ha-2.10-p1-filters
 due: null
 depends_on: [HA-2.04]
-blocked_by_questions: []
+blocked_by_questions: [O-22]
 touches_db: true
 touches_prod: true
-pr: null
+pr: 25
 ---
 
 ## Cel
@@ -48,3 +48,4 @@ Sklep ma dziś filtry kategorii, wyszukiwarki, dostępności i przedziału ceny 
 ## Notatki z realizacji
 - 2026-09-22 tj: filtry dla podkategorii P1 jako zadanie etapu 2 (analiza z 2026-09-15)
 - 2026-09-24 tj: mapowanie P1 → 01–15 przeniesione do HA-2.04
+- 2026-09-30: PR #25 — filtry uniwersalne (marka, dostawa) gotowe i przetestowane lokalnie; filtry kluczowe i próg pokrycia czekają na decyzję tj (patrz raport w sesji) i O-22
