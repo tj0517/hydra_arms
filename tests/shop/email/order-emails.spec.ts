@@ -223,6 +223,58 @@ test.describe('p24/notify — idempotent payment email', () => {
 })
 
 // ════════════════════════════════════════════════════════════════════════════
+// 3b. Payment email only for paid orders — the marker claim itself requires
+//     status='paid', independent of markOrderPaid's own RPC semantics.
+// ════════════════════════════════════════════════════════════════════════════
+
+test.describe('payment email — status=paid guard', () => {
+  test('order still pending_payment → send is a no-op, counter 0, marker stays null', async ({ request }) => {
+    const { order_id: orderId } = await doCheckout(request)
+    expect((await getOrder(orderId))?.status).toBe('pending_payment')
+
+    const res = await request.post('/api/shop/dev/trigger-payment-email', { data: { orderId } })
+    expect(res.status()).toBe(200)
+
+    expect(await getEmailMockCounter(request, orderId, 'payment_received')).toBe(0)
+    const row = await fetch(
+      `${SUPABASE_URL}/rest/v1/orders?id=eq.${orderId}&select=payment_received_email_sent_at`,
+      { headers: serviceHeaders },
+    ).then(r => r.json())
+    expect(row[0].payment_received_email_sent_at).toBeNull()
+  })
+
+  test('cancelled order → send is a no-op, counter 0, marker stays null', async ({ request }) => {
+    const { order_id: orderId } = await doCheckout(request)
+    await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${orderId}`, {
+      method: 'PATCH',
+      headers: { ...serviceHeaders, Prefer: 'return=minimal' },
+      body: JSON.stringify({ status: 'cancelled' }),
+    })
+    expect((await getOrder(orderId))?.status).toBe('cancelled')
+
+    const res = await request.post('/api/shop/dev/trigger-payment-email', { data: { orderId } })
+    expect(res.status()).toBe(200)
+
+    expect(await getEmailMockCounter(request, orderId, 'payment_received')).toBe(0)
+    const row = await fetch(
+      `${SUPABASE_URL}/rest/v1/orders?id=eq.${orderId}&select=payment_received_email_sent_at`,
+      { headers: serviceHeaders },
+    ).then(r => r.json())
+    expect(row[0].payment_received_email_sent_at).toBeNull()
+  })
+
+  test('paid order → send succeeds, counter 1', async ({ request }) => {
+    const { order_id: orderId } = await doCheckout(request)
+    const attempts = await getPaymentAttempts(orderId)
+    await request.post('/api/shop/payments/p24/mock-pay', {
+      data: { orderId, p24SessionId: attempts[0].p24_session_id },
+    })
+    expect((await getOrder(orderId))?.status).toBe('paid')
+    expect(await getEmailMockCounter(request, orderId, 'payment_received')).toBe(1)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════
 // 4. Forced send failure — missing recipient email must not break the order
 // ════════════════════════════════════════════════════════════════════════════
 
@@ -303,5 +355,25 @@ test.describe('email-mock-counter — mock-mode guard', () => {
     const res = await request.get(`/api/shop/dev/email-mock-counter?orderId=${orderId}&type=order_received`)
     expect(res.status()).not.toBe(404)
     expect(res.ok()).toBe(true)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════
+// 6. Mock email HTML — written to test-results/mock-emails/, not logged
+// ════════════════════════════════════════════════════════════════════════════
+
+test.describe('mock email HTML file', () => {
+  test('order_received HTML is written to disk with correct order data', async ({ request }) => {
+    const { order_id: orderId, total } = await doCheckout(request)
+
+    const fs = await import('fs')
+    const path = await import('path')
+    const filePath = path.join(process.cwd(), 'test-results', 'mock-emails', `${orderId}-order_received.html`)
+    expect(fs.existsSync(filePath)).toBe(true)
+
+    const html = fs.readFileSync(filePath, 'utf8')
+    expect(html).toContain(orderId.slice(0, 8).toUpperCase())
+    expect(html).toContain('Czeka na płatność')
+    expect(html).toContain(`${total.toFixed(2).replace('.', ',')} PLN`)
   })
 })

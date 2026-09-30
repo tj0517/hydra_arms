@@ -66,3 +66,6 @@ Format: data · źródło (zadanie/raport) · co zauważono · propozycja (zadan
   - `src/components/TacticalReadout.tsx` ×3 (react-hooks/purity)
   - `src/components/shop/SklepClient.tsx` ×2 (react-hooks/static-components)
 - 2026-09-30 · HA-2.07 · podpisany, wygasający link do statusu zamówienia w mailach dla gościa (bez konta) · osobne zadanie z red proofami (wygasły token, sfałszowany token, id innego zamówienia); potrzebne przed HA-2.09 (decyzja tj 2026-09-30, opcja C+B)
+- 2026-09-30 · review HA-2.07 · test wymuszonego błędu wysyłki pokrywa tylko brak adresata, nie gałąź błędu API Resend · dodać przełącznik trybu mock symulujący błąd Resend
+- 2026-09-30 · review HA-2.07 · checkout czeka (`await`) na wysyłkę maila „zamówienie przyjęte" — opóźnienie Resend + Sanity w odpowiedzi checkoutu · rozważyć `after()` z `next/server`
+- 2026-09-30 · review HA-2.07 · `SHOP_BASE_URL ?? ''` w szablonach maili daje link względny, gdy zmienna nie jest ustawiona · fail-closed albo pomiń link, gdy `SHOP_BASE_URL` puste
