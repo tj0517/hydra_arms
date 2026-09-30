@@ -29,7 +29,7 @@
       "text_fields": {
         "name": "Spodnie taktyczne Ripstop Multicam",
         "description": "<p>Profesjonalne spodnie taktyczne wykonane z tkaniny Ripstop w kamuflażu Multicam. Idealne do służby i szkoleń w terenie.</p><ul><li>Tkanina: 65% poliester, 35% bawełna Ripstop</li><li>Wzmocnienia na kolanach z kieszeniami na wkładki</li><li>6 kieszeni z zamknięciami na rzep i zatrzaski</li><li>Regulacja obwodu pasa</li></ul>",
-        "features": { "Materiał": "65% poliester, 35% bawełna Ripstop", "Kamuflaż": "Multicam", "Wzmocnienia kolan": "Tak", "Liczba kieszeni": "6" }
+        "features": { "Materiał": "65% poliester, 35% bawełna Ripstop", "Kamuflaż": "Multicam", "Wzmocnienia kolan": "Tak", "Liczba kieszeni": "6", "Producent": "5.11 Tactical" }
       },
       "stock": { "blconnect_6820": 45 }, "prices": { "23934": 349 },
       "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,
@@ -42,7 +42,7 @@
       "text_fields": {
         "name": "Spodnie taktyczne Softshell Czarne",
         "description": "<p>Spodnie Softshell odporne na wiatr i wilgoć. Świetne na chłodniejsze dni w terenie.</p>",
-        "features": { "Materiał": "Softshell 3-warstwowy", "Kolor": "Czarny", "Wodoodporność": "10 000 mm H2O" }
+        "features": { "Materiał": "Softshell 3-warstwowy", "Kolor": "Czarny", "Wodoodporność": "10 000 mm H2O", "Producent": "Pentagon" }
       },
       "stock": { "blconnect_6820": 22 }, "prices": { "23934": 289 },
       "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,
@@ -55,7 +55,7 @@
       "text_fields": {
         "name": "Kurtka taktyczna Softshell Ranger Green",
         "description": "<p>Kurtka taktyczna Softshell w kolorze Ranger Green. Oddychający materiał 3-warstwowy, wodoodporność 10 000 mm H2O.</p>",
-        "features": { "Materiał": "Softshell 3L", "Kolor": "Ranger Green", "Kaptur": "Tak, odpinany" }
+        "features": { "Materiał": "Softshell 3L", "Kolor": "Ranger Green", "Kaptur": "Tak, odpinany", "Producent": "Helikon-Tex" }
       },
       "stock": { "blconnect_6820": 15 }, "prices": { "23934": 549 },
       "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,
@@ -68,7 +68,7 @@
       "text_fields": {
         "name": "Bluza Combat Flecktarn",
         "description": "<p>Bluza bojowa w kamuflażu Flecktarn. Wzmocnione łokcie i naramienniki.</p>",
-        "features": { "Materiał": "100% bawełna rip-stop", "Kamuflaż": "Flecktarn", "Naramienniki": "Tak" }
+        "features": { "Materiał": "100% bawełna rip-stop", "Kamuflaż": "Flecktarn", "Naramienniki": "Tak", "Producent": "Mil-Tec" }
       },
       "stock": { "blconnect_6820": 30 }, "prices": { "23934": 199 },
       "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,
@@ -159,7 +159,7 @@
       "text_fields": {
         "name": "Latarka taktyczna SureFire G2X Pro",
         "description": "<p>Latarka taktyczna SureFire G2X Pro. 600 lumenów, zasilanie 2x CR123A, odporność IPX7.</p>",
-        "features": { "Jasność": "600 lm / 15 lm", "Zasilanie": "2x CR123A", "Odporność": "IPX7", "Długość": "140 mm" }
+        "features": { "Jasność": "600 lm / 15 lm", "Zasilanie": "2x CR123A", "Odporność": "IPX7", "Długość": "140 mm", "Producent": "SureFire" }
       },
       "stock": { "blconnect_6820": 20 }, "prices": { "23934": 399 },
       "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,
@@ -185,7 +185,7 @@
       "text_fields": {
         "name": "Nóż taktyczny Gerber StrongArm Fixed Blade",
         "description": "<p>Nóż taktyczny Gerber StrongArm z głownią ze stali 420HC. Powłoka DLC, rękojeść z TPE. Dołączona pochwa MOLLE.</p>",
-        "features": { "Stal": "420HC + powłoka DLC", "Długość głowni": "12.1 cm", "Twardość": "56-58 HRC", "Pochwa": "MOLLE" }
+        "features": { "Stal": "420HC + powłoka DLC", "Długość głowni": "12.1 cm", "Twardość": "56-58 HRC", "Pochwa": "MOLLE", "Producent": "Gerber" }
       },
       "stock": { "blconnect_6820": 25 }, "prices": { "23934": 349 },
       "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,
@@ -198,7 +198,7 @@
       "text_fields": {
         "name": "Multitool Leatherman Wave+ Black",
         "description": "<p>Leatherman Wave+ w czarnej wersji. 18 narzędzi ze stali nierdzewnej 420HC, wszystkie dostępne w trybie otwartym i zamkniętym.</p>",
-        "features": { "Narzędzia": "18", "Stal": "420HC nierdzewna", "Waga": "241 g", "Gwarancja": "25 lat" }
+        "features": { "Narzędzia": "18", "Stal": "420HC nierdzewna", "Waga": "241 g", "Gwarancja": "25 lat", "Producent": "Leatherman" }
       },
       "stock": { "blconnect_6820": 14 }, "prices": { "23934": 499 },
       "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,

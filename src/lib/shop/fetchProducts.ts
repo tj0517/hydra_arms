@@ -19,6 +19,7 @@ export const PUBLIC_PRODUCT_COLUMNS = [
   'description',
   'short_description',
   'features',
+  'brand',
   'price',
   'price_compare',
   'tax_rate',
@@ -72,6 +73,9 @@ export const fetchShopData = unstable_cache(
         .limit(500),
     ])
 
+    if (productsResult.error) {
+      console.error('[fetchShopData] products query failed:', productsResult.error.message)
+    }
     const products = (productsResult.data ?? []) as unknown as ShopProduct[]
 
     let reserved = new Map<number, number>()

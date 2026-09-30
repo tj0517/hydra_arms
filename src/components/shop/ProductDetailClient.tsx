@@ -110,6 +110,7 @@ export default function ProductDetailClient({ product, categories, related }: Pr
   }
   if (product.requires_license) extraRows.push(['Wymagane zezwolenie', product.license_category ?? 'tak']);
   const allFeatureRows: [string, string][] = [
+    ...(product.brand ? [['Producent', product.brand] as [string, string]] : []),
     ...(features ? Object.entries(features) : []),
     ...extraRows,
   ];

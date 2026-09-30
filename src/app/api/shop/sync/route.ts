@@ -9,6 +9,7 @@ import {
   getProductsData,
   getPrice,
   getWarehouseStock,
+  extractBrand,
 } from '@/lib/baselinker/client';
 import { isSyncAuthorized, isCronAuthorized } from '@/lib/apiAuth';
 import { filterHydraCategories } from '@/lib/shop/categoryFilter';
@@ -79,6 +80,7 @@ async function runSync() {
       // here prevents double-netting and keeps the DB as the canonical BL mirror.
       const rows = Object.entries(details).map(([idStr, p]) => {
         const id = parseInt(idStr, 10);
+        const { brand, features } = extractBrand(p.text_fields.features);
         return {
           id,
           inventory_id: INVENTORY_ID,
@@ -86,7 +88,8 @@ async function runSync() {
           ean: p.ean || null,
           name: p.text_fields.name,
           description: p.text_fields.description ?? null,
-          features: p.text_fields.features ?? null,
+          features,
+          brand,
           price: getPrice(p.prices),
           tax_rate: p.tax_rate,
           stock: Math.max(0, getWarehouseStock(p.stock)),

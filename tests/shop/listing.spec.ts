@@ -140,6 +140,84 @@ test.describe('/sklep — listing page', () => {
     expect(overlap.length).toBe(0);
   });
 
+  test('brand filter narrows products and syncs to the URL', async ({ page }) => {
+    await goToShop(page);
+
+    const initialCount = await page.locator('a[href^="/sklep/"]').count();
+
+    // "Marka" heading -> header row (p's parent) -> section div (siblings: header + rows)
+    const brandSection = page.locator('aside').first().getByText('Marka', { exact: true }).locator('xpath=../..');
+    const firstBrandRow = brandSection.locator('label').first();
+    const brandName = (await firstBrandRow.locator('span').first().textContent())?.trim().replace(/\s*\(\d+\)$/, '');
+    expect(brandName).toBeTruthy();
+
+    await firstBrandRow.click();
+    await page.waitForTimeout(300);
+
+    const expectedParam = new URLSearchParams({ marka: brandName! }).toString();
+    await expect(page).toHaveURL(new RegExp(expectedParam.replace(/[.+]/g, '\\$&')));
+
+    const filteredCount = await page.locator('a[href^="/sklep/"]').count();
+    expect(filteredCount).toBeLessThan(initialCount);
+    expect(filteredCount).toBeGreaterThan(0);
+  });
+
+  test('delivery mode filter separates shippable from pickup-only products', async ({ page }) => {
+    await goToShop(page);
+
+    const initialCount = await page.locator('a[href^="/sklep/"]').count();
+
+    await page.getByText('Tylko odbiór osobisty', { exact: true }).click();
+    await page.waitForTimeout(300);
+    await expect(page).toHaveURL(/dostawa=odbior/);
+    const pickupCount = await page.locator('a[href^="/sklep/"]').count();
+    expect(pickupCount).toBeGreaterThan(0);
+    expect(pickupCount).toBeLessThan(initialCount);
+
+    await page.getByText('Wysyłka kurierem', { exact: true }).click();
+    await page.waitForTimeout(300);
+    await expect(page).toHaveURL(/dostawa=wysylka/);
+    const shippableCount = await page.locator('a[href^="/sklep/"]').count();
+    expect(shippableCount).toBeGreaterThan(0);
+    expect(shippableCount + pickupCount).toBe(initialCount);
+  });
+
+  // Red proof: a pickup-only product (delivery_allowed=FALSE in seed.sql) must
+  // never appear when "Wysyłka kurierem" is active, only under "Tylko odbiór osobisty".
+  test('pickup-only product never appears under the shippable filter', async ({ page }) => {
+    await goToShop(page);
+
+    await page.getByPlaceholder('SZUKAJ...').fill('Kamizelka taktyczna JPC');
+    await page.waitForTimeout(400);
+    await expect(page.locator('a[href^="/sklep/"] h3').first()).toContainText('Kamizelka');
+
+    await page.getByText('Wysyłka kurierem', { exact: true }).click();
+    await page.waitForTimeout(300);
+    await expect(page.getByText('BRAK WYNIKÓW')).toBeVisible();
+
+    await page.getByText('Wysyłka kurierem', { exact: true }).click(); // deselect
+    await page.getByText('Tylko odbiór osobisty', { exact: true }).click();
+    await page.waitForTimeout(300);
+    await expect(page.locator('a[href^="/sklep/"] h3').first()).toContainText('Kamizelka');
+  });
+
+  // Red proof: unknown ?marka=/?dostawa= values are validated against the known
+  // set (brands actually present, and the fixed wysylka/odbior pair) and ignored,
+  // not applied as a filter and not string-built into a query.
+  test('invalid marka and dostawa URL values are ignored', async ({ page }) => {
+    await goToShop(page);
+    const baselineCount = await page.locator('a[href^="/sklep/"]').count();
+
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await dismissCookies(page);
+    await page.goto('/sklep?marka=NieistniejacaMarkaXYZ&dostawa=foo', { waitUntil: 'domcontentloaded' });
+    await hideBanner(page);
+    await page.waitForSelector('a[href^="/sklep/"]', { timeout: 20_000 });
+
+    const count = await page.locator('a[href^="/sklep/"]').count();
+    expect(count).toBe(baselineCount);
+  });
+
   test('category click filters products', async ({ page }) => {
     await goToShop(page);
 
