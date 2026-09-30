@@ -240,6 +240,8 @@ export interface Database {
           tracking_number: string | null;
           shipping_carrier: string | null;
           bl_status_id: number | null;
+          order_received_email_sent_at: string | null;
+          payment_received_email_sent_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -255,6 +257,8 @@ export interface Database {
           tracking_number?: string | null;
           shipping_carrier?: string | null;
           bl_status_id?: number | null;
+          order_received_email_sent_at?: string | null;
+          payment_received_email_sent_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -270,6 +274,8 @@ export interface Database {
           tracking_number?: string | null;
           shipping_carrier?: string | null;
           bl_status_id?: number | null;
+          order_received_email_sent_at?: string | null;
+          payment_received_email_sent_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };

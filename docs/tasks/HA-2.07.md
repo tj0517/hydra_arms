@@ -45,3 +45,4 @@ Klient po zakupie nie dostaje żadnego maila, a sklep z płatnościami musi potw
 ## Notatki z realizacji
 - 2026-09-30 tj: O-13 rozstrzygnięte — dane firmy są na stronie, zwroty w `legal/Regulamin sklepu.docx` (§ 6), opisy produktów z BaseLinkera.
 - 2026-09-30 tj: znacznik wysłania maili w zamówieniu — migracja 013, touches_db: true (opcja A)
+- 2026-09-30 tj: link do statusu dla gościa — bez linku do zamówienia; w mailu zachęta do konta na ten sam e-mail (/konto/zamowienia, istniejący claim po e-mailu); podpisany link osobnym zadaniem przed HA-2.09 (opcja C+B)

@@ -65,3 +65,4 @@ Format: data · źródło (zadanie/raport) · co zauważono · propozycja (zadan
   - `src/sanity/components/ProductPickerInput.tsx` (react-hooks/set-state-in-effect)
   - `src/components/TacticalReadout.tsx` ×3 (react-hooks/purity)
   - `src/components/shop/SklepClient.tsx` ×2 (react-hooks/static-components)
+- 2026-09-30 · HA-2.07 · podpisany, wygasający link do statusu zamówienia w mailach dla gościa (bez konta) · osobne zadanie z red proofami (wygasły token, sfałszowany token, id innego zamówienia); potrzebne przed HA-2.09 (decyzja tj 2026-09-30, opcja C+B)
