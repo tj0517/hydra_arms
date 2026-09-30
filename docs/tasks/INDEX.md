@@ -29,5 +29,5 @@ Etap 1: bezpieczny fundament (audyt 2026-09-22). Etap 2: płatności i uruchomie
 | HA-2.11 | Spechurt — podgląd i walidacja na aktualnym feedzie z serwera | done | S | HA-2.04 | — | — |
 | HA-2.12 | Kategoryzacja Kolby — reguły do drzewa Hydry | done | L | HA-2.04 | — | — |
 | HA-2.13 | hydra-categories.json do repo i weryfikacja z BaseLinkerem | done | S | — | — | — |
-| HA-2.14 | Inwentaryzacja BaseLinkera (tylko odczyt) | todo | S | HA-2.13 | — | — |
-| HA-2.15 | Import hurtowni na serwerze — cron sync i import | todo | M | HA-2.11, HA-2.13, HA-2.14 | O-19 | — |
+| HA-2.14 | Inwentaryzacja BaseLinkera (tylko odczyt) | todo | S | HA-2.13 | O-21 | — |
+| HA-2.15 | Import hurtowni na serwerze — cron sync i import | todo | M | HA-2.11, HA-2.13, HA-2.14 | O-19, O-21 | — |

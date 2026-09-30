@@ -9,7 +9,7 @@ effort: null
 branch: null
 due: null
 depends_on: [HA-2.11, HA-2.13, HA-2.14]
-blocked_by_questions: [O-19]
+blocked_by_questions: [O-19, O-21]
 touches_db: false
 touches_prod: true
 pr: null
