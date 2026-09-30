@@ -3,13 +3,13 @@ id: HA-2.10
 title: Filtry katalogu dla podkategorii P1
 status: review
 difficulty: L
-model: null
+model: claude-sonnet-5
 model_approved: null
-effort: null
+effort: medium
 branch: feat/ha-2.10-p1-filters
 due: null
 depends_on: [HA-2.04]
-blocked_by_questions: [O-22]
+blocked_by_questions: []
 touches_db: true
 touches_prod: true
 pr: 25
@@ -40,6 +40,14 @@ Sklep ma dziś filtry kategorii, wyszukiwarki, dostępności i przedziału ceny 
 - przed pełnym syncem z BL, który zapisze nowe pola na prod — akceptacja tj
 - wybór progu pokrycia danymi dla filtrów kluczowych — decyzja tj (pokaż tabelę)
 
+## Kolejność wdrożenia (WYMAGANA — merge do main wdraża)
+Prod nie ma dziś kolumny `brand`; zwykły merge zepsułby `/sklep` (zapytanie `select`
+z nieistniejącą kolumną → `fetchShopData` zwraca pustą listę produktów) i nocny
+cron `/api/shop/sync` (upsert z nieistniejącym polem). Kolejność:
+1. migracja `014_shop_brand.sql` wdrożona na prod — **akceptacja tj**
+2. weryfikacja przez zapytanie read-only (`select column_name from information_schema.columns where table_name='shop_products' and column_name='brand'` przez `supabase-prod`)
+3. dopiero wtedy merge tego PR do `main`
+
 ## Kontekst
 - `docs/research/analiza_popularnosci_kategorii.xlsx` (arkusze „Podkategorie i filtry”, „Ranking kategorii”)
 - `xml-integration/hydra-category-tree.txt`, `xml-integration/category-map.json`, `xml-integration/SCHEMAS.md`
@@ -50,3 +58,4 @@ Sklep ma dziś filtry kategorii, wyszukiwarki, dostępności i przedziału ceny 
 - 2026-09-24 tj: mapowanie P1 → 01–15 przeniesione do HA-2.04
 - 2026-09-30: PR #25 — filtry uniwersalne (marka, dostawa) gotowe i przetestowane lokalnie; filtry kluczowe i próg pokrycia czekają na decyzję tj (patrz raport w sesji) i O-22
 - 2026-09-30 tj: filtry kluczowe odłożone w całości — pokrycie danymi ~0% we wszystkich działach w zakresie (prod i próbki feedów), nie ma czego filtrować; wrócić po realnym imporcie BL, który wypełni `features`/`brand` dla tych działów. Próg liczbowy niepotrzebny na razie.
+- 2026-09-30 tj: review rundy 1 (PR #25) — zaakceptowane z poprawkami: kolejność wdrożenia (migracja na prod → weryfikacja → merge, patrz sekcja wyżej), log błędu zapytania produktów zamiast cichego połykania, `brand` na stronie produktu (regresja — sync usuwa „Marka"/„Producent" z `features`, a `ProductDetailClient.tsx` nie renderował `brand`), higiena `INDEX.md`/frontmatter. Runda 2 w toku na tym samym branchu.
