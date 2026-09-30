@@ -41,6 +41,7 @@ export default defineConfig({
       SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
       BASELINKER_MOCK: process.env.BASELINKER_MOCK ?? 'true',
       BASELINKER_STATUS_PAID: process.env.BASELINKER_STATUS_PAID ?? '',
+      RESEND_MOCK: 'true',
       SHOP_BASE_URL: 'http://localhost:3001',
       P24_MODE: process.env.P24_MODE ?? 'mock',
       P24_CRC_KEY: process.env.P24_CRC_KEY,

@@ -5,6 +5,7 @@ import { analyzeCart } from '@/lib/shop/cartAnalysis'
 import { ORDER_SESSION_COOKIE, appendOrderSession } from '@/lib/shop/orderSession'
 import { rateLimit, getClientIp } from '@/lib/rateLimit'
 import { registerPayment } from '@/lib/shop/registerPayment'
+import { sendOrderReceivedEmail } from '@/lib/email/orderEmails'
 
 interface CheckoutItem {
   product_id: number
@@ -210,6 +211,13 @@ export async function POST(req: NextRequest) {
     } catch (regErr) {
       // Non-fatal: order is created; client falls back to confirmation page
       console.error('[checkout] payment registration failed:', regErr)
+    }
+
+    try {
+      await sendOrderReceivedEmail(orderId)
+    } catch (emailErr) {
+      // Non-fatal: order is created regardless of email delivery
+      console.error('[checkout] order received email failed:', emailErr)
     }
 
     return withSessionCookie(

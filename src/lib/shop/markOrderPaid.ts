@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { addOrder } from '@/lib/baselinker/client'
 import { incrementBlMockCounter } from '@/lib/baselinker/mockCounter'
 import { SHOP_CACHE_TAG } from '@/lib/shop/fetchProducts'
+import { sendPaymentReceivedEmail } from '@/lib/email/orderEmails'
 
 /**
  * Atomically transitions an order from pending_payment → paid, then pushes
@@ -23,6 +24,16 @@ export async function markOrderPaid(
   })
 
   if (rpcError) throw new Error(`mark_order_paid RPC failed: ${rpcError.message}`)
+
+  // Called on every resolution, including idempotent recovery re-calls where
+  // `changed` is already false — the send marker (not `changed`) is what
+  // makes this idempotent; see HA-2.07 red proof.
+  try {
+    await sendPaymentReceivedEmail(orderId)
+  } catch (emailErr) {
+    console.error('[markOrderPaid] payment received email failed (non-fatal):', emailErr)
+  }
+
   if (!changed) return { changed: false }
 
   // Status just changed to paid — reserved stock window opened, bust cache.

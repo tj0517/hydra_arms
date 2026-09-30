@@ -1,18 +1,18 @@
 ---
 id: HA-2.07
 title: Maile — potwierdzenie zamówienia i płatności
-status: todo
+status: done
 difficulty: M
 model: null
 model_approved: null
 effort: null
-branch: null
+branch: feat/ha-2.07-order-emails
 due: null
 depends_on: [HA-2.03]
 blocked_by_questions: []
-touches_db: false
+touches_db: true
 touches_prod: false
-pr: null
+pr: 24
 ---
 
 ## Cel
@@ -36,6 +36,7 @@ Klient po zakupie nie dostaje żadnego maila, a sklep z płatnościami musi potw
 ## Bramki STOP
 - wysyłka przez Resend poza trybem testowym — tylko na adres tj, po zgodzie
 - zmiana env w Vercelu — tj
+- migracja 013 na prod — tj, ręcznie (schema_migrations na prod pusta)
 
 ## Kontekst
 - `src/app/api/contact/route.ts`, `src/app/api/newsletter/route.ts`, `.env.local.example` (Resend)
@@ -43,3 +44,6 @@ Klient po zakupie nie dostaje żadnego maila, a sklep z płatnościami musi potw
 
 ## Notatki z realizacji
 - 2026-09-30 tj: O-13 rozstrzygnięte — dane firmy są na stronie, zwroty w `legal/Regulamin sklepu.docx` (§ 6), opisy produktów z BaseLinkera.
+- 2026-09-30 tj: znacznik wysłania maili w zamówieniu — migracja 013, touches_db: true (opcja A)
+- 2026-09-30 tj: link do statusu dla gościa — bez linku do zamówienia; w mailu zachęta do konta na ten sam e-mail (/konto/zamowienia, istniejący claim po e-mailu); podpisany link osobnym zadaniem przed HA-2.09 (opcja C+B)
+- 2026-09-30 tj: odbiór PR #24 po 1 rundzie — przyjęte. Udowodnione: oba maile w trybie testowym (HTML sprawdzony: dane firmy, pozycje, kwota, status, link /konto/zamowienia), idempotencja przez znaczniki z migracji 013 (red proof: 3 → 1), fail-closed trybu testowego (brak klucza → błąd w logu, znacznik pusty, zamówienie nietknięte), mail o płatności tylko dla opłaconych (pending/cancelled → 0), anon nie zapisze znaczników. Otwarte bramki: migracja 013 na prod (tj, ręcznie, przed HA-2.09), próbna wysyłka realna na adres tj. Deferred: gałąź błędu API Resend w testach, await maila w checkout, SHOP_BASE_URL bez fail-closed.
