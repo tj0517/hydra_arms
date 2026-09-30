@@ -62,8 +62,8 @@ function resolveProductsForBlock(
   return pool.slice(0, limit)
 }
 
-// ── Set to true on main/production until shop config is complete ──────────────
-const SHOP_DISABLED = false;
+// ── SHOP_DISABLED=true in Vercel (Production) hides the shop listing until launch ──
+const SHOP_DISABLED = process.env.SHOP_DISABLED === 'true';
 
 // ── Page ───────────────────────────────────────────────────────────────────────
 
