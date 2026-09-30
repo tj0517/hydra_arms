@@ -1,7 +1,7 @@
 ---
 id: HA-2.07
 title: Maile — potwierdzenie zamówienia i płatności
-status: in_progress
+status: review
 difficulty: M
 model: null
 model_approved: null
