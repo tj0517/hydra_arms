@@ -1,6 +1,6 @@
 ---
 id: HA-2.08
-title: Tryb weryfikacji P24 — sandbox, telefon, strony prawne
+title: Tryb weryfikacji P24 — mock, telefon, strony prawne
 status: todo
 difficulty: M
 model: null
@@ -8,30 +8,31 @@ model_approved: null
 effort: null
 branch: null
 due: null
-depends_on: [HA-2.03, HA-2.07]
-blocked_by_questions: [O-09]
+depends_on: [HA-2.03, HA-2.07, HA-2.16]
+blocked_by_questions: []
 touches_db: false
 touches_prod: true
 pr: null
 ---
 
 ## Cel
-P24 weryfikuje sklep przed aktywacją: sprawdza pełną ścieżkę zamówienia, dane firmy, telefon, regulamin i zasady zwrotów. Klient nie chce jeszcze realnej sprzedaży. Sukces: publiczna strona pozwala przejść całą ścieżkę do płatności w sandboxie, jest wyraźnie oznaczona jako tryb testowy, a wszystkie wymagane przez P24 elementy są na miejscu.
+P24 weryfikuje sklep przed aktywacją: sprawdza pełną ścieżkę zamówienia, dane firmy, telefon, regulamin i zasady zwrotów. Klient nie chce jeszcze realnej sprzedaży. Sukces: publiczna strona pozwala przejść całą ścieżkę do płatności na mocku P24 (prawdziwy sandbox: HA-2.23), jest wyraźnie oznaczona jako tryb testowy, a wszystkie wymagane przez P24 elementy są na miejscu.
 
 ## Zakres
 - [ ] odczyt stanu bieżącego: aktualne wymagania weryfikacyjne P24 (docs), strony `regulamin`, `polityka-prywatnosci`, stopka/nawigacja (telefon), `legal/*.docx` (nieśledzone pliki od klienta), odpowiedzi O-09, O-13
-- [ ] podpięcie danych sandbox P24 (O-09) pod adapter z HA-2.03 (`P24_MODE=sandbox`) i test ścieżki na prawdziwym sandboxie
+- [ ] adapter z HA-2.03 w trybie `sandbox` konfigurowany wartościami z rejestru HA-2.16 (`P24_*`, status `placeholder`, właściciel: klient, O-09); test na prawdziwym sandboxie → HA-2.23
 - [ ] flaga trybu (np. `SHOP_MODE=verification`): baner „tryb testowy”, płatności tylko sandbox
 - [ ] brakujące treści: regulamin sklepu, zwroty i reklamacje, dane firmy, telefon (z O-09/O-13; treść prawną dostarcza klient, zadanie ją wstawia)
 - [ ] checklista wymagań P24 w raporcie: wymaganie → gdzie na stronie
 
 ## Gotowe, gdy
-- pełna ścieżka w trybie weryfikacji na sandboxie P24 (lokalnie, a po zgodzie tj na produkcyjnej domenie) — **jak sprawdzić:** zrzuty z Playwright MCP każdego kroku
+- pełna ścieżka w trybie weryfikacji na mocku P24 (lokalnie, a po zgodzie tj na produkcyjnej domenie) — **jak sprawdzić:** zrzuty z Playwright MCP każdego kroku
 - red proof: w trybie weryfikacji checkout nie może użyć produkcyjnych kluczy P24 — **jak sprawdzić:** test/konfiguracja z wklejonym błędem przy `P24_MODE=production`
 - checklista P24 kompletna, każdy punkt ze wskazaniem strony — **jak sprawdzić:** tabela w raporcie
 
 ## Poza zakresem
 - pisanie treści prawnych od zera → klient / prawnik
+- test na prawdziwym sandboxie P24 → HA-2.23
 - przełączenie na realną sprzedaż → HA-2.09
 
 ## Bramki STOP
@@ -44,3 +45,4 @@ P24 weryfikuje sklep przed aktywacją: sprawdza pełną ścieżkę zamówienia, 
 
 ## Notatki z realizacji
 - 2026-09-30 tj: O-13 rozstrzygnięte — dane firmy są na stronie, zwroty w `legal/Regulamin sklepu.docx` (§ 6), opisy produktów z BaseLinkera.
+- 2026-10-06 tj: dane P24 (O-09) blokują tylko HA-2.23; reszta powstaje na mocku i wartościach wstępnych.
