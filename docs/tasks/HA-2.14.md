@@ -9,7 +9,7 @@ effort: null
 branch: null
 due: null
 depends_on: [HA-2.13]
-blocked_by_questions: [O-21]
+blocked_by_questions: []
 touches_db: false
 touches_prod: true
 pr: null
@@ -19,6 +19,7 @@ pr: null
 24.07 z serwera poszedł import Spechurtu na żywo do pustego katalogu 107789: 6 854 produkty, bez filtra P1 i z błędami tagów. Dziś nie wiemy, co jest w BaseLinkerze. Pierwszy import z filtrem z HA-2.04 i bramka „przed ukryciem produktów już obecnych w BL” wymagają tej wiedzy. Sukces: raport z liczbami, na podstawie którego tj zdecyduje, co zrobić z produktami spoza P1, które już są w BL.
 
 ## Zakres
+- [ ] tj weryfikuje login do konta BL klienta i wpisuje token API do `.env.local` (poza czatem i repo); agent nie loguje się do konta
 - [ ] odczyt stanu: `src/lib/baselinker/client.ts`, `scripts/baselinker-sync.ts` (warunek `approved`), `xml-integration/assortment-rules.ts`, `assortment-filter.ts`
 - [ ] tj uruchamia `npx tsx scripts/bl-verify-categories.ts` (plik) i na kopii z jednym zmienionym ID (red proof); jeśli skrypt padnie na kształcie odpowiedzi BL — poprawka w tym zadaniu
 - [ ] skrypt tylko do odczytu (np. `scripts/bl-inventory-report.ts`) przez klienta, który udostępnia wyłącznie metody `get*`. Uruchamia tj
@@ -51,3 +52,4 @@ pr: null
 - 2026-09-25 tj: log importu z 24.07 na serwerze: katalog 107789, magazyn Spechurtu `bl_148604`, 0 produktów w BL przed importem.
 - 2026-09-25 tj: konto BaseLinker zablokowane (`ERROR_USER_ACCOUNT_BLOCKED`); zadanie czeka na odblokowanie. Przejęło weryfikację na żywo z HA-2.13.
 - 2026-09-26 tj: obecny BaseLinker to sandbox tj, nie konto klienta — inwentaryzacja sandboxa nie daje wiedzy potrzebnej przed importem z filtrem. Zadanie odłożone do dostępu do BL klienta (O-21).
+- 2026-10-06 tj: dostęp do BL klienta otrzymany (login); hasła i tokena jeszcze nie sprawdzono. Zadanie startuje po wpisaniu tokena do `.env.local`.

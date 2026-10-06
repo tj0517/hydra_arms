@@ -8,8 +8,8 @@ model_approved: null
 effort: null
 branch: null
 due: null
-depends_on: [HA-2.11, HA-2.13, HA-2.14]
-blocked_by_questions: [O-19, O-21]
+depends_on: [HA-2.11, HA-2.13, HA-2.14, HA-2.18]
+blocked_by_questions: [O-19]
 touches_db: false
 touches_prod: true
 pr: null
@@ -50,3 +50,4 @@ Feedy hurtowni ważą 54–246 MB, Spechurt działa tylko z serwera 51.83.134.18
 
 ## Notatki z realizacji
 - 2026-09-25 tj: serwer 51.83.134.183 — Ubuntu 26.04, Node v20.20.2, 3,7 GB RAM, 32 GB wolne; `~/hydra` = klon repo na `f20a13d` z `.env.local`; brak crontaba.
+- 2026-10-06 tj: O-21 zdjęte (dostęp do BL, zob. HA-2.14); zostaje decyzja tj O-19 (serwer, klucze produkcyjne na serwerze). Import na żywo z marżą wstępną tylko, gdy sklep nie sprzedaje (czeka na P24); zapis cen to bramka STOP.

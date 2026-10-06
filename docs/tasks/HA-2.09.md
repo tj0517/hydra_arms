@@ -8,7 +8,7 @@ model_approved: null
 effort: null
 branch: null
 due: null
-depends_on: [HA-1.02, HA-1.03, HA-1.07, HA-2.02, HA-2.03, HA-2.04, HA-2.05, HA-2.06, HA-2.07, HA-2.08, HA-2.15]
+depends_on: [HA-1.02, HA-1.03, HA-1.07, HA-2.02, HA-2.03, HA-2.04, HA-2.05, HA-2.06, HA-2.07, HA-2.08, HA-2.15, HA-2.16, HA-2.19, HA-2.20, HA-2.21, HA-2.23]
 blocked_by_questions: []
 touches_db: true
 touches_prod: true
@@ -25,9 +25,14 @@ Po akceptacji P24 sklep ma zacząć realną sprzedaż. To moment, w którym zam�
 - [ ] ochrona `orders`/`order_items` przed zmianą historii (np. brak UPDATE/DELETE poza statusem przez service role), migracja
 - [ ] propozycja diffu do project.md: `security.immutable: [orders, order_items]`, notatka o starcie
 - [ ] test dymny po przełączeniu: jedno realne zamówienie o niskiej wartości (robi tj), potem zwrot
+- [ ] `npm run inputs:check` w trybie live bez placeholderów (HA-2.16)
+- [ ] własny SMTP i szablony w Supabase Auth Settings (deferred 2026-09-22)
+- [ ] runbook okna oversell: częstotliwość syncu stanów po pushu zamówienia do BL (deferred 2026-09-23)
+- [ ] weryfikacja awarii obrazu PG 17.6 przy wywołaniu cofniętej funkcji SECURITY DEFINER na instancji nieprodukcyjnej, przed startem (deferred 2026-09-23)
 
 ## Gotowe, gdy
 - runbook przejrzany przez tj — **jak sprawdzić:** akceptacja tj w notatkach
+- `npm run inputs:check` w trybie live zwraca 0 — **jak sprawdzić:** wklejony wynik
 - red proof: próba usunięcia/zmiany kwoty zamówienia (lokalnie) → odrzucona — **jak sprawdzić:** wklejony błąd
 - pierwsze realne zamówienie: P24 → `paid` → BL → mail — **jak sprawdzić:** wklejone SELECT, identyfikator w BL, zrzut maila (dane klienta zamaskowane)
 
@@ -43,3 +48,4 @@ Po akceptacji P24 sklep ma zacząć realną sprzedaż. To moment, w którym zam�
 - project.md (security, bramki), `docs/deferred-tasks.md`, raporty HA-2.01–2.08
 
 ## Notatki z realizacji
+- 2026-10-06 tj: dopisane zależności od HA-2.16, 2.19, 2.20, 2.21, 2.23 (plan „większość projektu na wartościach wstępnych”).
