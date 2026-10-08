@@ -1,7 +1,7 @@
 ---
 id: HA-2.25
 title: Gałęzie 01/02 w filtrze asortymentu po O-11/O-27 + czarnoprochowa Kolby
-status: in_progress
+status: review
 difficulty: M
 model: claude-fable-5-1
 model_approved: null
@@ -12,7 +12,7 @@ depends_on: [HA-2.04, HA-2.17]
 blocked_by_questions: []
 touches_db: false
 touches_prod: false
-pr: null
+pr: 34
 ---
 
 ## Cel
