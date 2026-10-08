@@ -8,7 +8,7 @@ model_approved: null
 effort: null
 branch: null
 due: null
-depends_on: [HA-2.04]
+depends_on: [HA-2.04, HA-2.25]
 blocked_by_questions: []
 touches_db: false
 touches_prod: false
