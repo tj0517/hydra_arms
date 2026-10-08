@@ -1,7 +1,7 @@
 ---
 id: HA-2.25
 title: Gałęzie 01/02 w filtrze asortymentu po O-11/O-27 + czarnoprochowa Kolby
-status: review
+status: done
 difficulty: M
 model: claude-fable-5-1
 model_approved: null
@@ -59,3 +59,4 @@ Filtr asortymentu (HA-2.04) wyklucza całe gałęzie 01 (broń palna) i 02 (amun
 - 2026-10-08 agent: model faktyczny = claude-fable-5-1 (prompt zakładał Sonnet); dry-run kolba/sharg do uruchomienia przez tj — porównanie z regułami po wklejeniu.
 - 2026-10-08 tj (review): dry-run sharg A=289 C=4, kolba A=3 C=14 (C bez zmian — reguły 1.4 nie trafiły żadnego produktu Kolby); tabela permit drukuje tylko 40 wierszy, więc wierszy 1.x/2.x nie widać. Dopisek w tym PR: flaga `--sections=1,2` (tylko dry-run, read-only) drukująca wszystkie wiersze tabeli permit dla wskazanych sekcji; porównanie wierszy z regułami po wklejeniu; decyzja o prochu bezdymnym czeka na te wiersze; żadnej reguły nie poszerzać bez decyzji tj.
 - 2026-10-08 tj (review, 2. runda): reguła „spłonk” usunięta (3 narzędzia Lyman/RCBS), mapa Sharg „Broń palna” → 1.5 usunięta (~175 produktów → 00 do czasu `sharg_rules`, deferred); cztery reguły Kolby → 1.4 zostają uśpione (opcja A); komentarze 1.4 / 2.6 w `assortment-rules.ts` oznaczone „dormant”.
+- 2026-10-08 tj: odbiór po 3 rundach (PR #34). Udowodnione: 5 węzłów w filtrze, brak «pending O-11», testy 108/108, red proofs (olej czarnoprochowy; narzędzia Lyman/RCBS), dry-run Kolba 0 wierszy 01/02 (feed bez czarnoprochowej), dry-run Sharg: alarmówki, Hatsan 1.3, amunicja hukowa 2.5 z tagiem permit. Usunięte w review: reguła `spłonk`, mapy Sharg «Broń palna»→1.5 i «…> Amunicja»→2.5. Model: Fable (prompt zakładał Sonnet).
