@@ -1,7 +1,7 @@
 ---
 id: HA-2.16
 title: Rejestr inputów i guard placeholderów
-status: in_progress
+status: review
 difficulty: M
 model: null
 model_approved: null
@@ -12,7 +12,7 @@ depends_on: []
 blocked_by_questions: []
 touches_db: false
 touches_prod: false
-pr: null
+pr: 29
 ---
 
 ## Cel
