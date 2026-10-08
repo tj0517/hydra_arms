@@ -1,7 +1,7 @@
 ---
 id: HA-2.20
 title: Hardening P24 — notify tylko z IP P24, RLS koszyków, guard licznika BL
-status: review
+status: done
 difficulty: M
 model: sonnet
 model_approved: tj
@@ -56,3 +56,7 @@ Przed sandboxem P24 i startem sprzedaży zamykamy trzy luki z deferred: notify m
    W `sandbox`/`production` z pustą lub nieustawioną listą → odrzucamy każde notify
    (fail closed). W trybie `mock` z nieustawioną listą → filtr wyłączony, więc
    `mock-pay` działa jak dotąd.
+
+### Odbiór
+
+2026-10-08 · odbiór tj · PR #30 · udowodnione: notify obce IP → 403 bez zmian w zamówieniu, IP z listy → opłacone, sandbox/prod bez listy → odrzuca wszystko; cart_items anon → 42501 (przed/po); bl-mock-counter mock=false → 404. Migracja 015 tylko lokalnie — prod wgrywa tj przez SQL Editor (NIE db push: schema_migrations na prod pusta).
