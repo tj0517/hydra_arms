@@ -152,7 +152,7 @@ describe('output is value-free', () => {
   const envInputs = INPUTS.filter((i) => i.source === 'env').map((i) => i.name);
 
   function runCheck(extraEnv: Record<string, string>) {
-    const env: Record<string, string> = { ...process.env as Record<string, string> };
+    const env: NodeJS.ProcessEnv = { ...process.env };
     for (const name of envInputs) env[name] = MARKER;
     Object.assign(env, extraEnv);
     return spawnSync('npx', ['tsx', 'scripts/inputs-check.ts'], {
