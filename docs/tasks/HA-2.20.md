@@ -1,18 +1,18 @@
 ---
 id: HA-2.20
 title: Hardening P24 — notify tylko z IP P24, RLS koszyków, guard licznika BL
-status: todo
+status: done
 difficulty: M
-model: null
-model_approved: null
-effort: null
-branch: null
+model: sonnet
+model_approved: tj
+effort: medium
+branch: feat/ha-2.20-p24-hardening
 due: null
 depends_on: [HA-2.03]
 blocked_by_questions: []
 touches_db: true
 touches_prod: true
-pr: null
+pr: 30
 ---
 
 ## Cel
@@ -44,3 +44,19 @@ Przed sandboxem P24 i startem sprzedaży zamykamy trzy luki z deferred: notify m
 - `src/lib/p24/`, `supabase/migrations/`, `supabase/baseline/prod-schema-2026-09-22.sql`, `docs/deferred-tasks.md`
 
 ## Notatki z realizacji
+
+### Decyzje tj — 2026-10-08
+
+1. **`cart_items`: zamknąć, tabelę zostawić.** Usuwamy politykę `own cart`, odbieramy
+   wszystkie uprawnienia do `cart_items` rolom `anon` i `authenticated`, RLS zostaje
+   włączony i bez żadnej polityki dla tych rol (odmowa wszystkiego). Tabela zostaje —
+   bez usuwania tabeli.
+2. **Filtr IP na notify jest aktywny**, gdy `P24_MODE` to `sandbox` albo `production`,
+   ALBO gdy `P24_NOTIFY_ALLOWED_IPS` jest ustawione (w dowolnym trybie).
+   W `sandbox`/`production` z pustą lub nieustawioną listą → odrzucamy każde notify
+   (fail closed). W trybie `mock` z nieustawioną listą → filtr wyłączony, więc
+   `mock-pay` działa jak dotąd.
+
+### Odbiór
+
+2026-10-08 · odbiór tj · PR #30 · udowodnione: notify obce IP → 403 bez zmian w zamówieniu, IP z listy → opłacone, sandbox/prod bez listy → odrzuca wszystko; cart_items anon → 42501 (przed/po); bl-mock-counter mock=false → 404. Migracja 015 tylko lokalnie — prod wgrywa tj przez SQL Editor (NIE db push: schema_migrations na prod pusta).

@@ -17,7 +17,7 @@ może ją zmienić.
 | `P24_POS_ID` | client | O-09 | HA-2.08 | `src/lib/p24/index.ts`<br>`src/app/api/shop/payments/p24/mock-pay/route.ts` | nie |
 | `P24_CRC_KEY` | client | O-09 | HA-2.08 | `src/lib/p24/mode.ts` | tak |
 | `P24_API_KEY` | client | O-09 | HA-2.08 | `src/lib/p24/index.ts` | tak |
-| `P24_NOTIFY_ALLOWED_IPS` ⟨nazwa wstępna⟩ | tj | O-09 | HA-2.20 | jeszcze nie — HA-2.20 | nie |
+| `P24_NOTIFY_ALLOWED_IPS` ⟨nazwa wstępna⟩ | tj | O-09 | HA-2.20 | `src/lib/p24/notifyIp.ts`<br>`src/app/api/shop/payments/p24/notify/route.ts` | nie |
 | `BASELINKER_MARKUP_KOLBA` | client | O-07 | HA-2.05 | `scripts/xml-to-baselinker.ts` | nie |
 | `BASELINKER_MARKUP_SHARG` | client | O-07 | HA-2.05 | `scripts/xml-to-baselinker.ts` | nie |
 | `BASELINKER_MARKUP_SPECHURT` | client | O-07 | HA-2.05 | `scripts/xml-to-baselinker.ts` | nie |
@@ -42,7 +42,7 @@ może ją zmienić.
 - `P24_CRC_KEY` — Signature verification key. Sandbox and production keys differ.
 - `P24_API_KEY` — Reports key from the Przelewy24 panel.
 - `P24_MODE` — Closed list in code: mock | sandbox | production. Per-environment switch, not a missing value — HA-2.09 sets production.
-- `P24_NOTIFY_ALLOWED_IPS` — P24 server IP list from the Przelewy24 documentation; not read yet, so the registry holds no list. Sandbox and production ranges may differ.
+- `P24_NOTIFY_ALLOWED_IPS` — Comma-separated P24 server IPs — bare addresses and IPv4 CIDR ranges. Source: official Przelewy24 docs, section "Adresy IP serwerow" / "Server IP addresses" (developers.przelewy24.pl, /yaml/pl_documentation_1.0.yaml + en). The docs publish ONE list for all P24 servers and do NOT split sandbox from production, so the same list applies to both modes. Stays placeholder: the registry holds metadata only, the values go to env (Vercel) at HA-2.23/HA-2.09. Filter is active in sandbox/production or whenever this is set; empty in sandbox/production rejects every notify (fail closed).
 - `BASELINKER_MARKUP_KOLBA` — Percent on purchase price (25 = +25%). Client gave no rates on 2026-10-06; 30% is the working assumption in HA-2.05. See also O-32 (markup sheet, HA-2.22).
 - `BASELINKER_MARKUP_SHARG` — See BASELINKER_MARKUP_KOLBA.
 - `BASELINKER_MARKUP_SPECHURT` — See BASELINKER_MARKUP_KOLBA.

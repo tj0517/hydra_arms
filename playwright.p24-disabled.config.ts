@@ -45,6 +45,7 @@ export default defineConfig({
       P24_MODE: '',
       P24_CRC_KEY: '',   // empty CRC — tests the crcKey() guard
       P24_MERCHANT_ID: '',
+      P24_NOTIFY_ALLOWED_IPS: '',   // filter off: this config tests the CRC guard (HA-2.20)
       P24_POS_ID: '',
     },
   },

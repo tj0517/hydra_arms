@@ -118,10 +118,13 @@ export const INPUTS: readonly InputEntry[] = [
     owner: 'tj',
     provisional: true,
     secret: false,
-    usedIn: ['not yet — HA-2.20'],
+    usedIn: [
+      'src/lib/p24/notifyIp.ts',
+      'src/app/api/shop/payments/p24/notify/route.ts',
+    ],
     question: 'O-09',
     task: 'HA-2.20',
-    note: 'P24 server IP list from the Przelewy24 documentation; not read yet, so the registry holds no list. Sandbox and production ranges may differ.',
+    note: 'Comma-separated P24 server IPs — bare addresses and IPv4 CIDR ranges. Source: official Przelewy24 docs, section "Adresy IP serwerow" / "Server IP addresses" (developers.przelewy24.pl, /yaml/pl_documentation_1.0.yaml + en). The docs publish ONE list for all P24 servers and do NOT split sandbox from production, so the same list applies to both modes. Stays placeholder: the registry holds metadata only, the values go to env (Vercel) at HA-2.23/HA-2.09. Filter is active in sandbox/production or whenever this is set; empty in sandbox/production rejects every notify (fail closed).',
   },
 
   // ─── BaseLinker — markup per wholesaler (O-07, delivered by the client) ─────
