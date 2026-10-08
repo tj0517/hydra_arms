@@ -1,18 +1,18 @@
 ---
 id: HA-2.16
 title: Rejestr inputów i guard placeholderów
-status: todo
+status: done
 difficulty: M
 model: null
 model_approved: null
 effort: null
-branch: null
+branch: feat/ha-2.16-inputs-registry
 due: null
 depends_on: []
 blocked_by_questions: []
 touches_db: false
 touches_prod: false
-pr: null
+pr: 29
 ---
 
 ## Cel
@@ -45,3 +45,7 @@ Brakujące dane od klienta (ceny wysyłek, marże, dane P24, domena, tokeny) maj
 
 ## Notatki z realizacji
 - 2026-10-06 tj: cel planu — większość projektu gotowa, wartości jako minimalne inputy do działających funkcji.
+- 2026-10-08 tj: SHOP_MODE — zamknięta lista (live / verification / brak = dev); inna wartość = błąd inputs:check.
+- 2026-10-08 tj: SHOP_BASE_URL w rejestrze obok SITE_URL, oba placeholder (O-31), bez zmiany nazw — opcja A.
+- 2026-10-08 tj: P24_MODE zostaje confirmed (przełącznik środowiska, nie brakująca dana); sprawdzenie wartości przy starcie należy do HA-2.09.
+- 2026-10-08 tj: odbiór PR #29 — 6/6 kryteriów udowodnionych (red proofs: placeholder w live, znacznik sekretu, nieaktualny docs/inputs.md); notatki i deferred uzupełnione w tej samej gałęzi.
