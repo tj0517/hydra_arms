@@ -139,9 +139,22 @@ test('kolba_rules (HA-2.25): percussion caps (kapiszony) → 2.6', () => {
   assert.equal(firstKolbaMatch('Kapiszony RWS 1075 Plus 250 szt.')?.cat, '2.6');
 });
 
-test('kolba_rules (HA-2.25): black powder and primers → 2.6', () => {
+test('kolba_rules (HA-2.25): black powder → 2.6', () => {
   assert.equal(firstKolbaMatch('Proch czarny Vesuvit LC 500 g')?.cat, '2.6');
-  assert.equal(firstKolbaMatch('Spłonki CCI No. 11 Percussion Caps 100 szt.')?.cat, '2.6');
+});
+
+// Red proof (review 2026-10-08): the only Kolba names containing "spłonk" are reloading
+// TOOLS (primer-pocket reamer, press with priming kits), not primers. A "spłonk" → 2.6 rule
+// tagged all three as permit (group A). The rule is removed; re-add it and this fails.
+test('kolba_rules (HA-2.25) red proof: reloading tools with "spłonk" in the name → neither 1.4 nor 2.6', () => {
+  for (const name of [
+    'Narzędzie Lyman do frezowania gniazda na spłonkę Large',
+    'Narzędzie Lyman do frezowania gniazda na spłonkę Small',
+    'Prasa RCBS Rock Chucker Supreme IV z zestawami do spłonkowania',
+  ]) {
+    const hit = firstKolbaMatch(name);
+    assert.ok(hit?.cat !== '1.4' && hit?.cat !== '2.6', `${name} → got ${hit?.cat ?? 'no match (00)'}`);
+  }
 });
 
 // Red proof: the trap name contains "czarnoprochow" (generic 1.4 rule) but is an

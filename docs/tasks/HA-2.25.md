@@ -32,7 +32,7 @@ Filtr asortymentu (HA-2.04) wyklucza całe gałęzie 01 (broń palna) i 02 (amun
 - `grep -rniE 'pending O-11' xml-integration src` pusty — **jak sprawdzić:** wklejony grep
 - test filtru: 5 produktów admitted (po jednym na węzeł), `2.1` dropped — **jak sprawdzić:** nazwy testów w wyniku `npm run test:unit`
 - red proof reguł Kolby: nazwa-pułapka nie trafia do 1.4/2.6 — **jak sprawdzić:** test w `category-rules.test.ts`
-- grupa A > 0 na realnych danych: dry-run `kolba` i `sharg` na pełnym feedzie pokazuje `permit groups: A=…` > 0 i w tabeli produkty z 1.4/1.5/2.5/2.6 z tagiem `permit` — **jak sprawdzić:** tj uruchamia z terminala (hook blokuje skrypt w sesji agenta), wkleja blok `permit tags:` + tabelę; agent porównuje z regułami
+- grupa A > 0 na realnych danych (zmienione 2026-10-08 po dry-runie): Sharg `permit groups: A=…` > 0 z broni alarmowej (1.5), strzelb Hatsan (1.3) i amunicji hukowej (2.5); Kolba w sekcjach 1/2 oczekiwane `permit rows (sections 1,2): 0` — feed Kolby nie ma broni czarnoprochowej, kapiszonów ani prochów (grep 2026-10-08); w tabeli Sharg żadnej Pietty, GSG/ISSC/Astra ani części — **jak sprawdzić:** tj uruchamia `--dry-run --sections=1,2` z terminala (hook blokuje skrypt w sesji agenta), wkleja blok `permit tags:` / `permit groups:` + tabelę; agent porównuje z regułami
 - pełny zestaw testów zielony — **jak sprawdzić:** `npm run test:unit` raz na końcu
 
 ## Poza zakresem
