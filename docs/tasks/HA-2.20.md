@@ -1,7 +1,7 @@
 ---
 id: HA-2.20
 title: Hardening P24 — notify tylko z IP P24, RLS koszyków, guard licznika BL
-status: in_progress
+status: review
 difficulty: M
 model: sonnet
 model_approved: tj
@@ -12,7 +12,7 @@ depends_on: [HA-2.03]
 blocked_by_questions: []
 touches_db: true
 touches_prod: true
-pr: null
+pr: 30
 ---
 
 ## Cel
