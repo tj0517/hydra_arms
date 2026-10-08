@@ -1,12 +1,12 @@
 ---
 id: HA-2.16
 title: Rejestr inputów i guard placeholderów
-status: todo
+status: in_progress
 difficulty: M
 model: null
 model_approved: null
 effort: null
-branch: null
+branch: feat/ha-2.16-inputs-registry
 due: null
 depends_on: []
 blocked_by_questions: []
@@ -45,3 +45,4 @@ Brakujące dane od klienta (ceny wysyłek, marże, dane P24, domena, tokeny) maj
 
 ## Notatki z realizacji
 - 2026-10-06 tj: cel planu — większość projektu gotowa, wartości jako minimalne inputy do działających funkcji.
+- 2026-10-08 tj: SHOP_MODE — zamknięta lista (live / verification / brak = dev); inna wartość = błąd inputs:check.
