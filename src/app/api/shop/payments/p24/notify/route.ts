@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { parseNotifyBody, verifyNotifySign, verifyTransaction } from '@/lib/p24'
+import { decideNotifyIp } from '@/lib/p24/notifyIp'
+import { getClientIp } from '@/lib/rateLimit'
 import { markOrderPaid } from '@/lib/shop/markOrderPaid'
 
 // Vercel function max duration.  The stale-claim threshold in p24_claim_for_verify
@@ -9,6 +11,25 @@ import { markOrderPaid } from '@/lib/shop/markOrderPaid'
 export const maxDuration = 15
 
 export async function POST(req: NextRequest) {
+  // 0. IP allowlist (HA-2.20) — an extra layer IN FRONT of the CRC check below,
+  //    never a replacement for it.  Runs before body parsing, signature
+  //    verification and any DB access, so a rejected call touches nothing.
+  //
+  //    Trust assumption: the client IP comes from `x-forwarded-for`, which on
+  //    Vercel is set by the platform itself.  Vercel's request-headers docs state
+  //    it "currently overwrite[s] the X-Forwarded-For header and do not forward
+  //    external IPs. This restriction is in place to prevent IP spoofing", so a
+  //    value a caller sets cannot reach this handler in production.  That
+  //    guarantee is Vercel-specific: behind any other proxy (or on a local dev
+  //    server) the header is caller-controlled, which is exactly why the CRC
+  //    signature check in §2 remains the authoritative gate.
+  const ipDecision = decideNotifyIp({ clientIp: getClientIp(req) })
+  if (!ipDecision.allowed) {
+    // Log the IP and the reason only — never the body, signature or keys.
+    console.warn(`[p24/notify] rejected ip=${getClientIp(req)} reason=${ipDecision.reason}`)
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
   let raw: unknown
   try {
     raw = await req.json()

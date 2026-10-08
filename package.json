@@ -13,6 +13,8 @@
     "test:shop:local": "playwright test tests/shop",
     "test:p24:disabled": "playwright test --config playwright.p24-disabled.config.ts",
     "test:p24:no-baseurl": "playwright test --config playwright.p24-no-baseurl.config.ts",
+    "test:p24:notify-ip": "playwright test --config playwright.p24-notify-ip.config.ts",
+    "test:bl-mock-off": "playwright test --config playwright.bl-mock-off.config.ts",
     "test:unit": "npx tsx --test xml-integration/__tests__/*.test.ts",
     "inputs:check": "npx tsx scripts/inputs-check.ts",
     "inputs:docs": "npx tsx scripts/inputs-docs.ts",

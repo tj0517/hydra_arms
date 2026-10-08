@@ -14,7 +14,13 @@ if (!process.env.P24_CRC_KEY) {
 
 export default defineConfig({
   testDir: './tests',
-  testIgnore: ['**/p24-disabled.spec.ts', '**/p24-no-baseurl.spec.ts'],
+  // Specs that need a webServer with different env live in their own configs.
+  testIgnore: [
+    '**/p24-disabled.spec.ts',
+    '**/p24-no-baseurl.spec.ts',
+    '**/notify-ip-api.spec.ts',   // playwright.p24-notify-ip.config.ts (HA-2.20)
+    '**/bl-mock-off.spec.ts',     // playwright.bl-mock-off.config.ts  (HA-2.20)
+  ],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 1,
@@ -44,6 +50,10 @@ export default defineConfig({
       RESEND_MOCK: 'true',
       SHOP_BASE_URL: 'http://localhost:3001',
       P24_MODE: process.env.P24_MODE ?? 'mock',
+      // Empty (not absent): webServer env is additive over the test-runner's
+      // process.env, so an explicit '' guarantees the notify IP filter is OFF
+      // here and the mock-pay -> notify path keeps working (HA-2.20).
+      P24_NOTIFY_ALLOWED_IPS: '',
       P24_CRC_KEY: process.env.P24_CRC_KEY,
       P24_MERCHANT_ID: process.env.P24_MERCHANT_ID ?? '',
       P24_POS_ID: process.env.P24_POS_ID ?? '',

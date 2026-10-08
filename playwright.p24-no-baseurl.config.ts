@@ -38,6 +38,7 @@ export default defineConfig({
       BASELINKER_STATUS_PAID: process.env.BASELINKER_STATUS_PAID ?? '',
       SHOP_BASE_URL: '',  // intentionally empty: tests fail-closed behaviour
       P24_MODE: 'mock',
+      P24_NOTIFY_ALLOWED_IPS: '',   // filter off: this config tests the SHOP_BASE_URL guard (HA-2.20)
       P24_CRC_KEY: process.env.P24_CRC_KEY,
       P24_MERCHANT_ID: process.env.P24_MERCHANT_ID ?? '',
       P24_POS_ID: process.env.P24_POS_ID ?? '',
