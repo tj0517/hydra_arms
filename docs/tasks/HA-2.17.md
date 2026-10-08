@@ -4,7 +4,7 @@ title: Flagi pozwolenia i 18+ — import, sync, override w BaseLinkerze
 status: review
 difficulty: M
 model: fable-5.1
-model_approved: sonnet
+model_approved: null
 effort: medium
 branch: feat/ha-2.17-permit-flags
 due: null
@@ -55,3 +55,8 @@ Sklep wymusza odbiór osobisty dla produktów z pozwoleniem, rejestracją lub 18
 - 2026-10-08 tj (prompt): `delivery_allowed = false` dla działów 01 i 02 niezależnie od tagów, `true` dla reszty; dział z łańcucha kategorii po nazwie korzenia („01.”/„02.”), nie po id BL. Red proof merge przeniesiony z dry-runu do testu jednostkowego (hook blokuje skrypt w każdym trybie). Hook bez zmian (poza zakresem).
 - 2026-10-08 agent: tabela reguł `xml-integration/permit-rules.ts` (37 wierszy: 30 aktywnych po numerach Hydra, 7 inertnych bez gałęzi w drzewie — ASG, kusze, czarnoprochowa, lufy, BCG, konwersje). Liście drzewa: A=19, B=1, C=4, D=21, brak=106. Dopasowanie: najdłuższy prefiks (np. „1” → A, „1.4” → C). Tagi i merge wyciągnięte do `xml-integration/import-tags.ts`, resolver do `xml-integration/resolve-category.ts`; mapowanie syncu w `src/lib/shop/permitFlags.ts`, wpięte w `src/app/api/shop/sync/route.ts`. Mock BL: +6 produktów i +10 kategorii („01.”, „02.”, „15.”) na dowód mapowania. Dry-run drukuje teraz tabelę tagów per produkt (do 40 wierszy). Próbki w `samples/` mają tylko grupę D (31 kompletnych produktów) — A/B/C w tabeli z próbek brak, powiedziane wprost.
 - 2026-10-08 agent — domyślne przypisania czekające na decyzję tj (dane, nie kod): 1.4 → C (O-29, liść miesza demobil/pozbawioną cech/czarnoprochową); 13.3 multitoole → brak, 13.4.3 toporki → D (O-30 „itp.”); 15.3 paralizatory → C (bez osobnego `age_18`, 18+ wynika z `permit`); 4.1–4.3 → brak (lufy/BCG/konwersje bez liścia). Zgodnie ze spec `age_min=18` gdy `permit` lub `age_18` — więc `permit_off` nie zdejmuje 18+ (produkt po `permit_off` nadal idzie odbiorem).
+- 2026-10-08 agent: ran on Fable 5.1; prompt specified Sonnet medium.
+- 2026-10-08 tj: 1.4 Broń kolekcjonerska i historyczna → grupa C (`permit` + `permit_review`) — zostaje jak jest.
+- 2026-10-08 tj: `permit_off` NIE zeruje `age_min`; produkt z `permit_off` zostaje odbiorem osobistym do czasu bramki wieku (O-28) — `permitFlags.ts` bez zmian.
+- 2026-10-08 tj: wiersze O-30: 13.1 / 13.2 / 13.4.3 → D, 13.3 multitoole → brak; części 4.1–4.3 → brak z wierszami inertnymi dla luf / BCG / zestawów konwersyjnych — zostaje jak jest; liście dojdą z HA-2.24.
+- 2026-10-08 tj: dry-run na pełnym feedzie Kolby (3168 dopuszczonych): permit 14 / age_18 2772 / permit_review 14; grupy A=0 B=0 C=14 D=2772; wszystkie 14 C to 15.3 z `permit, permit_review` — kryterium 4 potwierdzone na realnych danych dla C i D. A=0 / B=0 wynika z `assortment-rules.ts` (działy 01/02 nadal wykluczone „pending O-11”) — nie przywracać w tym PR, zapis w deferred.
