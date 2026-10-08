@@ -13,6 +13,7 @@ import {
 } from '@/lib/baselinker/client';
 import { isSyncAuthorized, isCronAuthorized } from '@/lib/apiAuth';
 import { filterHydraCategories } from '@/lib/shop/categoryFilter';
+import { computePermitFlags, indexCategories, resolveHydraSection } from '@/lib/shop/permitFlags';
 
 const CHUNK = 100;
 
@@ -58,6 +59,12 @@ async function runSync() {
     if (catError) throw new Error(`Category sync: ${catError.message}`);
     log.push(`categories: ${catRows.length} upserted`);
 
+    // Hydra section per product (root "01." / "02." → pickup only), read from
+    // the synced category chain — never from hard-coded BL ids (HA-2.17)
+    const catById = indexCategories(cats);
+    let permitCount = 0;
+    let pickupOnlyCount = 0;
+
     // Sync products (paginated)
     const allIds: string[] = [];
     let page = 1;
@@ -81,6 +88,12 @@ async function runSync() {
       const rows = Object.entries(details).map(([idStr, p]) => {
         const id = parseInt(idStr, 10);
         const { brand, features } = extractBrand(p.text_fields.features);
+        const tags = p.tags ?? [];
+        // Compliance flags from BL tags (permit / age_18 / permit_off) + Hydra
+        // section; cartAnalysis.ts forces pickup on any of them (HA-2.17)
+        const flags = computePermitFlags(tags, resolveHydraSection(p.category_id, catById));
+        if (flags.requires_license) permitCount++;
+        if (!flags.delivery_allowed) pickupOnlyCount++;
         return {
           id,
           inventory_id: INVENTORY_ID,
@@ -97,7 +110,10 @@ async function runSync() {
           category_id: p.category_id || null,
           images: p.images && Object.keys(p.images).length > 0 ? p.images : null,
           // Publish gate: only products the admin tagged `approved` in BL go live
-          is_active: (p.tags ?? []).includes('approved'),
+          is_active: tags.includes('approved'),
+          requires_license: flags.requires_license,
+          age_min: flags.age_min,
+          delivery_allowed: flags.delivery_allowed,
           synced_at: new Date().toISOString(),
         };
       });
@@ -111,6 +127,7 @@ async function runSync() {
     }
 
     log.push(`products: ${totalSynced} upserted (product_type, source_warehouse preserved)`);
+    log.push(`compliance: ${permitCount} requires_license, ${pickupOnlyCount} pickup-only by section 01/02`);
 
     // Bust the shop page cache so the next visitor sees fresh stock/prices
     revalidateTag(SHOP_CACHE_TAG, 'max');

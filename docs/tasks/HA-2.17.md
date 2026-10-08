@@ -1,12 +1,12 @@
 ---
 id: HA-2.17
 title: Flagi pozwolenia i 18+ — import, sync, override w BaseLinkerze
-status: todo
+status: review
 difficulty: M
-model: null
-model_approved: null
-effort: null
-branch: null
+model: fable-5.1
+model_approved: sonnet
+effort: medium
+branch: feat/ha-2.17-permit-flags
 due: null
 depends_on: [HA-2.04]
 blocked_by_questions: []
@@ -52,3 +52,6 @@ Sklep wymusza odbiór osobisty dla produktów z pozwoleniem, rejestracją lub 18
 
 ## Notatki z realizacji
 - 2026-10-06 tj: override = tag admina `permit_off` (nie pole dodatkowe BL); grupa C po imporcie = odbiór + `review`.
+- 2026-10-08 tj (prompt): `delivery_allowed = false` dla działów 01 i 02 niezależnie od tagów, `true` dla reszty; dział z łańcucha kategorii po nazwie korzenia („01.”/„02.”), nie po id BL. Red proof merge przeniesiony z dry-runu do testu jednostkowego (hook blokuje skrypt w każdym trybie). Hook bez zmian (poza zakresem).
+- 2026-10-08 agent: tabela reguł `xml-integration/permit-rules.ts` (37 wierszy: 30 aktywnych po numerach Hydra, 7 inertnych bez gałęzi w drzewie — ASG, kusze, czarnoprochowa, lufy, BCG, konwersje). Liście drzewa: A=19, B=1, C=4, D=21, brak=106. Dopasowanie: najdłuższy prefiks (np. „1” → A, „1.4” → C). Tagi i merge wyciągnięte do `xml-integration/import-tags.ts`, resolver do `xml-integration/resolve-category.ts`; mapowanie syncu w `src/lib/shop/permitFlags.ts`, wpięte w `src/app/api/shop/sync/route.ts`. Mock BL: +6 produktów i +10 kategorii („01.”, „02.”, „15.”) na dowód mapowania. Dry-run drukuje teraz tabelę tagów per produkt (do 40 wierszy). Próbki w `samples/` mają tylko grupę D (31 kompletnych produktów) — A/B/C w tabeli z próbek brak, powiedziane wprost.
+- 2026-10-08 agent — domyślne przypisania czekające na decyzję tj (dane, nie kod): 1.4 → C (O-29, liść miesza demobil/pozbawioną cech/czarnoprochową); 13.3 multitoole → brak, 13.4.3 toporki → D (O-30 „itp.”); 15.3 paralizatory → C (bez osobnego `age_18`, 18+ wynika z `permit`); 4.1–4.3 → brak (lufy/BCG/konwersje bez liścia). Zgodnie ze spec `age_min=18` gdy `permit` lub `age_18` — więc `permit_off` nie zdejmuje 18+ (produkt po `permit_off` nadal idzie odbiorem).

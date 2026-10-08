@@ -40,11 +40,17 @@
  *   - Dictionary hit on a LEAF        → that category  + tag `auto`
  *   - Hit on a PARENT / unsure rule   → that category  + tag `review`
  *   - No match                        → "00. DO PRZYPISANIA" + tag `flag`
- *   - Branch 15 (gaz/pałki/paralizatory) additionally gets tag `age_18`
+ *   - Permit tags from the data table xml-integration/permit-rules.ts (HA-2.17,
+ *     groups A–D of O-27): A → `permit`, B/D → `age_18`, C → `permit` +
+ *     `permit_review` (pickup until the client decides). Branch 15 keeps
+ *     `age_18` through that table.
  *   - Products are NOT auto-published: the frontend (baselinker-sync → Supabase)
  *     only shows products tagged `approved` — admin flips auto/review/flag →
  *     approved in BL (bulk, filtering by tag/warehouse/category). Re-imports
- *     preserve `approved` and any other admin tags.
+ *     preserve `approved`, `permit_off`, `permit_ok` and any other admin tags;
+ *     `permit_off` / `permit_ok` also stop `permit_review` from coming back
+ *     (xml-integration/import-tags.ts). The resolver itself lives in
+ *     xml-integration/resolve-category.ts.
  */
 
 import * as fs from 'fs';
@@ -60,7 +66,15 @@ import type { NormalizedProduct } from '../xml-integration/types';
 import { filterProduct } from '../xml-integration/assortment-filter';
 import { ASSORTMENT_RULES } from '../xml-integration/assortment-rules';
 import { HydraTreeFromTxt } from '../xml-integration/hydra-tree-txt';
-import { ruleMatches, type CategoryRule } from '../xml-integration/category-rules';
+import {
+  resolveCategory,
+  type CategoryMapFile,
+  type HydraTreeLike,
+  type ResolvedCategory,
+  type StatusTag,
+} from '../xml-integration/resolve-category';
+import { computeImportTags, mergeImportTags } from '../xml-integration/import-tags';
+import { permitGroupFor } from '../xml-integration/permit-rules';
 
 const CONNECTOR_NAMES = ['kolba', 'sharg', 'spechurt'] as const;
 type ConnectorName = (typeof CONNECTOR_NAMES)[number];
@@ -216,24 +230,14 @@ const HYDRA_TREE_TXT_PATH = path.resolve(process.cwd(), 'xml-integration/hydra-c
 const CATEGORY_MAP_PATH = path.resolve(process.cwd(), 'xml-integration/category-map.json');
 
 const UNASSIGNED_NUM = '00'; // "00. DO PRZYPISANIA"
-const AGE_18_BRANCH = '15';  // gaz / pałki / paralizatory → tag age_18
 
-// Import-status tags owned by this script; everything else (incl. `approved`)
-// belongs to the admin and is preserved on re-import.
-type StatusTag = 'auto' | 'review' | 'flag';
-const IMPORT_OWNED_TAGS = new Set<string>(['auto', 'review', 'flag', 'age_18']);
-
-interface CategoryMapFile {
-  spechurt?: Record<string, string>;
-  sharg?: Record<string, string>;
-  kolba_brands?: Record<string, string>;
-  kolba_rules?: CategoryRule[];
-}
+// Tag ownership (import-owned vs admin) and the permit tags live in
+// xml-integration/import-tags.ts + permit-rules.ts (HA-2.17).
 
 // Tree numbers appear with and without leading zero ("03" vs children "3.1")
 const normNum = (n: string) => n.trim().replace(/^0+(?=\d)/, '');
 
-class HydraTree {
+class HydraTree implements HydraTreeLike {
   private byNum = new Map<string, number>();
 
   constructor(raw: Record<string, number>) {
@@ -250,11 +254,6 @@ class HydraTree {
       if (key.startsWith(prefix)) return false;
     }
     return true;
-  }
-
-  isAge18Branch(num: string): boolean {
-    const n = normNum(num);
-    return n === AGE_18_BRANCH || n.startsWith(`${AGE_18_BRANCH}.`);
   }
 
   get unassignedId(): number {
@@ -274,56 +273,18 @@ function loadJson<T>(file: string, hint: string): T {
   return JSON.parse(fs.readFileSync(file, 'utf8')) as T;
 }
 
-interface ResolvedCategory {
-  categoryId: number;
-  status: StatusTag;
-  hydraNum: string | null;
+// resolveCategory (product → Hydra number + status) and the tag functions were
+// extracted to xml-integration/ in HA-2.17 so they can be unit-tested.
+
+/** Per-tag counters for the import / dry-run summaries. */
+function countPermitTags(tags: readonly string[], counts: Record<string, number>): void {
+  for (const t of tags) {
+    if (t === 'permit' || t === 'age_18' || t === 'permit_review') counts[t] = (counts[t] ?? 0) + 1;
+  }
 }
 
-function resolveCategory(
-  p: NormalizedProduct,
-  map: CategoryMapFile,
-  tree: HydraTree,
-  unknownNums: Set<string>,
-): ResolvedCategory {
-  let hydraNum: string | null = null;
-  let forcedReview = false;
-
-  if (p.connector === 'kolba') {
-    // Rules first (can target deep leaves), brand fallback (usually branch-level)
-    const rule = (map.kolba_rules ?? []).find((r) => ruleMatches(r, p));
-    if (rule) {
-      hydraNum = rule.cat;
-      forcedReview = rule.review === true;
-    } else if (p.brand && map.kolba_brands?.[p.brand]) {
-      hydraNum = map.kolba_brands[p.brand];
-    }
-  } else {
-    const dict = (map[p.connector as 'sharg' | 'spechurt'] ?? {}) as Record<string, string>;
-    if (p.supplier_category_name && dict[p.supplier_category_name]) {
-      hydraNum = dict[p.supplier_category_name];
-    }
-  }
-
-  if (!hydraNum) {
-    return { categoryId: tree.unassignedId, status: 'flag', hydraNum: null };
-  }
-
-  const categoryId = tree.resolve(hydraNum);
-  if (categoryId === undefined) {
-    // Dictionary points at a number that isn't in the tree — treat as unmapped
-    unknownNums.add(hydraNum);
-    return { categoryId: tree.unassignedId, status: 'flag', hydraNum: null };
-  }
-
-  const status: StatusTag = forcedReview || !tree.isLeaf(hydraNum) ? 'review' : 'auto';
-  return { categoryId, status, hydraNum };
-}
-
-function computeTags(resolved: ResolvedCategory, tree: HydraTree): string[] {
-  const tags: string[] = [resolved.status];
-  if (resolved.hydraNum && tree.isAge18Branch(resolved.hydraNum)) tags.push('age_18');
-  return tags;
+function formatPermitCounts(counts: Record<string, number>): string {
+  return `permit ${counts.permit ?? 0} / age_18 ${counts.age_18 ?? 0} / permit_review ${counts.permit_review ?? 0}`;
 }
 
 // ── Payload: NormalizedProduct → BL addInventoryProduct product object ────────
@@ -548,7 +509,8 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
   }
 
   // Fetch current tags of products we are about to update, so re-imports
-  // preserve `approved` and other admin tags (only auto/review/flag/age_18 are ours)
+  // preserve `approved`, `permit_off`, `permit_ok` and other admin tags
+  // (only IMPORT_OWNED_TAGS — auto/review/flag/age_18/permit/permit_review — are ours)
   const matchedIds = [...new Set(
     products.map((p) => findExistingId(p, index)).filter((id): id is number => id !== undefined),
   )];
@@ -566,17 +528,20 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
   }
 
   let created = 0, updated = 0, errors = 0, priceFallbacks = 0, priceZeros = 0;
+  const permitCounts: Record<string, number> = {};
 
   console.log(`\nUpserting ${products.length} products (~${Math.ceil(products.length * RATE_LIMIT_MS / 60000)} min)…`);
   for (const p of products) {
     const r = resolved.get(p)!;
     const existingId = findExistingId(p, index);
 
-    let tags = computeTags(r, tree);
-    if (existingId !== undefined) {
-      const adminTags = (existingTags.get(existingId) ?? []).filter((t) => !IMPORT_OWNED_TAGS.has(t));
-      tags = [...adminTags, ...tags];
-    }
+    // Admin tags (approved, permit_off, permit_ok, …) survive; ours are refreshed;
+    // permit_off / permit_ok suppress permit_review (see import-tags.ts).
+    const tags = mergeImportTags(
+      existingId !== undefined ? (existingTags.get(existingId) ?? []) : [],
+      computeImportTags(r),
+    );
+    countPermitTags(tags, permitCounts);
 
     const { product, priceFromFallback, priceZero } = toBLProduct(p, env, r.categoryId, tags);
     if (priceFromFallback) priceFallbacks++;
@@ -602,6 +567,7 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
 
   console.log(`\n\n✓ Import done: ${created} created, ${updated} updated, ${errors} errors`);
   console.log(`  tags: ${statusCounts.auto} auto / ${statusCounts.review} review / ${statusCounts.flag} flag`);
+  console.log(`  permit tags: ${formatPermitCounts(permitCounts)} (permit-rules.ts; permit_off/permit_ok in BL are kept)`);
   if (priceFallbacks > 0) {
     console.warn(`⚠ ${priceFallbacks} products had no purchase price in the feed — feed gross price used instead of markup pricing`);
   }
@@ -770,10 +736,26 @@ async function runDryRun(
     let admitted = 0;
     let flagCount = 0;
     const dropReasons: Record<string, number> = {};
+    const permitCounts: Record<string, number> = {};
+    const permitRows: Array<{ sku: string; name: string; hydra: string; group: string; tags: string }> = [];
 
     for (const p of products) {
       const r = resolveCategory(p, categoryMap, tree, unknownNums);
       if (r.status === 'flag') flagCount++;
+      // Tags as a fresh import would write them (no BL read: existing admin
+      // tags are not merged in dry-run — permit_off/permit_ok are a BL-side fact)
+      const tags = computeImportTags(r);
+      countPermitTags(tags, permitCounts);
+      const group = permitGroupFor(r.hydraNum);
+      if (group) {
+        permitRows.push({
+          sku: p.connector_sku ?? p.connector_product_id,
+          name: p.name.slice(0, 44),
+          hydra: r.hydraNum ?? '00',
+          group,
+          tags: tags.join(','),
+        });
+      }
       const existingId = blIndex ? findExistingId(p, blIndex) : undefined;
       const hydraOwnStock = existingId !== undefined ? (hydraStockById.get(existingId) ?? 0) : 0;
       // Selling price = purchase price + markup (same formula as import).
@@ -803,6 +785,21 @@ async function runDryRun(
     }
     if (unknownNums.size > 0) {
       console.log(`  dict nums not in tree: ${[...unknownNums].sort().join(', ')}`);
+    }
+    // Permit tags (HA-2.17) — per group counts + per-product table (first rows)
+    console.log(`  permit tags: ${formatPermitCounts(permitCounts)}`);
+    if (permitRows.length > 0) {
+      const groupCounts: Record<string, number> = {};
+      for (const row of permitRows) groupCounts[row.group] = (groupCounts[row.group] ?? 0) + 1;
+      console.log(`  permit groups: ${['A', 'B', 'C', 'D'].map((g) => `${g}=${groupCounts[g] ?? 0}`).join(' ')}`);
+      const DRY_RUN_PERMIT_ROWS = 40;
+      console.log(`  ${'sku'.padEnd(16)} ${'product'.padEnd(44)} ${'hydra'.padEnd(7)} grp   tags`);
+      for (const row of permitRows.slice(0, DRY_RUN_PERMIT_ROWS)) {
+        console.log(`  ${row.sku.padEnd(16)} ${row.name.padEnd(44)} ${row.hydra.padEnd(7)} ${row.group.padEnd(5)} ${row.tags}`);
+      }
+      if (permitRows.length > DRY_RUN_PERMIT_ROWS) {
+        console.log(`  … ${permitRows.length - DRY_RUN_PERMIT_ROWS} more (use --limit to narrow)`);
+      }
     }
     summary.push({ connector: connectorName, feed: products.length, admitted, dropped });
   }
