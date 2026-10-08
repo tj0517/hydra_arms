@@ -165,6 +165,48 @@ test('spechurt connector: admitted when enabled', () => {
   assert.equal(r.allowed, true);
 });
 
+// ── 01/02 branches after O-11/O-27 (HA-2.25) ─────────────────────────────────
+// Only the five nodes ≥1 wholesaler maps in category-map.json are admitted;
+// permit tags come from permit-rules.ts (1.3/1.5/2.5/2.6 → A, 1.4 → C).
+
+test('admitted (HA-2.25): "1.3" Strzelby Gładkolufowe — Sharg', () => {
+  const r = filterProduct(makeProduct({ connector: 'sharg' }), '1.3', 2, 0, PASS_PRICE, ASSORTMENT_RULES);
+  assert.equal(r.allowed, true);
+  assert.equal(r.reason, 'ok');
+});
+
+test('admitted (HA-2.25): "1.4" Broń Kolekcjonerska i Historyczna (czarnoprochowa) — Kolba', () => {
+  const r = filterProduct(makeProduct({ connector: 'kolba' }), '1.4', 2, 0, PASS_PRICE, ASSORTMENT_RULES);
+  assert.equal(r.allowed, true);
+  assert.equal(r.reason, 'ok');
+});
+
+test('admitted (HA-2.25): "1.5" Broń alarmowa i sygnałowa — Sharg / Spechurt', () => {
+  const r = filterProduct(makeProduct({ connector: 'spechurt' }), '1.5', 2, 0, PASS_PRICE, ASSORTMENT_RULES);
+  assert.equal(r.allowed, true);
+  assert.equal(r.reason, 'ok');
+});
+
+test('admitted (HA-2.25): "2.5" Amunicja Hukowa, Alarmowa i Gazowa — Sharg', () => {
+  const r = filterProduct(makeProduct({ connector: 'sharg' }), '2.5', 2, 0, PASS_PRICE, ASSORTMENT_RULES);
+  assert.equal(r.allowed, true);
+  assert.equal(r.reason, 'ok');
+});
+
+test('admitted (HA-2.25): "2.6" Elementy Koncesjonowane do Elaboracji (kapiszony, proch czarny) — Kolba', () => {
+  const r = filterProduct(makeProduct({ connector: 'kolba' }), '2.6', 2, 0, PASS_PRICE, ASSORTMENT_RULES);
+  assert.equal(r.allowed, true);
+  assert.equal(r.reason, 'ok');
+});
+
+test('dropped (HA-2.25): 01/02 nodes outside the five stay not_p1 ("1.1", "1.1.2", "1.2" wait for HA-2.18)', () => {
+  for (const num of ['1.1', '1.1.2', '1.2', '1.3.1', '2.5.1']) {
+    const r = filterProduct(makeProduct({ connector: 'kolba' }), num, 5, 0, PASS_PRICE, ASSORTMENT_RULES);
+    assert.equal(r.allowed, false, `${num} must not be admitted`);
+    assert.equal(r.reason, 'not_p1');
+  }
+});
+
 // ── Sync regression: filter does NOT run in sync mode ────────────────────────
 // Sync sends real stock (including 0) for every product already in BL.
 // The assortment filter is import-only — runSync() never calls filterProduct().

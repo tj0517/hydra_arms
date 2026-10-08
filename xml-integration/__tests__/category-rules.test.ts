@@ -106,3 +106,62 @@ test('ruleMatches: excludeName is case-insensitive', () => {
   const rule: CategoryRule = { match: { name: 'tłumik' }, cat: '04', excludeName: ['ASG'] };
   assert.equal(ruleMatches(rule, fakeProduct('Tłumik ASG Elite Force C4 Mock 14 mm')), false);
 });
+
+// ── Kolba black-powder rules in category-map.json (HA-2.25) ──────────────────
+// Runs the REAL kolba_rules list with the script's first-match-wins semantics
+// (resolve-category.ts: `kolba_rules.find(ruleMatches)`), so these tests also
+// pin rule ORDER: consumables (2.6) before guns (1.4), accessories before both.
+
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
+
+const KOLBA_RULES = (JSON.parse(
+  readFileSync(resolve(process.cwd(), 'xml-integration/category-map.json'), 'utf8'),
+) as { kolba_rules: CategoryRule[] }).kolba_rules;
+
+function firstKolbaMatch(name: string): CategoryRule | undefined {
+  return KOLBA_RULES.find((r) => ruleMatches(r, fakeProduct(name)));
+}
+
+test('kolba_rules (HA-2.25): black-powder revolver → 1.4', () => {
+  const hit = firstKolbaMatch('Rewolwer czarnoprochowy Pietta 1858 Remington New Army kal. .44');
+  assert.equal(hit?.cat, '1.4');
+  assert.notEqual(hit?.review, true, 'an explicit "rewolwer czarnoprochow" hit is a leaf-grade match, not review');
+});
+
+test('kolba_rules (HA-2.25): other black-powder gun (word order / type not listed) → 1.4 with review', () => {
+  const hit = firstKolbaMatch('Pietta 1851 Navy Yank .36 czarnoprochowy');
+  assert.equal(hit?.cat, '1.4');
+  assert.equal(hit?.review, true, 'the generic "czarnoprochow" fallback must force review');
+});
+
+test('kolba_rules (HA-2.25): percussion caps (kapiszony) → 2.6', () => {
+  assert.equal(firstKolbaMatch('Kapiszony RWS 1075 Plus 250 szt.')?.cat, '2.6');
+});
+
+test('kolba_rules (HA-2.25): black powder and primers → 2.6', () => {
+  assert.equal(firstKolbaMatch('Proch czarny Vesuvit LC 500 g')?.cat, '2.6');
+  assert.equal(firstKolbaMatch('Spłonki CCI No. 11 Percussion Caps 100 szt.')?.cat, '2.6');
+});
+
+// Red proof: the trap name contains "czarnoprochow" (generic 1.4 rule) but is an
+// accessory — excludeName ("czarnoprochowej" / "do broni" / "olej") must reject it.
+// Remove the excludeName of the generic "czarnoprochow" rule and this test fails.
+test('kolba_rules (HA-2.25) red proof: trap "Olej do broni czarnoprochowej" → neither 1.4 nor 2.6', () => {
+  const hit = firstKolbaMatch('Olej do broni czarnoprochowej Ballistol 50 ml');
+  assert.ok(hit?.cat !== '1.4' && hit?.cat !== '2.6',
+    `accessory must not be filed as a firearm/consumable — got ${hit?.cat ?? 'no match (00)'}`);
+});
+
+test('kolba_rules (HA-2.25): consumable accessories stay out of 2.6 (kapiszonownik, prochownica)', () => {
+  for (const name of ['Kapiszonownik do rewolweru czarnoprochowego', 'Prochownica mosiężna na czarny proch']) {
+    const hit = firstKolbaMatch(name);
+    assert.ok(hit?.cat !== '1.4' && hit?.cat !== '2.6', `${name} → got ${hit?.cat ?? 'no match (00)'}`);
+  }
+});
+
+test('kolba_rules (HA-2.25): order — earlier accessory rules win for holsters/stocks, air-gun rules not shadowed', () => {
+  assert.equal(firstKolbaMatch('Kabura skórzana do rewolweru czarnoprochowego Pietta')?.cat, '6.1');
+  assert.equal(firstKolbaMatch('Kolba do rewolweru czarnoprochowego Pietta 1858')?.cat, '4.6.1');
+  assert.equal(firstKolbaMatch('Rewolwer wiatrówka Colt SAA CO2 4,5 mm')?.cat, '11.2');
+});

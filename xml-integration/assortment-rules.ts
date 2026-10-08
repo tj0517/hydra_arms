@@ -32,6 +32,19 @@ export interface AssortmentRules {
 
 export const ASSORTMENT_RULES: AssortmentRules = {
   allowedHydraNums: [
+    // ── 01. BROŃ PALNA (O-11/O-27 rozstrzygnięte; HA-2.25, 2026-10-08) ───────
+    // Tagi permit nadaje permit-rules.ts (1.3/1.5 → A, 1.4 → C).  Wchodzą tylko
+    // węzły, które ≥1 hurtownia realnie mapuje w category-map.json.
+    // 1.1 / 1.1.2 / 1.2 (czarnoprochowa Kolby wg notatki HA-2.04) nie wracają —
+    // żadna hurtownia ich nie mapuje; Kolba idzie regułami nazwowymi do 1.4 → HA-2.18.
+    '1.3',    // Strzelby Gładkolufowe (parent → review) — Sharg „Strzelby Hatsan”
+    '1.4',    // Broń Kolekcjonerska i Historyczna (czarnoprochowa) — Sharg „Broń czarnoprochowa”, Kolba (kolba_rules)
+    '1.5',    // Broń alarmowa i sygnałowa — Sharg (rewolwery/pistolety alarmowe), Spechurt „Broń hukowa”
+
+    // ── 02. AMUNICJA I ELEMENTY ELABORACJI (jw.; 2.5/2.6 → grupa A) ───────────
+    '2.5',    // Amunicja Hukowa, Alarmowa i Gazowa (parent → review) — Sharg (amunicja alarmowa/hukowa)
+    '2.6',    // Elementy Koncesjonowane do Elaboracji (kapiszony, proch czarny, spłonki) — Kolba (kolba_rules)
+
     // ── 03. OPTYKA STRZELECKA I OPTOELEKTRONIKA ───────────────────────────────
     '3.1',    // Lunety Celownicze
     '3.2',    // Celowniki Kolimatorowe i Holograficzne (w tym Prism Scopes, Magnifiers)
@@ -125,11 +138,6 @@ export const ASSORTMENT_RULES: AssortmentRules = {
     '15.1.1', // Gazy Pieprzowe Ręczne (strumień, stożek/chmura, żel/pianka)
     '15.2.1', // Pałki Teleskopowe Hartowane
     '15.3',   // Paralizatory
-
-    // ── WYKLUCZONE PENDING O-11 ───────────────────────────────────────────────
-    // Broń czarnoprochowa (gałąź 01/02, Kolba) wykluczona do czasu rozstrzygnięcia
-    // wymagań compliance / licencjonowania w O-11.
-    // Wiersze do przywrócenia po O-11: '1.1', '1.1.2', '1.2', '1.3', '2.6'
   ] as const,
 
   enabledSuppliers: ['kolba', 'sharg', 'spechurt'] as const,

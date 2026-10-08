@@ -40,4 +40,4 @@ Etap 1: bezpieczny fundament (audyt 2026-09-22). Etap 2: płatności i uruchomie
 | HA-2.22 | Marże sterowane arkuszem (wymienne źródło wartości) | todo | M | HA-2.05 | O-32 | — |
 | HA-2.23 | Test płatności na prawdziwym sandboxie P24 | todo | S | HA-2.08, HA-2.20 | O-09 | — |
 | HA-2.24 | Gałęzie ASG, łucznictwo i myślistwo w drzewie kategorii | todo | S | HA-2.18, HA-2.17 | O-20 | — |
-| HA-2.25 | Gałęzie 01/02 w filtrze asortymentu po O-11/O-27 + czarnoprochowa Kolby | todo | M | HA-2.04, HA-2.17 | — | — |
+| HA-2.25 | Gałęzie 01/02 w filtrze asortymentu po O-11/O-27 + czarnoprochowa Kolby | in_progress | M | HA-2.04, HA-2.17 | — | — |
