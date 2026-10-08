@@ -1,7 +1,7 @@
 ---
 id: HA-2.17
 title: Flagi pozwolenia i 18+ — import, sync, override w BaseLinkerze
-status: review
+status: done
 difficulty: M
 model: fable-5.1
 model_approved: null
@@ -60,3 +60,4 @@ Sklep wymusza odbiór osobisty dla produktów z pozwoleniem, rejestracją lub 18
 - 2026-10-08 tj: `permit_off` NIE zeruje `age_min`; produkt z `permit_off` zostaje odbiorem osobistym do czasu bramki wieku (O-28) — `permitFlags.ts` bez zmian.
 - 2026-10-08 tj: wiersze O-30: 13.1 / 13.2 / 13.4.3 → D, 13.3 multitoole → brak; części 4.1–4.3 → brak z wierszami inertnymi dla luf / BCG / zestawów konwersyjnych — zostaje jak jest; liście dojdą z HA-2.24.
 - 2026-10-08 tj: dry-run na pełnym feedzie Kolby (3168 dopuszczonych): permit 14 / age_18 2772 / permit_review 14; grupy A=0 B=0 C=14 D=2772; wszystkie 14 C to 15.3 z `permit, permit_review` — kryterium 4 potwierdzone na realnych danych dla C i D. A=0 / B=0 wynika z `assortment-rules.ts` (działy 01/02 nadal wykluczone „pending O-11”) — nie przywracać w tym PR, zapis w deferred.
+- 2026-10-08 tj: odbiór PR #32 — kryteria 1–8 udowodnione (4: test jednostkowy + dry-run kolba na pełnym feedzie, C=14/D=2772; A/B niemożliwe do czasu przywrócenia 01/02 w filtrze asortymentu). Decyzje: 1.4 → C, permit_off nie zdejmuje 18+, pozostałe wiersze bez zmian.
