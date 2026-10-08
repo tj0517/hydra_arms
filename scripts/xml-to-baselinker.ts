@@ -20,6 +20,8 @@
  *   --from-file=<connector>:<path> — dry-run only: read that connector's feed from a
  *                       local file instead of fetching it (e.g. Spechurt, IP-whitelisted
  *                       to the import server — see xml-integration/README.md)
+ *   --sections=1,2    — dry-run only: print every permit-table row of those top-level
+ *                       Hydra sections instead of the first 40 rows (HA-2.25 review)
  *
  * Key behaviours:
  *   - Upsert key: EAN first, fallback SKU — no duplicates across runs
@@ -661,6 +663,7 @@ async function runDryRun(
   connectors: readonly ConnectorName[],
   limit: number | null,
   fromFile: { connector: ConnectorName; path: string } | null,
+  sections: ReadonlySet<string> | null = null,
 ): Promise<void> {
   const { inventoryId, hydraWarehouseId } = loadDryRunEnv();
 
@@ -793,12 +796,17 @@ async function runDryRun(
       for (const row of permitRows) groupCounts[row.group] = (groupCounts[row.group] ?? 0) + 1;
       console.log(`  permit groups: ${['A', 'B', 'C', 'D'].map((g) => `${g}=${groupCounts[g] ?? 0}`).join(' ')}`);
       const DRY_RUN_PERMIT_ROWS = 40;
+      // --sections=1,2 (HA-2.25): every row of the chosen top-level sections, no cap
+      const shown = sections
+        ? permitRows.filter((row) => sections.has(normNum(row.hydra).split('.')[0]))
+        : permitRows.slice(0, DRY_RUN_PERMIT_ROWS);
+      if (sections) console.log(`  permit rows (sections ${[...sections].join(',')}): ${shown.length} of ${permitRows.length}`);
       console.log(`  ${'sku'.padEnd(16)} ${'product'.padEnd(44)} ${'hydra'.padEnd(7)} grp   tags`);
-      for (const row of permitRows.slice(0, DRY_RUN_PERMIT_ROWS)) {
+      for (const row of shown) {
         console.log(`  ${row.sku.padEnd(16)} ${row.name.padEnd(44)} ${row.hydra.padEnd(7)} ${row.group.padEnd(5)} ${row.tags}`);
       }
-      if (permitRows.length > DRY_RUN_PERMIT_ROWS) {
-        console.log(`  … ${permitRows.length - DRY_RUN_PERMIT_ROWS} more (use --limit to narrow)`);
+      if (!sections && permitRows.length > DRY_RUN_PERMIT_ROWS) {
+        console.log(`  … ${permitRows.length - DRY_RUN_PERMIT_ROWS} more (use --limit to narrow, or --sections=1,2 for every row of those sections)`);
       }
     }
     summary.push({ connector: connectorName, feed: products.length, admitted, dropped });
@@ -884,6 +892,23 @@ async function main() {
     fromFile = { connector: connectorRaw as ConnectorName, path: filePath };
   }
 
+  // --sections=1,2 — dry-run only: print every permit-table row of those top-level
+  // Hydra sections (no 40-row cap). Read-only; nothing else changes.
+  const sectionsFlag = flags.find((f) => f.startsWith('--sections='));
+  if (sectionsFlag && !isDryRun) {
+    console.error('[error] --sections is only valid together with --dry-run');
+    process.exit(1);
+  }
+  let sections: Set<string> | null = null;
+  if (sectionsFlag) {
+    const parts = sectionsFlag.slice('--sections='.length).split(',').map((s) => s.trim()).filter(Boolean);
+    if (parts.length === 0 || parts.some((s) => !/^\d{1,2}$/.test(s))) {
+      console.error('[error] --sections=<n,n,…> — top-level Hydra section numbers, e.g. --sections=1,2');
+      process.exit(1);
+    }
+    sections = new Set(parts.map(normNum));
+  }
+
   if (isDryRun) {
     const connectorArg = positional[0] as ConnectorName | undefined;
     const connectors: readonly ConnectorName[] =
@@ -895,7 +920,8 @@ async function main() {
     console.log(`  connectors: ${connectors.join(', ')}`);
     if (limit !== null) console.log(`  limit     : ${limit} products per supplier`);
     if (fromFile) console.log(`  from-file : ${fromFile.connector} ← ${fromFile.path}`);
-    await runDryRun(connectors, limit, fromFile);
+    if (sections) console.log(`  sections  : ${[...sections].join(',')} (every permit-table row, no cap)`);
+    await runDryRun(connectors, limit, fromFile, sections);
     return;
   }
 
@@ -905,13 +931,14 @@ async function main() {
   if (!connectorName || !CONNECTOR_NAMES.includes(connectorName) || !['import', 'sync'].includes(mode)) {
     console.error('Usage:');
     console.error('  npx tsx scripts/xml-to-baselinker.ts <kolba|sharg|spechurt> [import|sync] [--limit=N]');
-    console.error('  npx tsx scripts/xml-to-baselinker.ts [<connector>] --dry-run [--limit=N] [--from-file=<connector>:<path>]');
+    console.error('  npx tsx scripts/xml-to-baselinker.ts [<connector>] --dry-run [--limit=N] [--from-file=<connector>:<path>] [--sections=1,2]');
     console.error('');
     console.error('  import   (default) — full upsert into BL catalogue (slow, run rarely)');
     console.error('  sync               — stock + price refresh only (batched, run often)');
     console.error('  --dry-run          — preview admitted/dropped counts, no BL writes');
     console.error('  --limit=N          — limit to N products per supplier');
     console.error('  --from-file=<connector>:<path> — read that connector\'s feed from disk instead of fetching (--dry-run only)');
+    console.error('  --sections=1,2     — print every permit-table row of those Hydra sections, no 40-row cap (--dry-run only)');
     process.exit(1);
   }
 
