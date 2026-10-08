@@ -8,7 +8,7 @@ Wygenerowane: HA-2.04, 2026-09-24.
 
 Kolumny: Lp · Kategoria (arkusz) · Podkategoria · Hydra numer · Hydra nazwa (skrócona) · Sharg · Kolba · SpecShop · Uwagi
 
-- Sharg / Kolba / SpecShop = ✓ gdy nazwa hurtowni pojawia się w „Inspiracja rynkowa"; „—" gdy brak.  
+- Sharg / Kolba / SpecShop = ✓ gdy nazwa hurtowni pojawia się w „Inspiracja rynkowa"; „—" gdy brak. Wyjątek: wiersze z dopiskiem **w filtrze (HA-2.25)** lub **feed Kolby** — tam ✓ = hurtownia mapuje ten węzeł w `category-map.json` **i** ma takie produkty w feedzie (dry-run + grep feedu 2026-10-08).  
 - `brak` = brak odpowiadającego węzła w drzewie 01–15.  
 - Węzeł rodzic (np. `04`) → tag `review` w imporcie.
 
@@ -42,7 +42,7 @@ Wiersze, dla których w drzewie Hydra nie istnieje żaden węzeł (liść ani ga
 | 325 | Airsoft / ASG | Strzelby ASG | ✓ | ✓ | ✓ | brak gałęzi ASG |
 
 > Łucznictwo (5 szt.), ASG (5 szt.), Myślistwo (5 szt.), Kolekcjonerstwo (2 szt.) = **17 wierszy bez odpowiednika**.  
-> Kolekcjonerstwo lp 253, 255, 256 mają węzły (1.4, 9.3.4, 12.1) ale żadnej naszej hurtowni — w tabeli poniżej, poza filtrem importu.  
+> Kolekcjonerstwo lp 255, 256 mają węzły (9.3.4, 12.1) ale żadnej naszej hurtowni — w tabeli poniżej, poza filtrem importu; lp 253 (1.4) od HA-2.25 mapuje Sharg (czarnoprochowa) — w filtrze.  
 > Spośród nich 15 pojawia się u naszych hurtowni i trafi do „00. DO PRZYPISANIA" przy imporcie; 2 (Kolekcjonerstwo) bez hurtowni.  
 > Decyzja o dodaniu nowych gałęzi należy do klienta (HA-2.10, O-17).
 
@@ -61,7 +61,8 @@ Wiersze, dla których w drzewie Hydra nie istnieje żaden węzeł (liść ani ga
 | 12 | Broń palna | Rewolwery | 1.1.2 | Rewolwery | — | — | — | koncesja; brak naszych hurtowni; **[korekta]** |
 | 13 | Broń palna | Karabinki samopowtarzalne | 1.2.1 | Karabiny i Karabinki Samopowtarzalne | — | — | — | koncesja; brak naszych hurtowni; **[korekta]** |
 | 14 | Broń palna | Karabiny powtarzalne | 1.2.2 | Karabiny i Karabinki Powtarzalne | — | — | — | koncesja; brak naszych hurtowni; **[korekta]** |
-| 15 | Broń palna | Strzelby | 1.3 | Strzelby Gładkolufowe | — | — | — | koncesja; brak naszych hurtowni; **[korekta]** |
+| 15 | Broń palna | Strzelby | 1.3 | Strzelby Gładkolufowe | ✓ | — | — | **w filtrze (HA-2.25)**: Sharg „Strzelby Hatsan” → 1.3 (`category-map.json`); rodzic → review; permit (grupa A, O-11/O-27 → odbiór osobisty); **[korekta]** |
+| — | Broń palna | Broń alarmowa i sygnałowa | 1.5 | Broń alarmowa i sygnałowa | ✓ | — | ✓ | **w filtrze (HA-2.25)**: wiersz dodany (brak w arkuszu P1); Sharg „Rewolwery Alarmowe” / „BROŃ ALARMOWA Rewolwery”, Spechurt „Broń hukowa” → 1.5 (Sharg „Broń palna” usunięte z mapy — mieszało broń palną, Piettę i części) (`category-map.json`); permit (grupa A); O-23: BAS ≤6 mm wg klienta bez pozwolenia |
 | 19 | Części i tuning broni | Lufy | 04 | Części Zamienne i Tuning Broni | — | — | ✓ | brak liścia lufy; rodzic → review |
 | 20 | Części i tuning broni | Zamki, suwadła i BCG | 04 | Części Zamienne i Tuning Broni | — | — | ✓ | brak liścia; rodzic → review |
 | 21 | Części i tuning broni | Spusty | 04 | Części Zamienne i Tuning Broni | — | — | ✓ | rodzic → review |
@@ -146,6 +147,7 @@ Wiersze, dla których w drzewie Hydra nie istnieje żaden węzeł (liść ani ga
 | 170 | Amunicja i elaboracja | Amunicja karabinowa | 2.2 | Amunicja Pośrednia i Karabinowa | — | — | — | koncesja; brak naszych hurtowni; **[korekta]** |
 | 171 | Amunicja i elaboracja | Amunicja strzelbowa | 2.3 | Amunicja Śrutowa | — | — | — | koncesja; brak naszych hurtowni; **[korekta]** |
 | 172 | Amunicja i elaboracja | Amunicja bocznego zapłonu | 2.4 | Amunicja Bocznego Zapłonu | — | — | — | koncesja; brak naszych hurtowni; **[korekta]** |
+| — | Amunicja i elaboracja | Amunicja hukowa, alarmowa i gazowa | 2.5 | Amunicja Hukowa, Alarmowa i Gazowa | ✓ | — | — | **w filtrze (HA-2.25)**: wiersz dodany (brak w arkuszu P1); Sharg „BROŃ HUKOWA Amunicja” / „…Konserwacja i akcesoria do broni palnej > Amunicja” → 2.5 (`category-map.json`); rodzic → review; permit (grupa A) |
 | 173 | Amunicja i elaboracja | Amunicja myśliwska | 02 | Amunicja i Elementy Rechargingu | — | — | — | spans wiele kalibrów; rodzic → review; brak naszych hurtowni; **[korekta]** |
 | 184 | Multitoole i narzędzia outdoor | Multitoole kombinerkowe | 13.3.2 | Multitoole Codzienne | ✓ | ✓ | ✓ | |
 | 185 | Multitoole i narzędzia outdoor | Scyzoryki | 13.2 | Noże Składane | ✓ | ✓ | ✓ | konwencja z category-map.json |
@@ -177,12 +179,12 @@ Wiersze, dla których w drzewie Hydra nie istnieje żaden węzeł (liść ani ga
 | 234 | Termowizja i noktowizja | Nasadki termowizyjne | 3.3 | Optoelektronika Obserwacyjna i Celownicza | ✓ | ✓ | — | clip-on thermal; brak liścia; review |
 | 235 | Termowizja i noktowizja | Noktowizory cyfrowe | 3.3 | Optoelektronika Obserwacyjna i Celownicza | ✓ | ✓ | — | |
 | 236 | Termowizja i noktowizja | Noktowizory analogowe | 3.3 | Optoelektronika Obserwacyjna i Celownicza | ✓ | ✓ | — | |
-| 242 | Broń czarnoprochowa | Rewolwery czarnoprochowe | 1.1.2 | Rewolwery | — | ✓ | — | **[korekta]** |
-| 243 | Broń czarnoprochowa | Pistolety czarnoprochowe | 1.1 | Broń Krótka | — | ✓ | — | brak liścia black powder pistol; rodzic → review; **[korekta]** |
-| 244 | Broń czarnoprochowa | Karabiny czarnoprochowe | 1.2 | Broń Długa | — | ✓ | — | brak liścia black powder rifle; rodzic → review; **[korekta]** |
-| 245 | Broń czarnoprochowa | Strzelby czarnoprochowe | 1.3 | Strzelby Gładkolufowe | — | ✓ | — | **[korekta]** |
-| 246 | Broń czarnoprochowa | Kapiszony | 2.6 | Elementy Koncesjonowane do Elaboracji | — | ✓ | — | spłonki do broni czarnoprochowej; **[korekta]** |
-| 253 | Kolekcjonerstwo i militaria | Broń zdezaktywowana | 1.4 | Broń Kolekcjonerska i Historyczna | — | — | — | brak naszych hurtowni; **[korekta]** |
+| 242 | Broń czarnoprochowa | Rewolwery czarnoprochowe | 1.1.2 | Rewolwery | — | — | — | feed Kolby bez broni czarnoprochowej (grep 2026-10-08); rewolwery czarnoprochowe ma Sharg (Pietta, ~100 szt.) — w kategorii „Broń palna” bez mapowania → 00 (deferred HA-2.25); **[korekta]** |
+| 243 | Broń czarnoprochowa | Pistolety czarnoprochowe | 1.1 | Broń Krótka | — | — | — | feed Kolby bez broni czarnoprochowej (grep 2026-10-08); brak liścia black powder pistol; rodzic → review; **[korekta]** |
+| 244 | Broń czarnoprochowa | Karabiny czarnoprochowe | 1.2 | Broń Długa | — | — | — | feed Kolby bez broni czarnoprochowej (grep 2026-10-08); brak liścia black powder rifle; rodzic → review; **[korekta]** |
+| 245 | Broń czarnoprochowa | Strzelby czarnoprochowe | 1.3 | Strzelby Gładkolufowe | ✓ | — | — | **w filtrze (HA-2.25)**: węzeł 1.3 mapuje Sharg („Strzelby Hatsan”); feed Kolby bez broni czarnoprochowej (grep 2026-10-08); **[korekta]** |
+| 246 | Broń czarnoprochowa | Kapiszony | 2.6 | Elementy Koncesjonowane do Elaboracji | — | — | — | **w filtrze (HA-2.25)**: reguły Kolby „kapiszon” / „proch czarny” → 2.6 zostają, ale feed Kolby nie ma kapiszonów ani prochów (grep 2026-10-08) — uśpione; reguła „spłonk” usunięta (łapała narzędzia Lyman/RCBS); permit (grupa A); **[korekta]** |
+| 253 | Kolekcjonerstwo i militaria | Broń zdezaktywowana | 1.4 | Broń Kolekcjonerska i Historyczna | ✓ | — | — | **w filtrze (HA-2.25)**: Sharg „Broń czarnoprochowa” → 1.4; feed Kolby bez broni czarnoprochowej (grep 2026-10-08); permit + permit_review (grupa C, O-29 otwarte); **[korekta]** |
 | 254 | Kolekcjonerstwo i militaria | Repliki broni | brak | — | — | — | — | category-map.json → 00; brak naszych hurtowni; **[korekta]** |
 | 255 | Kolekcjonerstwo i militaria | Hełmy militarne | 9.3.4 | Hełmy Balistyczne | — | — | — | brak naszych hurtowni; **[korekta]** |
 | 256 | Kolekcjonerstwo i militaria | Mundury | 12.1 | Odzież Taktyczna i Mundurowa | — | — | — | brak naszych hurtowni; **[korekta]** |
@@ -239,7 +241,9 @@ Wiersze, dla których w drzewie Hydra nie istnieje żaden węzeł (liść ani ga
 | Zmapowane do węzła rodzica (→ tag `review`) | 27 |
 | Brak odpowiednika w drzewie | 17 |
 | Spośród „brak" — obecne u naszych hurtowni | 15 |
-| P1 bez żadnej z naszych hurtowni (poza zakresem importu) | 15 |
+| P1 bez żadnej z naszych hurtowni (poza zakresem importu) | 13 |
+
+> HA-2.25 (2026-10-08): lp 15 (1.3) i 253 (1.4) weszły do filtru (Sharg wg `category-map.json`) — stąd 15 → 13. Dodane 2 wiersze spoza arkusza P1 (1.5, 2.5) nie wliczają się do 175.
 
 Kategorie bez gałęzi w drzewie (decyzja klienta do HA-2.10 lub osobnego zadania):
 - **ASG / Airsoft** (5 podkategorii) — wszystkie 3 nasze hurtownie; ok. 1 000–2 000 produktów w feedach
