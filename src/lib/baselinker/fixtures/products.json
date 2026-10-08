@@ -19,7 +19,13 @@
     "309001": { "id": 309001, "ean": "5901234567601", "asin": "", "sku": "KD-AP-001", "name": "Apteczka IFAK powypadkowa Coyote", "parent_id": 0, "stock": { "blconnect_6820": 33 }, "prices": { "23934": 199 } },
     "309002": { "id": 309002, "ean": "5901234567602", "asin": "", "sku": "KD-TQ-001", "name": "Opaska uciskowa CAT Combat Application Tourniquet", "parent_id": 0, "stock": { "blconnect_6820": 67 }, "prices": { "23934": 129 } },
     "310001": { "id": 310001, "ean": "5901234567701", "asin": "", "sku": "KD-BT-001", "name": "Buty taktyczne Haix Black Eagle Athletic 10 Low", "parent_id": 0, "stock": { "blconnect_6820": 28 }, "prices": { "23934": 649 } },
-    "311001": { "id": 311001, "ean": "5901234567801", "asin": "", "sku": "KD-AM-001", "name": "Naszywka flaga PL IR Multicam", "parent_id": 0, "stock": { "blconnect_6820": 120 }, "prices": { "23934": 29 } }
+    "311001": { "id": 311001, "ean": "5901234567801", "asin": "", "sku": "KD-AM-001", "name": "Naszywka flaga PL IR Multicam", "parent_id": 0, "stock": { "blconnect_6820": 120 }, "prices": { "23934": 29 } },
+    "312001": { "id": 312001, "ean": "5901234567901", "asin": "", "sku": "KD-BP-001", "name": "Pistolet Glock 17 Gen5 9x19", "parent_id": 0, "stock": { "blconnect_6820": 3 }, "prices": { "23934": 2899 } },
+    "312002": { "id": 312002, "ean": "5901234567902", "asin": "", "sku": "KD-BP-002", "name": "Pistolet treningowy Glock 17T FX (permit_off)", "parent_id": 0, "stock": { "blconnect_6820": 2 }, "prices": { "23934": 2499 } },
+    "312003": { "id": 312003, "ean": "5901234567903", "asin": "", "sku": "KD-AM-101", "name": "Amunicja 9x19 FMJ 124gr (50 szt.)", "parent_id": 0, "stock": { "blconnect_6820": 200 }, "prices": { "23934": 119 } },
+    "312004": { "id": 312004, "ean": "5901234567904", "asin": "", "sku": "KD-GZ-001", "name": "Gaz pieprzowy Fox Labs 5.2 Stream 60 ml", "parent_id": 0, "stock": { "blconnect_6820": 40 }, "prices": { "23934": 59 } },
+    "312005": { "id": 312005, "ean": "5901234567905", "asin": "", "sku": "KD-PZ-001", "name": "Paralizator ESP Scorpy 200 (permit_review)", "parent_id": 0, "stock": { "blconnect_6820": 7 }, "prices": { "23934": 349 } },
+    "312006": { "id": 312006, "ean": "5901234567906", "asin": "", "sku": "KD-PZ-002", "name": "Paralizator Power 200 (permit_off)", "parent_id": 0, "stock": { "blconnect_6820": 5 }, "prices": { "23934": 199 } }
   },
   "products_data": {
     "301001": {
@@ -281,6 +287,84 @@
       "stock": { "blconnect_6820": 120 }, "prices": { "23934": 29 },
       "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,
       "images": { "1": "https://cdn.baselinker.com/products/kd/am-001-1.jpg" }
+    },
+    "312001": {
+      "is_bundle": false, "ean": "5901234567901", "asin": "", "parent_id": 0, "sku": "KD-BP-001",
+      "tags": ["auto", "permit", "approved"], "tax_rate": 23, "weight": 0.7,
+      "height": 0, "width": 0, "length": 0, "star": 0, "category_id": 8926523, "manufacturer_id": 0,
+      "text_fields": {
+        "name": "Pistolet Glock 17 Gen5 9x19",
+        "description": "<p>HA-2.17 fixture: group A (01. Broń palna) — tag permit → requires_license, 18+, no courier (section 01).</p>",
+        "features": { "Kaliber": "9x19", "Producent": "Glock" }
+      },
+      "stock": { "blconnect_6820": 3 }, "prices": { "23934": 2899 },
+      "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,
+      "images": { "1": "https://cdn.baselinker.com/products/kd/bp-001-1.jpg" }
+    },
+    "312002": {
+      "is_bundle": false, "ean": "5901234567902", "asin": "", "parent_id": 0, "sku": "KD-BP-002",
+      "tags": ["auto", "permit", "permit_off", "approved"], "tax_rate": 23, "weight": 0.7,
+      "height": 0, "width": 0, "length": 0, "star": 0, "category_id": 8926523, "manufacturer_id": 0,
+      "text_fields": {
+        "name": "Pistolet treningowy Glock 17T FX (permit_off)",
+        "description": "<p>HA-2.17 fixture: section 01 with admin tag permit_off → requires_license=false, but delivery_allowed stays false (01/02 rule).</p>",
+        "features": { "Kaliber": "9x19 FX", "Producent": "Glock" }
+      },
+      "stock": { "blconnect_6820": 2 }, "prices": { "23934": 2499 },
+      "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,
+      "images": { "1": "https://cdn.baselinker.com/products/kd/bp-002-1.jpg" }
+    },
+    "312003": {
+      "is_bundle": false, "ean": "5901234567903", "asin": "", "parent_id": 0, "sku": "KD-AM-101",
+      "tags": ["auto", "permit", "approved"], "tax_rate": 23, "weight": 0.6,
+      "height": 0, "width": 0, "length": 0, "star": 0, "category_id": 8926538, "manufacturer_id": 0,
+      "text_fields": {
+        "name": "Amunicja 9x19 FMJ 124gr (50 szt.)",
+        "description": "<p>HA-2.17 fixture: group A in section 02 (amunicja) → requires_license, 18+, no courier.</p>",
+        "features": { "Kaliber": "9x19", "Producent": "Sellier & Bellot" }
+      },
+      "stock": { "blconnect_6820": 200 }, "prices": { "23934": 119 },
+      "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,
+      "images": { "1": "https://cdn.baselinker.com/products/kd/am-101-1.jpg" }
+    },
+    "312004": {
+      "is_bundle": false, "ean": "5901234567904", "asin": "", "parent_id": 0, "sku": "KD-GZ-001",
+      "tags": ["auto", "age_18", "approved"], "tax_rate": 23, "weight": 0.09,
+      "height": 0, "width": 0, "length": 0, "star": 0, "category_id": 8926719, "manufacturer_id": 0,
+      "text_fields": {
+        "name": "Gaz pieprzowy Fox Labs 5.2 Stream 60 ml",
+        "description": "<p>HA-2.17 fixture: group D (15.1.1) — age_18 only → age_min=18, no licence, courier allowed by section (pickup via age_min).</p>",
+        "features": { "Pojemność": "60 ml", "Producent": "Fox Labs" }
+      },
+      "stock": { "blconnect_6820": 40 }, "prices": { "23934": 59 },
+      "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,
+      "images": { "1": "https://cdn.baselinker.com/products/kd/gz-001-1.jpg" }
+    },
+    "312005": {
+      "is_bundle": false, "ean": "5901234567905", "asin": "", "parent_id": 0, "sku": "KD-PZ-001",
+      "tags": ["auto", "permit", "permit_review", "approved"], "tax_rate": 23, "weight": 0.25,
+      "height": 0, "width": 0, "length": 0, "star": 0, "category_id": 8926727, "manufacturer_id": 0,
+      "text_fields": {
+        "name": "Paralizator ESP Scorpy 200 (permit_review)",
+        "description": "<p>HA-2.17 fixture: group C (15.3.1) awaiting the client's decision — permit + permit_review → requires_license=true until permit_off.</p>",
+        "features": { "Producent": "ESP" }
+      },
+      "stock": { "blconnect_6820": 7 }, "prices": { "23934": 349 },
+      "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,
+      "images": { "1": "https://cdn.baselinker.com/products/kd/pz-001-1.jpg" }
+    },
+    "312006": {
+      "is_bundle": false, "ean": "5901234567906", "asin": "", "parent_id": 0, "sku": "KD-PZ-002",
+      "tags": ["auto", "permit", "permit_off", "approved"], "tax_rate": 23, "weight": 0.2,
+      "height": 0, "width": 0, "length": 0, "star": 0, "category_id": 8926727, "manufacturer_id": 0,
+      "text_fields": {
+        "name": "Paralizator Power 200 (permit_off)",
+        "description": "<p>HA-2.17 fixture: group C outside 01/02 with permit_off → requires_license=false, age_min=18 (permit tag still marks 18+), delivery_allowed=true.</p>",
+        "features": { "Producent": "Power" }
+      },
+      "stock": { "blconnect_6820": 5 }, "prices": { "23934": 199 },
+      "locations": {}, "links": {}, "average_cost": 0, "average_landed_cost": 0,
+      "images": { "1": "https://cdn.baselinker.com/products/kd/pz-002-1.jpg" }
     }
   }
 }

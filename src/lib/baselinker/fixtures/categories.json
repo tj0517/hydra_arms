@@ -51,5 +51,15 @@
   { "category_id": 10003, "name": "Wkładki i akcesoria do obuwia", "parent_id": 10001 },
   { "category_id": 11001, "name": "Akcesoria militarne", "parent_id": 0 },
   { "category_id": 11002, "name": "Pagony i dystynkcje", "parent_id": 11001 },
-  { "category_id": 11003, "name": "Flagi i emblematy", "parent_id": 11001 }
+  { "category_id": 11003, "name": "Flagi i emblematy", "parent_id": 11001 },
+  { "category_id": 8926521, "name": "01. BROŃ PALNA (Koncesjonowana – Odbiór osobisty: Salon Kraków)", "parent_id": 0 },
+  { "category_id": 8926522, "name": "1.1 Broń Krótka", "parent_id": 8926521 },
+  { "category_id": 8926523, "name": "1.1.1 Pistolety Samopowtarzalne (Bojowe, Sportowe/IPSC, Subkompaktowe)", "parent_id": 8926522 },
+  { "category_id": 8926537, "name": "02. AMUNICJA I ELEMENTY RECHARGINGU (Koncesjonowana – Odbiór osobisty: Salon Kraków)", "parent_id": 0 },
+  { "category_id": 8926538, "name": "2.1 Amunicja Pistoletowa i Rewolwerowa", "parent_id": 8926537 },
+  { "category_id": 8926717, "name": "15. ŚRODKI DO OCHRONY OSOBISTEJ (Niekoncesjonowane urządzenia obronne i akcesoria)", "parent_id": 0 },
+  { "category_id": 8926718, "name": "15.1 Miotacze Gazu Pieprzowego (OC - Oleoresin Capsicum)", "parent_id": 8926717 },
+  { "category_id": 8926719, "name": "15.1.1 Gazy Pieprzowe Ręczne", "parent_id": 8926718 },
+  { "category_id": 8926726, "name": "15.3 Paralizatory", "parent_id": 8926717 },
+  { "category_id": 8926727, "name": "15.3.1 Paralizatory Kontaktowe", "parent_id": 8926726 }
 ]
