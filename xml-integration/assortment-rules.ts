@@ -38,12 +38,12 @@ export const ASSORTMENT_RULES: AssortmentRules = {
     // 1.1 / 1.1.2 / 1.2 (czarnoprochowa Kolby wg notatki HA-2.04) nie wracają —
     // żadna hurtownia ich nie mapuje; Kolba idzie regułami nazwowymi do 1.4 → HA-2.18.
     '1.3',    // Strzelby Gładkolufowe (parent → review) — Sharg „Strzelby Hatsan”
-    '1.4',    // Broń Kolekcjonerska i Historyczna (czarnoprochowa) — Sharg „Broń czarnoprochowa”, Kolba (kolba_rules)
+    '1.4',    // Broń Kolekcjonerska i Historyczna (czarnoprochowa) — Sharg „Broń czarnoprochowa”, Kolba (kolba_rules, dormant — no such products in the feed as of 2026-10-08)
     '1.5',    // Broń alarmowa i sygnałowa — Sharg (rewolwery/pistolety alarmowe), Spechurt „Broń hukowa”
 
     // ── 02. AMUNICJA I ELEMENTY ELABORACJI (jw.; 2.5/2.6 → grupa A) ───────────
     '2.5',    // Amunicja Hukowa, Alarmowa i Gazowa (parent → review) — Sharg (amunicja alarmowa/hukowa)
-    '2.6',    // Elementy Koncesjonowane do Elaboracji (kapiszony, proch czarny, spłonki) — Kolba (kolba_rules)
+    '2.6',    // Elementy Koncesjonowane do Elaboracji (kapiszony, proch czarny, spłonki) — Kolba (kolba_rules, dormant — no such products in the feed as of 2026-10-08)
 
     // ── 03. OPTYKA STRZELECKA I OPTOELEKTRONIKA ───────────────────────────────
     '3.1',    // Lunety Celownicze
