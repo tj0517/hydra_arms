@@ -21,6 +21,7 @@ Adapter P24 był testowany tylko na mocku. Przed startem sprzedaży musi przejś
 ## Zakres
 - [ ] odczyt stanu bieżącego: wartości sandbox w rejestrze inputów (status `confirmed`), `P24_MODE=sandbox`
 - [ ] tj wpisuje dane sandbox do env (lokalnie, potem po akceptacji w Vercelu)
+- [ ] `P24_NOTIFY_ALLOWED_IPS` = lista z dokumentacji P24 („Adresy IP serwerów”), sprawdzona przez tj na stronie P24 w dniu ustawiania; bez niej filtr z HA-2.20 odrzuca każde notify (403)
 - [ ] pełna ścieżka: checkout → rejestracja → płatność sandbox → notify → verify → `paid`
 - [ ] próby błędne: zły CRC / podpis, kwota niezgodna, duplikat notify
 
@@ -29,6 +30,7 @@ Adapter P24 był testowany tylko na mocku. Przed startem sprzedaży musi przejś
 - red proof: notify ze złym podpisem → odrzucone, status bez zmian — **jak sprawdzić:** wklejony log i SELECT
 - red proof: niezgodna kwota → odrzucone — **jak sprawdzić:** wklejony log
 - red proof: duplikat notify nie dubluje zamówienia w BL — **jak sprawdzić:** wklejony SELECT i licznik BL (mock)
+- red proof: notify spoza listy IP na środowisku Vercel → 403 — **jak sprawdzić:** log Vercela z `reason=ip_not_allowed`
 
 ## Poza zakresem
 - przełączenie na produkcyjne klucze → HA-2.09
