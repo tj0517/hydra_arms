@@ -1,7 +1,7 @@
 ---
 id: HA-2.14
 title: Inwentaryzacja BaseLinkera (tylko odczyt)
-status: review
+status: done
 difficulty: S
 model: claude-fable-5-1
 model_approved: null
@@ -61,3 +61,4 @@ pr: 36
 - 2026-10-09 tj — decyzja: inwentaryzacja wszystkich 6 katalogów. Skrypt listuje katalogi (id, nazwa, liczba produktów), nie kończy się gdy `BASELINKER_INVENTORY_ID` nie istnieje, iteruje po wszystkich; magazyny po id widocznych na produktach z nazwami z `getInventoryWarehouses` (mapowanie env H1/H2/H3 nieużywane — sandbox); `bl-verify-categories.ts` przyjmuje `--inventory=<id>` i sprawdza istnienie katalogu przez `getInventories` zamiast padać na `ERROR_STORAGE_ID`. `.env.local` nietknięte; HA-2.15 nietknięte; O-21 tylko nota datowana.
 - 2026-10-09 claude: `docs/research/bl-inventory-2026-10.md` założony z sekcją „Finding: 107789 and bl_148602/3/4 are not in the client's account”; sekcje z liczbami czekają na wklejone wyniki runu 2.
 - 2026-10-09 tj: run 2 (wszystkie katalogi) i verify 35743 wklejone do `docs/research/bl-inventory-2026-10.md`. Wynik: 6 katalogów, 7 341 produktów, 0 tagów, 0 kategorii Hydry, 0 z `approved`; dwa obce żywe stany — Kobold Defense 4 741 (1 738 ze stanem) i MILICON 2 591 (1 454 ze stanem); katalog 35743 ma własne drzewo 53 kategorii (akcesoria do broni palnej) z innego kanału. Pytanie zadania (produkty spoza P1 już w BL): brak. Decyzja: kryterium red proof `bl-verify-categories.ts` nieweryfikowalne w tym stanie konta, zastąpione ustaleniem „0 kategorii Hydry”; jeden run verify (35743) jako dowód. Następna decyzja: O-33 (katalog i magazyny docelowe; dopisane do `blocked_by_questions` HA-2.15).
+- 2026-10-09 tj: odbiór PR #36 — udowodnione: klient read-only + red proof (140/140), raport bl-inventory-2026-10.md z run 2 i verify 35743 verbatim; ustalenie: import z 24.07 nigdy nie trafił na konto klienta (7 341 produktów, 0 tagów, 0 kategorii Hydry), decyzja o katalogu docelowym → O-33.
