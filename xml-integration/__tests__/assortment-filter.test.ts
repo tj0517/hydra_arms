@@ -228,3 +228,125 @@ test('sync regression: filterProduct would drop no-stock non-P1, but stock=0 upd
   assert.equal(syncStockUpdate[MOCK_WAREHOUSE], 0,
     'stock=0 still written in sync regardless of what the filter would decide');
 });
+
+// ── Correction sheet 2026-09-29 (HA-2.18) ────────────────────────────────────
+// (1) Removed category: „Kolekcjonerstwo i militaria” (O-24).  The filter works on
+//     Hydra numbers, so the proof is: a product whose supplier category resolves
+//     to „00. DO PRZYPISANIA” via the REAL category-map.json is rejected.
+// (2) New subcategories: in scope only when their effective priority is P1
+//     (NEW_SUBCATEGORY_DEFAULT_PRIORITY, injected here — never read from env).
+
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
+import { HydraTreeFromTxt } from '../hydra-tree-txt';
+import { resolveCategory, type CategoryMapFile } from '../resolve-category';
+import {
+  effectiveAllowedHydraNums,
+  parseNewSubcategoryPriority,
+  type AssortmentRules,
+} from '../assortment-rules';
+
+const TREE = new HydraTreeFromTxt(readFileSync(resolve(process.cwd(), 'xml-integration/hydra-category-tree.txt'), 'utf8'));
+const MAP = JSON.parse(readFileSync(resolve(process.cwd(), 'xml-integration/category-map.json'), 'utf8')) as CategoryMapFile;
+
+test('red proof (HA-2.18, O-24): removed „Kolekcjonerstwo i militaria” — supplier category resolving to „00” is rejected', () => {
+  // lp 254 „Repliki broni” (Sharg) and lp 257 „Oznaki i naszywki” (Spechurt „Patches”)
+  for (const [connector, cat] of [
+    ['sharg', 'Hobby/Militaria i strzelectwo/Repliki broni'],
+    ['spechurt', 'Patches'],
+  ] as const) {
+    const p = makeProduct({ connector, supplier_category_name: cat, stock: 7 });
+    const r = resolveCategory(p, MAP, TREE, new Set());
+    assert.equal(r.hydraNum, null, `${connector} „${cat}” must resolve to 00`);
+    assert.equal(r.status, 'flag');
+    const f = filterProduct(p, r.hydraNum, p.stock, 0, PASS_PRICE, ASSORTMENT_RULES);
+    assert.equal(f.allowed, false, `${connector} „${cat}” must be rejected`);
+    assert.equal(f.reason, 'not_p1');
+  }
+});
+
+test('HA-2.18: the sheet-removed nodes 9.3.4 (helmets) and 12.1 (clothing) stay admitted via other P1 rows (lp 347, 98/100)', () => {
+  for (const num of ['9.3.4', '12.1']) {
+    const r = filterProduct(makeProduct({ connector: 'kolba' }), num, 1, 0, PASS_PRICE, ASSORTMENT_RULES);
+    assert.equal(r.allowed, true, `${num} must still pass`);
+  }
+});
+
+// A product in a NEW subcategory: „Magazynki pozostałe” → Hydra „05” (parent), which
+// Spechurt feeds („Magazynki i akcesoria” → 05 in category-map.json).  „05” is NOT in
+// allowedHydraNums (only 5.1 is), so admission depends solely on the new-subcategory priority.
+const NEW_SUB_PRODUCT = makeProduct({ connector: 'spechurt', supplier_category_name: 'Magazynki i akcesoria', stock: 3 });
+const NEW_SUB_HYDRA = resolveCategory(NEW_SUB_PRODUCT, MAP, TREE, new Set()).hydraNum;
+
+function withDefaultPriority(priority: AssortmentRules['newSubcategoryDefaultPriority']): AssortmentRules {
+  return { ...ASSORTMENT_RULES, newSubcategoryDefaultPriority: priority };
+}
+
+test('red proof (HA-2.18, O-22): new subcategory „Magazynki pozostałe” (05) is REJECTED with default priority P2', () => {
+  assert.equal(NEW_SUB_HYDRA, '05', 'Spechurt „Magazynki i akcesoria” resolves to 05');
+  assert.ok(!ASSORTMENT_RULES.allowedHydraNums.includes('05'), 'precondition: 05 is not a static P1 node');
+  const r = filterProduct(NEW_SUB_PRODUCT, NEW_SUB_HYDRA, 3, 0, PASS_PRICE, withDefaultPriority('P2'));
+  assert.equal(r.allowed, false);
+  assert.equal(r.reason, 'not_p1');
+});
+
+test('red proof (HA-2.18, O-22): the same product is ACCEPTED with default priority P1', () => {
+  const r = filterProduct(NEW_SUB_PRODUCT, NEW_SUB_HYDRA, 3, 0, PASS_PRICE, withDefaultPriority('P1'));
+  assert.equal(r.allowed, true);
+  assert.equal(r.reason, 'ok');
+});
+
+test('HA-2.18: P3 default behaves like P2 (nothing added); an explicit row priority overrides the default', () => {
+  assert.equal(filterProduct(NEW_SUB_PRODUCT, NEW_SUB_HYDRA, 3, 0, PASS_PRICE, withDefaultPriority('P3')).allowed, false);
+  // Row-level answer to O-22: only „Magazynki pozostałe” → P1 while the default stays P2
+  const rules: AssortmentRules = {
+    ...ASSORTMENT_RULES,
+    newSubcategoryDefaultPriority: 'P2',
+    newSubcategories: ASSORTMENT_RULES.newSubcategories.map((r) =>
+      r.name === 'Magazynki pozostałe' ? { ...r, priority: 'P1' as const } : r,
+    ),
+  };
+  assert.equal(filterProduct(NEW_SUB_PRODUCT, NEW_SUB_HYDRA, 3, 0, PASS_PRICE, rules).allowed, true);
+  // …and nothing else from the new list opened up (e.g. 2.1 ammunition stays out)
+  assert.equal(filterProduct(makeProduct(), '2.1', 3, 0, PASS_PRICE, rules).allowed, false);
+});
+
+test('HA-2.18: existing P1 nodes keep working exactly as today whatever the default priority', () => {
+  for (const priority of ['P1', 'P2', 'P3'] as const) {
+    const rules = withDefaultPriority(priority);
+    for (const num of ['6.1', '1.3', '1.4', '1.5', '2.5', '2.6', '15.3']) {
+      assert.equal(filterProduct(makeProduct(), num, 2, 0, PASS_PRICE, rules).allowed, true, `${num} @ ${priority}`);
+    }
+  }
+  // P2 adds no node at all: effective set === static set
+  assert.deepEqual([...effectiveAllowedHydraNums(withDefaultPriority('P2'))], [...ASSORTMENT_RULES.allowedHydraNums]);
+});
+
+test('HA-2.18: rows without a Hydra node (RAM markers, BAS) stay inert even at P1', () => {
+  const inert = ASSORTMENT_RULES.newSubcategories.filter((r) => r.hydra === null).map((r) => r.name);
+  assert.ok(inert.includes('Markery pneumatyczne (RAM i podobne)'));
+  assert.ok(inert.includes('Broń alarmowo-sygnałowa (BAS)'));
+  // Sharg RAM markers map to the parent „15”, which no row adds — rejected at P1 too
+  const ram = makeProduct({ connector: 'sharg', supplier_category_name: 'OFERTA/SAMOOBRONA/BROŃ NA KULE (RAM)/BROŃ NA KULE (RAM) Kaliber .68' });
+  const hydra = resolveCategory(ram, MAP, TREE, new Set()).hydraNum;
+  assert.equal(hydra, '15');
+  assert.equal(filterProduct(ram, hydra, 3, 0, PASS_PRICE, withDefaultPriority('P1')).allowed, false);
+});
+
+test('HA-2.18: every new-subcategory row has a sheet name, and its Hydra node (when set) exists in the tree', () => {
+  const names = ASSORTMENT_RULES.newSubcategories.map((r) => r.name);
+  assert.equal(new Set(names).size, names.length, 'names are unique');
+  assert.equal(names.length, 46, '46 names added by the correction sheet (see docs/research/korekta-2026-09-29-podkategorie.md)');
+  for (const r of ASSORTMENT_RULES.newSubcategories) {
+    if (r.hydra !== null) assert.notEqual(TREE.resolve(r.hydra), undefined, `${r.name}: ${r.hydra} not in tree`);
+  }
+});
+
+test('HA-2.18: parseNewSubcategoryPriority — unset/empty = P2, P1/P2/P3 pass, anything else throws without echoing the value', () => {
+  assert.equal(parseNewSubcategoryPriority(undefined), 'P2');
+  assert.equal(parseNewSubcategoryPriority(''), 'P2');
+  for (const v of ['P1', 'P2', 'P3'] as const) assert.equal(parseNewSubcategoryPriority(v), v);
+  for (const bad of ['p1', 'P4', 'priority-9', 'true']) {
+    assert.throws(() => parseNewSubcategoryPriority(bad), (e: Error) => !e.message.includes(bad));
+  }
+});

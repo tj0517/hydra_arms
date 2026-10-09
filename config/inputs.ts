@@ -215,6 +215,20 @@ export const INPUTS: readonly InputEntry[] = [
     note: 'Order value (PLN gross) above which shipping is free. Personal pickup is always 0 and needs no input.',
   },
 
+  // ─── Import filter — priority of new subcategories (O-22, client) ───────────
+  {
+    name: 'NEW_SUBCATEGORY_DEFAULT_PRIORITY',
+    source: 'env',
+    status: 'placeholder',
+    owner: 'client',
+    provisional: false,
+    secret: false,
+    usedIn: ['xml-integration/assortment-rules.ts'],
+    question: 'O-22',
+    task: 'HA-2.18',
+    note: 'Closed list: P1 | P2 | P3 (case-sensitive); unset = P2. Default priority of every subcategory the correction sheet (2026-09-29) added without a P1/P2/P3 column — tj 2026-10-09: P2 = not imported until the client answers O-22. Only P1 admits those nodes to the import filter; the answer per subcategory is a `priority` edit on the row in assortment-rules.ts `newSubcategories`, this env moves all unanswered rows at once.',
+  },
+
   // ─── Main domain (O-31, client) ─────────────────────────────────────────────
   {
     name: 'SITE_URL',

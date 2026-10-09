@@ -3,7 +3,9 @@
  *
  * Implements the four admission rules from O-04 (resolved 2026-09-24):
  *   1. Supplier enabled (Sharg / Kolba / Spechurt — "Szafy" excluded per O-17)
- *   2. Category is P1 and present at ≥1 of our wholesalers
+ *   2. Category is P1 and present at ≥1 of our wholesalers (new subcategories
+ *      from the correction sheet count as P1 only when their effective priority
+ *      is P1 — effectiveAllowedHydraNums in assortment-rules.ts, HA-2.18)
  *   3. Stock > 0 at Hydra's own warehouse OR at the wholesaler (mixed model)
  *   4. Price ≥ minPricePln (0 = disabled)
  *
@@ -11,7 +13,7 @@
  */
 
 import type { NormalizedProduct } from './types';
-import type { AssortmentRules } from './assortment-rules';
+import { effectiveAllowedHydraNums, type AssortmentRules } from './assortment-rules';
 
 export type FilterReason =
   | 'ok'
@@ -64,7 +66,7 @@ export function filterProduct(
     return { allowed: false, reason: 'disabled_supplier' };
   }
 
-  if (!hydraNum || !isP1(hydraNum, rules.allowedHydraNums)) {
+  if (!hydraNum || !isP1(hydraNum, effectiveAllowedHydraNums(rules))) {
     return { allowed: false, reason: 'not_p1' };
   }
 

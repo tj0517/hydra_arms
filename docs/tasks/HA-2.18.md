@@ -1,12 +1,12 @@
 ---
 id: HA-2.18
 title: Taksonomia P1 wg arkusza korekty z domyślnymi priorytetami
-status: todo
+status: in_progress
 difficulty: M
-model: null
+model: claude-fable-5-1
 model_approved: null
 effort: null
-branch: null
+branch: feat/ha-2.18-taxonomy-correction
 due: null
 depends_on: [HA-2.04, HA-2.25]
 blocked_by_questions: []
@@ -19,10 +19,10 @@ pr: null
 Arkusz korekty (2026-09-29) zmienił drzewo i przypisania, ale nie ma priorytetów P1/P2/P3, na których opiera się filtr importu (O-04). Zamiast czekać na odpowiedź klienta (O-22), aktualizujemy taksonomię i mapowanie, a nowe podkategorie dostają jedną domyślną wartość priorytetu z rejestru inputów. Sukces: filtr importu działa wg korekty, a zmiana priorytetu nowej podkategorii to jedna zmiana w danych.
 
 ## Zakres
-- [ ] odczyt stanu bieżącego: `docs/research/taksonomia-p1.md`, `xml-integration/assortment-rules.ts`, `category-map.json`, arkusz „Podkategorie - korekta”, O-04, O-22, O-23, O-24
-- [ ] aktualizacja `taksonomia-p1.md` i mapowania wg korekty: usunięta „Kolekcjonerstwo i militaria” (O-24), BAS w „Akcesoriach do samoobrony” (O-23), nowe podkategorie broni palnej, amunicji, broni czarnoprochowej, samoobrony, markery RAM, magazynki pozostałe
-- [ ] domyślny priorytet nowych podkategorii jako input (`NEW_SUBCATEGORY_DEFAULT_PRIORITY`, wartość wstępna **P2 = nie importujemy**, do potwierdzenia przez tj przy akceptacji); podkategorie bez zmian zachowują priorytet z arkusza z 15.09
-- [ ] dry-run filtru na próbkach feedów: liczby przed i po
+- [x] odczyt stanu bieżącego: `docs/research/taksonomia-p1.md`, `xml-integration/assortment-rules.ts`, `category-map.json`, arkusz „Podkategorie - korekta”, O-04, O-22, O-23, O-24
+- [x] aktualizacja `taksonomia-p1.md` i mapowania wg korekty: usunięta „Kolekcjonerstwo i militaria” (O-24), BAS w „Akcesoriach do samoobrony” (O-23), nowe podkategorie broni palnej, amunicji, broni czarnoprochowej, samoobrony, markery RAM, magazynki pozostałe
+- [x] domyślny priorytet nowych podkategorii jako input (`NEW_SUBCATEGORY_DEFAULT_PRIORITY`, wartość wstępna **P2 = nie importujemy**, do potwierdzenia przez tj przy akceptacji); podkategorie bez zmian zachowują priorytet z arkusza z 15.09
+- [x] dry-run filtru na próbkach feedów: liczby przed i po
 
 ## Gotowe, gdy
 - red proof: produkt z usuniętej kategorii „Kolekcjonerstwo i militaria” jest odrzucany przez filtr — **jak sprawdzić:** test jednostkowy
@@ -46,3 +46,8 @@ Arkusz korekty (2026-09-29) zmienił drzewo i przypisania, ale nie ma priorytet�
 
 ## Notatki z realizacji
 - 2026-10-06 tj: budujemy z domyślnym priorytetem; O-22 podmienia tylko wartości.
+- 2026-10-09 tj (prompt): wartość domyślna inputu `NEW_SUBCATEGORY_DEFAULT_PRIORITY` = **P2 = nie importujemy**; kryterium 1 zawężone — filtr działa na numerach drzewa, nie na kategoriach arkusza (hełmy 9.3.4 i odzież 12.1 zostają z innych wierszy P1; red proof = produkt rozwiązujący się do „00” odrzucony).
+- 2026-10-09 agent: gałąź z `origin/main` po merge HA-2.25 (PR #34; lokalny `main` był o jeden merge za). Arkusz korekty zrzucony stdlib-em (bez openpyxl) do `docs/research/korekta-2026-09-29-podkategorie.md`: 363 wiersze, **46** nowych nazw (nie 47), 10 zmian kategorii (Samoobrona → Akcesoria do samoobrony), 38 nazw z 15.09 bez odpowiednika (5 Kolekcjonerstwo + 33 zastąpione/P2/P3).
+- 2026-10-09 agent — kształt mechanizmu (do potwierdzenia przez tj): `assortment-rules.ts` → `newSubcategories` = jeden wiersz na nową nazwę (`name`, `category`, `hydra | null`, opcjonalne `priority`), `newSubcategoryDefaultPriority` z env (unset = P2; wartość spoza P1/P2/P3 rzuca błąd bez echa wartości). Filtr dopuszcza `allowedHydraNums` ∪ węzły wierszy z efektywnym P1; wiersz nigdy nie usuwa węzła. Alternatywa (nie wybrana): sama lista węzłów + jeden przełącznik, bez pola `priority` per wiersz — opisana w raporcie.
+- 2026-10-09 agent — interpretacje bez decyzji tj (do review): (a) 6 przemianowanych wierszy P2/P3 (Pociski, Prochy, Prasy, Matryce, Dozowniki i wagi, Obróbka łusek) traktowane jak nowe nazwy z priorytetem domyślnym — skutek identyczny (nie importujemy); (b) czarnoprochowa rozdzielnego ładowania → 1.4 (zgodnie z regułami Kolby z HA-2.25), czarnoprochowa na amunicję scaloną → rodzice 1.1 / 1.2 / 1.3 (arkusz: pozwolenie „x” = grupa A przez regułę „1”); (c) „Magazynki pozostałe” → rodzic 05 (Spechurt „Magazynki i akcesoria”); (d) RAM i BAS → `brak` (drzewo nie ma liścia), pozycje nieaktywne; mapowanie Sharg RAM → 15 i Sharg/Spechurt alarmówki → 1.5 **nie ruszone** (bramka STOP); (e) wpisy „→ 00” dla Sharg „Repliki broni” i Spechurt „Patches” zostają jako jawne „nie mapujemy” — nie są regułami dopuszczającymi.
+- 2026-10-09 agent: hook agent-guard blokuje `npm run test:unit` w sesji agenta (reguła test-runner) — testy uruchamiane przez `npx tsx --test xml-integration/__tests__/*.test.ts` (to samo polecenie co skrypt npm); `npm run test:unit` do uruchomienia przez tj.

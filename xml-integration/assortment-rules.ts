@@ -8,7 +8,52 @@
  * (sheet "Podkategorie i filtry", column D), mapped to Hydra tree 01–15 in
  * docs/research/taksonomia-p1.md.  Only subcategories present at ≥1 of our
  * wholesalers (Sharg / Kolba / Spechurt) are included.
+ *
+ * New subcategories (HA-2.18, 2026-10-09): the client's correction sheet
+ * („Podkategorie - korekta”, 2026-09-29) added subcategories without any
+ * P1/P2/P3 column (O-22).  They live in `newSubcategories` below, one row per
+ * sheet name, each with an optional explicit `priority`.  A row without one
+ * takes `newSubcategoryDefaultPriority`, read from the registered input
+ * NEW_SUBCATEGORY_DEFAULT_PRIORITY (config/inputs.ts; unset = P2 = not
+ * imported, tj 2026-10-09).  Only rows whose effective priority is P1 add their
+ * Hydra node to the filter; nodes already in `allowedHydraNums` are never
+ * removed by a row.  Answering O-22 = editing `priority` on the rows, or the
+ * env value for all of them at once.
  */
+
+/** Sheet priority: P1 = import now, P2 = after the core, P3 = specialisation. */
+export type Priority = 'P1' | 'P2' | 'P3';
+
+/** Env var that carries the default priority of new subcategories (registered in config/inputs.ts). */
+export const NEW_SUBCATEGORY_PRIORITY_ENV = 'NEW_SUBCATEGORY_DEFAULT_PRIORITY';
+
+/**
+ * Parse the input.  Unset / empty = P2 (tj 2026-10-09).  Anything else than
+ * P1 | P2 | P3 (case-sensitive) throws, so a typo cannot silently widen or
+ * narrow the import — the message never echoes the value.
+ */
+export function parseNewSubcategoryPriority(raw: string | undefined): Priority {
+  if (raw === undefined || raw === '') return 'P2';
+  if (raw === 'P1' || raw === 'P2' || raw === 'P3') return raw;
+  throw new Error(`${NEW_SUBCATEGORY_PRIORITY_ENV} must be P1, P2 or P3 (case-sensitive) or unset (= P2)`);
+}
+
+export interface NewSubcategoryRule {
+  /** Subcategory name exactly as in the corrected sheet (grep target). */
+  name: string;
+  /** Sheet category. */
+  category: string;
+  /**
+   * Hydra tree node from docs/research/taksonomia-p1.md (leading zero
+   * optional; parent node ⇒ tag review as everywhere else), or null when the
+   * tree has no node for it — then the row is inert whatever its priority
+   * (same convention as permit-rules.ts).
+   */
+  hydra: string | null;
+  /** Explicit priority once the client answers O-22; absent = the default input. */
+  priority?: Priority;
+  note?: string;
+}
 
 export interface AssortmentRules {
   /**
@@ -28,6 +73,29 @@ export interface AssortmentRules {
    * 0 = filter disabled.  Set e.g. 30 to drop products below 30 PLN.
    */
   minPricePln: number;
+
+  /** Subcategories added by the correction sheet (2026-09-29) — see header. */
+  newSubcategories: readonly NewSubcategoryRule[];
+
+  /** Priority of every `newSubcategories` row without an explicit `priority`. */
+  newSubcategoryDefaultPriority: Priority;
+}
+
+/** Priority a new-subcategory row currently has (explicit, else the default). */
+export function effectivePriority(rule: NewSubcategoryRule, rules: AssortmentRules): Priority {
+  return rule.priority ?? rules.newSubcategoryDefaultPriority;
+}
+
+/**
+ * Hydra nodes the filter admits: `allowedHydraNums` plus the node of every
+ * new-subcategory row whose effective priority is P1 (rows with `hydra: null`
+ * never add anything).  Pure — the filter calls it per product.
+ */
+export function effectiveAllowedHydraNums(rules: AssortmentRules): readonly string[] {
+  const extra = rules.newSubcategories
+    .filter((r) => r.hydra !== null && effectivePriority(r, rules) === 'P1')
+    .map((r) => r.hydra as string);
+  return extra.length === 0 ? rules.allowedHydraNums : [...rules.allowedHydraNums, ...extra];
 }
 
 export const ASSORTMENT_RULES: AssortmentRules = {
@@ -144,4 +212,74 @@ export const ASSORTMENT_RULES: AssortmentRules = {
 
   // 0 = disabled.  Raise to e.g. 30 to drop low-ticket items.
   minPricePln: 0,
+
+  // ── Nowe podkategorie z arkusza korekty 2026-09-29 (HA-2.18) ───────────────
+  // Jedna pozycja na nazwę z arkusza (46). `hydra` wg docs/research/taksonomia-p1.md
+  // (sekcja „Nowe podkategorie”); null = brak węzła w drzewie 01–15 (pozycja
+  // nieaktywna).  Bez `priority` ⇒ newSubcategoryDefaultPriority.  Węzły już
+  // obecne w allowedHydraNums (1.3, 1.4, 1.5, 2.5, 2.6) zostają w filtrze
+  // niezależnie od tych wierszy.  Odpowiedź klienta na O-22 = `priority` w wierszu.
+  newSubcategories: [
+    // Wyposażenie strzeleckie i trening
+    { name: 'Markery pneumatyczne (RAM i podobne)', category: 'Wyposażenie strzeleckie i trening', hydra: null,
+      note: 'brak węzła (arkusz: dział wyposażenia strzeleckiego = 10, bez liścia); Sharg „BROŃ NA KULE (RAM)” mapuje dziś na rodzica 15 → review, poza filtrem' },
+
+    // Broń palna (permit-rules.ts: 1 → grupa A)
+    { name: 'Pistolety jednostrzałowe', category: 'Broń palna', hydra: '1.1', note: 'brak liścia; rodzic → review' },
+    { name: 'Broń PCC', category: 'Broń palna', hydra: '1.2.4' },
+    { name: 'Pistolety maszynowe — broń samoczynna', category: 'Broń palna', hydra: '1.2.4', note: 'arkusz: x (koncesja)' },
+    { name: 'Karabinki jednostrzałowe', category: 'Broń palna', hydra: '1.2', note: 'brak liścia; rodzic → review' },
+    { name: 'Karabinki powtarzalne', category: 'Broń palna', hydra: '1.2.2' },
+    { name: 'Karabinki samoczynne', category: 'Broń palna', hydra: '1.2.3' },
+    { name: 'Karabiny jednostrzałowe', category: 'Broń palna', hydra: '1.2', note: 'brak liścia; rodzic → review' },
+    { name: 'Karabiny samopowtarzalne', category: 'Broń palna', hydra: '1.2.1' },
+    { name: 'Karabiny samoczynne', category: 'Broń palna', hydra: '1.2.3', note: 'arkusz: tylko koncesja/B2G' },
+    { name: 'Strzelby jednostrzałowe', category: 'Broń palna', hydra: '1.3.3' },
+    { name: 'Strzelby wielolufowe łamane', category: 'Broń palna', hydra: '1.3.3' },
+    { name: 'Strzelby powtarzalne', category: 'Broń palna', hydra: '1.3.1' },
+    { name: 'Strzelby samopowtarzalne', category: 'Broń palna', hydra: '1.3.2' },
+    { name: 'Broń kombinowana', category: 'Broń palna', hydra: '1.3.3', note: '„Strzelby Łamane i Inne”; brak liścia dla broni kombinowanej' },
+    { name: 'Broń palna alarmowa', category: 'Broń palna', hydra: '1.5', note: 'węzeł już w allowedHydraNums (HA-2.25)' },
+    { name: 'Broń palna sygnałowa', category: 'Broń palna', hydra: '1.5', note: 'węzeł już w allowedHydraNums (HA-2.25)' },
+    { name: 'Broń palna gazowa', category: 'Broń palna', hydra: '1.5', note: 'węzeł już w allowedHydraNums (HA-2.25)' },
+    { name: 'Broń palna pozbawiona cech użytkowych', category: 'Broń palna', hydra: '1.4', note: 'węzeł już w allowedHydraNums (HA-2.25); arkusz: rejestracja' },
+
+    // Magazynki
+    { name: 'Magazynki pozostałe', category: 'Magazynki', hydra: '05', note: 'brak liścia; rodzic → review; Spechurt „Magazynki i akcesoria” → 05' },
+
+    // Amunicja i elaboracja (permit-rules.ts: 2 → grupa A; 8 → bez pozwolenia)
+    { name: 'Naboje bocznego zapłonu', category: 'Amunicja i elaboracja', hydra: '2.4' },
+    { name: 'Naboje centralnego zapłonu do broni krótkiej', category: 'Amunicja i elaboracja', hydra: '2.1' },
+    { name: 'Naboje centralnego zapłonu do broni długiej gwintowanej', category: 'Amunicja i elaboracja', hydra: '2.2' },
+    { name: 'Naboje śrutowe do broni gładkolufowej', category: 'Amunicja i elaboracja', hydra: '2.3' },
+    { name: 'Naboje kulowe do broni gładkolufowej', category: 'Amunicja i elaboracja', hydra: '2.3', note: 'breneka w opisie 2.3' },
+    { name: 'Naboje ślepe i hukowe', category: 'Amunicja i elaboracja', hydra: '2.5', note: 'rodzic → review; węzeł już w allowedHydraNums (HA-2.25)' },
+    { name: 'Naboje alarmowe, gazowe i sygnałowe', category: 'Amunicja i elaboracja', hydra: '2.5', note: 'węzeł już w allowedHydraNums (HA-2.25)' },
+    { name: 'Naboje scalone elaborowane prochem czarnym', category: 'Amunicja i elaboracja', hydra: '02', note: 'brak liścia; rodzic → review' },
+    { name: 'Amunicja szczególnie niebezpieczna lub ograniczona', category: 'Amunicja i elaboracja', hydra: '02', note: 'arkusz: tylko koncesja/B2G; brak liścia' },
+    { name: 'Pociski do elaboracji', category: 'Amunicja i elaboracja', hydra: '8.2', note: '15.09: „Pociski” P2 (zmiana nazwy)' },
+    { name: 'Prochy bezdymne', category: 'Amunicja i elaboracja', hydra: '2.6', note: 'węzeł już w allowedHydraNums (HA-2.25); 15.09: „Prochy” P3' },
+    { name: 'Proch czarny', category: 'Amunicja i elaboracja', hydra: '2.6', note: 'węzeł już w allowedHydraNums (HA-2.25); reguły Kolby uśpione' },
+    { name: 'Przybitki, koszyki i komponenty nabojów śrutowych', category: 'Amunicja i elaboracja', hydra: '8.2' },
+    { name: 'Prasy elaboracyjne', category: 'Amunicja i elaboracja', hydra: '8.1', note: '15.09: „Prasy” P3 (zmiana nazwy)' },
+    { name: 'Matryce elaboracyjne', category: 'Amunicja i elaboracja', hydra: '8.1', note: '15.09: „Matryce” P3 (zmiana nazwy)' },
+    { name: 'Dozowniki prochu i wagi', category: 'Amunicja i elaboracja', hydra: '08', note: 'brak liścia; rodzic → review; 15.09: „Dozowniki i wagi” P3' },
+    { name: 'Obróbka i kontrola łusek', category: 'Amunicja i elaboracja', hydra: '8.2', note: '15.09: „Obróbka łusek” P3 (zmiana nazwy)' },
+
+    // Broń czarnoprochowa (permit-rules.ts: 1.4 → grupa C / O-29; 1 → A)
+    { name: 'Pistolety rozdzielnego ładowania odprzodowego', category: 'Broń czarnoprochowa', hydra: '1.4', note: 'węzeł już w allowedHydraNums (HA-2.25); Sharg „Broń czarnoprochowa”, reguły Kolby uśpione' },
+    { name: 'Rewolwery rozdzielnego ładowania', category: 'Broń czarnoprochowa', hydra: '1.4', note: 'jw.' },
+    { name: 'Karabiny rozdzielnego ładowania odprzodowego', category: 'Broń czarnoprochowa', hydra: '1.4', note: 'jw.' },
+    { name: 'Muszkiety i strzelby rozdzielnego ładowania odprzodowego', category: 'Broń czarnoprochowa', hydra: '1.4', note: 'jw.' },
+    { name: 'Broń rozdzielnego ładowania odtylcowego', category: 'Broń czarnoprochowa', hydra: '1.4', note: 'jw.' },
+    { name: 'Broń czarnoprochowa na amunicję scaloną — krótka', category: 'Broń czarnoprochowa', hydra: '1.1', note: 'arkusz: x (koncesja) → rodzic 1.1 → review; Sharg wrzuca całą czarnoprochową do 1.4' },
+    { name: 'Broń czarnoprochowa na amunicję scaloną — długa gwintowana', category: 'Broń czarnoprochowa', hydra: '1.2', note: 'jw., rodzic 1.2' },
+    { name: 'Broń czarnoprochowa na amunicję scaloną — długa gładkolufowa lub kombinowana', category: 'Broń czarnoprochowa', hydra: '1.3', note: 'jw., rodzic 1.3 (już w allowedHydraNums, HA-2.25)' },
+
+    // Akcesoria do samoobrony (O-23)
+    { name: 'Broń alarmowo-sygnałowa (BAS)', category: 'Akcesoria do samoobrony', hydra: null,
+      note: 'O-23: bez pozwolenia, w dziale samoobrony — drzewo 15 nie ma liścia BAS; dziś Sharg „Rewolwery Alarmowe” / Spechurt „Broń hukowa” → 1.5 (grupa A, HA-2.25); rozjazd do HA-2.17 / HA-2.06' },
+  ],
+
+  newSubcategoryDefaultPriority: parseNewSubcategoryPriority(process.env[NEW_SUBCATEGORY_PRIORITY_ENV]),
 };
