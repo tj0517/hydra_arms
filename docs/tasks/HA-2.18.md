@@ -1,7 +1,7 @@
 ---
 id: HA-2.18
 title: Taksonomia P1 wg arkusza korekty z domyślnymi priorytetami
-status: in_progress
+status: review
 difficulty: M
 model: claude-fable-5-1
 model_approved: null
@@ -12,7 +12,7 @@ depends_on: [HA-2.04, HA-2.25]
 blocked_by_questions: []
 touches_db: false
 touches_prod: false
-pr: null
+pr: 35
 ---
 
 ## Cel
