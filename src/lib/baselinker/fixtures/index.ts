@@ -25,6 +25,17 @@ export function getMockResponse(method: string, params: Record<string, unknown>)
         ],
       };
 
+    case 'getInventoryWarehouses':
+      // Mirrors the stock keys used in products.json (`blconnect_6820`) plus an
+      // empty one, so bl-inventory-report.ts can be smoke-tested offline.
+      return {
+        status: 'SUCCESS',
+        warehouses: [
+          { warehouse_type: 'blconnect', warehouse_id: 6820, name: 'Mock main', description: '', stock_edition: true, is_default: true },
+          { warehouse_type: 'bl', warehouse_id: 1, name: 'Mock empty', description: '', stock_edition: true, is_default: false },
+        ],
+      };
+
     case 'getInventoryCategories':
       return {
         status: 'SUCCESS',
