@@ -6,12 +6,14 @@
  *   BASELINKER_MOCK=true npx tsx scripts/bl-verify-categories.ts          # smoke test
  *   npx tsx scripts/bl-verify-categories.ts                               # live BL
  *   npx tsx scripts/bl-verify-categories.ts /path/to/other.json           # test a copy
+ *   npx tsx scripts/bl-verify-categories.ts --inventory=12345             # other catalogue (HA-2.14)
  *
  * Exit code:
  *   0 — no mismatches found (and NOT on mock)
- *   1 — any mismatch, or running on mock (mock categories do not match the Hydra tree)
+ *   1 — any mismatch, inventory not found on the account, or running on mock
  *
  * BL methods called (read-only):
+ *   getInventories()                     — via getInventories() (inventory existence check)
  *   getInventoryCategories(inventory_id) — via getCategories()
  *   getInventoryTags(inventory_id)       — via blCall()
  *
@@ -63,10 +65,18 @@ function buildExpectedNames(txt: string): Map<string, string> {
 
 async function main() {
   const isMock = process.env.BASELINKER_MOCK === 'true';
-  const inventoryId = parseInt(process.env.BASELINKER_INVENTORY_ID ?? '35743', 10);
+  // Optional --inventory=<id> overrides BASELINKER_INVENTORY_ID (HA-2.14: the
+  // configured id may not exist on the client's account; run per catalogue).
+  const invArg = process.argv.find((a) => a.startsWith('--inventory='));
+  const positional = process.argv.slice(2).filter((a) => !a.startsWith('--'));
+  const inventoryId = parseInt(invArg?.slice('--inventory='.length) ?? process.env.BASELINKER_INVENTORY_ID ?? '35743', 10);
+  if (isNaN(inventoryId)) {
+    console.error('[error] --inventory must be a number');
+    process.exit(1);
+  }
 
   console.log('\n=== bl-verify-categories (READ-ONLY) ===');
-  console.log(`Inventory ID : ${inventoryId}`);
+  console.log(`Inventory ID : ${inventoryId}${invArg ? ' (from --inventory)' : ''}`);
   console.log(`BASELINKER_MOCK: ${isMock}`);
 
   if (isMock) {
@@ -82,7 +92,7 @@ async function main() {
 
   const DEFAULT_JSON = path.resolve(process.cwd(), 'xml-integration/hydra-categories.json');
   const TXT_PATH = path.resolve(process.cwd(), 'xml-integration/hydra-category-tree.txt');
-  const jsonPath = process.argv[2] ?? DEFAULT_JSON;
+  const jsonPath = positional[0] ?? DEFAULT_JSON;
 
   if (!fs.existsSync(jsonPath)) {
     console.error(`[error] JSON file not found: ${jsonPath}`);
@@ -113,7 +123,17 @@ async function main() {
 
   // ── Fetch BL categories ────────────────────────────────────────────────────────
 
-  const { blCall, getCategories } = await import('../src/lib/baselinker/client');
+  const { blCall, getCategories, getInventories } = await import('../src/lib/baselinker/client');
+
+  // Fail clearly (not with ERROR_STORAGE_ID) when the inventory is not on this account.
+  console.log('Fetching getInventories…');
+  const inventories = await getInventories();
+  if (!inventories.some((i) => i.inventory_id === inventoryId)) {
+    console.error(`[error] inventory ${inventoryId} NOT FOUND on this account. Visible inventories:`);
+    for (const i of inventories) console.error(`  ${i.inventory_id}  "${i.name}"`);
+    console.error('Re-run with --inventory=<id>.');
+    process.exit(1);
+  }
 
   console.log('Fetching getInventoryCategories…');
   const blCats = await getCategories(inventoryId);
