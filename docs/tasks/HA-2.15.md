@@ -8,8 +8,8 @@ model_approved: null
 effort: null
 branch: null
 due: null
-depends_on: [HA-2.11, HA-2.13, HA-2.14, HA-2.18]
-blocked_by_questions: [O-19, O-33]
+depends_on: [HA-2.11, HA-2.13, HA-2.14, HA-2.18, HA-2.26]
+blocked_by_questions: [O-19]
 touches_db: false
 touches_prod: true
 pr: null
