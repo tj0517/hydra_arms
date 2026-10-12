@@ -1,7 +1,7 @@
 /**
- * Read-only BaseLinker client (HA-2.14).
+ * Read-only BaseLinker client (HA-2.14; account-configuration reads: HA-2.26).
  *
- * Exposes ONLY catalogue read methods. Every call goes through
+ * Exposes ONLY catalogue reads and three account-configuration reads. Every call goes through
  * `blReadOnlyCall`, which checks the method name against a closed allowlist
  * BEFORE anything reaches `blCall` (and therefore before the mock switch, the
  * token, or the network). Any other method name — a write (`add*`, `update*`,
@@ -9,18 +9,22 @@
  * throws `BaseLinkerReadOnlyError`. Writes are impossible by construction:
  * there is no code path in this module that can send a non-allowlisted method.
  *
- * Allowlisted methods (all read-only, product catalogue only):
- *   getInventories, getInventoryWarehouses, getInventoryCategories,
- *   getInventoryTags, getInventoryProductsList, getInventoryProductsData,
- *   getInventoryProductsStock
+ * Allowlisted methods (all read-only):
+ *   product catalogue —
+ *     getInventories, getInventoryWarehouses, getInventoryCategories,
+ *     getInventoryTags, getInventoryProductsList, getInventoryProductsData,
+ *     getInventoryProductsStock
+ *   account configuration, ids and names only (HA-2.26, approved by tj) —
+ *     getInventoryPriceGroups, getOrderSources, getOrderStatusList
  *
  * Deliberately NOT allowlisted even though they start with `get`:
- *   getOrders, getOrderStatusList, getInvoices, … — orders/customers are out of
- *   scope for the inventory report (HA-2.14 STOP gate).
+ *   getOrders, getInvoices, … — order and customer data stay out of reach
+ *   (HA-2.14 STOP gate).
  */
 
 import { blCall } from './client';
-import type { BLCategory, BLInventory, BLProduct, BLProductDetail } from './types';
+import type { BLPriceGroup, BLOrderSources } from './accountIds';
+import type { BLCategory, BLInventory, BLOrderStatus, BLProduct, BLProductDetail } from './types';
 
 export const READ_ONLY_METHODS = [
   'getInventories',
@@ -30,6 +34,9 @@ export const READ_ONLY_METHODS = [
   'getInventoryProductsList',
   'getInventoryProductsData',
   'getInventoryProductsStock',
+  'getInventoryPriceGroups',
+  'getOrderSources',
+  'getOrderStatusList',
 ] as const;
 
 export type ReadOnlyMethod = (typeof READ_ONLY_METHODS)[number];
@@ -140,4 +147,21 @@ export async function getInventoryProductsStock(
     products: ids,
   })) as { products?: Record<string, { stock: Record<string, number> }> };
   return data.products ?? {};
+}
+
+// ── Account configuration (HA-2.26) — ids and names, no order or customer data ──
+
+export async function getInventoryPriceGroups(): Promise<BLPriceGroup[]> {
+  const data = (await blReadOnlyCall('getInventoryPriceGroups')) as { price_groups?: BLPriceGroup[] };
+  return data.price_groups ?? [];
+}
+
+export async function getOrderSources(): Promise<BLOrderSources> {
+  const data = (await blReadOnlyCall('getOrderSources')) as { sources?: BLOrderSources };
+  return data.sources ?? {};
+}
+
+export async function getOrderStatusList(): Promise<BLOrderStatus[]> {
+  const data = (await blReadOnlyCall('getOrderStatusList')) as { statuses?: BLOrderStatus[] };
+  return data.statuses ?? [];
 }
