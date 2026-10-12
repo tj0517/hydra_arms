@@ -1,7 +1,7 @@
 ---
 id: HA-2.26
 title: BL klienta — drzewo kategorii i tagi w katalogu 119068, odczyt ID konta
-status: review
+status: done
 difficulty: S
 model: claude-opus-5-5
 model_approved: null
@@ -72,3 +72,4 @@ Po HA-2.14 wiemy, że konto BL klienta nie ma nic z naszego importu, a O-33 dał
 - 2026-10-12 claude: stan dowodów — surowe wyniki `bl-verify-categories.ts --inventory=119068`, red proof, `bl-account-ids.ts` i `grep -E '^BASELINKER_' .env.local` nie zostały wklejone w tej sesji; powyższe wpisy „tj (wiadomość)” to streszczenie tj, nie odczyt claude. claude nie wykonał żadnego wywołania BaseLinkera (w klonie nie ma `.env.local`). `.env.local` na `hydra-srv` — bez potwierdzenia, punkt zakresu zostaje otwarty.
 - 2026-10-12 tj (review PR #38): przyjęte z uzupełnieniami, status zostaje `review`. `.env.local` na `hydra-srv` — niepotwierdzone, do sprawdzenia w preflighcie HA-2.15; punkt zakresu zostaje otwarty, serwer nietknięty. Surowe wyniki verify / red proof / odczytu ID konta wkleja tj do sekcji „Proof” w opisie PR #38. `docs/04-open-questions.md` i `project.md` poza tym PR (osobna gałąź docs tj).
 - 2026-10-12 tj: surowe dowody (a) verify, (b) red proof, (c) odczyt ID konta są w opisie PR #38 (sekcja „Proof”; uruchomione przez tj z terminala na Macu, nie przez claude). Red proof (b) = kopia `hydra-categories.json` z jednym podmienionym ID (9755703 → 9999999) → 1 rozjazd i `exit=1`; plik przywrócony (`git status` pusty, `grep -c 9999999` → 0).
+- 2026-10-12 tj: odbiór — „accepted — close it”; status `done` (PR #38). Otwarte poza zadaniem: `.env.local` na `hydra-srv` do sprawdzenia w preflighcie HA-2.15 (punkt zakresu zostaje niezaznaczony); `BASELINKER_STATUS_RETURN` puste decyzją tj (deferred).
