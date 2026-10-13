@@ -377,21 +377,61 @@ cd /home/hydra-import/hydra && flock -n /home/hydra-import/.hydra-run-bl.lock np
 
 ## 7. Harmonogram
 
-**Do uzupełnienia po podglądach — decyzja tj (STOP).** Propozycja powstanie z liczb z kroku 6.
+Decyzja tj 2026-10-13: raz na dobę, dla każdej hurtowni import i zaraz po nim sync; Kolba i Sharg
+kończą przed 02:00 UTC. Godziny w UTC, strefy serwera nie zmieniamy.
 
-Co już wiadomo:
+Dlaczego 02:00 UTC: sklep kopiuje BaseLinkera raz na dobę, o tej godzinie (cron Vercela
+`/api/shop/sync`). Do sklepu trafia stan katalogu z tej jednej chwili; sync zrobiony w ciągu dnia
+niczego w sklepie nie zmienia.
 
-- blokada jest jedna na serwer, więc import i sync nigdy nie idą równocześnie; uruchomienie, które
-  trafi na zajętą blokadę, jest pomijane, a nie kolejkowane;
-- import to jedno zapytanie do BaseLinkera na przyjęty produkt z przerwą 0,7 s po każdym, więc
-  trwa co najmniej 0,7 s na produkt plus czas samych zapytań, pobrania i parsowania feedu;
-  rzeczywisty czas pokaże pierwszy import;
-- Spechurt generuje stan raz na dobę między 3:00 a 4:00, a feed odświeża co ok. 3 h (zapis
-  z `docs/tasks/HA-2.15.md`). Źródła nie podają strefy; przyjmuję czas polski — do potwierdzenia;
-- dla Kolby i Sharga częstotliwości odświeżania feedu nie ma w dokumentach;
-- sync Sharga pobiera pełny feed (taki sam jak import), nie lekki;
-- cron na Ubuntu 26.04 nie ma stref czasowych per użytkownik: godziny w crontabie są w strefie
-  systemu, dziś UTC. Czas polski to UTC+2 latem i UTC+1 zimą (zmiana 2026-10-25).
+| Start (UTC) | Czas polski latem / zimą | Co | Limit | Najpóźniejszy koniec (UTC) |
+|---|---|---|---|---|
+| 20:20 | 22:20 / 21:20 | Kolba — import | 150 min | 22:51 |
+| 22:55 | 00:55 / 23:55 | Kolba — sync | 13 min | 23:09 |
+| 23:15 | 01:15 / 00:15 | Sharg — import | 90 min | 00:46 |
+| 00:50 | 02:50 / 01:50 | Sharg — sync | 13 min | 01:04 |
+| 01:05–04:05 | | nic nie chodzi: o 02:00 UTC sklep kopiuje BaseLinkera, Spechurt generuje stan | | |
+| 04:05 | 06:05 / 05:05 | Spechurt — import | 90 min | 05:36 |
+| 05:40 | 07:40 / 06:40 | Spechurt — sync | 13 min | 05:54 |
+
+Zasady, z których to wynika:
+
+- **Odstęp między startami jest większy niż limit wcześniejszego uruchomienia plus 60 s** (tyle
+  wrapper czeka po sygnale, zanim zabije proces). Dwa uruchomienia nie mogą się więc nałożyć,
+  a linia `SKIP` w dzienniku oznacza coś spoza harmonogramu: aktualizację kodu, podgląd, partię
+  próbną albo ręczne uruchomienie w tym czasie.
+- **Sync zaraz po imporcie tej samej hurtowni.** Import zapisuje tylko produkty, które
+  przechodzą filtr, czyli mają stan; produkt wyprzedany u hurtowni zeruje dopiero sync. Produktu,
+  który z feedu zniknął, nie zeruje nic (wpis w deferred).
+- **Limity są wstępne.** Same przerwy 0,7 s na produkt dają: Kolba 3140 → 37 min, Sharg 2280 →
+  27 min, Spechurt 1958 → 23 min; czas zapytań poznamy z pierwszego importu. Limit Kolby
+  zadziałałby dopiero przy średnio 2,2 s na zapytanie, Sharga przy 1,7 s, Spechurtu przy 2,1 s.
+  Po pierwszym imporcie limity i godziny są przeliczane z pola `duration=` w dzienniku i dopiero
+  wtedy powstaje ostateczna treść crontaba (krok 10).
+- **Co się dzieje przy limicie.** Import zatrzymany limitem zostawia hurtownię odświeżoną
+  częściowo, a następnej nocy zaczyna od początku feedu. Za ciasny limit ucinałby więc co noc
+  ten sam ogon — w dzienniku widać to jako `stopped-by=limit-…` noc w noc. Bez limitów
+  przeciągnięty import zabrałby okno własnemu sync (np. sync Kolby o 22:55 UTC), a zerowanie
+  wyprzedanych produktów tej hurtowni czekałoby dobę.
+- **Spechurt** generuje stan raz na dobę między 3:00 a 4:00; źródła nie podają strefy. 04:05 UTC
+  jest po tym oknie zarówno przy czasie polskim, jak i przy UTC. Jego dzienny stan trafia do
+  sklepu dopiero przy następnym 02:00 UTC, czyli dobę później; zmieniłoby to przesunięcie crona
+  Vercela (wpis w deferred, poza tym zadaniem).
+- **Produkt wspólny dla dwóch hurtowni** (ten sam EAN) to w BaseLinkerze jeden produkt. Nazwę,
+  opis, kategorię i cenę sprzedaży wyznacza hurtownia, która zapisała go ostatnia przed 02:00 UTC:
+  Sharg, jeśli go ma; w parze Kolba–Spechurt Kolba; Spechurt nigdy. Reguły „wygrywa najtańsza
+  hurtownia” nie ma (O-32).
+- **Ruch.** Import nie przekracza 86 zapytań do BaseLinkera na minutę przy limicie ok. 100; sync
+  to kilkanaście zapytań. Sharg dostaje dwa pobrania pełnego feedu na dobę (przy każdym także
+  manifest i parametry). Sync zamówień sklepu (co 4 h UTC) nachodzi na import Sharga na wspólnym
+  limicie zapytań; dziś robi kilka zapytań.
+- **Strefa.** Cron na Ubuntu 26.04 nie ma stref per użytkownik, więc crontab jest w UTC jak zegar
+  serwera i nie ma zmiany czasu do obsłużenia. Dziennik i nazwy logów są w czasie polskim: wpis
+  z 20:20 UTC ma w dzienniku 22:20+0200 latem i 21:20+0100 zimą, a import Sharga z 23:15 UTC nosi
+  datę następnego dnia.
+
+Dzienne synchronizacje (np. Kolba co 3 h) dokładamy przy starcie sprzedaży (HA-2.09), razem
+z decyzją, jak często sklep kopiuje BaseLinkera.
 
 ## 8. Pierwszy import na żywo
 
@@ -407,10 +447,45 @@ Warunki wstępne — wszystkie naraz:
    „SHARG (Hurtownia)”. Decyzja tj, czy importujemy mimo to;
 3. podgląd danej hurtowni z kroku 6 i jej marża z kroku 4 zaakceptowane przez tj;
 4. crontab **nie jest** jeszcze zainstalowany (krok 10) — inaczej pierwszy import zrobiłby się sam
-   w nocy, bez akceptacji.
+   w nocy, bez akceptacji;
+5. diagnostyka feedów (niżej) nie pokazuje produktów dwóch hurtowni dopasowanych po samym SKU —
+   decyzja tj 2026-10-13: przy wyniku zerowym import idzie, przy niezerowym wracamy z liczbami.
 
 **STOP — przed każdą hurtownią.** Import danej hurtowni uruchamiasz dopiero po zgodzie. Zgoda
 obejmuje liczby z podglądu i marżę tej hurtowni.
+
+### Diagnostyka feedów — przed pierwszym importem
+
+Import szuka produktu w BaseLinkerze po EAN, a gdy go nie znajdzie — po samym SKU, w całym
+katalogu, bez względu na hurtownię. SKU Sharga to gołe liczby, SKU Spechurtu też bywa liczbą,
+więc dwa niezwiązane produkty mogłyby trafić w jeden rekord. Narzędzie pobiera feedy tak jak
+import, symuluje trzy importy i sync, i wypisuje same liczby z przykładami nazw. Nie woła
+BaseLinkera i niczego nie zapisuje.
+
+`hydra-import`:
+
+```bash
+cd /home/hydra-import/hydra && git pull --ff-only
+D=~/logs/diag-feedy.log
+npx tsx scripts/xml-feed-diagnostics.ts > "$D" 2>&1; echo "exit=$?"
+grep -cE 'key=|token=' "$D"                # musi być 0, zanim cokolwiek wkleisz
+cat "$D"
+```
+
+Co odczytać:
+
+- `admitted by the assortment filter` — te same liczby co w podglądzie z kroku 6;
+- `same SKU only … earlier supplier` przy imporcie i `found through the SKU alone` przy sync —
+  **mają być 0**. Każda inna liczba to produkty, które by się zlały; pod spodem są przykłady par;
+- `same EAN as a product of an earlier supplier` — produkty, które naprawdę mają dwie hurtownie;
+  tu obowiązuje zasada z kroku 7 (wygrywa hurtownia importowana później);
+- `EAN shapes` — długości inne niż 8, 12, 13 i 14 cyfr to EAN-y, które po drodze straciły zera
+  wiodące (znany błąd konektora Sharga, wpis w deferred);
+- `SHARG STOCK` — czy stan w pełnym feedzie, z którego korzystają import i sync, zgadza się
+  z feedem lekkim;
+- `feed generated` — kiedy hurtownia wygenerowała plik.
+
+**STOP — diagnostyka.** Wklej wynik (po sprawdzeniu `grep -c`).
 
 ### Uzbrojenie serwera — raz, po pierwszej zgodzie
 
@@ -426,8 +501,8 @@ z komunikatem `catalogue mismatch`.
 cd /home/hydra-import/hydra
 printf 'inventory=119068\n' > ~/.hydra-import-server
 scripts/server/run-bl.sh --check sharg import; echo "exit=$?"
-env -i HOME="$HOME" PATH=/usr/bin:/bin scripts/server/run-bl.sh --check sharg import; echo "exit=$?"
-#   druga komenda sprawdza to samo w otoczeniu takim, jakie daje cron
+env -i HOME="$HOME" PATH=/usr/local/bin:/usr/bin:/bin HYDRA_MAX_SECONDS=5400 scripts/server/run-bl.sh --check sharg import; echo "exit=$?"
+#   druga komenda sprawdza to samo w otoczeniu takim, jakie daje cron; w jej wyniku jest „limit 5400s”
 #   … CHECK ok — nothing was run. A real run would start in /home/hydra-import/hydra:
 #     /home/hydra-import/hydra/node_modules/.bin/tsx scripts/xml-to-baselinker.ts sharg import
 #     (catalogue 119068, limit none, lock /home/hydra-import/.hydra-run-bl.lock) ; exit=0
@@ -552,20 +627,63 @@ Do odczytania: `Matched N products`, linie `stock …: X updated` i `prices …:
 
 ## 10. Crontab
 
-**Do uzupełnienia — dokładną treść akceptuje tj przed wpisaniem (STOP).** Powstanie po decyzji
-o harmonogramie.
+Kształt zaakceptowany przez tj 2026-10-13. **Dokładna treść przechodzi przez STOP po pierwszym
+imporcie**, z limitami przeliczonymi z pomiaru. Do tego czasu niczego nie instalujesz.
 
-Co będzie pewne niezależnie od godzin:
+Szkic — limity wstępne:
+
+```
+# Hydra Arms — import hurtowni do BaseLinkera (HA-2.15). Konto hydra-import. GODZINY W UTC.
+# Liczba przed komendą to limit czasu w sekundach; odstęp do następnego startu jest większy niż limit + 60 s.
+# Instrukcja: docs/ops/serwer-importu.md
+SHELL=/bin/sh
+PATH=/usr/local/bin:/usr/bin:/bin
+MAILTO=""
+
+# Kolba: import (22:20 czasu polskiego latem / 21:20 zimą), potem sync
+20 20 * * * HYDRA_MAX_SECONDS=9000 /home/hydra-import/hydra/scripts/server/run-bl.sh kolba import 2>>/home/hydra-import/cron-stderr.log
+55 22 * * * HYDRA_MAX_SECONDS=780 /home/hydra-import/hydra/scripts/server/run-bl.sh kolba sync 2>>/home/hydra-import/cron-stderr.log
+# Sharg: import (01:15 latem / 00:15 zimą), potem sync
+15 23 * * * HYDRA_MAX_SECONDS=5400 /home/hydra-import/hydra/scripts/server/run-bl.sh sharg import 2>>/home/hydra-import/cron-stderr.log
+50 0 * * * HYDRA_MAX_SECONDS=780 /home/hydra-import/hydra/scripts/server/run-bl.sh sharg sync 2>>/home/hydra-import/cron-stderr.log
+# 01:05-04:05 UTC nic nie chodzi: o 02:00 UTC sklep kopiuje BaseLinkera, Spechurt generuje stan
+# Spechurt: import (06:05 latem / 05:05 zimą), potem sync
+5 4 * * * HYDRA_MAX_SECONDS=5400 /home/hydra-import/hydra/scripts/server/run-bl.sh spechurt import 2>>/home/hydra-import/cron-stderr.log
+40 5 * * * HYDRA_MAX_SECONDS=780 /home/hydra-import/hydra/scripts/server/run-bl.sh spechurt sync 2>>/home/hydra-import/cron-stderr.log
+```
+
+Co jest w tych liniach:
 
 - crontab należy do konta `hydra-import` (`crontab -e` po `sudo -iu hydra-import`;
   `crontab -l` na koncie `ubuntu` zostaje pusty);
-- każda linia woła tylko `/home/hydra-import/hydra/scripts/server/run-bl.sh <hurtownia> <tryb>` —
-  blokadę, logi i odblokowanie prod załatwia wrapper; linie nie zawierają `HA_ALLOW_PROD`;
-- ustawienia wrappera (np. limit czasu) stoją w osobnych liniach jako sama liczba, bez komentarza
-  w tej samej linii — cron wziąłby komentarz za część wartości, a wrapper odmówiłby startu;
-- wrapper milczy przy powodzeniu i przy pominięciu, a odmowy i błędy wypisuje na stderr; czy
-  cron ma dokąd je wysłać, ustalimy razem z treścią crontaba — źródłem prawdy zostaje dziennik;
+- każda linia woła wrapper, który sam załatwia blokadę, logi i odblokowanie prod; linie nie
+  zawierają `HA_ALLOW_PROD`;
+- `HYDRA_MAX_SECONDS=…` przed komendą to limit czasu tego uruchomienia w sekundach — sama liczba.
+  Wartość, której wrapper nie rozumie (np. `90m`), kończy się odmową, a nie brakiem limitu;
+- `2>>…/cron-stderr.log`: pod cronem wrapper milczy przy powodzeniu i przy pominięciu, a odmowy
+  i nieudane uruchomienia wypisuje na stderr. Trafiają do tego pliku razem z błędami, które
+  zdarzą się, zanim wrapper cokolwiek zapisze (np. literówka w ścieżce). Niepusty plik znaczy, że
+  coś się nie udało. `MAILTO=""` wyłącza pocztę, której na serwerze nie ma;
+- komentarze stoją w osobnych liniach, a plik kończy się znakiem nowej linii — inaczej cron uzna
+  go za uszkodzony;
 - instalujesz go **po** kroku 9, nie wcześniej.
+
+Instalacja, po akceptacji treści — `hydra-import`:
+
+```bash
+crontab -e                                  # wklej zaakceptowaną treść, zapisz
+crontab -l                                  # wklej wynik
+```
+
+Sprawdzenie następnego dnia — `hydra-import`:
+
+```bash
+grep -E ' (START|END|SKIP|STOP|ERROR|WARN) ' "$(ls -t ~/logs/run-bl-*.log | head -n 1)" | tail -n 14
+test -s ~/cron-stderr.log && cat ~/cron-stderr.log || echo "cron-stderr.log pusty"
+```
+
+Oczekiwane: sześć par `START` / `END exit=0` w kolejności z kroku 7, żadnego `SKIP`, pusty
+`cron-stderr.log`.
 
 ## Odblokowanie prod
 
@@ -630,7 +748,7 @@ Aktualizacja kodu: krok 2, „Aktualizacja kodu”.
 
 | Objaw w dzienniku | Znaczenie | Co zrobić |
 |---|---|---|
-| `SKIP lock held by another run` raz | poprzednie uruchomienie jeszcze trwało | nic; następne okno nadrobi |
+| `SKIP lock held by another run` | przy tym harmonogramie nie powinno się zdarzać: w tym czasie szła aktualizacja kodu, podgląd, partia próbna albo ręczne uruchomienie | sprawdź, co trzymało blokadę (pole `holder`); pominięty import albo sync nie jest nadrabiany — czeka do następnej doby |
 | `SKIP` przy każdym uruchomieniu, `running` rośnie | jakiś proces trzyma blokadę (zawieszone pobieranie albo czekanie na limit BaseLinkera) | jako `hydra-import`: `cat /home/hydra-import/.hydra-run-bl.lock.holder`, `ps -fu hydra-import`; decyzja tj, czy zatrzymać |
 | `ERROR … not marked as the import server` / `does not name the catalogue` | brak albo pusty `~/.hydra-import-server` | krok 8, „Uzbrojenie serwera” |
 | `ERROR catalogue mismatch` | `BASELINKER_INVENTORY_ID` w `.env.local` inne niż w znaczniku | popraw `.env.local`; znacznika nie zmieniaj bez decyzji tj |
