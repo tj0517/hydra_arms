@@ -18,8 +18,10 @@ Kolejność: 1 konto → 2 klon → 3 zależności → 4 plik env → 5 wrapper 
 - **Zapis do BaseLinkera** (`import`, `sync`) dzieje się wyłącznie na serwerze, po bramce STOP.
 - **Podgląd** (`--dry-run`) niczego nie zapisuje i nie wymaga odblokowania prod.
 - **STOP** w tekście znaczy: wklej wynik i poczekaj na odpowiedź, zanim pójdziesz dalej.
-- Komendy oznaczone `ubuntu` wpisujesz po `ssh hydra-srv`; oznaczone `hydra-import` — po
-  `sudo -iu hydra-import`.
+- **Konto.** Każdy blok komend ma nad sobą etykietę: `ubuntu`, `hydra-import` albo `Mac`. Na
+  serwer wchodzisz zawsze jako `ubuntu` (`ssh hydra-srv`), a na konto importu przez
+  `sudo -iu hydra-import` — przed blokiem sprawdź `whoami`. Na koncie `ubuntu` katalog `~/hydra`
+  to stary klon z lipca, a `~/.hydra-run-bl.lock` nie jest blokadą importu.
 
 ## Stan wyjściowy (odczyt 2026-10-13, 11:29 UTC)
 
@@ -50,6 +52,7 @@ jako root.
 sudo adduser --disabled-password --comment "Hydra import" hydra-import
 getent passwd hydra-import                    # katalog /home/hydra-import, powłoka /bin/bash
 sudo -l -U hydra-import                       # oczekiwane: „… is not allowed to run sudo …”
+sudo -u hydra-import ls /home/ubuntu          # oczekiwane: Permission denied
 sudo -iu hydra-import                         # wejście na konto; wyjście: exit
 ```
 
@@ -63,9 +66,9 @@ Repo jest publiczne, więc klon idzie po HTTPS i konto nie potrzebuje żadnego k
 `hydra-import`:
 
 ```bash
-cd ~
+cd /home/hydra-import
 git clone --branch feat/ha-2.15-import-server https://github.com/tj0517/hydra_arms.git hydra
-cd ~/hydra
+cd /home/hydra-import/hydra
 git status -sb | head -3                      # ## feat/ha-2.15-import-server...origin/…
 git log -1 --format='%h %ci %s'
 git ls-remote origin feat/ha-2.15-import-server | cut -c1-7     # ten sam skrót co wyżej
@@ -79,25 +82,29 @@ reguł Sharga, bezpiecznika prod w skrypcie ani wrappera, a jego `hydra-categori
 identyfikatory kategorii z sandboxa (8926520–8926732), których nie ma na koncie klienta. Import
 ze starego klonu wpisałby produkty bez filtra i z nieistniejącymi kategoriami.
 
-**Po merge PR-a** (gdy żaden import nie trwa — patrz „Obsługa”):
+### Aktualizacja kodu
+
+Po merge PR-a — i tak samo przy każdej późniejszej zmianie kodu, wtedy bez `git switch main`.
+Aktualizacja bierze tę samą blokadę co import, więc cron nie wystartuje w połowie `npm ci`.
+
+`hydra-import`:
 
 ```bash
-cd ~/hydra
-git fetch origin && git switch main && git pull --ff-only
+cd /home/hydra-import/hydra
+flock -n /home/hydra-import/.hydra-run-bl.lock bash -c 'git fetch origin && git switch main && git pull --ff-only && npm ci'; echo "exit=$?"
+# exit=1 od razu, bez żadnego wypisu = trwa import albo sync; spróbuj później
 git log -1 --format='%h %ci %s'
-npm ci
 scripts/server/run-bl.sh --check sharg sync; echo "exit=$?"     # CHECK ok, exit=0
 ```
 
-Ścieżki w crontabie się nie zmieniają. Tak samo wygląda każda późniejsza aktualizacja kodu
-(bez `git switch`).
+Ścieżki w crontabie się nie zmieniają.
 
 ## 3. Zależności
 
 `hydra-import`:
 
 ```bash
-cd ~/hydra
+cd /home/hydra-import/hydra
 node -v                                       # v20.20.2
 npm ci                                        # pełna instalacja, kilka minut
 test -x node_modules/.bin/tsx && node_modules/.bin/tsx --version
@@ -124,17 +131,18 @@ Zmienne, których potrzebuje import — **same nazwy**:
 | `BASELINKER_WAREHOUSE_H1` | magazyn Kolby, format `bl_<id>` |
 | `BASELINKER_WAREHOUSE_H2` | magazyn Sharga |
 | `BASELINKER_WAREHOUSE_H3` | magazyn Spechurtu |
-| `BASELINKER_MARKUP_KOLBA` | marża w procentach od ceny zakupu |
+| `BASELINKER_MARKUP_KOLBA` | marża w procentach od ceny zakupu, sama liczba: `30` to cena zakupu + 30 % (nie `0.3`; ułamek z kropką) |
 | `BASELINKER_MARKUP_SHARG` | jw. |
 | `BASELINKER_MARKUP_SPECHURT` | jw. |
 | `SPECHURT_KEY` | klucz feedu Spechurtu |
 | `SHARG_CLIENT` | identyfikator klienta w adresie feedu Sharga |
 | `SHARG_TOKEN_FULL` | token pełnego feedu Sharga |
 | `SHARG_TOKEN_GATEWAY` | token manifestu Sharga (parametry produktów) |
-| `SHARG_TOKEN_LIGHT` | kod buduje z niej adres feedu „light”, ale obecny import go nie pobiera — można pominąć |
+| `SHARG_TOKEN_LIGHT` | kod buduje z niej adres feedu „light”, ale obecny import go nie pobiera — można pominąć (wtedy niżej wychodzi 14 nazw, nie 15) |
 
 Identyfikatory konta klienta (katalog, grupy cen, magazyny) są w notatkach `docs/tasks/HA-2.26.md`
-i przy O-33 w `docs/04-open-questions.md`.
+i przy O-33 w `docs/04-open-questions.md`. Marża wstępna to 30 % (O-07, HA-2.05), o ile tj nie
+poda innej.
 
 Czego w pliku **nie może być**:
 
@@ -146,27 +154,37 @@ Czego w pliku **nie może być**:
 - kluczy Supabase, Sanity, Przelewy24, Resend, `SYNC_SECRET`, `CRON_SECRET` ani zmiennych zamówień
   (`BASELINKER_ORDER_SOURCE_ID`, `BASELINKER_STATUS_*`) — import ich nie czyta.
 
+`NEW_SUBCATEGORY_DEFAULT_PRIORITY` też tu nie wpisujemy: filtr asortymentu czyta ją, zanim plik
+zostanie wczytany, więc z pliku najpewniej by nie zadziałała (wpis w deferred).
+
 **Uwaga na katalog.** Gdy brakuje `BASELINKER_INVENTORY_ID`, skrypt importu bierze domyślnie
-katalog `35743` — żywy katalog klienta „Kobold Defense”. Wrapper nie wystartuje bez tej zmiennej,
-ale komenda wpisana ręcznie, z pominięciem wrappera, tej ochrony nie ma. Dlatego pierwsze linie
-każdego logu importu mają pokazywać `inventory : 119068`.
+katalog `35743` — żywy katalog klienta „Kobold Defense”. Wrapper nie wystartuje, gdy zmiennej
+brakuje albo wskazuje inny katalog niż znacznik serwera (krok 8), ale komenda wpisana ręcznie,
+z pominięciem wrappera, tej ochrony nie ma.
 
 ### Przeniesienie wartości
 
 Źródłem jest `.env.local` na Macu tj (tam są identyfikatory konta klienta, zapisane w HA-2.26).
 Plik pośredni zawiera tylko linie z listy wyżej; niczego nie wypisuje na ekran.
 
-Mac, w katalogu repo:
+`Mac`, w katalogu repo. Komendy w tym bloku nie mają komentarzy po `#`, bo domyślny zsh na macOS
+nie rozpoznaje ich w wierszu poleceń:
 
 ```bash
 umask 077
 grep -E '^(BASELINKER_TOKEN|BASELINKER_INVENTORY_ID|BASELINKER_PRICE_GROUP|BASELINKER_PRICE_GROUP_PURCHASE|BASELINKER_WAREHOUSE_H[123]|BASELINKER_MARKUP_(KOLBA|SHARG|SPECHURT)|SPECHURT_KEY|SHARG_CLIENT|SHARG_TOKEN_(FULL|GATEWAY|LIGHT))=' .env.local > ~/hydra-import.env
-grep -oE '^[A-Z][A-Z0-9_]*=' ~/hydra-import.env | sort | uniq -c    # 15 nazw, każda dokładnie raz
-scp ~/hydra-import.env hydra-srv:hydra-import.env && rm ~/hydra-import.env
+grep -oE '^[A-Z][A-Z0-9_]*=' ~/hydra-import.env | sort | uniq -c
 ```
 
-Jeśli któraś nazwa wychodzi dwa razy albo której brakuje, popraw `~/hydra-import.env` w edytorze
-przed wysłaniem (przy powtórzeniu wygrywa ostatnia linia).
+Oczekiwane: 15 linii, każda z liczbą `1`. Jeśli któraś nazwa wychodzi dwa razy albo której
+brakuje, popraw `~/hydra-import.env` w edytorze i powtórz ostatnią komendę (przy powtórzeniu
+wygrywa ostatnia linia). Plik wysyłasz dopiero, gdy lista jest dobra.
+
+`Mac`:
+
+```bash
+scp ~/hydra-import.env hydra-srv:hydra-import.env && rm ~/hydra-import.env
+```
 
 `ubuntu`:
 
@@ -175,31 +193,42 @@ sudo install -o hydra-import -g hydra-import -m 600 ~/hydra-import.env /home/hyd
 rm ~/hydra-import.env
 ```
 
-### Sprawdzenie bez wypisywania wartości
+### Sprawdzenie bez wypisywania sekretów
 
 `hydra-import`:
 
 ```bash
-E=~/hydra/.env.local
+E=/home/hydra-import/hydra/.env.local
 stat -c '%a %U:%G' "$E"                                    # 600 hydra-import:hydra-import
 grep -oE '^[A-Z][A-Z0-9_]*=' "$E" | sort | uniq -c         # 15 nazw z tabeli, każda raz
-grep -cvE '^[A-Z][A-Z0-9_]*=.|^[[:space:]]*#|^[[:space:]]*$' "$E"   # 0 — brak pustych wartości i obcych linii
+grep -cvE "^[A-Z][A-Z0-9_]*=([^[:space:]#\"']|\"[^\"]|'[^'])|^[[:space:]]*#|^[[:space:]]*\$" "$E"   # 0 — brak pustych wartości i obcych linii
+grep -oE "^[A-Z][A-Z0-9_]*=[[:space:]]*(\"\"|'')?[[:space:]]*(#|\$)" "$E" | cut -d= -f1               # nic; jeśli coś wypisze — to nazwy bez wartości
 for kv in BASELINKER_INVENTORY_ID=119068 BASELINKER_PRICE_GROUP=104511 BASELINKER_PRICE_GROUP_PURCHASE=104512 BASELINKER_WAREHOUSE_H1=bl_157483 BASELINKER_WAREHOUSE_H2=bl_157484 BASELINKER_WAREHOUSE_H3=bl_157485; do
   printf '%s : %s\n' "$kv" "$(grep -cE "^${kv%%=*}=[\"']?${kv#*=}[\"']?[[:space:]]*(#.*)?\$" "$E")"
 done                                                        # sześć razy „: 1”
 grep -cE '=["'"'"']?(107789|bl_14860[234])' "$E"            # 0 — nic z sandboxa
+grep -E '^BASELINKER_MARKUP_(KOLBA|SHARG|SPECHURT)=' "$E"   # trzy linie — marża nie jest sekretem, wklej je
 ```
+
+Pusta wartość to także `NAZWA=      # komentarz` (tak wyglądają niewypełnione linie
+z `.env.local.example`), same spacje po `=` oraz `""` i `''` — import czyta je wszystkie jako
+puste. Jeśli któreś sprawdzenie nie daje oczekiwanego wyniku, popraw plik (`nano "$E"`, wartość
+zaraz po `=`, bez spacji) i powtórz cały blok. Pustą linię `SHARG_TOKEN_LIGHT` po prostu usuń.
+
+Marże to jedyne wartości z tego pliku, które pokazujesz. Od nich zależy każda cena sprzedaży
+zapisana przez import i sync, a podgląd z kroku 6 ich nie pokazuje — akceptujesz je razem
+z podglądem.
 
 Zgodności tokena nie da się sprawdzić bez wypisania go — potwierdzi ją dopiero pierwszy import
 (BaseLinker odrzuci zapis do katalogu, którego token nie widzi).
 
-## 5. Wrapper, znacznik serwera, samosprawdzenie
+## 5. Wrapper i jego samosprawdzenie
 
 Cron i ręczne uruchomienia importu idą przez `scripts/server/run-bl.sh <hurtownia> <tryb>`
 (`kolba|sharg|spechurt`, `import|sync`). Wrapper:
 
 - trzyma jedną blokadę (`flock -n`) na cały serwer — gdy trwa inne uruchomienie, nowe kończy się
-  od razu kodem 0 i linią `SKIP` w dzienniku, niczego nie wypisując;
+  od razu kodem 0 i linią `SKIP` w dzienniku;
 - pisze osobny log na każde uruchomienie i dziennik miesięczny (sekcja „Logi”);
 - podaje odblokowanie prod wyłącznie procesowi importu;
 - przed startem sprawdza konfigurację i odmawia (kod 78, linia `ERROR` w dzienniku i na stderr),
@@ -216,7 +245,7 @@ Cron i ręczne uruchomienia importu idą przez `scripts/server/run-bl.sh <hurtow
 `hydra-import`:
 
 ```bash
-cd ~/hydra
+cd /home/hydra-import/hydra
 
 # a) Samosprawdzenie wrappera. Bezpieczne: tylko komendy zastępcze w katalogu tymczasowym.
 bash scripts/server/test-run-bl.sh | tail -n 3          # passed: 78, failed: 0
@@ -224,26 +253,10 @@ bash scripts/server/test-run-bl.sh | tail -n 3          # passed: 78, failed: 0
 # b) Red proof znacznika: bez znacznika wrapper odmawia i niczego nie uruchamia.
 scripts/server/run-bl.sh --check sharg sync; echo "exit=$?"
 #    … ERROR this machine is not marked as the import server … ; exit=78
-
-# c) Oznaczenie serwera — raz. Znacznik podaje katalog, do którego ten serwer ma prawo pisać.
-printf 'inventory=119068\n' > ~/.hydra-import-server
-
-# d) Sprawdzenie konfiguracji — nadal niczego nie uruchamia. Druga komenda sprawdza to samo
-#    w otoczeniu takim, jakie daje cron.
-scripts/server/run-bl.sh --check sharg sync; echo "exit=$?"
-env -i HOME="$HOME" PATH=/usr/bin:/bin scripts/server/run-bl.sh --check sharg sync; echo "exit=$?"
-#    … CHECK ok — nothing was run. A real run would start in /home/hydra-import/hydra:
-#      /home/hydra-import/hydra/node_modules/.bin/tsx scripts/xml-to-baselinker.ts sharg sync
-#      (catalogue 119068, limit none, lock /home/hydra-import/.hydra-run-bl.lock) ; exit=0
 ```
 
-Wklej wyniki a), b) i d).
-
-Znacznik robi dwie rzeczy. Odróżnia serwer od komputera, na którym wrapper uruchomiony przez
-pomyłkę zapisałby do produkcyjnego BaseLinkera — nie zakładamy go na żadnej innej maszynie.
-I przypina katalog: jeśli `BASELINKER_INVENTORY_ID` w `.env.local` kiedykolwiek będzie inne niż
-`119068` (literówka, stara linia, podwójny wpis), wrapper odmówi z komunikatem
-`catalogue mismatch`.
+Wklej wyniki a) i b). Znacznika jeszcze nie zakładasz: powstaje dopiero w kroku 8, po zgodzie na
+pierwszy import. Do tego czasu wrapper nie zapisze niczego, nawet uruchomiony przez pomyłkę.
 
 ## Logi
 
@@ -255,19 +268,23 @@ Katalog `/home/hydra-import/logs` (tryb 700, pliki 600):
 | `run-bl-<RRRR-MM>.log` | dziennik: jedna linia na `START`, `END`, `SKIP`, `STOP`, `ERROR`, `WARN` |
 | `preview-<hurtownia>.log` | podglądy uruchamiane ręcznie (krok 6) |
 
-Czasy w logach i dzienniku są polskie (`+0200` latem, `+0100` zimą), choć zegar serwera chodzi
-w UTC: wrapper uruchamia import w strefie Europe/Warsaw, bo BaseLinker podaje koniec blokady
-limitu zapytań w czasie polskim.
+Czasy w logach, w dzienniku i w nazwach plików są polskie (`+0200` latem, `+0100` zimą), choć
+zegar serwera chodzi w UTC: wrapper uruchamia import w strefie Europe/Warsaw, bo BaseLinker
+podaje koniec blokady limitu zapytań w czasie polskim. Dlatego komendy niżej biorą najnowszy
+dziennik, zamiast zgadywać miesiąc z zegara serwera.
 
 Rotacja (decyzja tj 2026-10-13): wrapper przy starcie kasuje własne pliki starsze niż 30 dni —
-tylko te o dokładnie jego nazwach: `<hurtownia>-<import|sync>-<8 cyfr>-<6 cyfr>.log` oraz
+tylko te o dokładnie jego nazwach: `<hurtownia>-<import albo sync>-<8 cyfr>-<6 cyfr>.log` oraz
 `run-bl-<RRRR-MM>.log`. Niczego innego w `~/logs` nie rusza; podglądy i własne notatki usuwasz
 ręcznie. Inną retencję ustawia `HYDRA_LOG_KEEP_DAYS` w crontabie (liczba całkowita).
 
+`hydra-import`:
+
 ```bash
-tail -n 20 ~/logs/run-bl-$(date +%Y-%m).log              # co się działo ostatnio
-grep -E 'ERROR|WARN|exit=[1-9]' ~/logs/run-bl-*.log       # wszystko, co nie poszło gładko
-tail -f "$(ls -t ~/logs/sharg-import-*.log | head -n 1)"  # trwający import Sharga
+J="$(ls -t ~/logs/run-bl-*.log | head -n 1)"              # najnowszy dziennik
+tail -n 20 "$J"                                           # co się działo ostatnio
+grep -E 'ERROR|WARN|STOP|exit=[1-9]|[1-9][0-9]* errors|result="(none|Nothing to|Matched 0 |Import done: 0 created, 0 updated)' ~/logs/run-bl-*.log
+# ↑ wszystko, co nie poszło gładko — także przy exit=0: błędy produktów, pusty feed, sync bez trafień
 grep -cE 'key=|token=' ~/logs/*.log                       # 0 przy każdym pliku
 ```
 
@@ -279,21 +296,28 @@ Jak czytać dziennik:
 … sharg sync pid=4311 SKIP lock held by another run — skipping (holder: sharg import pid=4242 since …, running 12 min)
 ```
 
-- `result="…"` to podsumowanie samego importu. Import kończy się kodem 0 także wtedy, gdy część
-  produktów się nie zapisała — liczbę błędów widać właśnie tu. `result="none"` przy `exit=0`
-  znaczy, że import nie doszedł do podsumowania.
+- `result="…"` to podsumowanie samego importu, przepisane z logu. Kod `exit=0` nie wystarcza:
+  import kończy się zerem także wtedy, gdy część produktów się nie zapisała, feed był pusty albo
+  sync niczego nie dopasował. Przy `exit=0` możliwe wartości to: `Import done: N created,
+  M updated, K errors`, `Sync done: N products refreshed`, `Matched 0 products, N not in BL yet`
+  (sync nie znalazł w katalogu żadnego produktu z feedu) oraz `Nothing to import.` /
+  `Nothing to sync.` (feed dał 0 produktów). `result="none"` znaczy, że w logu nie ma żadnej
+  z tych linii — import został przerwany przed podsumowaniem.
 - `url-credentials=N` to liczba linii logu wyglądających na adres z danymi dostępowymi.
   Oczekiwane `0`. Przy innej wartości wrapper dopisuje `WARN` — przeczytaj log, a potem go usuń
   (decyzja tj 2026-10-13: wrapper tylko wykrywa, niczego nie zamazuje).
 - `stopped-by=…` — uruchomienie zatrzymane limitem czasu albo sygnałem; `killed-by-signal=9` —
   proces zabity z zewnątrz, najczęściej przez system z braku pamięci.
+- `what=stand-in` — uruchomienie z komendą zastępczą (`--cmd`), nie import.
 
-Plik blokady to `~/.hydra-run-bl.lock`; kto ją trzyma, mówi `~/.hydra-run-bl.lock.holder`.
-Żaden z nich nie leży w `~/logs`, więc sprzątanie logów nie zdejmie blokady.
+Plik blokady to `/home/hydra-import/.hydra-run-bl.lock`; kto ją trzyma, mówi
+`/home/hydra-import/.hydra-run-bl.lock.holder`. Żaden z nich nie leży w `~/logs`, więc sprzątanie
+logów nie zdejmie blokady.
 
-Wrapper nic nie wypisuje, gdy uruchomienie się udało albo zostało pominięte. Odmowy i nieudane
-uruchomienia wypisuje też na stderr, więc cron może je zgłosić. Innych powiadomień nie ma
-(monitoring jest w deferred).
+Pod cronem wrapper nic nie wypisuje, gdy uruchomienie się udało albo zostało pominięte; odmowy
+i nieudane uruchomienia wypisuje na stderr, więc cron może je zgłosić. Uruchomiony ręcznie
+w terminalu powtarza na ekranie każdą linię dziennika. Innych powiadomień nie ma (monitoring jest
+w deferred).
 
 ## 6. Podgląd i pomiar pamięci
 
@@ -305,12 +329,13 @@ pozwala na 1956 MB sterty.
 
 ```bash
 mkdir -p ~/logs && chmod 700 ~/logs
-cd ~/hydra
+cd /home/hydra-import/hydra
 P=~/logs/preview-sharg.log
 /usr/bin/time -v npx tsx scripts/xml-to-baselinker.ts sharg --dry-run > "$P" 2>&1; echo "exit=$?"
 grep -cE 'key=|token=' "$P"                   # musi być 0, zanim cokolwiek wkleisz
 grep -E '^(Received|Parsed)|Defence filter|no category mapping|permit (tags|groups)' "$P"
-sed -n '/DRY-RUN SUMMARY/,$p' "$P"
+sed -n '/DRY-RUN SUMMARY/,$p' "$P"            # pusto = podgląd nie doszedł do podsumowania
+grep -E '\[(fatal|error)\]|heap out of memory|^Command (exited|terminated)|Elapsed \(wall clock\)|Maximum resident set size' "$P"
 ```
 
 Wynik idzie do pliku, a nie na ekran, żeby `grep -c` dało się policzyć przed pokazaniem treści.
@@ -321,39 +346,48 @@ Co odczytać:
   `no category mapping`, tabela `Admitted by Hydra section`;
 - **szczyt pamięci**: linia `Maximum resident set size (kbytes)` z wyjścia `time`. To największy
   pojedynczy proces (Node ze skryptem); procesy pośrednie `npx` i `tsx` dokładają ok. 150 MB;
-- **czas**: `Elapsed (wall clock) time`.
+- **czas**: `Elapsed (wall clock) time`;
+- **gdy `exit` nie jest 0 albo trzecia komenda nic nie wypisała**: podgląd nie doszedł do
+  podsumowania. Przyczynę, czas i szczyt pamięci pokazuje czwarta komenda, która od podsumowania
+  nie zależy: linia `[fatal] …` albo `[error] …`, `… JavaScript heap out of memory`,
+  `Command exited with non-zero status N` albo `Command terminated by signal N`.
 
-**STOP — pamięć.** Wklej trzy komendy wynikowe dla Sharga. Jeśli szczyt przekracza
-ok. 2 500 000 kB albo podgląd kończy się komunikatem `JavaScript heap out of memory` (to limit
-sterty Node, nie brak RAM-u), nie próbuj dalej i nie uruchamiaj pozostałych hurtowni — czekasz na
-opcje. To samo, gdy Sharg odpowie błędem zamiast feedu (`Feed fetch failed`, `Parsed 0 products`):
-pobieranie serwer–serwer nie było jeszcze u Sharga potwierdzone.
+**STOP — pamięć.** Wklej linię `exit=…` i wyniki czterech komend wynikowych dla Sharga. Jeśli
+szczyt przekracza ok. 2 500 000 kB albo podgląd kończy się komunikatem
+`JavaScript heap out of memory` (to limit sterty Node, nie brak RAM-u), nie próbuj dalej i nie
+uruchamiaj pozostałych hurtowni — czekasz na opcje. To samo, gdy Sharg odpowie błędem zamiast
+feedu (`Feed fetch failed`, `Parsed 0 products`): pobieranie serwer–serwer nie było jeszcze
+u Sharga potwierdzone.
 
 Po zgodzie — Kolba i Spechurt, każda osobno (zmień `sharg` w nazwie pliku i w komendzie na `kolba`,
 potem `spechurt`).
 
 **STOP — liczby.** Wklej wyniki trzech podglądów. Z nich powstaje propozycja harmonogramu,
-a przed importem każdej hurtowni akceptujesz jej liczby.
+a przed importem każdej hurtowni akceptujesz jej liczby i marżę.
 
 Gdy cron już działa, podgląd uruchamiaj pod tą samą blokadą co import, żeby dwa parsowania nie
-zderzyły się w pamięci:
+zderzyły się w pamięci.
+
+`hydra-import`:
 
 ```bash
-cd ~/hydra && flock -n ~/.hydra-run-bl.lock npx tsx scripts/xml-to-baselinker.ts sharg --dry-run > ~/logs/preview-sharg.log 2>&1; echo "exit=$?"
+cd /home/hydra-import/hydra && flock -n /home/hydra-import/.hydra-run-bl.lock npx tsx scripts/xml-to-baselinker.ts sharg --dry-run > ~/logs/preview-sharg.log 2>&1; echo "exit=$?"
 # exit=1 od razu i pusty plik = trwa import albo sync; spróbuj później
 ```
 
 ## 7. Harmonogram
 
-**Do uzupełnienia po podglądach — decyzja tj (STOP).** Propozycja powstanie z liczb z kroku 6:
-czas importu to ok. 0,7 s na przyjęty produkt plus pobranie i parsowanie feedu.
+**Do uzupełnienia po podglądach — decyzja tj (STOP).** Propozycja powstanie z liczb z kroku 6.
 
 Co już wiadomo:
 
 - blokada jest jedna na serwer, więc import i sync nigdy nie idą równocześnie; uruchomienie, które
   trafi na zajętą blokadę, jest pomijane, a nie kolejkowane;
-- Spechurt generuje stan raz na dobę między 3:00 a 4:00 czasu polskiego; feed odświeża co ok. 3 h
-  (zapis z `docs/tasks/HA-2.15.md`);
+- import to jedno zapytanie do BaseLinkera na przyjęty produkt z przerwą 0,7 s po każdym, więc
+  trwa co najmniej 0,7 s na produkt plus czas samych zapytań, pobrania i parsowania feedu;
+  rzeczywisty czas pokaże pierwszy import;
+- Spechurt generuje stan raz na dobę między 3:00 a 4:00, a feed odświeża co ok. 3 h (zapis
+  z `docs/tasks/HA-2.15.md`). Źródła nie podają strefy; przyjmuję czas polski — do potwierdzenia;
 - dla Kolby i Sharga częstotliwości odświeżania feedu nie ma w dokumentach;
 - sync Sharga pobiera pełny feed (taki sam jak import), nie lekki;
 - cron na Ubuntu 26.04 nie ma stref czasowych per użytkownik: godziny w crontabie są w strefie
@@ -371,89 +405,150 @@ Warunki wstępne — wszystkie naraz:
 2. **STOP — O-33.** Klient nie odpowiedział, czym są integracje „hydra-arms.co…” i HYDRA-ARMS
    (Allegro) na koncie BaseLinkera ani czy Sharg ma iść naszym importem, czy przez Base Connect
    „SHARG (Hurtownia)”. Decyzja tj, czy importujemy mimo to;
-3. podgląd danej hurtowni z kroku 6 zaakceptowany przez tj;
-4. `scripts/server/run-bl.sh --check <hurtownia> import` kończy się `CHECK ok`;
-5. crontab **nie jest** jeszcze zainstalowany (krok 10) — inaczej pierwszy import zrobiłby się sam
+3. podgląd danej hurtowni z kroku 6 i jej marża z kroku 4 zaakceptowane przez tj;
+4. crontab **nie jest** jeszcze zainstalowany (krok 10) — inaczej pierwszy import zrobiłby się sam
    w nocy, bez akceptacji.
 
-**STOP — przed każdą hurtownią.** Import danej hurtowni uruchamiasz dopiero po zgodzie.
+**STOP — przed każdą hurtownią.** Import danej hurtowni uruchamiasz dopiero po zgodzie. Zgoda
+obejmuje liczby z podglądu i marżę tej hurtowni.
 
-Opcjonalnie najpierw mała partia, żeby obejrzeć kilka produktów w panelu BaseLinkera (jedyna
-komenda poza wrapperem; odblokowanie stoi na początku tej jednej linii):
+### Uzbrojenie serwera — raz, po pierwszej zgodzie
+
+Znacznik podaje katalog, do którego ten serwer ma prawo pisać. Odróżnia serwer od komputera, na
+którym wrapper uruchomiony przez pomyłkę zapisałby do produkcyjnego BaseLinkera — nie zakładamy
+go na żadnej innej maszynie. I przypina katalog: jeśli `BASELINKER_INVENTORY_ID` w `.env.local`
+kiedykolwiek będzie inne niż `119068` (literówka, stara linia, podwójny wpis), wrapper odmówi
+z komunikatem `catalogue mismatch`.
+
+`hydra-import`:
 
 ```bash
-cd ~/hydra
-HA_ALLOW_PROD=1 npx tsx scripts/xml-to-baselinker.ts sharg import --limit=20 > ~/logs/proba-sharg-import.log 2>&1; echo "exit=$?"
-head -n 12 ~/logs/proba-sharg-import.log              # MUSI pokazać: inventory : 119068
-grep -E 'Filtered|Assortment filter|Import done' ~/logs/proba-sharg-import.log
+cd /home/hydra-import/hydra
+printf 'inventory=119068\n' > ~/.hydra-import-server
+scripts/server/run-bl.sh --check sharg import; echo "exit=$?"
+env -i HOME="$HOME" PATH=/usr/bin:/bin scripts/server/run-bl.sh --check sharg import; echo "exit=$?"
+#   druga komenda sprawdza to samo w otoczeniu takim, jakie daje cron
+#   … CHECK ok — nothing was run. A real run would start in /home/hydra-import/hydra:
+#     /home/hydra-import/hydra/node_modules/.bin/tsx scripts/xml-to-baselinker.ts sharg import
+#     (catalogue 119068, limit none, lock /home/hydra-import/.hydra-run-bl.lock) ; exit=0
+```
+
+Wklej oba wyniki. Od tej chwili `run-bl.sh <hurtownia> import` albo `sync` bez `--check` zapisuje
+do BaseLinkera.
+
+### Partia próbna — opcjonalnie
+
+Żeby obejrzeć kilka produktów w panelu BaseLinkera przed pełnym importem. To jedyny zapis poza
+wrapperem, więc ta jedna linia robi sama to, co wrapper: najpierw `--check` (katalog w `.env.local`
+musi zgadzać się ze znacznikiem), potem ta sama blokada, a odblokowanie dostaje wyłącznie proces
+importu.
+
+`hydra-import`:
+
+```bash
+H=sharg                                    # hurtownia, na którą masz zgodę
+cd /home/hydra-import/hydra && scripts/server/run-bl.sh --check "$H" import && flock -n /home/hydra-import/.hydra-run-bl.lock env TZ=Europe/Warsaw HA_ALLOW_PROD=1 npx tsx scripts/xml-to-baselinker.ts "$H" import --limit=20 > ~/logs/proba-$H-import.log 2>&1; echo "exit=$?"
+# exit=78 i linia ERROR na ekranie = --check odmówił; import nie wystartował
+# exit=1 od razu i pusty plik = blokada zajęta (trwa inne uruchomienie)
+grep -cE 'key=|token=' ~/logs/proba-$H-import.log     # musi być 0, zanim cokolwiek wkleisz
+head -n 12 ~/logs/proba-$H-import.log                 # inventory : 119068 oraz markup : +N% (zaakceptowana stawka)
+grep -E 'Filtered|Assortment filter|Import done' ~/logs/proba-$H-import.log
 ```
 
 `--limit=20` bierze pierwsze 20 produktów ze stanem, a dopiero potem filtr asortymentu, więc
 zapisanych może być mniej niż 20.
 
-Pełny import — w tle, żeby zerwane połączenie SSH go nie przerwało:
+### Pełny import
+
+W tle, żeby zerwane połączenie SSH go nie przerwało.
+
+`hydra-import`:
 
 ```bash
-cd ~/hydra
-nohup scripts/server/run-bl.sh sharg import > /dev/null 2>&1 &
-sleep 5; tail -n 2 ~/logs/run-bl-$(date +%Y-%m).log      # linia START z nazwą logu
-LOG="$(ls -t ~/logs/sharg-import-*.log | head -n 1)"
-head -n 12 "$LOG"                                        # MUSI pokazać: inventory : 119068
-tail -f "$LOG"                                           # „+” nowy produkt, „.” aktualizacja; Ctrl-C kończy tylko podgląd
+H=sharg                                    # hurtownia, na którą masz zgodę
+cd /home/hydra-import/hydra
+nohup scripts/server/run-bl.sh "$H" import > /dev/null 2>&1 &
+sleep 5
+J="$(ls -t ~/logs/run-bl-*.log | head -n 1)"; tail -n 2 "$J"     # linia START: catalogue=119068, nazwa logu
+LOG="$(grep ' START ' "$J" | tail -n 1 | sed -n 's/.* log=\([^ ]*\).*/\1/p')"; echo "$LOG"
+head -n 12 "$LOG"                          # inventory : 119068 oraz markup : +N% (zaakceptowana stawka)
+tail -f "$LOG"                             # „+” nowy produkt, „.” aktualizacja; Ctrl-C kończy tylko podgląd
 ```
 
-Wrapper nie wystartuje z innym katalogiem niż `119068` (pilnuje tego znacznik), a linia `START`
-w dzienniku ma `catalogue=119068`. Gdyby mimo to log pokazał coś innego albo import trzeba było
-przerwać: zatrzymanie opisuje sekcja „Obsługa”. Między startem a pierwszym zapisem jest pobranie
-i parsowanie feedu, więc jest na to czas.
-
-Po zakończeniu wklej:
-
-```bash
-tail -n 3 ~/logs/run-bl-$(date +%Y-%m).log               # END exit=0 … url-credentials=0 result="Import done: …"
-grep -cE 'key=|token=' "$LOG"                            # 0
-grep -E '^(Received|Parsed)|Assortment filter|no_stock|not_p1|Category resolution|Import done|tags:|purchase price|price 0' "$LOG"
-grep -c '⚠' "$LOG"                                       # liczba ostrzeżeń
-```
-
-Do odczytania: `✓ Import done: N created, M updated, K errors`, liczby tagów, ostrzeżenia
-o cenach (`no purchase price` — cena z feedu zamiast marży; `price 0` — produkt bez ceny).
-
-Nic nie publikuje się samo: sklep pokazuje tylko produkty z tagiem `approved`.
+Wrapper nie wystartuje z innym katalogiem niż `119068` (pilnuje tego znacznik). Gdyby mimo to log
+pokazał inny katalog albo inną marżę, albo import trzeba było przerwać: zatrzymanie opisuje
+sekcja „Obsługa”. Między startem a pierwszym zapisem jest pobranie i parsowanie feedu, więc jest
+na to czas.
 
 ### Red proof blokady na serwerze
 
-W trakcie trwającego importu, z drugiej sesji (`hydra-import`):
+Teraz, dopóki import trwa (`tail -f` w pierwszej sesji nadal dopisuje znaki), z drugiej sesji.
+Drugi start idzie komendą zastępczą: bierze tę samą blokadę, a gdyby blokada była wolna, wykona
+tylko `true` — nie sync i bez odblokowania prod.
+
+`hydra-import`:
 
 ```bash
-~/hydra/scripts/server/run-bl.sh sharg sync; echo "exit=$?"     # exit=0 od razu
-tail -n 3 ~/logs/run-bl-$(date +%Y-%m).log
+/home/hydra-import/hydra/scripts/server/run-bl.sh --cmd true sharg sync; echo "exit=$?"     # exit=0 od razu
+tail -n 3 "$(ls -t ~/logs/run-bl-*.log | head -n 1)"
 ```
 
 Oczekiwane: linia `START` trwającego importu, potem `SKIP lock held by another run — skipping
-(holder: sharg import …)`. Wklej je razem z późniejszą linią `END` importu.
+(holder: … import pid=…)` z tym samym `pid` co w linii `START`. Wklej je razem z późniejszą linią
+`END` importu.
+
+Jeśli zamiast `SKIP` pojawiają się `START … what=stand-in` i `END … what=stand-in`, blokada była
+wolna: import już się skończył albo nie wystartował. Nic nie zostało zapisane; powtórz dowód przy
+imporcie następnej hurtowni. Prawdziwego `run-bl.sh <hurtownia> sync` do tego dowodu nie używaj —
+przy wolnej blokadzie zacząłby zapis.
+
+### Po zakończeniu importu
+
+Blok ustawia `LOG` od nowa, więc działa też w nowej sesji i dla każdej hurtowni.
+
+`hydra-import`:
+
+```bash
+J="$(ls -t ~/logs/run-bl-*.log | head -n 1)"; tail -n 3 "$J"     # END exit=0 … url-credentials=0 result="Import done: …"
+LOG="$(grep ' END ' "$J" | grep -v 'what=stand-in' | tail -n 1 | sed -n 's/.* log=\([^ ]*\).*/\1/p')"; echo "$LOG"
+grep -cE 'key=|token=' "$LOG"              # 0
+grep -E '^(Received|Parsed)|prod-guard|Assortment filter|no_stock|not_p1|Category resolution|Import done|tags:|^⚠|\[warn\]' "$LOG"
+grep -c '^  ⚠' "$LOG"                      # liczba produktów, których zapis się nie udał
+grep -m 5 '^  ⚠' "$LOG"                    # pierwsze pięć takich linii
+```
+
+Do odczytania: `✓ Import done: N created, M updated, K errors`, liczby tagów, ostrzeżenia
+o cenach (`no purchase price` — cena z feedu zamiast marży; `price 0` — produkt bez ceny). Linia
+z `prod-guard` potwierdza, że odblokowanie dostał proces importu.
+
+Nic nie publikuje się samo: sklep pokazuje tylko produkty z tagiem `approved`.
 
 ## 9. Pierwszy sync
 
 Po imporcie wszystkich trzech hurtowni. `sync` odświeża stan w magazynie hurtowni i cenę
 sprzedaży produktów, które już są w katalogu; niczego nie tworzy.
 
+Każdy sync i każdy import **nadpisuje cenę sprzedaży** wyliczoną z ceny zakupu i marży z pliku
+env. Cena poprawiona ręcznie w BaseLinkerze nie przetrwa najbliższego uruchomienia (pytanie O-32
+jest otwarte).
+
+**STOP — przed pierwszym sync.** Sync zapisuje ceny. Uruchamiasz go po zgodzie, gdy wyniki importu
+trzech hurtowni są wklejone.
+
 `hydra-import`, dla każdej hurtowni:
 
 ```bash
-cd ~/hydra
-scripts/server/run-bl.sh sharg sync; echo "exit=$?"
-LOG="$(ls -t ~/logs/sharg-sync-*.log | head -n 1)"
-grep -cE 'key=|token=' "$LOG"                            # 0
-grep -E 'Matched|stock |prices |Sync done|purchase price|price 0' "$LOG"
+H=sharg
+cd /home/hydra-import/hydra
+scripts/server/run-bl.sh "$H" sync; echo "exit=$?"
+J="$(ls -t ~/logs/run-bl-*.log | head -n 1)"; tail -n 2 "$J"     # END exit=0 … result="Sync done: N products refreshed"
+LOG="$(grep ' END ' "$J" | grep -v 'what=stand-in' | tail -n 1 | sed -n 's/.* log=\([^ ]*\).*/\1/p')"; echo "$LOG"
+grep -cE 'key=|token=' "$LOG"              # 0
+grep -E 'prod-guard|Matched|stock |prices |Sync done|^⚠' "$LOG"
 ```
 
 Do odczytania: `Matched N products`, linie `stock …: X updated` i `prices …: X updated`,
 `✓ Sync done: N products refreshed`.
-
-Każdy sync i każdy import **nadpisuje cenę sprzedaży** wyliczoną z ceny zakupu i marży z pliku
-env. Cena poprawiona ręcznie w BaseLinkerze nie przetrwa najbliższego uruchomienia (pytanie O-32
-jest otwarte).
 
 ## 10. Crontab
 
@@ -466,6 +561,8 @@ Co będzie pewne niezależnie od godzin:
   `crontab -l` na koncie `ubuntu` zostaje pusty);
 - każda linia woła tylko `/home/hydra-import/hydra/scripts/server/run-bl.sh <hurtownia> <tryb>` —
   blokadę, logi i odblokowanie prod załatwia wrapper; linie nie zawierają `HA_ALLOW_PROD`;
+- ustawienia wrappera (np. limit czasu) stoją w osobnych liniach jako sama liczba, bez komentarza
+  w tej samej linii — cron wziąłby komentarz za część wartości, a wrapper odmówiłby startu;
 - wrapper milczy przy powodzeniu i przy pominięciu, a odmowy i błędy wypisuje na stderr; czy
   cron ma dokąd je wysłać, ustalimy razem z treścią crontaba — źródłem prawdy zostaje dziennik;
 - instalujesz go **po** kroku 9, nie wcześniej.
@@ -477,42 +574,48 @@ Skrypt importu odmawia zapisu do BaseLinkera, dopóki w otoczeniu **tego jednego
 
 - **Przez wrapper** (cron i zwykłe uruchomienia ręczne) niczego nie dopisujesz: wrapper ustawia
   zmienną wyłącznie dla procesu importu, a odziedziczoną z otoczenia usuwa.
-- **Bez wrappera** — tylko mała partia próbna z kroku 8 — zmienna stoi na początku tej jednej
-  komendy.
+- **Bez wrappera** — tylko partia próbna z kroku 8 — zmienna stoi w tej jednej linii tuż przed
+  komendą importu (`env … HA_ALLOW_PROD=1 npx tsx …`), po `--check` i po `flock`.
 - Nigdy w `.env.local`, w `~/.profile`, `~/.bashrc` ani w nagłówku crontaba.
 
 ## 11. Porządki — propozycja
 
 Decyduje i usuwa tj. Wszystko poniżej leży na koncie `ubuntu` i po wdrożeniu nie jest potrzebne
-importowi.
+importowi. Pierwszą pozycję można zrobić od razu po kroku 4.
 
 | Co | Dlaczego |
 |---|---|
 | `/home/ubuntu/hydra/.env.local` | tryb 644; trzyma klucz Supabase service role, token Sanity, klucz Resend i stare dane BaseLinkera — żaden z nich nie jest potrzebny na serwerze (O-19, opcja B) |
+| `/home/ubuntu/hydra/scripts/count-adhoc.ts` | nieśledzony skrypt, treść nieznana — obejrzyj, zanim usuniesz klon |
 | cały `/home/ubuntu/hydra` | stary klon z lipca: kod bez filtra i bezpieczników, `hydra-categories.json` z ID sandboxa, 926 pakietów; uruchomiony przez pomyłkę pisałby według starego pliku env |
-| `/home/ubuntu/hydra/scripts/count-adhoc.ts` | nieśledzony skrypt, treść nieznana — obejrzyj przed usunięciem klonu |
 | `~/spechurt-import.log` | log importu z lipca; 1 linia z kluczem lub tokenem w adresie |
 | `~/spechurt.xml`, `~/spechurt-2026-09-26.xml` | pełne feedy Spechurtu z cenami zakupu (18,8 MB i 17,4 MB); import pobiera feed sam |
-| `~/.bash_history` | mogą w niej być komendy z adresem feedu; sprawdź `grep -cE 'key=|token=' ~/.bash_history` i przy wyniku innym niż 0 wyczyść historię |
+| `~/.bash_history` | mogą w niej być komendy z adresem feedu; sprawdź `grep -c -e 'key=' -e 'token=' ~/.bash_history` i przy wyniku innym niż 0 wyczyść historię (`history -c`, potem `: > ~/.bash_history`) |
+| `~/hydra-import.env` na serwerze i na Macu | plik pośredni z kroku 4; `ls ~/hydra-import.env` ma odpowiedzieć „No such file” w obu miejscach |
 | klucz w `~/.ssh` używany do GitHuba | nowe konto klonuje publiczne repo po HTTPS; sprawdź `ssh -T git@github.com`, czyj to klucz — jeśli osobisty z prawem zapisu, zdejmij go z serwera i z GitHuba |
 
-Tokeny Sharga i klucz Spechurtu są też w publicznym repo (migracja 004 i próbka manifestu) —
-usunięcie plików z serwera tego nie zmienia; zmienia to dopiero rotacja u hurtowni (ryzyko
-zaakceptowane w HA-1.02, wpis w `docs/deferred-tasks.md`).
+Tokeny Sharga i klucz Spechurtu są też w publicznym repo, więc usunięcie plików z serwera ich nie
+chroni; chroni dopiero rotacja u hurtowni. Ryzyko zaakceptowane w HA-1.02 dotyczy migracji 004;
+próbka manifestu Sharga z tokenami pozostałych feedów jest osobnym wpisem w
+`docs/deferred-tasks.md`, do decyzji tj.
 
 ## Obsługa
 
-Czy coś teraz trwa:
+Czy coś teraz trwa — `hydra-import`:
 
 ```bash
-flock -n ~/.hydra-run-bl.lock true && echo wolne || cat ~/.hydra-run-bl.lock.holder
+flock -n /home/hydra-import/.hydra-run-bl.lock true && echo wolne || cat /home/hydra-import/.hydra-run-bl.lock.holder
 ```
 
-Zatrzymanie trwającego uruchomienia — sygnał do wrappera (numer procesu jest w pliku `.holder`
-i w linii `START`). Wrapper zatrzymuje cały import i zapisuje `STOP` oraz `END`:
+`Permission denied` znaczy, że jesteś na koncie `ubuntu`, a nie że blokada jest wolna — wejdź
+przez `sudo -iu hydra-import` i powtórz. Pusta odpowiedź znaczy, że blokadę trzyma coś
+uruchomionego poza wrapperem (podgląd, partia próbna albo aktualizacja kodu).
+
+Zatrzymanie trwającego uruchomienia — `hydra-import`; sygnał do wrappera (numer procesu jest
+w pliku `.holder` i w linii `START`). Wrapper zatrzymuje cały import i zapisuje `STOP` oraz `END`:
 
 ```bash
-kill "$(sed -nE 's/.* pid=([0-9]+) since .*/\1/p' ~/.hydra-run-bl.lock.holder)"
+kill "$(sed -nE 's/.* pid=([0-9]+) since .*/\1/p' /home/hydra-import/.hydra-run-bl.lock.holder)"
 ```
 
 Import przerwany w połowie nie zostawia szkody: następny go dokończy, bo produkty już zapisane
@@ -523,19 +626,23 @@ wszystkich produktów tej hurtowni.
 
 Wstrzymanie crona: zakomentuj linie w `crontab -e`. Trwającego uruchomienia to nie przerywa.
 
+Aktualizacja kodu: krok 2, „Aktualizacja kodu”.
+
 | Objaw w dzienniku | Znaczenie | Co zrobić |
 |---|---|---|
 | `SKIP lock held by another run` raz | poprzednie uruchomienie jeszcze trwało | nic; następne okno nadrobi |
-| `SKIP` przy każdym uruchomieniu, `running` rośnie | jakiś proces trzyma blokadę (zawieszone pobieranie albo czekanie na limit BaseLinkera) | `cat ~/.hydra-run-bl.lock.holder`, `ps -fu hydra-import`; decyzja tj, czy zatrzymać |
-| `ERROR … not marked as the import server` / `does not name the catalogue` | brak albo pusty `~/.hydra-import-server` | krok 5 |
+| `SKIP` przy każdym uruchomieniu, `running` rośnie | jakiś proces trzyma blokadę (zawieszone pobieranie albo czekanie na limit BaseLinkera) | jako `hydra-import`: `cat /home/hydra-import/.hydra-run-bl.lock.holder`, `ps -fu hydra-import`; decyzja tj, czy zatrzymać |
+| `ERROR … not marked as the import server` / `does not name the catalogue` | brak albo pusty `~/.hydra-import-server` | krok 8, „Uzbrojenie serwera” |
 | `ERROR catalogue mismatch` | `BASELINKER_INVENTORY_ID` w `.env.local` inne niż w znaczniku | popraw `.env.local`; znacznika nie zmieniaj bez decyzji tj |
 | `ERROR … BASELINKER_INVENTORY_ID` / `BASELINKER_MOCK` / `production unlock` / `not readable` | błąd w `.env.local` | popraw plik, potem `--check` |
-| `ERROR … must be whole seconds` / `whole number of days` | zła wartość `HYDRA_MAX_SECONDS` albo `HYDRA_LOG_KEEP_DAYS` w crontabie (np. `90m`) | podaj liczbę całkowitą |
+| `ERROR … must be whole seconds` / `whole number of days` | zła wartość `HYDRA_MAX_SECONDS` albo `HYDRA_LOG_KEEP_DAYS` w crontabie (np. `90m` albo komentarz w tej samej linii) | podaj samą liczbę całkowitą |
 | `END exit=1` | import przerwany błędem; ostatnie linie logu zaczynają się od `[fatal]` albo `[error]` | przeczytaj log; nie wklejaj go bez `grep -c` |
 | `END exit=124 … stopped-by=limit-…` | zadziałał limit czasu `HYDRA_MAX_SECONDS` | sprawdź, co trwało tak długo |
 | `END … killed-by-signal=9` | proces zabity z zewnątrz, zwykle przez system z braku pamięci | jako `ubuntu`: `sudo journalctl -k --since today`, szukaj `Out of memory` |
 | `WARN the previous run did not end cleanly` | poprzednie uruchomienie skończyło się bez linii `END` (restart serwera, zabity proces) | sprawdź jego log; następne uruchomienie działa normalnie |
-| `END exit=0 … result="none"`, w logu `Nothing to import.` albo `Parsed 0 products` | hurtownia oddała pustą odpowiedź albo stronę błędu | sprawdź podglądem; Spechurt odpowiada tylko temu serwerowi |
+| `END exit=0 … result="Nothing to import."` albo `result="Nothing to sync."` (w logu `Parsed 0 products`) | hurtownia oddała pustą odpowiedź albo stronę błędu z HTTP 200; nic nie zostało zapisane ani odświeżone | sprawdź podglądem; Spechurt odpowiada tylko temu serwerowi |
+| `END exit=0 … result="Matched 0 products, N not in BL yet"` | sync nie znalazł w katalogu żadnego produktu z feedu — import tej hurtowni jeszcze nie przeszedł | najpierw import tej hurtowni (krok 8) |
+| `END exit=0 … K errors` z K większym od 0 | część produktów się nie zapisała | linie `  ⚠` w logu tego uruchomienia mówią, które i dlaczego |
 | `WARN … look like a URL with credentials` | komunikat błędu zacytował adres feedu | przeczytaj log, usuń plik |
 | `[baselinker] token blocked (rate limit)` w logu | przekroczony limit zapytań BaseLinkera; skrypt sam czeka i ponawia | nic, chyba że powtarza się stale — wtedy coś jeszcze używa tego samego tokena |
 
