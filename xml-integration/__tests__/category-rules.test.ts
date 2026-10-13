@@ -393,25 +393,64 @@ test('sharg_rules red proof: one trap per ammunition rule — box, cases, a rifl
   }
 });
 
-test('sharg_rules data: products the rules deliberately do not catch stay in „00” (flag) — node decisions pending (tj)', () => {
+test('sharg_rules data (node gate, tj 2026-10-13): Hatsan shotguns → 1.3.1 pump / 1.3.2 semi-auto / 1.3.3 over-under (auto)', () => {
+  for (const [name, cat] of [
+    ["Strzelba powtarzalna Hatsan Escort AimGuard 18'' 12/76", '1.3.1'],
+    ['Strzelba powtarzalna Hatsan kal. 12/76 - ESCORT Slug Pump Combo 12GA', '1.3.1'],
+    ["Strzelba samopowtarzalna Hatsan Escort PS Guard 20'' kal. 12GA", '1.3.2'],
+    ['Strzelba samopowtarzalna Hatsan Escort Supreme 28" 12/76 (magaz 4+1) - Escort Supreme 12GA 04 W', '1.3.2'],
+    ['Bok śrutowy Hatsan kal. 12 (OPTIMA SILVER SELECT EXTRACTOR)', '1.3.3'],
+  ] as const) {
+    const r = resolveSharg(name);
+    assert.deepEqual([r.hydraNum, r.status], [cat, 'auto'], name);
+  }
+});
+
+test('sharg_rules data (node gate): Ekol alarm pistols → 1.5 (review), blank ammunition → 2.5 (review), nipple wrenches → 7.3.1 (review)', () => {
+  for (const [name, cat] of [
+    ['Pistolet Ekol JACK DUAL COMPACT', '1.5'],
+    ['Pistolet Ekol P 29 REV II', '1.5'],
+    ['Pistolet Special 99 Rev II', '1.5'],                      // brand not in the name — literal model match
+    ['Amunicja hukowa PTG 22 Long K 100szt (199-001)', '2.5'],
+    ['Klucz do kominków + kominki Pietta Remington Pocket (AC580)', '7.3.1'],
+    ['Klucz do kominków Pietta Remington Pocket kal. .31 (AC570)', '7.3.1'],
+    ['Klucz Pietta Mod T #11 do kominków rewolwerowych (AC020)', '7.3.1'],
+    ['Pietta Mod T #11 klucz do kominków rewolwerowych + kominki (AC020+060)', '7.3.1'],
+  ] as const) {
+    const r = resolveSharg(name);
+    assert.deepEqual([r.hydraNum, r.status], [cat, 'review'], name);
+  }
+});
+
+test('sharg_rules red proof (node gate): traps — shotgun / alarm-pistol accessories and the loading kit with „klucz do kominków” in its name', () => {
   for (const name of [
-    // barrels and cylinders — kept out of 04 (no permit tag there), decision tj 2026-10-13
+    'Kolba strzelba powtarzalna Hatsan Escort',                 // rule „strzelba powtarzalna”
+    'Magazynek strzelba samopowtarzalna Hatsan Escort 12/76',   // rule „strzelba samopowtarzalna”
+    'Lufa bok śrutowy Hatsan Optima kal. 12',                   // rule „bok śrutowy”
+    'Magazynek pistolet Ekol P 29',                             // rule „pistolet ekol”
+    'Magazynek pistolet Special 99',                            // rule „pistolet special 99”
+    'Pudełko amunicja hukowa 6 mm',                             // rule „amunicja hukowa”
+    // rule „klucz” — real feed row: a loading kit, not a wrench
+    'Zestaw Pietta do rewolweru czarnoprochowego .36: prochownica, miarka, kapiszonownik, przybitki filcowe, kule, klucz do kominków (AC1410/36)',
+  ]) {
+    const r = resolveSharg(name);
+    assert.equal(r.hydraNum, null, name);
+    assert.equal(r.status, 'flag', name);
+  }
+});
+
+test('sharg_rules data: products the rules deliberately do not catch stay in „00” (flag) — barrels, cylinders, loading kits, gilzy (tj 2026-10-13)', () => {
+  for (const name of [
+    // barrels and cylinders — kept out of 04 (no permit tag there) until the client names their permit group
     "Lufa 8'' Pietta 1858 Remington New Model Army Target kal. 44 (A434/STR44)",
     'Lufa oktagonalna .36 Pietta 1851 Colt REB Nord Navy (A345/OT36)',
+    'Lufa okrągła .44 Pietta 1860 Colt Army, 1861 Colt Navy (A1568/44)',
     'Bęben kapiszonowy Pietta 1858 Remington New Army / Navy .44 (A432/ST44)',
+    'Bęben kapiszonowy Pietta Colt 1851 Navy Yank, 1860 Army, 1861 Navy .44 Grawerowany (A341Y)',
     'Bęben rewolwer alarmowy kal. 6mm (EKOL Arda C-1L Black)',
-    // accessories and kits — neither parts nor revolvers
+    // loading kits and cases — neither parts, wrenches nor revolvers
     'Gilzy Pietta do karabinu Smith Carbine .50 4szt (AC460)',
-    'Klucz do kominków + kominki Pietta Remington Pocket (AC580)',
-    'Pietta Mod T #11 klucz do kominków rewolwerowych + kominki (AC020+060)',
     'Zestaw Pietta do rewolweru czarnoprochowego .44: prochownica, miarka, kapiszonownik, przybitki filcowe, kule, klucz do kominków (AC1410/44)',
-    // outside the agreed nodes: shotguns (1.3.x), alarm pistols (1.5), blank ammunition (2.5)
-    "Strzelba powtarzalna Hatsan Escort AimGuard 18'' 12/76",
-    "Strzelba samopowtarzalna Hatsan Escort PS Guard 20'' kal. 12GA",
-    'Bok śrutowy Hatsan kal. 12 (OPTIMA SILVER SELECT EXTRACTOR)',
-    'Pistolet Ekol P 29 REV II',
-    'Pistolet Special 99 Rev II',
-    'Amunicja hukowa PTG 22 Long K 100szt (199-001)',
   ]) {
     const r = resolveSharg(name);
     assert.equal(r.hydraNum, null, name);

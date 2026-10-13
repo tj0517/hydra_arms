@@ -155,6 +155,17 @@ test('HA-2.27: 1.1 / 1.2 with every leaf and 2.2 / 2.3 → group A (permit); 1.4
   assert.deepEqual(permitTagsFor('1.4'), ['permit', 'permit_review']);
 });
 
+test('HA-2.27 (node gate): shotgun leaves 1.3.1–1.3.3, alarm 1.5 and blank ammunition 2.5 → group A; wrenches 7.3.1 → none', () => {
+  for (const num of ['1.3.1', '1.3.2', '1.3.3', '1.5', '2.5']) {
+    assert.equal(permitGroupFor(num), 'A', num);
+    assert.deepEqual(permitTagsFor(num), ['permit'], num);
+  }
+  assert.equal(permitGroupFor('7.3.1'), null);
+  assert.deepEqual(computeImportTags({ status: 'auto', hydraNum: '1.3.1' }), ['auto', 'permit']);     // Hatsan pump shotgun
+  assert.deepEqual(computeImportTags({ status: 'review', hydraNum: '1.5' }), ['review', 'permit']);   // Ekol alarm pistol
+  assert.deepEqual(computeImportTags({ status: 'review', hydraNum: '7.3.1' }), ['review']);           // nipple wrench
+});
+
 test('HA-2.27: import tags as the Sharg rules resolve them — leaf auto, parent review, parts in 04 without permit tags', () => {
   assert.deepEqual(computeImportTags({ status: 'auto', hydraNum: '1.4' }), ['auto', 'permit', 'permit_review']); // Pietta revolver
   assert.deepEqual(computeImportTags({ status: 'auto', hydraNum: '1.1.3' }), ['auto', 'permit']);                // ISSC .22LR pistol

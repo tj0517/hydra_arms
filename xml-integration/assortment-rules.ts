@@ -118,6 +118,9 @@ export const ASSORTMENT_RULES: AssortmentRules = {
     '1.2.3',  // Karabinki Samoczynne (wg drzewa: tylko podmioty koncesjonowane) — liść 1.2 z drzewa, decyzja tj 2026-10-13 (HA-2.27)
     '1.2.4',  // Karabinki PCC i Pistolety Maszynowe — liść 1.2 z drzewa, decyzja tj 2026-10-13 (HA-2.27)
     '1.3',    // Strzelby Gładkolufowe (parent → review) — Sharg „Strzelby Hatsan”
+    '1.3.1',  // Strzelby Powtarzalne (pump-action) — decyzja tj 2026-10-13 (HA-2.27, bramka węzłów); Sharg sharg_rules „strzelba powtarzalna”
+    '1.3.2',  // Strzelby Samopowtarzalne — decyzja tj 2026-10-13 (HA-2.27, bramka węzłów); Sharg sharg_rules „strzelba samopowtarzalna”
+    '1.3.3',  // Strzelby Łamane i Inne (boki) — decyzja tj 2026-10-13 (HA-2.27, bramka węzłów); Sharg sharg_rules „bok śrutowy”
     '1.4',    // Broń Kolekcjonerska i Historyczna (czarnoprochowa) — Sharg „Broń czarnoprochowa”, Kolba (kolba_rules, dormant — no such products in the feed as of 2026-10-08)
     '1.5',    // Broń alarmowa i sygnałowa — Sharg (rewolwery/pistolety alarmowe), Spechurt „Broń hukowa”
 
@@ -232,8 +235,8 @@ export const ASSORTMENT_RULES: AssortmentRules = {
   // Jedna pozycja na nazwę z arkusza (46). `hydra` wg docs/research/taksonomia-p1.md
   // (sekcja „Nowe podkategorie”); null = brak węzła w drzewie 01–15 (pozycja
   // nieaktywna).  Bez `priority` ⇒ newSubcategoryDefaultPriority.  Węzły już
-  // obecne w allowedHydraNums (1.3, 1.4, 1.5, 2.5, 2.6; od HA-2.27 także 1.1, 1.2
-  // z liśćmi, 2.2, 2.3) zostają w filtrze
+  // obecne w allowedHydraNums (1.3, 1.4, 1.5, 2.5, 2.6; od HA-2.27 także 1.1, 1.2,
+  // 1.3 z liśćmi, 2.2, 2.3) zostają w filtrze
   // niezależnie od tych wierszy.  Odpowiedź klienta na O-22 = `priority` w wierszu.
   newSubcategories: [
     // Wyposażenie strzeleckie i trening
