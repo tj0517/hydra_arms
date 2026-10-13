@@ -59,9 +59,10 @@ Pytania klienta O-04–O-13 przeniesione 2026-09-22 z Notion („Lista pytań �
   - 2026-09-29 tj: pomijamy Szafy, poza zakresem, bez konektora.
 - **O-18** · rozstrzygnięte · tj — Czy ścieżka XML→Supabase wraca?
   - 2026-09-23 tj: nie. Przepływ: XML → BaseLinker (xml-to-baselinker.ts) → Supabase (/api/shop/sync) → BaseLinker (zamówienia). source_connectors, engine.ts, /api/xml/sync, next_xml_product_id do usunięcia osobnym zadaniem po HA-1.06.
-- **O-19** · otwarte · tj · blokuje HA-2.15 — Serwer importu 51.83.134.183 (OVH, Ubuntu 26.04, Node 20, 3,7 GB RAM).
+- **O-19** · rozstrzygnięte · tj · dotyczy HA-2.15 — Serwer importu 51.83.134.183 (OVH, Ubuntu 26.04, Node 20, 3,7 GB RAM).
   - 2026-09-25 tj: dostęp `ssh ubuntu@` kluczem (alias `hydra-srv`); feed Spechurtu działa tylko stąd (HTTP 200, 17 MB); na serwerze klon repo z lipca i `.env.local`.
-  - **Otwarte:** czy serwer zostaje na stałe i kto za niego płaci; czy akceptujemy klucze produkcyjne (Supabase service role, BaseLinker) w `.env.local` na serwerze, z dostępem przez konto `ubuntu`.
+  - 2026-10-12 tj: opcja B — import na serwerze z ograniczonymi kluczami, na dedykowanym użytkowniku / własnym pliku env z uprawnieniami 600; tylko `BASELINKER_*` i klucze feedów, bez Supabase service role.
+  - 2026-10-13 tj: serwer zostaje do odwołania, koszt ponosi Hydra.
 - **O-20** · otwarte · klient — ASG, łucznictwo i myślistwo nie mają gałęzi w drzewie 01–15 (HA-2.04: samo ASG to ok. 1–2 tys. produktów we wszystkich trzech hurtowniach). Dodajemy gałęzie (zmiana drzewa i kategorii w BL) czy zostają poza sklepem?
   - 2026-10-06 klient traktuje ASG jako towar z odbiorem osobistym; gałęzie w HA-2.24 po decyzji.
 - **O-21** · rozstrzygnięte · klient · dotyczy HA-2.14, HA-2.15 — Dostęp do BaseLinkera klienta (konto, inventory ID, magazyny, grupy cen).
