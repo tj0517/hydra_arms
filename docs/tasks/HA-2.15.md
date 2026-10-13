@@ -1,12 +1,12 @@
 ---
 id: HA-2.15
 title: Import hurtowni na serwerze — cron sync i import
-status: todo
+status: in_progress
 difficulty: M
-model: null
+model: claude-opus-5-5
 model_approved: null
-effort: null
-branch: null
+effort: xhigh
+branch: feat/ha-2.15-import-server
 due: null
 depends_on: [HA-2.11, HA-2.13, HA-2.14, HA-2.18, HA-2.26, HA-2.27]
 blocked_by_questions: []
@@ -29,7 +29,7 @@ Feedy hurtowni ważą 54–246 MB, Spechurt działa tylko z serwera 51.83.134.18
 ## Gotowe, gdy
 - podgląd na serwerze dla trzech hurtowni z liczbami i szczytową pamięcią — **jak sprawdzić:** wklejony wynik (uruchamia tj, np. `/usr/bin/time -v`)
 - crontab z wpisami i `flock` — **jak sprawdzić:** wklejony `crontab -l`
-- pierwszy sync na żywo, po zgodzie tj: log bez tokenów, liczba zaktualizowanych stanów — **jak sprawdzić:** wklejony fragment logu + `grep -c 'key=' <log>` = 0
+- pierwszy import na żywo per hurtownia (po akceptacji podglądu, STOP przed każdym), a po nim pierwszy sync — **jak sprawdzić:** wklejone fragmenty logów z liczbami created/updated (import) i updated (sync) + `grep -cE 'key=|token=' <log>` = 0 dla każdego logu
 - red proof `flock`: drugie uruchomienie w trakcie pierwszego kończy się bez działania — **jak sprawdzić:** wklejony log
 
 ## Poza zakresem
@@ -52,3 +52,5 @@ Feedy hurtowni ważą 54–246 MB, Spechurt działa tylko z serwera 51.83.134.18
 - 2026-09-25 tj: serwer 51.83.134.183 — Ubuntu 26.04, Node v20.20.2, 3,7 GB RAM, 32 GB wolne; `~/hydra` = klon repo na `f20a13d` z `.env.local`; brak crontaba.
 - 2026-10-06 tj: O-21 zdjęte (dostęp do BL, zob. HA-2.14); zostaje decyzja tj O-19 (serwer, klucze produkcyjne na serwerze). Import na żywo z marżą wstępną tylko, gdy sklep nie sprzedaje (czeka na P24); zapis cen to bramka STOP.
 - 2026-10-13 tj: O-19 rozstrzygnięte (opcja B). HA-2.15 po HA-2.27, bo bez reguł Sharga ~175 pozycji wpadłoby do „00”. Przed startem: `.env.local` na hydra-srv (tylko `BASELINKER_*` i klucze feedów), `git pull` (stary `hydra-categories.json` ma stare ID), kryterium „sync na żywo” dopiero po pierwszym imporcie (katalog 119068 jest pusty).
+- 2026-10-13 decyzja tj (prompt zadania): kryterium „pierwszy sync na żywo … `grep -c 'key=' <log>` = 0” zastąpione kryterium „pierwszy import na żywo per hurtownia, a po nim pierwszy sync … `grep -cE 'key=|token=' <log>` = 0 dla każdego logu”. Powód: `sync` dotyka tylko produktów już obecnych w BL, a katalog 119068 jest pusty, więc sam sync niczego by nie dowiódł; token Sharga jedzie w URL jako `token=`, nie `key=`.
+- 2026-10-13 decyzja tj (preflight): zadanie idzie w klonie WSL `/home/tj/hydra_arms` — `git rev-parse --show-toplevel` nie kończy się tu na `hydra_arms/web`, ale `.claude/settings.json` z hookiem `agent-guard.sh` i `CLAUDE.md` są załadowane. Sesja: `claude-opus-5-5`, effort `xhigh` (ustawiony przez tj w sesji; w prompcie zatwierdzony `high`).
