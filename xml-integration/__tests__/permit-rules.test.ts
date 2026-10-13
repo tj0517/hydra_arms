@@ -143,3 +143,35 @@ test('summary (for the report): subcategories per group across all tree leaves',
   assert.equal(leaves.length, Object.values(counts).reduce((a, b) => a + b, 0));
   assert.ok(counts.A > 0 && counts.B > 0 && counts.C > 0 && counts.D > 0 && counts.none > 0);
 });
+
+// ── HA-2.27: nodes the Sharg name rules route to ─────────────────────────────
+
+test('HA-2.27: 1.1 / 1.2 with every leaf and 2.2 / 2.3 → group A (permit); 1.4 → group C (permit + permit_review)', () => {
+  for (const num of ['1.1', '1.1.1', '1.1.2', '1.1.3', '1.2', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '2.2', '2.3']) {
+    assert.equal(permitGroupFor(num), 'A', num);
+    assert.deepEqual(permitTagsFor(num), ['permit'], num);
+  }
+  assert.equal(permitGroupFor('1.4'), 'C');
+  assert.deepEqual(permitTagsFor('1.4'), ['permit', 'permit_review']);
+});
+
+test('HA-2.27 (node gate): shotgun leaves 1.3.1–1.3.3, alarm 1.5 and blank ammunition 2.5 → group A; wrenches 7.3.1 → none', () => {
+  for (const num of ['1.3.1', '1.3.2', '1.3.3', '1.5', '2.5']) {
+    assert.equal(permitGroupFor(num), 'A', num);
+    assert.deepEqual(permitTagsFor(num), ['permit'], num);
+  }
+  assert.equal(permitGroupFor('7.3.1'), null);
+  assert.deepEqual(computeImportTags({ status: 'auto', hydraNum: '1.3.1' }), ['auto', 'permit']);     // Hatsan pump shotgun
+  assert.deepEqual(computeImportTags({ status: 'review', hydraNum: '1.5' }), ['review', 'permit']);   // Ekol alarm pistol
+  assert.deepEqual(computeImportTags({ status: 'review', hydraNum: '7.3.1' }), ['review']);           // nipple wrench
+});
+
+test('HA-2.27: import tags as the Sharg rules resolve them — leaf auto, parent review, parts in 04 without permit tags', () => {
+  assert.deepEqual(computeImportTags({ status: 'auto', hydraNum: '1.4' }), ['auto', 'permit', 'permit_review']); // Pietta revolver
+  assert.deepEqual(computeImportTags({ status: 'auto', hydraNum: '1.1.3' }), ['auto', 'permit']);                // ISSC .22LR pistol
+  assert.deepEqual(computeImportTags({ status: 'auto', hydraNum: '1.2.1' }), ['auto', 'permit']);                // self-loading rifle
+  assert.deepEqual(computeImportTags({ status: 'review', hydraNum: '1.2' }), ['review', 'permit']);              // GSG rifle (parent)
+  assert.deepEqual(computeImportTags({ status: 'auto', hydraNum: '2.2' }), ['auto', 'permit']);                  // hunting rifle ammunition
+  assert.deepEqual(computeImportTags({ status: 'auto', hydraNum: '2.3' }), ['auto', 'permit']);                  // brenneke
+  assert.deepEqual(computeImportTags({ status: 'review', hydraNum: '04' }), ['review']);                         // spare part
+});
