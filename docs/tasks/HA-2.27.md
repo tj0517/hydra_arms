@@ -1,7 +1,7 @@
 ---
 id: HA-2.27
 title: Reguły nazwowe Sharga — broń palna i amunicja myśliwska do drzewa
-status: in_progress
+status: review
 difficulty: M
 model: claude-opus-5-5
 model_approved: null
@@ -19,12 +19,12 @@ pr: null
 Dwie ścieżki Sharga wypadły z mapy `category-map.json` w HA-2.25 i produkty spadają do „00. DO PRZYPISANIA”: „Artykuły dla dorosłych > Broń > Broń palna” (~175 pozycji: broń palna, rewolwery i zestawy czarnoprochowe Pietta, części Pietta, amunicja myśliwska) oraz „… > Konserwacja i akcesoria do broni palnej > Amunicja” (5 pozycji). Mapa po ścieżce nie rozróżnia ich, więc Sharg dostaje reguły nazwowe (jak `kolba_rules`). Sukces: te pozycje trafiają do 1.1 / 1.2 (broń palna), 1.4 (czarnoprochowa), 04 (części), 2.2 / 2.3 (amunicja myśliwska), z tagami z `permit-rules.ts`, a w „00” zostaje z tych ścieżek tylko to, czego reguły świadomie nie łapią.
 
 ## Zakres
-- [ ] odczyt stanu bieżącego: `category-map.json` (klucz `sharg`, brak ścieżek „Broń palna”/„Amunicja”), `category-rules.ts`, `resolveCategory`, `assortment-rules.ts`, `permit-rules.ts`, drzewo `xml-integration/hydra-category-tree.txt` (które z 1.1 / 1.2 / 2.2 / 2.3 mają liście), deferred z 2026-10-08 (HA-2.25) i lista pozycji z `--dry-run --sections=1,2` wklejona przez tj (stan „przed”)
-- [ ] `sharg_rules` w `category-map.json` + obsługa w `resolveCategory` (te same reguły dopasowania co `kolba_rules`, z opcjonalnym filtrem po ścieżce kategorii Sharga, żeby reguła nie łapała produktów spoza tych dwóch ścieżek)
-- [ ] reguły: rewolwery i zestawy czarnoprochowe Pietta → 1.4; części Pietta → 04; broń palna (Hatsan Escort, ISSC, GSG, Astra STG itd.) → 1.1 / 1.2 wg drzewa; amunicja myśliwska (Sako 9.3x74R, Federal/PMC .270 Win, brenneka Sauvestre) → 2.2 / 2.3; reguły o niepewnym zasięgu z `review: true`
-- [ ] `allowedHydraNums` += węzły 1.1, 1.2, 2.2, 2.3 (i ich liście, jeśli drzewo je ma), każdy z komentarzem skąd (decyzja tj 2026-10-13)
-- [ ] testy: po jednej nazwie dla każdej grupy → oczekiwany węzeł; nazwa-pułapka dla każdej reguły; admitted/dropped dla czterech nowych węzłów w filtrze; tagi `permit` dla 1.1 / 1.2 / 2.2 / 2.3 w `permit-flags.test.ts`
-- [ ] komenda dry-run dla tj (`sharg --dry-run --sections=1,2`) i porównanie wyniku z regułami po wklejeniu
+- [x] odczyt stanu bieżącego: `category-map.json` (klucz `sharg`, brak ścieżek „Broń palna”/„Amunicja”), `category-rules.ts`, `resolveCategory`, `assortment-rules.ts`, `permit-rules.ts`, drzewo `xml-integration/hydra-category-tree.txt` (które z 1.1 / 1.2 / 2.2 / 2.3 mają liście), deferred z 2026-10-08 (HA-2.25) i lista pozycji z `--dry-run --sections=1,2` wklejona przez tj (stan „przed”)
+- [x] `sharg_rules` w `category-map.json` + obsługa w `resolveCategory` (te same reguły dopasowania co `kolba_rules`, z opcjonalnym filtrem po ścieżce kategorii Sharga, żeby reguła nie łapała produktów spoza tych dwóch ścieżek)
+- [x] reguły: rewolwery i zestawy czarnoprochowe Pietta → 1.4; części Pietta → 04; broń palna (Hatsan Escort, ISSC, GSG, Astra STG itd.) → 1.1 / 1.2 wg drzewa; amunicja myśliwska (Sako 9.3x74R, Federal/PMC .270 Win, brenneka Sauvestre) → 2.2 / 2.3; reguły o niepewnym zasięgu z `review: true`
+- [x] `allowedHydraNums` += węzły 1.1, 1.2, 2.2, 2.3 (i ich liście, jeśli drzewo je ma), każdy z komentarzem skąd (decyzja tj 2026-10-13)
+- [x] testy: po jednej nazwie dla każdej grupy → oczekiwany węzeł; nazwa-pułapka dla każdej reguły; admitted/dropped dla czterech nowych węzłów w filtrze; tagi `permit` dla 1.1 / 1.2 / 2.2 / 2.3 w `permit-flags.test.ts`
+- [x] komenda dry-run dla tj (`sharg --dry-run --sections=1,2`) i porównanie wyniku z regułami po wklejeniu
 
 ## Gotowe, gdy
 - w `category-map.json` istnieje `sharg_rules`, a `resolveCategory` je stosuje tylko do zadeklarowanych ścieżek — **jak sprawdzić:** test w `category-rules.test.ts` (reguła dla pozycji z ścieżki objętej i brak trafienia dla tej samej nazwy w innej ścieżce)
@@ -62,3 +62,5 @@ Dwie ścieżki Sharga wypadły z mapy `category-map.json` w HA-2.25 i produkty s
 - 2026-10-13 reguły dla uzgodnionych grup: 29 reguł, łapią 218 z 278 pozycji (1.4: 78, 04: 131 w tym 3 części Ekol, 1.1.3: 1, 1.2.1: 1, 1.2: 2, 2.2: 4, 2.3: 1); 60 zostaje w „00” do decyzji tj. Amunicja myśliwska po kalibrze („270 win”, „9.3x74r”), bo feed ma literówkę „myśłiwska” (Federal). Reguły amunicji przypięte tylko do ścieżki „Amunicja” — „270 win” na ścieżce „Broń palna” złapałoby sztucer w tym kalibrze.
 - 2026-10-13 decyzja tj (bramka węzłów, STOP 3): (1) strzelby Hatsan (19) — opcja A: reguły po nazwie do 1.3.1 (12) / 1.3.2 (5) / 1.3.3 (2), do `allowedHydraNums` dokładnie 1.3.1, 1.3.2, 1.3.3; (2) pistolety Ekol (3) → 1.5 review — tj potwierdza, że to pistolety alarmowe; „Pistolet Special 99 Rev II” po dosłownej nazwie modelu; amunicja hukowa Pobjeda (1) → 2.5 review; (3) lufy (10) i bębny (20) — opcja A: zostają w „00”; **tj zapyta klienta, do której grupy pozwoleń należą lufy i bębny** (do tego czasu bez reguły); (4) akcesoria Pietta — opcja B: 4 klucze do kominków → 7.3.1 review, 2 zestawy do ładowania i gilzy zostają w „00”.
 - 2026-10-13 stan końcowy reguł: 36 reguł, łapią 245 z 278 pozycji — 1.4: 78, 04: 131, 1.3.1: 12, 1.3.2: 5, 1.3.3: 2, 1.5: 3, 1.2: 2, 1.2.1: 1, 1.1.3: 1, 2.2: 4, 2.3: 1, 2.5: 1, 7.3.1: 4; w „00” świadomie 33 (10 luf, 20 bębnów, 2 zestawy, 1 gilzy). Liść 1.2.3 (tylko podmioty koncesjonowane) jest w filtrze, choć żadna reguła tam nie kieruje — wpis w deferred.
+- 2026-10-13 dry-run Sharga na realnym feedzie (uruchomił tj; „przed” = main, „po” = gałąź @ 8f9b4ff, feed 9019 w obu): „no category mapping (→ DO PRZYPISANIA)” 835 → 590 (−245, tyle łapią reguły); admitted 2118 → 2280 (+162), no_stock 2786 → 2869 (+83), not_p1 4115 → 3870 (−245; 162 + 83 = 245); permit tags: permit 15 → 125 (+110), permit_review 4 → 82 (+78); permit groups: A 11 → 43 (+32), C 4 → 82 (+78), D bez zmian (6528); wiersze permit sekcji 1,2: 13 → 123 (+110 = 78 + 32). Wszystkie sumy zgodne z liczbami podanymi przed uruchomieniem. Pierwsze ~40 wierszy tabeli odczytał tj (Hatsan 1.3.x, Pietta 1.4 C, amunicja 2.2 / 2.3, ISSC 1.1.3, GSG 1.2 review, Astra 1.2.1); pozostałych wierszy agent nie widział — rozkład per węzeł potwierdzają sumy grup i testy na realnych nazwach.
+- 2026-10-13 testy: pełny `npm run test:unit` na Macu tj — 198 / 198 (wg tj). W klonie WSL agenta 196 / 198: dwa testy `prod-guard.test.ts` czerwone także na czystym `origin/main` (środowisko, wpis w deferred). Red proof: po usunięciu „sprężyna” z `excludeName` reguły „rewolwer pietta” test „14 real part names…” pada („Sprężyna główna rewolwer Pietta 1851…”: expected 04, actual 1.4), po przywróceniu przechodzi.
