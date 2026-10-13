@@ -457,3 +457,24 @@ test('sharg_rules data: products the rules deliberately do not catch stay in „
     assert.equal(r.status, 'flag', name);
   }
 });
+
+// Review HA-2.27 (tj 2026-10-13): the revolver rule stands before the part rules,
+// so every keyword a 04 part rule matches on must also be in its excludeName —
+// otherwise „<part> rewolwer Pietta …” lands in 1.4 `auto` instead of 04.
+test('sharg_rules guard: every 04 part-rule keyword is excluded by the „rewolwer pietta” rule (1.4)', () => {
+  const rules = REAL_MAP.sharg_rules ?? [];
+  const revolver = rules.find((r) => r.cat === '1.4' && r.match.name === 'rewolwer pietta');
+  assert.ok(revolver, 'the „rewolwer pietta” → 1.4 rule must exist');
+  const excluded = (revolver.excludeName ?? []).map((e) => e.toLowerCase());
+  const partKeywords = rules.filter((r) => r.cat === '04').map((r) => (r.match.name ?? '').toLowerCase());
+  assert.ok(partKeywords.length > 0, 'there must be 04 part rules');
+  for (const keyword of partKeywords) {
+    assert.ok(keyword.length > 0, 'a 04 part rule without match.name');
+    // covered = an excluded word is contained in the keyword, so any name with the keyword is rejected
+    assert.ok(excluded.some((e) => keyword.includes(e)), `part keyword „${keyword}” is not in the revolver rule's excludeName`);
+    // behaviour: a part named after the gun goes to 04, never to a firearm node
+    const r = resolveSharg(`Część ${keyword} rewolwer Pietta 1858 Remington New Model Army (000)`);
+    assert.equal(r.hydraNum, '04', `„${keyword} rewolwer Pietta” must resolve to 04`);
+    assert.equal(r.status, 'review');
+  }
+});
