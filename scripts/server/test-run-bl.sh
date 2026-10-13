@@ -248,6 +248,17 @@ else
   bad "kill from outside" "exit=$RC line=$LAST"
 fi
 expect "stderr of a killed run carries only the wrapper's own line" 0 "$(grep -vc '^run-bl: ' "$T/err")"
+if [ "$(id -u)" != "0" ]; then
+  HYDRA_MAX_SECONDS=2 run marker-missing good --cmd "sleep 7774.$$" sharg import &
+  bg=$!
+  sleep 1
+  chmod 400 "$LOGS"/run-bl-*.log
+  wait "$bg"
+  chmod 600 "$LOGS"/run-bl-*.log
+  expect "the limit still stops a run when the journal cannot be written" no "$(alive "sleep 7774.$$")"
+  run marker-missing good --cmd 'true' sharg import
+  has "and the lock is free afterwards" "$LAST" 'sharg import .*END exit=0'
+fi
 
 echo "# what a stand-in can and cannot see"
 HA_ALLOW_PROD=1 run marker-missing good --cmd 'env | cut -d= -f1 | grep -c "^HA_ALLOW_PROD$"; true' kolba import

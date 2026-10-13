@@ -248,7 +248,7 @@ Cron i ręczne uruchomienia importu idą przez `scripts/server/run-bl.sh <hurtow
 cd /home/hydra-import/hydra
 
 # a) Samosprawdzenie wrappera. Bezpieczne: tylko komendy zastępcze w katalogu tymczasowym.
-bash scripts/server/test-run-bl.sh | tail -n 3          # passed: 78, failed: 0
+bash scripts/server/test-run-bl.sh | tail -n 3          # passed: 80, failed: 0
 
 # b) Red proof znacznika: bez znacznika wrapper odmawia i niczego nie uruchamia.
 scripts/server/run-bl.sh --check sharg sync; echo "exit=$?"

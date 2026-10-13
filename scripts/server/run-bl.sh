@@ -138,7 +138,11 @@ now() { date '+%F %T%z'; }
 journal() {
   local line
   line="$(now) $supplier $mode pid=$$ $*"
-  printf '%s\n' "$line" >> "$journal_file" || { echo "run-bl: cannot write $journal_file" >&2; exit 73; }
+  if ! printf '%s\n' "$line" >> "$journal_file"; then
+    echo "run-bl: cannot write $journal_file" >&2
+    # While the command is running the wrapper has to stay: it stops and reaps the run.
+    if [ -z "${child:-}" ]; then exit 73; fi
+  fi
   if [ "$interactive" -eq 1 ]; then printf '%s\n' "$line"; fi
   return 0
 }
@@ -286,8 +290,9 @@ request_stop() {
   [ -z "$stop_reason" ] || return 0
   stop_reason="$1"
   stop_at="$SECONDS"
-  journal "STOP $1 — stopping the run"
+  # Signal first, write second: the stop must not depend on the journal being writable.
   if [ -n "$target" ]; then kill -TERM -- "$target" 2>/dev/null; fi
+  journal "STOP $1 — stopping the run"
   return 0
 }
 trap 'request_stop signal-TERM' TERM
