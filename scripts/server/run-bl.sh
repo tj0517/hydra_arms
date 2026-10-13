@@ -34,6 +34,8 @@
 #   HYDRA_LOCK_FILE      default: $HYDRA_LOG_DIR/run-bl.lock
 #   HYDRA_LOG_KEEP_DAYS  default: 30; 0 = never delete
 #   HYDRA_MAX_SECONDS    stop the run after this many seconds; default: 0 = no limit
+#   HYDRA_STAND_IN_CHECKS  1 = run the setup checks before a --cmd stand-in as well, to
+#                        prove on the real run path that a failed check stops the command
 #   TZ                   default: Europe/Warsaw — BaseLinker reports rate-limit blocks in
 #                        Polish time and src/lib/baselinker/client.ts reads them as local time
 #
@@ -81,6 +83,9 @@ case "$MAX_SECONDS" in ''|*[!0-9]*) MAX_SECONDS=0 ;; esac
 export TZ="${TZ:-Europe/Warsaw}"
 # Node's HTTP debug output prints request paths, and feed URLs carry credentials there.
 unset NODE_DEBUG
+# Never inherit the production unlock from the caller: it is set below, on the import
+# command only, so a stand-in or anything else started here cannot receive it.
+unset HA_ALLOW_PROD
 
 mkdir -p "$LOG_DIR" || { echo "run-bl: cannot create $LOG_DIR" >&2; exit 73; }
 journal_file="$LOG_DIR/run-bl-$(date +%Y-%m).log"
@@ -155,7 +160,7 @@ if [ "$KEEP_DAYS" -gt 0 ]; then
     -mtime +"$((KEEP_DAYS - 1))" -delete 2>/dev/null
 fi
 
-if [ -z "$stand_in" ]; then
+if [ -z "$stand_in" ] || [ "${HYDRA_STAND_IN_CHECKS:-0}" = "1" ]; then
   check_setup
 fi
 
