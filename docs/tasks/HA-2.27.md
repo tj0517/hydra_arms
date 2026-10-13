@@ -1,12 +1,12 @@
 ---
 id: HA-2.27
 title: Reguły nazwowe Sharga — broń palna i amunicja myśliwska do drzewa
-status: todo
+status: in_progress
 difficulty: M
-model: null
+model: claude-opus-5-5
 model_approved: null
-effort: null
-branch: null
+effort: high
+branch: feat/ha-2.27-sharg-rules
 due: null
 depends_on: [HA-2.18, HA-2.25]
 blocked_by_questions: []
