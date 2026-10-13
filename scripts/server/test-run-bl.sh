@@ -1,20 +1,29 @@
 #!/usr/bin/env bash
-# Self-test of scripts/server/run-bl.sh (HA-2.15).
+# Self-test of scripts/server/run-bl.sh (HA-2.15). Linux only (flock, GNU-style tools).
 #
 # Safe to run anywhere, including the import server: the wrapper is only ever called with
-# --cmd (a stand-in command) or --check, against temporary directories. The import itself
-# is never started and nothing outside the temporary directory is touched.
+# --cmd (a stand-in command) or --check, and every path it uses — repo root, server marker,
+# lock file, log directory — points into a temporary directory. The import itself is never
+# started. The placeholder that stands where tsx would be leaves a trace if it is ever
+# executed, and the last check fails if such a trace exists.
 #
 # Usage: bash scripts/server/test-run-bl.sh
 # Exit code: 0 when every check passes, 1 otherwise.
 
 set -u
 
+# Nothing from the caller's shell may leak into the wrapper calls below.
+unset HYDRA_DIR HYDRA_LOG_DIR HYDRA_LOCK_FILE HYDRA_SERVER_MARKER HYDRA_LOG_KEEP_DAYS \
+  HYDRA_MAX_SECONDS HYDRA_KILL_AFTER_SECONDS HYDRA_STAND_IN_CHECKS BASELINKER_MOCK NODE_DEBUG
+
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 W="$here/run-bl.sh"
-T="$(mktemp -d)"
+T="$(mktemp -d)" || exit 1
+[ -n "$T" ] && [ -d "$T" ] || exit 1
 trap 'rm -rf "$T"' EXIT
 LOGS="$T/logs"
+LOCK="$T/lock/run-bl.lock"
+mkdir -p "$T/lock"
 
 passed=0
 failed=0
@@ -23,136 +32,274 @@ bad() { failed=$((failed + 1)); printf 'FAIL - %s\n       %s\n' "$1" "$2"; }
 expect() { # description, expected, actual
   if [ "$2" = "$3" ]; then ok "$1"; else bad "$1" "expected: $2 | actual: $3"; fi
 }
-shown() { sed "s#$T#<tmp>#g" | cut -c1-200; }
+has() { # description, text, pattern
+  if printf '%s' "$2" | grep -qE -- "$3"; then ok "$1"; else bad "$1" "no match for /$3/ in: $2"; fi
+}
+shown() { sed "s#$T#<tmp>#g" | cut -c1-210; }
 
 # A test "repo root": an env file and an executable placeholder where tsx would be.
-# The placeholder is never executed — every call below uses --cmd or --check.
 mk_repo() { # name, env lines…
   local dir="$T/$1"
   shift
   mkdir -p "$dir/node_modules/.bin"
-  printf '#!/bin/sh\nexit 0\n' > "$dir/node_modules/.bin/tsx"
+  printf '#!/bin/sh\ntouch "$(dirname "$0")/../../tsx-ran"\nexit 0\n' > "$dir/node_modules/.bin/tsx"
   chmod +x "$dir/node_modules/.bin/tsx"
   printf '%s\n' "$@" > "$dir/.env.local"
   chmod 600 "$dir/.env.local"
 }
 mk_repo good 'BASELINKER_TOKEN=dummy' 'BASELINKER_INVENTORY_ID=119068'
-mk_repo mock 'BASELINKER_TOKEN=dummy' 'BASELINKER_INVENTORY_ID=119068' 'BASELINKER_MOCK=true'
+mk_repo good-loose 'BASELINKER_TOKEN=dummy' 'export BASELINKER_INVENTORY_ID = "119068"   # katalog' 'BASELINKER_MOCK=false' '# HA_ALLOW_PROD='
+mk_repo other-catalogue 'BASELINKER_TOKEN=dummy' 'BASELINKER_INVENTORY_ID=35743'
+mk_repo duplicate-catalogue 'BASELINKER_INVENTORY_ID=119068' 'BASELINKER_TOKEN=dummy' 'BASELINKER_INVENTORY_ID=35743'
 mk_repo inventory-empty 'BASELINKER_TOKEN=dummy' 'BASELINKER_INVENTORY_ID='
 mk_repo inventory-absent 'BASELINKER_TOKEN=dummy'
+mk_repo mock 'BASELINKER_TOKEN=dummy' 'BASELINKER_INVENTORY_ID=119068' 'BASELINKER_MOCK=true'
+mk_repo mock-spaced 'BASELINKER_TOKEN=dummy' 'BASELINKER_INVENTORY_ID=119068' 'BASELINKER_MOCK = true'
+mk_repo mock-quoted 'BASELINKER_TOKEN=dummy' 'BASELINKER_INVENTORY_ID=119068' 'BASELINKER_MOCK="true"'
+mk_repo mock-colon 'BASELINKER_TOKEN=dummy' 'BASELINKER_INVENTORY_ID=119068' 'BASELINKER_MOCK: true'
 mk_repo unlock 'BASELINKER_TOKEN=dummy' 'BASELINKER_INVENTORY_ID=119068' 'HA_ALLOW_PROD=1'
+mk_repo unlock-spaced 'BASELINKER_TOKEN=dummy' 'BASELINKER_INVENTORY_ID=119068' 'export HA_ALLOW_PROD = 1'
+mk_repo unreadable 'BASELINKER_TOKEN=dummy' 'BASELINKER_INVENTORY_ID=119068'
+chmod 000 "$T/unreadable/.env.local"
 mk_repo no-tsx 'BASELINKER_TOKEN=dummy' 'BASELINKER_INVENTORY_ID=119068'
 rm "$T/no-tsx/node_modules/.bin/tsx"
-mkdir -p "$T/no-env" "$T/home-server" "$T/home-dev"
-touch "$T/home-server/.hydra-import-server"
+mkdir -p "$T/no-env"
+printf 'inventory=119068\n' > "$T/marker-ok"
+: > "$T/marker-empty"
+printf 'inventory=35743\n' > "$T/marker-other"
 
-# Runs the wrapper with a test home and test repo root. Sets RC and LAST (last journal line).
+# Runs the wrapper against test paths only. Sets RC and LAST (last journal line);
+# stdout goes to $T/out, stderr to $T/err.
 CHECKS=0
-run() { # home, repo, wrapper arguments…
-  local home="$1" repo="$2"
+AGENT=0
+run() { # marker file, repo, wrapper arguments…
+  local marker="$1" repo="$2" agent=(-u CLAUDECODE)
   shift 2
-  HOME="$T/$home" HYDRA_DIR="$T/$repo" HYDRA_LOG_DIR="$LOGS" HYDRA_STAND_IN_CHECKS="$CHECKS" \
-    "$W" "$@" > "$T/out" 2>&1
+  # The test itself may be started from an agent session; the wrapper must not see that
+  # unless a case asks for it.
+  if [ "$AGENT" = "1" ]; then agent=(CLAUDECODE=1); fi
+  env "${agent[@]}" HYDRA_SERVER_MARKER="$T/$marker" HYDRA_DIR="$T/$repo" HYDRA_LOG_DIR="$LOGS" \
+    HYDRA_LOCK_FILE="$LOCK" HYDRA_STAND_IN_CHECKS="$CHECKS" "$W" "$@" > "$T/out" 2> "$T/err"
   RC=$?
   LAST="$(cat "$LOGS"/run-bl-*.log 2>/dev/null | tail -n 1)"
 }
-run_logs() { find "$LOGS" -maxdepth 1 -name "$1" 2>/dev/null | wc -l | tr -d ' '; }
+journal_all() { cat "$LOGS"/run-bl-*.log 2>/dev/null; }
+starts() { journal_all | grep -c ' START '; }
+last_log() { journal_all | grep ' START ' | tail -n 1 | sed -nE 's/.* log=([^ ]+).*/\1/p'; }
+tsx_traces() { find "$T" -name tsx-ran | wc -l | tr -d ' '; }
+alive() { pgrep -f -- "$1" > /dev/null 2>&1 && echo yes || echo no; }
 
-echo "# setup checks stop the command on the real run path (stand-in command, checks on)"
-refused() { # description, home, repo, text expected in the journal line
+echo "# a failed setup check stops the command on the run path (stand-in command, checks on)"
+refused() { # description, marker, repo, text expected in the journal line
   local before
-  before="$(run_logs '*-import-*.log')"
+  before="$(starts)"
   rm -f "$T/sentinel"
-  CHECKS=1 run "$2" "$3" --cmd "touch '$T/sentinel'" sharg import
+  CHECKS=1
+  run "$2" "$3" --cmd "touch '$T/sentinel'" sharg import
   CHECKS=0
   printf '       %s\n       exit=%s\n' "$(printf '%s' "$LAST" | shown)" "$RC"
-  if [ "$RC" = "78" ] && [ ! -e "$T/sentinel" ] && [ "$(run_logs '*-import-*.log')" = "$before" ] \
-     && printf '%s' "$LAST" | grep -q "ERROR.*$4"; then
-    ok "$1 → refused, command not run"
+  if [ "$RC" = "78" ] && [ ! -e "$T/sentinel" ] && [ "$(starts)" = "$before" ] \
+     && printf '%s' "$LAST" | grep -q "ERROR.*$4" && grep -q '^run-bl: sharg import: ' "$T/err"; then
+    ok "$1 → refused, command not run, reported on stderr"
   else
-    bad "$1" "exit=$RC sentinel=$([ -e "$T/sentinel" ] && echo present || echo absent) line=$LAST"
+    bad "$1" "exit=$RC sentinel=$([ -e "$T/sentinel" ] && echo present || echo absent) line=$LAST err=$(cat "$T/err")"
   fi
 }
-refused "no server marker file" home-dev good 'not marked as the import server'
-refused "BASELINKER_MOCK=true in the env file" home-server mock 'BASELINKER_MOCK=true'
-refused "BASELINKER_INVENTORY_ID empty" home-server inventory-empty 'BASELINKER_INVENTORY_ID is not set'
-refused "BASELINKER_INVENTORY_ID line absent" home-server inventory-absent 'BASELINKER_INVENTORY_ID is not set'
-refused "production unlock stored in the env file" home-server unlock 'production unlock is stored'
-refused "env file missing" home-server no-env '.env.local not found'
-refused "tsx not installed" home-server no-tsx 'run npm ci'
+refused "no server marker file" marker-missing good 'not marked as the import server'
+refused "marker without a catalogue line" marker-empty good 'does not name the catalogue'
+refused "marker names another catalogue" marker-other good 'catalogue mismatch'
+refused "env file names another catalogue" marker-ok other-catalogue 'catalogue mismatch'
+refused "catalogue set twice, last line differs" marker-ok duplicate-catalogue 'catalogue mismatch'
+refused "BASELINKER_INVENTORY_ID empty" marker-ok inventory-empty 'BASELINKER_INVENTORY_ID is not set'
+refused "BASELINKER_INVENTORY_ID line absent" marker-ok inventory-absent 'BASELINKER_INVENTORY_ID is not set'
+refused "BASELINKER_MOCK=true" marker-ok mock 'BASELINKER_MOCK is true'
+refused "BASELINKER_MOCK = true (spaces)" marker-ok mock-spaced 'BASELINKER_MOCK is true'
+refused 'BASELINKER_MOCK="true" (quoted)' marker-ok mock-quoted 'BASELINKER_MOCK is true'
+refused "BASELINKER_MOCK: true (colon)" marker-ok mock-colon 'BASELINKER_MOCK is true'
+refused "production unlock stored in the env file" marker-ok unlock 'production unlock is stored'
+refused "production unlock with export and spaces" marker-ok unlock-spaced 'production unlock is stored'
+refused "env file missing" marker-ok no-env '.env.local not found'
+if [ "$(id -u)" != "0" ]; then
+  refused "env file unreadable" marker-ok unreadable 'is not readable by'
+fi
+refused "tsx not installed" marker-ok no-tsx 'run npm ci'
+AGENT=1
+refused "complete setup, but started from an agent session" marker-ok good 'AI coding agent session'
+AGENT=0
 
-rm -f "$T/sentinel"
-CHECKS=1 run home-server good --cmd "touch '$T/sentinel'" sharg import
-CHECKS=0
-if [ "$RC" = "0" ] && [ -e "$T/sentinel" ]; then ok "control: complete setup → command runs"; else bad "control: complete setup" "exit=$RC line=$LAST"; fi
+for repo in good good-loose; do
+  rm -f "$T/sentinel"
+  CHECKS=1
+  run marker-ok "$repo" --cmd "touch '$T/sentinel'" sharg import
+  CHECKS=0
+  if [ "$RC" = "0" ] && [ -e "$T/sentinel" ]; then ok "control: complete setup ($repo) → command runs"; else bad "control: complete setup ($repo)" "exit=$RC line=$LAST"; fi
+done
+has "START names the catalogue" "$(journal_all | grep ' START ' | tail -n 1)" 'START catalogue=119068 '
 
-echo "# --check reports the same without running anything"
-run home-dev good --check sharg import;               expect "--check, no marker → 78" 78 "$RC"
-run home-server mock --check sharg import;            expect "--check, mock on → 78" 78 "$RC"
-run home-server inventory-absent --check sharg import; expect "--check, no catalogue ID → 78" 78 "$RC"
-run home-server unlock --check sharg import;          expect "--check, unlock in env file → 78" 78 "$RC"
-before="$(run_logs '*-import-*.log')"
-run home-server good --check sharg import;            expect "--check, complete setup → 0" 0 "$RC"
-expect "--check creates no run log" "$before" "$(run_logs '*-import-*.log')"
+echo "# --check reports the same and starts nothing"
+before="$(starts)"
+run marker-missing good --check sharg import;       expect "--check, no marker → 78" 78 "$RC"
+run marker-other good --check sharg import;         expect "--check, marker names another catalogue → 78" 78 "$RC"
+run marker-ok mock-spaced --check sharg import;     expect "--check, mock on → 78" 78 "$RC"
+run marker-ok inventory-absent --check sharg import; expect "--check, no catalogue ID → 78" 78 "$RC"
+run marker-ok unlock --check sharg import;          expect "--check, unlock in env file → 78" 78 "$RC"
+run marker-ok good --check sharg import;            expect "--check, complete setup → 0" 0 "$RC"
+printf '       %s\n' "$(printf '%s' "$LAST" | shown)"
+has "--check says what a real run would start" "$LAST" 'CHECK ok — nothing was run\. A real run would start in .*/good: .*/node_modules/\.bin/tsx scripts/xml-to-baselinker\.ts sharg import \(catalogue 119068, limit none, lock '
+expect "--check starts no run" "$before" "$(starts)"
+AGENT=1
+run marker-ok good --check sharg import
+AGENT=0
+expect "--check from an agent session → 78" 78 "$RC"
+
+# The real home directory comes from the password database: a marker and a lock path
+# cannot be redirected through $HOME, and the lock does not follow the log directory.
+real_home="$(getent passwd "$(id -u)" | cut -d: -f6)"
+mk_repo catalogue-one 'BASELINKER_TOKEN=dummy' 'BASELINKER_INVENTORY_ID=1'
+mkdir -p "$T/fake-home"
+printf 'inventory=1\n' > "$T/fake-home/.hydra-import-server"
+env -u CLAUDECODE HOME="$T/fake-home" HYDRA_DIR="$T/catalogue-one" HYDRA_LOG_DIR="$LOGS" "$W" --check sharg import > "$T/out" 2> "$T/err"
+expect "a marker in a directory named by HOME is not accepted" 78 "$?"
+env -u CLAUDECODE HOME="$T/fake-home" HYDRA_SERVER_MARKER="$T/marker-ok" HYDRA_DIR="$T/good" HYDRA_LOG_DIR="$T/other-logs" "$W" --check sharg import > "$T/out" 2> "$T/err"
+has "the default lock is in the real home directory, whatever HOME and the log directory say" "$(cat "$T/out")" "lock $real_home/\.hydra-run-bl\.lock\)"
 chmod 644 "$T/good/.env.local"
-run home-server good --check sharg import
+run marker-ok good --check sharg import
 if [ "$RC" = "0" ] && grep -q 'WARN.*has mode 644, expected 600' "$T/out"; then ok "--check warns when the env file is not mode 600"; else bad "env file mode warning" "exit=$RC out=$(cat "$T/out")"; fi
 chmod 600 "$T/good/.env.local"
 
+echo "# settings that cannot be understood are refused, not replaced by a default"
+HYDRA_MAX_SECONDS=90m run marker-ok good --cmd 'true' kolba sync
+if [ "$RC" = "78" ] && printf '%s' "$LAST" | grep -q 'HYDRA_MAX_SECONDS must be whole seconds'; then ok "HYDRA_MAX_SECONDS=90m → 78"; else bad "bad time limit" "exit=$RC line=$LAST"; fi
+HYDRA_MAX_SECONDS=99999999999999999999 run marker-ok good --cmd 'true' kolba sync
+expect "a time limit too large to be a number → 78" 78 "$RC"
+HYDRA_MAX_SECONDS=90m run marker-ok good --check sharg import
+expect "--check refuses a bad time limit too" 78 "$RC"
+HYDRA_LOG_KEEP_DAYS=never run marker-ok good --cmd 'true' kolba sync
+if [ "$RC" = "78" ] && printf '%s' "$LAST" | grep -q 'HYDRA_LOG_KEEP_DAYS must be a whole number'; then ok "HYDRA_LOG_KEEP_DAYS=never → 78"; else bad "bad retention" "exit=$RC line=$LAST"; fi
+HYDRA_LOG_DIR=relative/logs HYDRA_LOCK_FILE="$LOCK" "$W" --cmd 'true' kolba sync > "$T/out" 2> "$T/err"
+expect "relative log directory → 78" 78 "$?"
+
 echo "# one run at a time"
-run home-dev good --cmd 'sleep 3' sharg sync &
+run marker-missing good --cmd 'sleep 3' sharg sync &
 holder=$!
 sleep 1
 started="$(date +%s)"
-run home-dev good --cmd 'sleep 3' sharg sync
+run marker-missing good --cmd 'sleep 3' sharg sync
 took=$(( $(date +%s) - started ))
 printf '       %s\n       exit=%s\n' "$(printf '%s' "$LAST" | shown)" "$RC"
-if [ "$RC" = "0" ] && [ "$took" -le 1 ] && printf '%s' "$LAST" | grep -q 'SKIP lock held by another run'; then
+if [ "$RC" = "0" ] && [ "$took" -le 1 ] \
+   && printf '%s' "$LAST" | grep -q 'SKIP lock held by another run — skipping (holder: sharg sync pid=[0-9]* since .*, running 0 min)'; then
   ok "second run while the first holds the lock → skipped, exit 0"
 else
   bad "second run skipped" "exit=$RC took=${took}s line=$LAST"
 fi
-run home-dev good --cmd 'sleep 3' kolba import
-if [ "$RC" = "0" ] && printf '%s' "$LAST" | grep -q 'kolba import .*SKIP'; then ok "another supplier is skipped too (one lock for the server)"; else bad "other supplier skipped" "exit=$RC line=$LAST"; fi
+expect "a skipped run prints nothing (cron stays quiet)" "0 0" "$(wc -c < "$T/out" | tr -d ' ') $(wc -c < "$T/err" | tr -d ' ')"
+run marker-missing good --cmd 'sleep 3' kolba import
+has "another supplier is skipped too (one lock for the server)" "$LAST" 'kolba import .*SKIP'
 wait "$holder"
-expect "skipped runs leave no run log" 1 "$(run_logs 'sharg-sync-*.log')"
-run home-dev good --cmd 'echo after' kolba sync
-if [ "$RC" = "0" ] && printf '%s' "$LAST" | grep -q 'kolba sync .*END exit=0'; then ok "lock is free again after the first run ends"; else bad "lock released" "exit=$RC line=$LAST"; fi
+expect "skipped runs leave no run log" 1 "$(find "$LOGS" -name 'sharg-sync-*.log' | wc -l | tr -d ' ')"
+run marker-missing good --cmd 'echo after' kolba sync
+has "lock is free again after the first run ends" "$LAST" 'kolba sync .*END exit=0'
+expect "the lock file itself is never written" 0 "$(wc -c < "$LOCK" | tr -d ' ')"
+printf 'sharg import pid=1 since 2026-01-01 00:00:00+0100 epoch=1\n' > "$LOCK.holder"
+run marker-missing good --cmd 'true' kolba sync
+if journal_all | grep -q 'WARN the previous run did not end cleanly: sharg import pid=1 since 2026-01-01'; then ok "a leftover holder line is reported as an unclean end"; else bad "unclean end warning" "$(journal_all | tail -n 3)"; fi
 
-echo "# exit codes"
-run home-dev good --cmd 'exit 3' spechurt sync;  expect "exit code of the command is passed through" 3 "$RC"
-run home-dev good;                               expect "no arguments → 64" 64 "$RC"
-run home-dev good --cmd 'true' allegro sync;     expect "unknown supplier → 64" 64 "$RC"
-run home-dev good --cmd 'true' sharg preview;    expect "unknown mode → 64" 64 "$RC"
-run home-dev good --cmd '' sharg sync;           expect "empty stand-in → 64" 64 "$RC"
-HYDRA_MAX_SECONDS=1 run home-dev good --cmd 'sleep 10' sharg import
-if [ "$RC" = "124" ] && printf '%s' "$LAST" | grep -q 'stopped-by-limit=1s'; then ok "HYDRA_MAX_SECONDS stops a long run → 124"; else bad "time limit" "exit=$RC line=$LAST"; fi
+echo "# exit codes and visibility"
+run marker-missing good --cmd 'exit 3' spechurt sync
+expect "exit code of the command is passed through" 3 "$RC"
+has "a failed run is reported on stderr" "$(cat "$T/err")" '^run-bl: spechurt sync: run ended with exit 3'
+run marker-missing good;                            expect "no arguments → 64" 64 "$RC"
+run marker-missing good --cmd 'true' allegro sync;  expect "unknown supplier → 64" 64 "$RC"
+run marker-missing good --cmd 'true' sharg preview; expect "unknown mode → 64" 64 "$RC"
+run marker-missing good --cmd '' sharg sync;        expect "empty stand-in → 64" 64 "$RC"
+run marker-missing good sharg sync --cmd 'true';    expect "options after the supplier → 64" 64 "$RC"
 
-echo "# the production unlock never reaches a stand-in"
-HA_ALLOW_PROD=1 run home-dev good --cmd 'env | cut -d= -f1 | grep -c "^HA_ALLOW_PROD$"; true' spechurt import
-expect "stand-in environment has no unlock, even when the caller has it" 0 "$(sed -n '3p' "$LOGS"/spechurt-import-*.log)"
+echo "# stopping a run: time limit, signal, and a kill from outside"
+HYDRA_MAX_SECONDS=1 run marker-missing good --cmd "sleep 7771.$$" sharg import
+printf '       %s\n' "$(printf '%s' "$LAST" | shown)"
+if [ "$RC" = "124" ] && printf '%s' "$LAST" | grep -q 'END exit=124 .*stopped-by=limit-1s'; then ok "HYDRA_MAX_SECONDS stops a long run → 124"; else bad "time limit" "exit=$RC line=$LAST"; fi
+has "START shows the limit in force" "$(journal_all | grep ' START ' | tail -n 1)" ' limit=1s '
+expect "nothing of the stopped run is left" no "$(alive "sleep 7771.$$")"
+started="$(date +%s)"
+HYDRA_MAX_SECONDS=1 HYDRA_KILL_AFTER_SECONDS=1 run marker-missing good --cmd "trap '' TERM; sleep 7772.$$ & wait" sharg import
+took=$(( $(date +%s) - started ))
+if [ "$RC" = "124" ] && [ "$took" -le 6 ]; then ok "a command that ignores TERM is killed after the grace period"; else bad "kill after grace" "exit=$RC took=${took}s line=$LAST"; fi
+expect "its child process is gone as well" no "$(alive "sleep 7772.$$")"
+run marker-missing good --cmd "sleep 7773.$$" kolba import &
+bg=$!
+sleep 1
+wrapper_pid="$(sed -nE 's/.* pid=([0-9]+) since .*/\1/p' "$LOCK.holder")"
+kill -TERM "$wrapper_pid"
+wait "$bg"
+LAST="$(journal_all | tail -n 1)"
+printf '       %s\n' "$(printf '%s' "$LAST" | shown)"
+if journal_all | grep -q 'kolba import .*STOP signal-TERM' && printf '%s' "$LAST" | grep -q 'END exit=143 .*stopped-by=signal-TERM'; then
+  ok "TERM sent to the wrapper stops the run and is journalled"
+else
+  bad "signal to the wrapper" "line=$LAST"
+fi
+expect "the command is gone after the signal" no "$(alive "sleep 7773.$$")"
+HYDRA_MAX_SECONDS=7200 run marker-missing good --cmd 'kill -KILL $$' spechurt import
+printf '       %s\n' "$(printf '%s' "$LAST" | shown)"
+if [ "$RC" = "137" ] && printf '%s' "$LAST" | grep -q 'END exit=137 .*killed-by-signal=9' && ! printf '%s' "$LAST" | grep -q 'stopped-by'; then
+  ok "a kill from outside (e.g. out of memory) is not blamed on the time limit"
+else
+  bad "kill from outside" "exit=$RC line=$LAST"
+fi
+expect "stderr of a killed run carries only the wrapper's own line" 0 "$(grep -vc '^run-bl: ' "$T/err")"
 
-echo "# logs"
-run home-dev good --cmd 'echo "Failed to parse URL from x.php?client=FAKE&token=FAKE"' kolba import
-if printf '%s' "$LAST" | grep -q 'WARN 1 line(s) of the run log look like a URL with credentials'; then ok "a log line with URL credentials is counted and flagged in the journal"; else bad "url-credentials flag" "line=$LAST"; fi
-expect "the journal itself never contains key= or token=" 0 "$(cat "$LOGS"/run-bl-*.log | grep -cE 'key=|token=')"
-expect "log files are private (600)" 600 "$(stat -c '%a' "$LOGS"/kolba-import-*.log | head -n 1)"
+echo "# what a stand-in can and cannot see"
+HA_ALLOW_PROD=1 run marker-missing good --cmd 'env | cut -d= -f1 | grep -c "^HA_ALLOW_PROD$"; true' kolba import
+expect "no production unlock, even when the caller has it" 0 "$(sed -n '3p' "$(last_log)")"
+BASELINKER_MOCK=true NODE_DEBUG=fetch TZ='' run marker-missing good --cmd 'echo "TZ=$TZ NODE_DEBUG=${NODE_DEBUG:-unset} MOCK=${BASELINKER_MOCK:-unset}"' kolba import
+expect "Polish time; HTTP debug output and an inherited mock switch are removed" "TZ=Europe/Warsaw NODE_DEBUG=unset MOCK=unset" "$(sed -n '3p' "$(last_log)")"
+
+echo "# logs and journal"
+run marker-missing good --cmd 'echo "Failed to parse URL from x.php?client=FAKE&token=FAKE"' kolba import
+has "a log line with URL credentials is counted and flagged" "$LAST" 'WARN 1 line\(s\) of the run log look like a URL with credentials'
+run marker-missing good --cmd 'echo "✓ Import done: 3 created, 2 updated, 1 errors"' sharg import
+has "the import summary is copied into the END line" "$LAST" 'END exit=0 .*result="Import done: 3 created, 2 updated, 1 errors"'
+has "a stand-in run is marked as such in the journal" "$LAST" 'what=stand-in$'
+run marker-missing good --cmd 'echo "Matched 0 products, 2280 not in BL yet (run import)"' sharg sync
+has "a sync that matched nothing shows in the END line" "$LAST" 'result="Matched 0 products, 2280 not in BL yet"'
+run marker-missing good --cmd 'true' sharg sync
+has "no summary → result none" "$LAST" 'result="none"'
+before="$(find "$LOGS" -name 'spechurt-sync-*.log' | wc -l | tr -d ' ')"
+run marker-missing good --cmd 'true' spechurt sync
+run marker-missing good --cmd 'true' spechurt sync
+run marker-missing good --cmd 'true' spechurt sync
+expect "three runs in a row get three separate log files" "$((before + 3))" "$(find "$LOGS" -name 'spechurt-sync-*.log' | wc -l | tr -d ' ')"
+expect "the journal itself never contains key= or token=" 0 "$(journal_all | grep -cE 'key=|token=')"
+expect "log files are private (600)" 600 "$(stat -c '%a' "$(last_log)")"
 expect "log directory is private (700)" 700 "$(stat -c '%a' "$LOGS")"
-NODE_DEBUG=fetch TZ='' run home-dev good --cmd 'echo "TZ=$TZ NODE_DEBUG=${NODE_DEBUG:-unset}"' spechurt sync
-expect "import runs in Polish time, HTTP debug output off" "TZ=Europe/Warsaw NODE_DEBUG=unset" "$(sed -n '3p' "$(find "$LOGS" -maxdepth 1 -name 'spechurt-sync-*.log' | sort | tail -n 1)")"
 
 echo "# retention (default 30 days)"
-touch -d '-29 days -23 hours' "$LOGS/sharg-sync-20000101-000001.log"
-touch -d '-30 days -1 hours' "$LOGS/sharg-sync-20000101-000002.log"
-touch -d '-45 days' "$LOGS/run-bl-2000-01.log" "$LOGS/preview-sharg.log" "$LOGS/notes.txt"
-run home-dev good --cmd 'true' kolba sync
+now_s="$(date +%s)"
+# Absolute seconds, so a clock change inside the 30 days cannot move the boundary.
+keep_at="@$((now_s - 30 * 86400 + 3600))"
+drop_at="@$((now_s - 30 * 86400 - 3600))"
+old_at="@$((now_s - 45 * 86400))"
+foreign=(preview-sharg.log sharg-preview.log sharg-preview-2026-08-29.log sharg-import-first-live-KEEP.log kolba-dry-run.log run-bl-README.log notes.txt)
+touch -d "$keep_at" "$LOGS/sharg-sync-20000101-000001.log"
+touch -d "$drop_at" "$LOGS/sharg-sync-20000101-000002.log" "$LOGS/kolba-import-20000101-000002-2.log"
+touch -d "$old_at" "$LOGS/run-bl-2000-01.log"
+for f in "${foreign[@]}"; do touch -d "$old_at" "$LOGS/$f"; done
+run marker-missing good --cmd 'true' kolba sync
 expect "own log younger than 30 days is kept" yes "$([ -e "$LOGS/sharg-sync-20000101-000001.log" ] && echo yes || echo no)"
-expect "own log older than 30 days is deleted" no "$([ -e "$LOGS/sharg-sync-20000101-000002.log" ] && echo yes || echo no)"
+expect "own logs older than 30 days are deleted" "no no" "$([ -e "$LOGS/sharg-sync-20000101-000002.log" ] && echo yes || echo no) $([ -e "$LOGS/kolba-import-20000101-000002-2.log" ] && echo yes || echo no)"
 expect "old journal is deleted" no "$([ -e "$LOGS/run-bl-2000-01.log" ] && echo yes || echo no)"
-expect "files the wrapper did not write are kept" yes "$([ -e "$LOGS/preview-sharg.log" ] && [ -e "$LOGS/notes.txt" ] && echo yes || echo no)"
-touch -d '-45 days' "$LOGS/sharg-sync-20000101-000003.log"
-HYDRA_LOG_KEEP_DAYS=0 run home-dev good --cmd 'true' kolba sync
+kept=0
+for f in "${foreign[@]}"; do if [ -e "$LOGS/$f" ]; then kept=$((kept + 1)); fi; done
+expect "files the wrapper did not write are kept, also when they start with a supplier name" "${#foreign[@]}" "$kept"
+touch -d "$old_at" "$LOGS/sharg-sync-20000101-000003.log"
+HYDRA_LOG_KEEP_DAYS=0 run marker-missing good --cmd 'true' kolba sync
 expect "HYDRA_LOG_KEEP_DAYS=0 deletes nothing" yes "$([ -e "$LOGS/sharg-sync-20000101-000003.log" ] && echo yes || echo no)"
+HYDRA_LOG_KEEP_DAYS=08 run marker-missing good --cmd 'true' kolba sync
+expect "HYDRA_LOG_KEEP_DAYS=08 is read as 8, not as a bad octal number" "0 no" "$RC $([ -e "$LOGS/sharg-sync-20000101-000003.log" ] && echo yes || echo no)"
+
+echo "# the placeholder standing in for tsx was never executed"
+expect "no trace of an import start anywhere" 0 "$(tsx_traces)"
 
 echo
 echo "passed: $passed, failed: $failed"
