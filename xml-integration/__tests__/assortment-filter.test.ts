@@ -199,12 +199,54 @@ test('admitted (HA-2.25): "2.6" Elementy Koncesjonowane do Elaboracji (kapiszony
   assert.equal(r.reason, 'ok');
 });
 
-test('dropped (HA-2.25): 01/02 nodes outside the five stay not_p1 ("1.1", "1.1.2", "1.2" wait for HA-2.18)', () => {
-  for (const num of ['1.1', '1.1.2', '1.2', '1.3.1', '2.5.1']) {
-    const r = filterProduct(makeProduct({ connector: 'kolba' }), num, 5, 0, PASS_PRICE, ASSORTMENT_RULES);
+test('dropped (HA-2.25, HA-2.27): 01/02 nodes outside the admitted ones stay not_p1', () => {
+  for (const num of ['1.3.1', '1.3.2', '1.3.3', '2.1', '2.4', '2.5.1', '02']) {
+    const r = filterProduct(makeProduct({ connector: 'sharg' }), num, 5, 0, PASS_PRICE, ASSORTMENT_RULES);
     assert.equal(r.allowed, false, `${num} must not be admitted`);
     assert.equal(r.reason, 'not_p1');
   }
+});
+
+// ── 1.1 / 1.2 / 2.2 / 2.3 for Sharg name rules (HA-2.27, decision tj 2026-10-13) ──
+// The parents and every leaf the tree has under them; permit tags come from
+// permit-rules.ts (1.x / 2.x → A).
+
+test('admitted (HA-2.27): "1.1" Broń Krótka and its leaves 1.1.1 / 1.1.2 / 1.1.3 — Sharg', () => {
+  for (const num of ['1.1', '1.1.1', '1.1.2', '1.1.3']) {
+    const r = filterProduct(makeProduct({ connector: 'sharg' }), num, 2, 0, PASS_PRICE, ASSORTMENT_RULES);
+    assert.equal(r.allowed, true, `${num} must be admitted`);
+    assert.equal(r.reason, 'ok');
+  }
+});
+
+test('admitted (HA-2.27): "1.2" Broń Długa and its leaves 1.2.1 / 1.2.2 / 1.2.3 / 1.2.4 — Sharg', () => {
+  for (const num of ['1.2', '1.2.1', '1.2.2', '1.2.3', '1.2.4']) {
+    const r = filterProduct(makeProduct({ connector: 'sharg' }), num, 2, 0, PASS_PRICE, ASSORTMENT_RULES);
+    assert.equal(r.allowed, true, `${num} must be admitted`);
+    assert.equal(r.reason, 'ok');
+  }
+});
+
+test('admitted (HA-2.27): "2.2" Amunicja Pośrednia i Karabinowa and "2.3" Amunicja Śrutowa — Sharg', () => {
+  for (const num of ['2.2', '2.3']) {
+    const r = filterProduct(makeProduct({ connector: 'sharg' }), num, 2, 0, PASS_PRICE, ASSORTMENT_RULES);
+    assert.equal(r.allowed, true, `${num} must be admitted`);
+    assert.equal(r.reason, 'ok');
+  }
+});
+
+test('dropped (HA-2.27): "2.1" Amunicja Pistoletowa i Rewolwerowa stays not_p1 next to the admitted 2.2 / 2.3', () => {
+  const r = filterProduct(makeProduct({ connector: 'sharg' }), '2.1', 2, 0, PASS_PRICE, ASSORTMENT_RULES);
+  assert.equal(r.allowed, false);
+  assert.equal(r.reason, 'not_p1');
+});
+
+test('HA-2.27: every 1.1 / 1.2 leaf of hydra-category-tree.txt is in allowedHydraNums, and 2.2 / 2.3 are leaves', () => {
+  const nums = [...parseHydraTreeNumbers(readFileSync(resolve(process.cwd(), 'xml-integration/hydra-category-tree.txt'), 'utf8'))];
+  const leaves = nums.filter((n) => /^1\.[12]\./.test(n));
+  assert.deepEqual(leaves.sort(), ['1.1.1', '1.1.2', '1.1.3', '1.2.1', '1.2.2', '1.2.3', '1.2.4']);
+  for (const n of leaves) assert.ok(ASSORTMENT_RULES.allowedHydraNums.includes(n), `${n} missing from allowedHydraNums`);
+  assert.equal(nums.some((n) => /^2\.[23]\./.test(n)), false, '2.2 / 2.3 have no children in the tree');
 });
 
 // ── Sync regression: filter does NOT run in sync mode ────────────────────────
@@ -238,7 +280,7 @@ test('sync regression: filterProduct would drop no-stock non-P1, but stock=0 upd
 
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import { HydraTreeFromTxt } from '../hydra-tree-txt';
+import { HydraTreeFromTxt, parseHydraTreeNumbers } from '../hydra-tree-txt';
 import { resolveCategory, type CategoryMapFile } from '../resolve-category';
 import {
   effectiveAllowedHydraNums,

@@ -101,15 +101,30 @@ export function effectiveAllowedHydraNums(rules: AssortmentRules): readonly stri
 export const ASSORTMENT_RULES: AssortmentRules = {
   allowedHydraNums: [
     // ── 01. BROŃ PALNA (O-11/O-27 rozstrzygnięte; HA-2.25, 2026-10-08) ───────
-    // Tagi permit nadaje permit-rules.ts (1.3/1.5 → A, 1.4 → C).  Wchodzą tylko
-    // węzły, które ≥1 hurtownia realnie mapuje w category-map.json.
-    // 1.1 / 1.1.2 / 1.2 (czarnoprochowa Kolby wg notatki HA-2.04) nie wracają —
-    // żadna hurtownia ich nie mapuje; Kolba idzie regułami nazwowymi do 1.4 → HA-2.18.
+    // Tagi permit nadaje permit-rules.ts (1.1/1.2/1.3/1.5 → A, 1.4 → C).
+    // HA-2.25: tylko węzły, które ≥1 hurtownia realnie mapuje w category-map.json.
+    // HA-2.27 (decyzja tj 2026-10-13, opcja A): 1.1 i 1.2 z wszystkimi liśćmi z
+    // hydra-category-tree.txt — broń z pozwoleniem idzie przez odbiór osobisty
+    // (O-11 / O-27).  Sharg mapuje je regułami nazwowymi (sharg_rules); liście bez
+    // reguły (1.1.1, 1.1.2, 1.2.2–1.2.4) są w filtrze, żeby kolejna reguła nie
+    // wymagała zmiany filtra.
+    '1.1',    // Broń Krótka (parent → review) — decyzja tj 2026-10-13 (HA-2.27)
+    '1.1.1',  // Pistolety Samopowtarzalne — liść 1.1 z drzewa, decyzja tj 2026-10-13 (HA-2.27)
+    '1.1.2',  // Rewolwery — liść 1.1 z drzewa, decyzja tj 2026-10-13 (HA-2.27)
+    '1.1.3',  // Broń Bocznego Zapłonu (.22 LR) — liść 1.1 z drzewa, decyzja tj 2026-10-13 (HA-2.27); Sharg sharg_rules „pistolet issc m22”
+    '1.2',    // Broń Długa (parent → review) — decyzja tj 2026-10-13 (HA-2.27); Sharg sharg_rules „karabin gsg”
+    '1.2.1',  // Karabiny i Karabinki Samopowtarzalne — liść 1.2 z drzewa, decyzja tj 2026-10-13 (HA-2.27); Sharg sharg_rules „karabin samopowtarzalny”
+    '1.2.2',  // Karabiny i Karabinki Powtarzalne — liść 1.2 z drzewa, decyzja tj 2026-10-13 (HA-2.27)
+    '1.2.3',  // Karabinki Samoczynne (wg drzewa: tylko podmioty koncesjonowane) — liść 1.2 z drzewa, decyzja tj 2026-10-13 (HA-2.27)
+    '1.2.4',  // Karabinki PCC i Pistolety Maszynowe — liść 1.2 z drzewa, decyzja tj 2026-10-13 (HA-2.27)
     '1.3',    // Strzelby Gładkolufowe (parent → review) — Sharg „Strzelby Hatsan”
     '1.4',    // Broń Kolekcjonerska i Historyczna (czarnoprochowa) — Sharg „Broń czarnoprochowa”, Kolba (kolba_rules, dormant — no such products in the feed as of 2026-10-08)
     '1.5',    // Broń alarmowa i sygnałowa — Sharg (rewolwery/pistolety alarmowe), Spechurt „Broń hukowa”
 
-    // ── 02. AMUNICJA I ELEMENTY ELABORACJI (jw.; 2.5/2.6 → grupa A) ───────────
+    // ── 02. AMUNICJA I ELEMENTY ELABORACJI (jw.; cały dział → grupa A) ────────
+    // 2.1 (pistoletowa) i 2.4 (bocznego zapłonu) zostają poza filtrem — żadna hurtownia ich nie mapuje.
+    '2.2',    // Amunicja Pośrednia i Karabinowa (liść) — decyzja tj 2026-10-13 (HA-2.27); Sharg sharg_rules (amunicja myśliwska kulowa wg kalibru)
+    '2.3',    // Amunicja Śrutowa, w tym breneka (liść) — decyzja tj 2026-10-13 (HA-2.27); Sharg sharg_rules „breneka”
     '2.5',    // Amunicja Hukowa, Alarmowa i Gazowa (parent → review) — Sharg (amunicja alarmowa/hukowa)
     '2.6',    // Elementy Koncesjonowane do Elaboracji (kapiszony, proch czarny, spłonki) — Kolba (kolba_rules, dormant — no such products in the feed as of 2026-10-08)
 
@@ -217,7 +232,8 @@ export const ASSORTMENT_RULES: AssortmentRules = {
   // Jedna pozycja na nazwę z arkusza (46). `hydra` wg docs/research/taksonomia-p1.md
   // (sekcja „Nowe podkategorie”); null = brak węzła w drzewie 01–15 (pozycja
   // nieaktywna).  Bez `priority` ⇒ newSubcategoryDefaultPriority.  Węzły już
-  // obecne w allowedHydraNums (1.3, 1.4, 1.5, 2.5, 2.6) zostają w filtrze
+  // obecne w allowedHydraNums (1.3, 1.4, 1.5, 2.5, 2.6; od HA-2.27 także 1.1, 1.2
+  // z liśćmi, 2.2, 2.3) zostają w filtrze
   // niezależnie od tych wierszy.  Odpowiedź klienta na O-22 = `priority` w wierszu.
   newSubcategories: [
     // Wyposażenie strzeleckie i trening

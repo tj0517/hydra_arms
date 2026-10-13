@@ -6,20 +6,23 @@
  * real resolver without importing the guarded script. No behaviour change:
  *
  *   kolba    — category-map.json kolba_rules (deep leaves) first, kolba_brands fallback
- *   sharg / spechurt — supplier category name → Hydra number dictionary
+ *   sharg    — category-map.json sharg_rules (name rules pinned to supplier paths,
+ *              HA-2.27) first, supplier category path dictionary fallback
+ *   spechurt — supplier category name → Hydra number dictionary
  *   dictionary hit on a LEAF        → that category + status `auto`
  *   hit on a PARENT / unsure rule   → that category + status `review`
  *   no match / number not in tree   → "00. DO PRZYPISANIA" + status `flag`
  */
 
 import type { NormalizedProduct } from './types';
-import { ruleMatches, type CategoryRule } from './category-rules';
+import { ruleMatches, shargRuleMatches, type CategoryRule, type ShargRule } from './category-rules';
 
 export type StatusTag = 'auto' | 'review' | 'flag';
 
 export interface CategoryMapFile {
   spechurt?: Record<string, string>;
   sharg?: Record<string, string>;
+  sharg_rules?: ShargRule[];
   kolba_brands?: Record<string, string>;
   kolba_rules?: CategoryRule[];
 }
@@ -56,8 +59,16 @@ export function resolveCategory(
       hydraNum = map.kolba_brands[p.brand];
     }
   } else {
+    // Sharg: name rules first (first match wins) — they split supplier paths the
+    // dictionary cannot tell apart; a rule's `paths` keeps it off every other path
+    const rule = p.connector === 'sharg'
+      ? (map.sharg_rules ?? []).find((r) => shargRuleMatches(r, p))
+      : undefined;
     const dict = (map[p.connector as 'sharg' | 'spechurt'] ?? {}) as Record<string, string>;
-    if (p.supplier_category_name && dict[p.supplier_category_name]) {
+    if (rule) {
+      hydraNum = rule.cat;
+      forcedReview = rule.review === true;
+    } else if (p.supplier_category_name && dict[p.supplier_category_name]) {
       hydraNum = dict[p.supplier_category_name];
     }
   }

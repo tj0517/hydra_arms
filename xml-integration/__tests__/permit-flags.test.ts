@@ -13,6 +13,7 @@ import {
   indexCategories,
   type CategoryNode,
 } from '../../src/lib/shop/permitFlags';
+import { permitTagsFor } from '../permit-rules';
 
 // ── red proofs ───────────────────────────────────────────────────────────────
 
@@ -114,4 +115,23 @@ test('end to end: "01." product tagged permit_off → requires_license=false but
   assert.deepEqual(computePermitFlags(['auto', 'permit', 'permit_off', 'approved'], section), {
     requires_license: false, age_min: 18, delivery_allowed: false,
   });
+});
+
+// ── HA-2.27: Sharg firearms and hunting ammunition (tags from permit-rules.ts) ──
+
+test('HA-2.27: group A tags of 1.1 / 1.2 / 2.2 / 2.3 children → licence, 18+, no courier (section 01 / 02)', () => {
+  for (const [num, section] of [['1.1.3', '01'], ['1.2', '01'], ['1.2.1', '01'], ['2.2', '02'], ['2.3', '02']] as const) {
+    const tags = permitTagsFor(num);
+    assert.deepEqual(tags, ['permit'], num);
+    assert.deepEqual(computePermitFlags(['auto', ...tags], section), {
+      requires_license: true, age_min: 18, delivery_allowed: false,
+    }, num);
+  }
+});
+
+test('HA-2.27: group C tags of 1.4 (Pietta black powder) → licence + permit_review, no courier; permit_off drops only the licence', () => {
+  const tags = permitTagsFor('1.4');
+  assert.deepEqual(tags, ['permit', 'permit_review']);
+  assert.deepEqual(computePermitFlags(['auto', ...tags], '01'), { requires_license: true, age_min: 18, delivery_allowed: false });
+  assert.deepEqual(computePermitFlags(['auto', ...tags, 'permit_off'], '01'), { requires_license: false, age_min: 18, delivery_allowed: false });
 });

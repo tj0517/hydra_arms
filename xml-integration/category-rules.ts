@@ -8,6 +8,10 @@
  *
  * No behaviour change for existing rules — same match semantics as before HA-2.12,
  * plus the new optional `excludeName`.
+ *
+ * HA-2.27: ShargRule / shargRuleMatches — the same matcher for Sharg
+ * (category-map.json sharg_rules), with an optional filter on the supplier
+ * category path.
  */
 
 import type { NormalizedProduct } from './types';
@@ -34,4 +38,18 @@ export function ruleMatches(rule: CategoryRule, p: NormalizedProduct): boolean {
   if (name && !productName.includes(name.toLowerCase())) return false;
   if (rule.excludeName?.some((ex) => productName.includes(ex.toLowerCase()))) return false;
   return true;
+}
+
+/**
+ * Sharg name rule (HA-2.27): a CategoryRule that can be pinned to supplier
+ * category paths, so it only splits the paths the dictionary cannot tell apart.
+ */
+export interface ShargRule extends CategoryRule {
+  paths?: string[]; // exact supplier_category_name values (feed category path) the rule may
+                    // fire on — any of them; absent = every Sharg product
+}
+
+export function shargRuleMatches(rule: ShargRule, p: NormalizedProduct): boolean {
+  if (rule.paths && !rule.paths.includes(p.supplier_category_name ?? '')) return false;
+  return ruleMatches(rule, p);
 }
