@@ -3,12 +3,12 @@ id: HA-2.15
 title: Import hurtowni na serwerze — cron sync i import
 status: in_progress
 difficulty: M
-model: claude-opus-5-5
+model: claude-fable-5-1
 model_approved: null
-effort: xhigh
+effort: high
 branch: feat/ha-2.15-import-server
 due: null
-depends_on: [HA-2.11, HA-2.13, HA-2.14, HA-2.18, HA-2.26, HA-2.27]
+depends_on: [HA-2.11, HA-2.13, HA-2.14, HA-2.18, HA-2.26, HA-2.27, HA-2.28]
 blocked_by_questions: []
 touches_db: false
 touches_prod: true
