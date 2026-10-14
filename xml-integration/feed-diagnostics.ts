@@ -1,18 +1,29 @@
 /**
- * Read-only diagnostics over parsed supplier feeds (HA-2.15).
+ * Read-only diagnostics over parsed supplier feeds (HA-2.15, key from HA-2.28).
  *
- * Replays the upsert key of scripts/xml-to-baselinker.ts — EAN first, then SKU, against one
- * index of the whole BaseLinker catalogue, whatever supplier wrote the product — to show where
- * two suppliers would land on one BaseLinker product, and what each sync would then touch.
+ * Replays the upsert key of scripts/xml-to-baselinker.ts — findBLMatch() from bl-match-key.ts,
+ * the very function import and sync call: EAN across suppliers first, then this supplier's
+ * `<SUPPLIER>-<feed sku>` only — to show where two suppliers would land on one BaseLinker
+ * product, and what each sync would then touch.
  *
  * Pure functions: no I/O, no BaseLinker calls. Used by scripts/xml-feed-diagnostics.ts.
  */
 
+import {
+  addToMatchIndex,
+  blSku,
+  emptyMatchIndex,
+  findBLMatch,
+  skuForUpdate,
+  type BLMatchIndex,
+  type Supplier,
+} from './bl-match-key';
+
 export interface SlimProduct {
-  supplier: string;
+  supplier: Supplier;
   /** connector_product_id */
   id: string;
-  /** connector_sku, trimmed; '' when missing */
+  /** connector_sku (the feed's bare SKU), trimmed; '' when missing */
   sku: string;
   /** EAN, trimmed; '' when missing */
   ean: string;
@@ -26,11 +37,12 @@ export interface SlimProduct {
 export interface CatalogueEntry {
   blId: number;
   ean: string;
+  /** the BaseLinker `sku`: `<SUPPLIER>-<feed sku>` of the supplier that created the record */
   sku: string;
   name: string;
-  createdBy: string;
-  /** supplier whose import wrote this product last (an upsert replaces the whole product) */
-  writer: string;
+  createdBy: Supplier;
+  /** supplier whose import wrote name and description last */
+  writer: Supplier;
 }
 
 export interface PairExample {
@@ -43,7 +55,7 @@ export interface PairExample {
 }
 
 export interface ImportSimulation {
-  supplier: string;
+  supplier: Supplier;
   admitted: number;
   created: number;
   /** updated a product this supplier wrote itself: a repeat inside the feed */
@@ -56,7 +68,7 @@ export interface ImportSimulation {
 }
 
 export interface SyncSimulation {
-  supplier: string;
+  supplier: Supplier;
   inFeed: number;
   matchedOwn: number;
   /** would write stock and price onto another supplier's product, found through the EAN */
@@ -67,37 +79,21 @@ export interface SyncSimulation {
   examples: PairExample[];
 }
 
-interface Index {
-  byEan: Map<string, number>;
-  bySku: Map<string, number>;
-}
-
-/** Same rule as loadExistingProducts(): the first product seen for an EAN or SKU wins. */
-function buildIndex(catalogue: readonly CatalogueEntry[]): Index {
-  const byEan = new Map<string, number>();
-  const bySku = new Map<string, number>();
-  for (const e of catalogue) {
-    if (e.ean && !byEan.has(e.ean)) byEan.set(e.ean, e.blId);
-    if (e.sku && !bySku.has(e.sku)) bySku.set(e.sku, e.blId);
-  }
-  return { byEan, bySku };
-}
-
-/** Same rule as findExistingId(): EAN first, SKU only when the EAN gives nothing. */
-function findExisting(p: SlimProduct, index: Index): { blId: number; via: 'ean' | 'sku' } | null {
-  if (p.ean && index.byEan.has(p.ean)) return { blId: index.byEan.get(p.ean)!, via: 'ean' };
-  if (p.sku && index.bySku.has(p.sku)) return { blId: index.bySku.get(p.sku)!, via: 'sku' };
-  return null;
+/** Same index as loadExistingProducts() builds from BaseLinker: addToMatchIndex(), first wins. */
+function buildIndex(catalogue: readonly CatalogueEntry[]): BLMatchIndex {
+  const index = emptyMatchIndex();
+  for (const e of catalogue) addToMatchIndex(index, e.blId, e.ean, e.sku);
+  return index;
 }
 
 /**
  * Simulates one import run of every supplier in the given order, starting from an empty
  * catalogue. Each run builds its index from the catalogue as the previous runs left it,
- * registers the products it creates, and replaces the products it updates — as the import does.
+ * registers the products it creates, and updates the products it matches — as the import does.
  */
 export function simulateImports(
-  order: readonly string[],
-  bySupplier: Readonly<Record<string, readonly SlimProduct[]>>,
+  order: readonly Supplier[],
+  bySupplier: Readonly<Partial<Record<Supplier, readonly SlimProduct[]>>>,
   maxExamples = 15,
 ): { runs: ImportSimulation[]; catalogue: CatalogueEntry[] } {
   const catalogue: CatalogueEntry[] = [];
@@ -112,19 +108,19 @@ export function simulateImports(
     for (const p of bySupplier[supplier] ?? []) {
       if (!p.admitted) continue;
       run.admitted++;
-      const hit = findExisting(p, index);
+      const hit = findBLMatch(index, supplier, p.ean, p.sku);
 
       if (!hit) {
         const blId = catalogue.length;
-        catalogue.push({ blId, ean: p.ean, sku: p.sku, name: p.name, createdBy: supplier, writer: supplier });
+        const sku = blSku(supplier, p.sku);
+        catalogue.push({ blId, ean: p.ean, sku, name: p.name, createdBy: supplier, writer: supplier });
         // The import registers a created product so a repeat later in the feed updates it.
-        if (p.ean) index.byEan.set(p.ean, blId);
-        if (p.sku) index.bySku.set(p.sku, blId);
+        addToMatchIndex(index, blId, p.ean, sku);
         run.created++;
         continue;
       }
 
-      const entry = catalogue[hit.blId];
+      const entry = catalogue[hit.id];
       if (entry.writer === supplier) {
         run.updatedOwn++;
       } else if (hit.via === 'ean') {
@@ -138,9 +134,10 @@ export function simulateImports(
           });
         }
       }
-      // An upsert sends the whole product again: name, SKU and EAN become this supplier's.
+      // An upsert sends name and EAN again; on a record another supplier created the SKU stays
+      // the creator's (skuForUpdate — the same rule the import applies).
       entry.ean = p.ean;
-      entry.sku = p.sku;
+      entry.sku = skuForUpdate(supplier, p.sku, entry.sku);
       entry.name = p.name;
       entry.writer = supplier;
     }
@@ -154,7 +151,7 @@ export function simulateImports(
  * of the feed, admitted or not, and writes stock and price to whatever it matches.
  */
 export function simulateSync(
-  supplier: string,
+  supplier: Supplier,
   products: readonly SlimProduct[],
   catalogue: readonly CatalogueEntry[],
   maxExamples = 15,
@@ -164,9 +161,9 @@ export function simulateSync(
     supplier, inFeed: products.length, matchedOwn: 0, foreignByEan: 0, foreignBySkuOnly: 0, unmatched: 0, examples: [],
   };
   for (const p of products) {
-    const hit = findExisting(p, index);
+    const hit = findBLMatch(index, supplier, p.ean, p.sku);
     if (!hit) { run.unmatched++; continue; }
-    const entry = catalogue[hit.blId];
+    const entry = catalogue[hit.id];
     if (entry.writer === supplier) { run.matchedOwn++; continue; }
     if (hit.via === 'ean') { run.foreignByEan++; continue; }
     run.foreignBySkuOnly++;
@@ -229,7 +226,7 @@ export function eanShapes(products: readonly SlimProduct[]): Record<string, numb
   return out;
 }
 
-/** Share of SKUs that are bare integers — the shape that collides across suppliers. */
+/** Share of SKUs that are bare integers — the shape that collided across suppliers before HA-2.28. */
 export function numericSkuCount(products: readonly SlimProduct[]): number {
   return products.filter((p) => /^\d+$/.test(p.sku)).length;
 }

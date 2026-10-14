@@ -1,6 +1,7 @@
 /**
  * Feed diagnostics (HA-2.15): the simulation must follow the import's upsert key exactly —
- * EAN first, then SKU, one index for the whole catalogue.
+ * since HA-2.28 the shared findBLMatch(): EAN across suppliers first, then this supplier's
+ * `<SUPPLIER>-<feed sku>` only.
  */
 
 import { test } from 'node:test';
@@ -13,8 +14,9 @@ import {
   simulateSync,
   type SlimProduct,
 } from '../feed-diagnostics';
+import type { Supplier } from '../bl-match-key';
 
-function prod(supplier: string, id: string, sku: string, ean: string, name: string, extra: Partial<SlimProduct> = {}): SlimProduct {
+function prod(supplier: Supplier, id: string, sku: string, ean: string, name: string, extra: Partial<SlimProduct> = {}): SlimProduct {
   return { supplier, id, sku, ean, name, stock: 5, admitted: true, ...extra };
 }
 
@@ -25,22 +27,22 @@ test('a product two suppliers carry under one EAN is one catalogue product, coun
   });
   assert.equal(catalogue.length, 1);
   assert.deepEqual([runs[0].created, runs[1].created, runs[1].sharedByEan, runs[1].mergedBySkuOnly], [1, 0, 1, 0]);
-  assert.equal(catalogue[0].writer, 'sharg', 'the later import owns name, SKU and EAN');
+  assert.equal(catalogue[0].writer, 'sharg', 'the later import owns name and description');
+  assert.equal(catalogue[0].sku, 'KOLBA-053-057ZB1', 'the SKU stays the creating supplier\'s (D1)');
 });
 
-test('two unrelated products with the same bare-number SKU are merged through the SKU fallback', () => {
+test('two unrelated products with the same bare-number SKU stay two records (HA-2.28)', () => {
   const { runs, catalogue } = simulateImports(['sharg', 'spechurt'], {
     sharg: [prod('sharg', 's1', '1094', '5905247620859', 'Nóż Sharg')],
     spechurt: [prod('spechurt', '1094', '1094', '4046872186585', 'Kabura Spechurt')],
   });
-  assert.equal(catalogue.length, 1, 'one BaseLinker product for two different goods');
-  assert.equal(runs[1].mergedBySkuOnly, 1);
+  assert.equal(catalogue.length, 2, 'two BaseLinker products for two different goods');
+  assert.equal(runs[1].mergedBySkuOnly, 0);
   assert.equal(runs[1].sharedByEan, 0);
-  assert.deepEqual(runs[1].examples[0], {
-    sku: '1094', name: 'Kabura Spechurt', ean: '4046872186585',
-    otherSupplier: 'sharg', otherName: 'Nóż Sharg', otherEan: '5905247620859',
-  });
-  assert.equal(catalogue[0].ean, '4046872186585', 'the EAN of the first product is gone');
+  assert.deepEqual(catalogue.map((e) => [e.sku, e.ean]), [
+    ['SHARG-1094', '5905247620859'],
+    ['SPECHURT-1094', '4046872186585'],
+  ], 'the first product keeps its EAN');
 });
 
 test('red proof: with different SKUs the same two products stay separate', () => {
@@ -87,14 +89,16 @@ test('products that do not pass the assortment filter are not imported', () => {
 
 test('suppliers are imported in the given order', () => {
   const feeds = {
-    kolba: [prod('kolba', 'k1', '5', '', 'Kolba 5')],
-    sharg: [prod('sharg', 's1', '5', '', 'Sharg 5')],
+    kolba: [prod('kolba', 'k1', '5', '5900000000005', 'Kolba 5')],
+    sharg: [prod('sharg', 's1', '5', '5900000000005', 'Sharg 5')],
   };
-  assert.equal(simulateImports(['kolba', 'sharg'], feeds).catalogue[0].writer, 'sharg');
-  assert.equal(simulateImports(['sharg', 'kolba'], feeds).catalogue[0].writer, 'kolba');
+  const ks = simulateImports(['kolba', 'sharg'], feeds).catalogue;
+  const sk = simulateImports(['sharg', 'kolba'], feeds).catalogue;
+  assert.deepEqual([ks.length, ks[0].writer, ks[0].sku], [1, 'sharg', 'KOLBA-5']);
+  assert.deepEqual([sk.length, sk[0].writer, sk[0].sku], [1, 'kolba', 'SHARG-5']);
 });
 
-test('a sync writes to whatever it matches, also for products the import would not admit', () => {
+test('a sync matches through the EAN or its own prefixed SKU only — a foreign record with the same bare SKU is not touched', () => {
   const feeds = {
     sharg: [prod('sharg', 's1', '1094', '5905247620859', 'Nóż Sharg')],
     spechurt: [
@@ -107,17 +111,23 @@ test('a sync writes to whatever it matches, also for products the import would n
   const sync = simulateSync('spechurt', feeds.spechurt, catalogue);
   assert.deepEqual(
     [sync.inFeed, sync.matchedOwn, sync.foreignBySkuOnly, sync.foreignByEan, sync.unmatched],
-    [3, 2, 1, 0, 0],
+    [3, 2, 0, 0, 1],
   );
-  assert.equal(sync.examples[0].otherSupplier, 'sharg');
+  assert.equal(sync.examples.length, 0);
 });
 
 test('the number of examples is capped, the counts are not', () => {
-  const sharg = Array.from({ length: 30 }, (_, i) => prod('sharg', `s${i}`, String(i + 1), `59000000000${String(i).padStart(2, '0')}`, `Sharg ${i}`));
-  const spechurt = Array.from({ length: 30 }, (_, i) => prod('spechurt', String(i + 1), String(i + 1), `40000000000${String(i).padStart(2, '0')}`, `Spechurt ${i}`));
-  const { runs } = simulateImports(['sharg', 'spechurt'], { sharg, spechurt }, 5);
-  assert.equal(runs[1].mergedBySkuOnly, 30);
-  assert.equal(runs[1].examples.length, 5);
+  // Shared records (same EAN) written last by Spechurt; Sharg's feed then loses the EANs, so its
+  // sync finds its own records through SHARG-<n> alone while Spechurt is the last writer.
+  const ean = (i: number) => `59000000000${String(i).padStart(2, '0')}`;
+  const sharg = Array.from({ length: 30 }, (_, i) => prod('sharg', `s${i}`, String(i + 1), ean(i), `Sharg ${i}`));
+  const spechurt = Array.from({ length: 30 }, (_, i) => prod('spechurt', String(i + 1), String(i + 1), ean(i), `Spechurt ${i}`));
+  const { runs, catalogue } = simulateImports(['sharg', 'spechurt'], { sharg, spechurt }, 5);
+  assert.deepEqual([catalogue.length, runs[1].sharedByEan, runs[1].mergedBySkuOnly], [30, 30, 0]);
+  const shargNoEan = sharg.map((p) => ({ ...p, ean: '' }));
+  const sync = simulateSync('sharg', shargNoEan, catalogue, 5);
+  assert.equal(sync.foreignBySkuOnly, 30);
+  assert.equal(sync.examples.length, 5);
 });
 
 test('stock comparison between two feeds of one supplier', () => {
