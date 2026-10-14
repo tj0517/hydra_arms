@@ -248,7 +248,7 @@ Cron i ręczne uruchomienia importu idą przez `scripts/server/run-bl.sh <hurtow
 cd /home/hydra-import/hydra
 
 # a) Samosprawdzenie wrappera. Bezpieczne: tylko komendy zastępcze w katalogu tymczasowym.
-bash scripts/server/test-run-bl.sh | tail -n 3          # passed: 80, failed: 0
+bash scripts/server/test-run-bl.sh | tail -n 3          # passed: 82, failed: 0
 
 # b) Red proof znacznika: bez znacznika wrapper odmawia i niczego nie uruchamia.
 scripts/server/run-bl.sh --check sharg sync; echo "exit=$?"
@@ -292,17 +292,20 @@ Jak czytać dziennik:
 
 ```
 … sharg import pid=4242 START catalogue=119068 commit=abc1234 limit=none log=/home/hydra-import/logs/sharg-import-20261014-020001.log
-… sharg import pid=4242 END exit=0 duration=1820s url-credentials=0 result="Import done: 2280 created, 0 updated, 0 errors" log=…
+… sharg import pid=4242 END exit=0 duration=1820s url-credentials=0 result="Import done: 2280 created, 0 updated, 0 errors, skipped: 0" log=…
 … sharg sync pid=4311 SKIP lock held by another run — skipping (holder: sharg import pid=4242 since …, running 12 min)
 ```
 
 - `result="…"` to podsumowanie samego importu, przepisane z logu. Kod `exit=0` nie wystarcza:
   import kończy się zerem także wtedy, gdy część produktów się nie zapisała, feed był pusty albo
   sync niczego nie dopasował. Przy `exit=0` możliwe wartości to: `Import done: N created,
-  M updated, K errors`, `Sync done: N products refreshed`, `Matched 0 products, N not in BL yet`
+  M updated, K errors, skipped: S`, `Sync done: N products refreshed`, `Matched 0 products, N not in BL yet`
   (sync nie znalazł w katalogu żadnego produktu z feedu) oraz `Nothing to import.` /
   `Nothing to sync.` (feed dał 0 produktów). `result="none"` znaczy, że w logu nie ma żadnej
   z tych linii — import został przerwany przed podsumowaniem.
+- `skipped: S` (od HA-2.28) to produkty dopasowane do katalogu, dla których BaseLinker nie
+  oddał danych (tagów, SKU, parametrów) — import ich nie nadpisał, tylko pominął; każdy
+  taki produkt jest już wliczony w `K errors`, więc `[1-9][0-9]* errors` z grepa wyżej je łapie.
 - `url-credentials=N` to liczba linii logu wyglądających na adres z danymi dostępowymi.
   Oczekiwane `0`. Przy innej wartości wrapper dopisuje `WARN` — przeczytaj log, a potem go usuń
   (decyzja tj 2026-10-13: wrapper tylko wykrywa, niczego nie zamazuje).
@@ -587,14 +590,19 @@ Blok ustawia `LOG` od nowa, więc działa też w nowej sesji i dla każdej hurto
 J="$(ls -t ~/logs/run-bl-*.log | head -n 1)"; tail -n 3 "$J"     # END exit=0 … url-credentials=0 result="Import done: …"
 LOG="$(grep ' END ' "$J" | grep -v 'what=stand-in' | tail -n 1 | sed -n 's/.* log=\([^ ]*\).*/\1/p')"; echo "$LOG"
 grep -cE 'key=|token=' "$LOG"              # 0
-grep -E '^(Received|Parsed)|prod-guard|Assortment filter|no_stock|not_p1|Category resolution|Import done|tags:|^⚠|\[warn\]' "$LOG"
-grep -c '^  ⚠' "$LOG"                      # liczba produktów, których zapis się nie udał
+grep -E '^(Received|Parsed)|prod-guard|Assortment filter|no_stock|not_p1|Category resolution|Import done|skipped:|tags:|^ *⚠|\[warn\]' "$LOG"
+grep -c '^  ⚠' "$LOG"                      # liczba produktów, których zapis się nie udał (w tym pominiętych)
 grep -m 5 '^  ⚠' "$LOG"                    # pierwsze pięć takich linii
+grep -c 'not returned by getInventoryProductsData' "$LOG"   # z tego: pominięte, bo BL nie oddał danych
 ```
 
-Do odczytania: `✓ Import done: N created, M updated, K errors`, liczby tagów, ostrzeżenia
-o cenach (`no purchase price` — cena z feedu zamiast marży; `price 0` — produkt bez ceny). Linia
-z `prod-guard` potwierdza, że odblokowanie dostał proces importu.
+Do odczytania: `✓ Import done: N created, M updated, K errors`, pod spodem `skipped: S (no BL
+data — counted in errors, nothing overwritten)` — produkty dopasowane do katalogu, dla których
+BaseLinker nie oddał tagów, SKU i parametrów; import ich nie ruszył (każdy ma linię
+`⚠ <sku> (<nazwa>): BL product <id> not returned by getInventoryProductsData — skipped, nothing
+overwritten` i jest wliczony w `K errors`). Dalej liczby tagów i ostrzeżenia o cenach (`no purchase
+price` — cena z feedu zamiast marży; `price 0` — produkt bez ceny). Linia z `prod-guard`
+potwierdza, że odblokowanie dostał proces importu.
 
 Nic nie publikuje się samo: sklep pokazuje tylko produkty z tagiem `approved`.
 
@@ -761,6 +769,7 @@ Aktualizacja kodu: krok 2, „Aktualizacja kodu”.
 | `END exit=0 … result="Nothing to import."` albo `result="Nothing to sync."` (w logu `Parsed 0 products`) | hurtownia oddała pustą odpowiedź albo stronę błędu z HTTP 200; nic nie zostało zapisane ani odświeżone | sprawdź podglądem; Spechurt odpowiada tylko temu serwerowi |
 | `END exit=0 … result="Matched 0 products, N not in BL yet"` | sync nie znalazł w katalogu żadnego produktu z feedu — import tej hurtowni jeszcze nie przeszedł | najpierw import tej hurtowni (krok 8) |
 | `END exit=0 … K errors` z K większym od 0 | część produktów się nie zapisała | linie `  ⚠` w logu tego uruchomienia mówią, które i dlaczego |
+| `END exit=0 … skipped: S` z S większym od 0 | BaseLinker nie oddał danych S produktów dopasowanych do katalogu (`⚠ … not returned by getInventoryProductsData — skipped`); import ich nie nadpisał, liczy je w `errors` | powtórz import tej hurtowni; jeśli te same produkty wracają, sprawdź w BL, czy produkt o tym id istnieje w katalogu 119068 |
 | `WARN … look like a URL with credentials` | komunikat błędu zacytował adres feedu | przeczytaj log, usuń plik |
 | `[baselinker] token blocked (rate limit)` w logu | przekroczony limit zapytań BaseLinkera; skrypt sam czeka i ponawia | nic, chyba że powtarza się stale — wtedy coś jeszcze używa tego samego tokena |
 

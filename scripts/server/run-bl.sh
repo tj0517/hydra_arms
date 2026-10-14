@@ -344,6 +344,14 @@ result="$(grep -aoE 'Import done: [0-9]+ created, [0-9]+ updated, [0-9]+ errors|
 if [ -z "$result" ]; then
   result="$(grep -aoE 'Matched [0-9]+ products, [0-9]+ not in BL yet|Nothing to (import|sync)\.' "$run_log" 2>/dev/null | tail -n 1)"
 fi
+# The import also counts matched products it skipped because BaseLinker returned no data
+# for them (already inside "errors"; nothing was overwritten) — carried along when present.
+case "$result" in
+  'Import done:'*)
+    skipped="$(grep -aoE '^  skipped: [0-9]+' "$run_log" 2>/dev/null | tail -n 1 | sed 's/^ *//')"
+    [ -n "$skipped" ] && result="$result, $skipped"
+    ;;
+esac
 # Feed URLs carry credentials as query parameters. The import strips them from its own
 # messages, but an error text from a library can still quote a URL — count such lines.
 url_credentials="$(grep -acE '(key|token|client)=' "$run_log" 2>/dev/null)"

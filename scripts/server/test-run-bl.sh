@@ -272,6 +272,10 @@ has "a log line with URL credentials is counted and flagged" "$LAST" 'WARN 1 lin
 run marker-missing good --cmd 'echo "✓ Import done: 3 created, 2 updated, 1 errors"' sharg import
 has "the import summary is copied into the END line" "$LAST" 'END exit=0 .*result="Import done: 3 created, 2 updated, 1 errors"'
 has "a stand-in run is marked as such in the journal" "$LAST" 'what=stand-in$'
+run marker-missing good --cmd 'printf "✓ Import done: 3 created, 2 updated, 1 errors\n  skipped: 1 (no BL data — counted in errors, nothing overwritten)\n"' sharg import
+has "the skipped count of the import is carried into the END line" "$LAST" 'result="Import done: 3 created, 2 updated, 1 errors, skipped: 1"'
+run marker-missing good --cmd 'printf "Sync done: 5 products refreshed\n  skipped: 9\n"' sharg sync
+has "a skipped line is only read for an import summary" "$LAST" 'result="Sync done: 5 products refreshed"'
 run marker-missing good --cmd 'echo "Matched 0 products, 2280 not in BL yet (run import)"' sharg sync
 has "a sync that matched nothing shows in the END line" "$LAST" 'result="Matched 0 products, 2280 not in BL yet"'
 run marker-missing good --cmd 'true' sharg sync
