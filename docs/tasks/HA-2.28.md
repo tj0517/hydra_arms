@@ -1,7 +1,7 @@
 ---
 id: HA-2.28
 title: Klucz dopasowania importu BL — EAN między hurtowniami, SKU w obrębie hurtowni, SKU hurtowni w rekordzie
-status: review
+status: done
 difficulty: M
 model: claude-opus-5-5
 model_approved: null
@@ -66,3 +66,4 @@ Import i sync (`scripts/xml-to-baselinker.ts`) dopasowują produkt w BaseLinkerz
 - 2026-10-14 bazowy wynik diagnostyki na tych kopiach przed zmianą klucza (kod z `f1dc7af`, offline, bez env marż): przyjętych Kolba 0 / Sharg 0 (filtr obronny Sharga: 0/6) / Spechurt 1; wszystkie liczniki między hurtowniami 0 — próbki nie mają wspólnych EAN ani SKU.
 - 2026-10-14 tj: zmiana zachowania przyjęta — produkt dopasowany, którego BL nie zwrócił w `getInventoryProductsData`, jest pomijany i liczony jako błąd (wcześniej import szedł dalej z pustymi tagami i kasował tagi admina; teraz nadpisałby też SKU i parametry). Funkcja `planUpsert` w `bl-match-key.ts`, test „bl-match-key: a matched product whose BL data is missing is skipped…”, linia w podsumowaniu importu `skipped: N (no BL data — counted in errors, nothing overwritten)`.
 - 2026-10-14 sesja: po przerwaniu przez tj sesja wróciła bez `SUPABASE_TARGET`; hook zablokował `npm run test:unit`, a wcześniej (zanim to zauważyłem) przeszły `npx tsc --noEmit` i `npx tsx --test` na `feed-diagnostics.test.ts` i `bl-match-key.test.ts` — testy jednostkowe offline, bez sieci i bazy. Prace stanęły do restartu sesji z `SUPABASE_TARGET=local`; red proofy i pełny zestaw zrobione po restarcie.
+- 2026-10-14 tj (review, PR #42): accepted by tj. Proven: key tests with both red proofs (prefix dropped → `not ok 55`, features replaced → `not ok 61`), D1 test, planUpsert skip test, findBLMatch in runImport/runSync and findExistingId removed (verified by read), diagnostics before/after byte-identical on the sample copies. tj's runs: dry-run before/after on /home/tj/hydra-samples/ — <paste the three "same" lines>; server diagnostics from the branch — <paste the grep -c line and the counter lines>. Model: session ran on Opus 5.5, prompt assumed Sonnet — noted, model_approved unchanged.

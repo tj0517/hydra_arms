@@ -43,4 +43,4 @@ Etap 1: bezpieczny fundament (audyt 2026-09-22). Etap 2: płatności i uruchomie
 | HA-2.25 | Gałęzie 01/02 w filtrze asortymentu po O-11/O-27 + czarnoprochowa Kolby | done | M | HA-2.04, HA-2.17 | — | — |
 | HA-2.26 | BL klienta: kategorie i tagi w katalogu 119068, odczyt ID konta | done | S | HA-2.14 | — | — |
 | HA-2.27 | Reguły nazwowe Sharga — broń palna i amunicja myśliwska do drzewa | done | M | HA-2.18, HA-2.25 | — | — |
-| HA-2.28 | Klucz dopasowania importu BL — EAN między hurtowniami, SKU w obrębie hurtowni, SKU hurtowni w rekordzie | review | M | — | — | — |
+| HA-2.28 | Klucz dopasowania importu BL — EAN między hurtowniami, SKU w obrębie hurtowni, SKU hurtowni w rekordzie | done | M | — | — | — |
