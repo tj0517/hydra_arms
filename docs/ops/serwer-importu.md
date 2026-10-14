@@ -555,13 +555,18 @@ W tle, żeby zerwane połączenie SSH go nie przerwało.
 ```bash
 H=sharg                                    # hurtownia, na którą masz zgodę
 cd /home/hydra-import/hydra
-nohup scripts/server/run-bl.sh "$H" import > /dev/null 2>&1 &
+scripts/server/run-bl.sh --check "$H" import; echo "exit=$?"     # CHECK ok … catalogue 119068
+HYDRA_MAX_SECONDS=7200 nohup scripts/server/run-bl.sh "$H" import > /dev/null 2>&1 &
 sleep 5
 J="$(ls -t ~/logs/run-bl-*.log | head -n 1)"; tail -n 2 "$J"     # linia START: catalogue=119068, nazwa logu
 LOG="$(grep ' START ' "$J" | tail -n 1 | sed -n 's/.* log=\([^ ]*\).*/\1/p')"; echo "$LOG"
 head -n 12 "$LOG"                          # inventory : 119068 oraz markup : +N% (zaakceptowana stawka)
 tail -f "$LOG"                             # „+” nowy produkt, „.” aktualizacja; Ctrl-C kończy tylko podgląd
 ```
+
+Pierwszy import idzie z limitem `HYDRA_MAX_SECONDS=7200` (decyzja tj 2026-10-14: 3× szacunek dla
+Kolby; zdrowy przebieg go nie dotyka, zawieszony oddaje blokadę). Limit zatrzymuje cały import —
+w dzienniku `stopped-by=limit-…`, a hurtownia zostaje odświeżona częściowo.
 
 Wrapper nie wystartuje z innym katalogiem niż `119068` (pilnuje tego znacznik). Gdyby mimo to log
 pokazał inny katalog albo inną marżę, albo import trzeba było przerwać: zatrzymanie opisuje
