@@ -532,7 +532,7 @@ importu.
 
 ```bash
 H=sharg                                    # hurtownia, na którą masz zgodę
-cd /home/hydra-import/hydra && scripts/server/run-bl.sh --check "$H" import && flock -n /home/hydra-import/.hydra-run-bl.lock env TZ=Europe/Warsaw HA_ALLOW_PROD=1 npx tsx scripts/xml-to-baselinker.ts "$H" import --limit=20 > ~/logs/proba-$H-import.log 2>&1; echo "exit=$?"
+cd /home/hydra-import/hydra && scripts/server/run-bl.sh --check "$H" import && flock -n /home/hydra-import/.hydra-run-bl.lock env TZ=Europe/Warsaw HA_ALLOW_PROD=1 npx tsx scripts/xml-to-baselinker.ts "$H" import --limit=500 > ~/logs/proba-$H-import.log 2>&1; echo "exit=$?"
 # exit=78 i linia ERROR na ekranie = --check odmówił; import nie wystartował
 # exit=1 od razu i pusty plik = blokada zajęta (trwa inne uruchomienie)
 grep -cE 'key=|token=' ~/logs/proba-$H-import.log     # musi być 0, zanim cokolwiek wkleisz
@@ -540,8 +540,11 @@ head -n 12 ~/logs/proba-$H-import.log                 # inventory : 119068 oraz 
 grep -E 'Filtered|Assortment filter|Import done' ~/logs/proba-$H-import.log
 ```
 
-`--limit=20` bierze pierwsze 20 produktów ze stanem, a dopiero potem filtr asortymentu, więc
-zapisanych może być mniej niż 20.
+`--limit=N` bierze pierwsze N produktów ze stanem z początku feedu, a dopiero potem filtr
+asortymentu, więc zapisanych jest mniej niż N: przy Kolbie `--limit=500` dało 185 zapisów
+(2026-10-14), a `--limit=20` dałoby 0. Podgląd z `--dry-run --limit=N` liczy N od początku feedu
+bez warunku stanu, więc jego liczby nie zgadzają się z partią próbną (wpis w deferred); pełne
+uruchomienia bez `--limit` tego nie dotyczy.
 
 ### Pełny import
 
