@@ -1,7 +1,7 @@
 ---
 id: HA-2.28
 title: Klucz dopasowania importu BL — EAN między hurtowniami, SKU w obrębie hurtowni, SKU hurtowni w rekordzie
-status: in_progress
+status: review
 difficulty: M
 model: claude-opus-5-5
 model_approved: null
@@ -12,7 +12,7 @@ depends_on: []
 blocked_by_questions: []
 touches_db: false
 touches_prod: false
-pr: null
+pr: 42
 ---
 
 ## Cel
