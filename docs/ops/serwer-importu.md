@@ -541,10 +541,10 @@ grep -E 'Filtered|Assortment filter|Import done' ~/logs/proba-$H-import.log
 ```
 
 `--limit=N` bierze pierwsze N produktów ze stanem z początku feedu, a dopiero potem filtr
-asortymentu, więc zapisanych jest mniej niż N: przy Kolbie `--limit=500` dało 185 zapisów
-(2026-10-14), a `--limit=20` dałoby 0. Podgląd z `--dry-run --limit=N` liczy N od początku feedu
-bez warunku stanu, więc jego liczby nie zgadzają się z partią próbną (wpis w deferred); pełne
-uruchomienia bez `--limit` tego nie dotyczy.
+asortymentu, więc zapisanych jest mniej niż N: przy Kolbie `--limit=20` dało 0 zapisów,
+a `--limit=500` 185 (2026-10-14). Podgląd z `--dry-run --limit=N` liczy N od początku feedu
+bez warunku stanu, więc jego liczby nie zgadzają się z partią próbną (500 → 104 przyjętych;
+wpis w deferred); pełnych uruchomień bez `--limit` to nie dotyczy.
 
 ### Pełny import
 
