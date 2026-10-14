@@ -1,12 +1,12 @@
 ---
 id: HA-2.28
 title: Klucz dopasowania importu BL — EAN między hurtowniami, SKU w obrębie hurtowni, SKU hurtowni w rekordzie
-status: todo
+status: in_progress
 difficulty: M
-model: null
+model: claude-opus-5-5
 model_approved: null
 effort: null
-branch: null
+branch: feat/ha-2.28-bl-match-key
 due: null
 depends_on: []
 blocked_by_questions: []
@@ -56,3 +56,6 @@ Import i sync (`scripts/xml-to-baselinker.ts`) dopasowują produkt w BaseLinkerz
 
 ## Notatki z realizacji
 - 2026-10-14 tj (wf-plan): zadanie wydzielone z HA-2.15 po diagnostyce na serwerze; HA-2.15 wznawia się od kroku 8 po merge'u. Decyzja: prefiks hurtowni w polu SKU BaseLinkera (opcja 1; opcja 2 „hurtownia = magazyn ze stanem” odrzucona, bo klucz nie może zależeć od tego, czy hurtownia ma stan). SKU wszystkich hurtowni dodatkowo w parametrach produktu, scalanych.
+- 2026-10-14 preflight: repo w WSL to `/home/tj/hydra_arms` (nie `…/hydra_arms/web`) — tj zatwierdził pracę w tym katalogu dla HA-2.28 (jak dla HA-2.15, decyzja 2026-10-13). `SUPABASE_TARGET` ustawione w sesji. Model sesji: Opus 5.5 (prompt zakładał Sonnet) — wpisany w `model:`.
+- 2026-10-14 tj: pliki diagnostyki skopiowane dosłownie z gałęzi `origin/feat/ha-2.15-import-server` przy commicie `f1dc7af` (`xml-integration/feed-diagnostics.ts`, `scripts/xml-feed-diagnostics.ts`, `xml-integration/__tests__/feed-diagnostics.test.ts`), nic więcej z tej gałęzi. Zaraz po kopii: `npx tsc --noEmit` czysto, `npm run test:unit` 208/210 — padają tylko 2 testy `prod-guard` (znane w WSL, deferred HA-2.27).
+- 2026-10-14: wyniku diagnostyki z serwera z 2026-10-14 nie ma w repo (ani w notatkach HA-2.15) — liczby wzięte z Celu i kryteriów tego zadania.
