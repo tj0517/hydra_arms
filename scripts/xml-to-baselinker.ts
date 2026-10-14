@@ -86,6 +86,7 @@ import {
   addToMatchIndex,
   emptyMatchIndex,
   findBLMatch,
+  planUpsert,
   recordIdentity,
   type BLMatchIndex,
   type Supplier,
@@ -535,20 +536,22 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
     }
   }
 
-  let created = 0, updated = 0, errors = 0, priceFallbacks = 0, priceZeros = 0;
+  let created = 0, updated = 0, errors = 0, skippedNoData = 0, priceFallbacks = 0, priceZeros = 0;
   const permitCounts: Record<string, number> = {};
 
   console.log(`\nUpserting ${products.length} products (~${Math.ceil(products.length * RATE_LIMIT_MS / 60000)} min)…`);
   for (const p of products) {
     const r = resolved.get(p)!;
-    const existingId = findBLMatch(index, connectorName, p.ean, p.connector_sku)?.id;
-    const existing = existingId !== undefined ? existingData.get(existingId) : undefined;
-    if (existingId !== undefined && !existing) {
-      // Without the record's current SKU and parameters the upsert would overwrite them
+    const plan = planUpsert(findBLMatch(index, connectorName, p.ean, p.connector_sku)?.id, existingData);
+    if (plan.kind === 'skip') {
+      // Without the record's current SKU, parameters and tags the upsert would overwrite them
       errors++;
-      console.warn(`\n  ⚠ ${p.connector_sku} (${p.name.slice(0, 50)}): BL product ${existingId} not returned by getInventoryProductsData — skipped, nothing overwritten`);
+      skippedNoData++;
+      console.warn(`\n  ⚠ ${p.connector_sku} (${p.name.slice(0, 50)}): BL product ${plan.id} not returned by getInventoryProductsData — skipped, nothing overwritten`);
       continue;
     }
+    const existingId = plan.kind === 'update' ? plan.id : undefined;
+    const existing = plan.kind === 'update' ? plan.existing : undefined;
 
     // Admin tags (approved, permit_off, permit_ok, …) survive; ours are refreshed;
     // permit_off / permit_ok suppress permit_review (see import-tags.ts).
@@ -582,6 +585,7 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
   }
 
   console.log(`\n\n✓ Import done: ${created} created, ${updated} updated, ${errors} errors`);
+  console.log(`  skipped: ${skippedNoData} (no BL data — counted in errors, nothing overwritten)`);
   console.log(`  tags: ${statusCounts.auto} auto / ${statusCounts.review} review / ${statusCounts.flag} flag`);
   console.log(`  permit tags: ${formatPermitCounts(permitCounts)} (permit-rules.ts; permit_off/permit_ok in BL are kept)`);
   if (priceFallbacks > 0) {

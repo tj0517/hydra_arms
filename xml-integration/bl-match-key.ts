@@ -108,6 +108,25 @@ export function findBLMatch(
   return undefined;
 }
 
+// ── Create, update or skip ────────────────────────────────────────────────────
+
+export type UpsertPlan<T> =
+  | { kind: 'create' }
+  | { kind: 'update'; id: number; existing: T }
+  /** matched, but BaseLinker did not return the record's data — writing would overwrite its SKU, parameters and admin tags */
+  | { kind: 'skip'; id: number };
+
+/**
+ * What the import does with one product, given its match and the data fetched for matched
+ * records (getInventoryProductsData). A matched record without data is skipped and counted as
+ * an error, never written blind (tj 2026-10-14).
+ */
+export function planUpsert<T>(matchId: number | undefined, existingById: ReadonlyMap<number, T>): UpsertPlan<T> {
+  if (matchId === undefined) return { kind: 'create' };
+  const existing = existingById.get(matchId);
+  return existing === undefined ? { kind: 'skip', id: matchId } : { kind: 'update', id: matchId, existing };
+}
+
 // ── What an upsert writes for the record's identity ──────────────────────────
 
 /**

@@ -4,7 +4,7 @@
  * supplier's code as a merged parameter.
  *
  * importRun() below composes exactly the functions runImport() calls per product —
- * findBLMatch → recordIdentity → addToMatchIndex — against an in-memory catalogue.
+ * findBLMatch → planUpsert → recordIdentity → addToMatchIndex — against an in-memory catalogue.
  */
 
 import { test } from 'node:test';
@@ -18,6 +18,7 @@ import {
   emptyMatchIndex,
   findBLMatch,
   mergeFeatures,
+  planUpsert,
   recordIdentity,
   supplierSkuParam,
   type Supplier,
@@ -33,14 +34,24 @@ import type { NormalizedProduct } from '../types';
 interface FeedItem { sku: string; ean: string; name: string; features?: Record<string, string> }
 interface BLRecord { id: number; sku: string; ean: string; name: string; features: Record<string, string> }
 
-/** One import run of `supplier` against the catalogue, as runImport() does it. */
-function importRun(catalogue: BLRecord[], supplier: Supplier, feed: readonly FeedItem[]): { created: number; updated: number } {
+/**
+ * One import run of `supplier` against the catalogue, as runImport() does it. `withoutData`:
+ * records BaseLinker does not return from getInventoryProductsData in this run.
+ */
+function importRun(
+  catalogue: BLRecord[],
+  supplier: Supplier,
+  feed: readonly FeedItem[],
+  withoutData: ReadonlySet<number> = new Set(),
+): { created: number; updated: number; skipped: number } {
   const index = emptyMatchIndex();
   for (const r of catalogue) addToMatchIndex(index, r.id, r.ean, r.sku);
-  let created = 0, updated = 0;
+  const existingById = new Map(catalogue.filter((r) => !withoutData.has(r.id)).map((r) => [r.id, r]));
+  let created = 0, updated = 0, skipped = 0;
   for (const p of feed) {
-    const match = findBLMatch(index, supplier, p.ean, p.sku);
-    const existing = match ? catalogue.find((r) => r.id === match.id)! : undefined;
+    const plan = planUpsert(findBLMatch(index, supplier, p.ean, p.sku)?.id, existingById);
+    if (plan.kind === 'skip') { skipped++; continue; }
+    const existing = plan.kind === 'update' ? plan.existing : undefined;
     const identity = recordIdentity(supplier, p.sku, p.features ?? {}, existing);
     if (existing) {
       // addInventoryProduct with product_id: features replaced wholesale by what we send
@@ -48,12 +59,14 @@ function importRun(catalogue: BLRecord[], supplier: Supplier, feed: readonly Fee
       updated++;
     } else {
       const id = 1000 + catalogue.length;
-      catalogue.push({ id, sku: identity.sku, ean: p.ean, name: p.name, features: identity.features });
+      const record = { id, sku: identity.sku, ean: p.ean, name: p.name, features: identity.features };
+      catalogue.push(record);
       addToMatchIndex(index, id, p.ean, identity.sku);
+      existingById.set(id, record);
       created++;
     }
   }
-  return { created, updated };
+  return { created, updated, skipped };
 }
 
 // ── sku-prefix ────────────────────────────────────────────────────────────────
@@ -78,7 +91,7 @@ test('bl-match-key: two suppliers, same numeric SKU, no EAN → two records, nev
   importRun(catalogue, 'sharg', [{ sku: '139', ean: '', name: 'Kamizelka Sharg' }]);
   const second = importRun(catalogue, 'spechurt', [{ sku: '139', ean: '', name: 'Ponczo Spechurt' }]);
   assert.equal(catalogue.length, 2, 'Spechurt 139 must not land on Sharg 139');
-  assert.deepEqual(second, { created: 1, updated: 0 });
+  assert.deepEqual(second, { created: 1, updated: 0, skipped: 0 });
   assert.deepEqual(catalogue.map((r) => [r.sku, r.name]), [
     ['SHARG-139', 'Kamizelka Sharg'],
     ['SPECHURT-139', 'Ponczo Spechurt'],
@@ -87,8 +100,8 @@ test('bl-match-key: two suppliers, same numeric SKU, no EAN → two records, nev
 
 test('bl-match-key: same supplier, same SKU, no EAN, two runs → one record (update, not duplicate)', () => {
   const catalogue: BLRecord[] = [];
-  assert.deepEqual(importRun(catalogue, 'sharg', [{ sku: '139', ean: '', name: 'Kamizelka' }]), { created: 1, updated: 0 });
-  assert.deepEqual(importRun(catalogue, 'sharg', [{ sku: '139', ean: '', name: 'Kamizelka (nowa nazwa)' }]), { created: 0, updated: 1 });
+  assert.deepEqual(importRun(catalogue, 'sharg', [{ sku: '139', ean: '', name: 'Kamizelka' }]), { created: 1, updated: 0, skipped: 0 });
+  assert.deepEqual(importRun(catalogue, 'sharg', [{ sku: '139', ean: '', name: 'Kamizelka (nowa nazwa)' }]), { created: 0, updated: 1, skipped: 0 });
   assert.equal(catalogue.length, 1);
   assert.deepEqual([catalogue[0].sku, catalogue[0].name], ['SHARG-139', 'Kamizelka (nowa nazwa)']);
 });
@@ -97,8 +110,25 @@ test('bl-match-key: same EAN at two suppliers → one record, whichever SKUs the
   const catalogue: BLRecord[] = [];
   importRun(catalogue, 'kolba', [{ sku: '053-057ZB1', ean: '5905247629906', name: 'Latarka (Kolba)' }]);
   const second = importRun(catalogue, 'sharg', [{ sku: '139', ean: '5905247629906', name: 'Latarka (Sharg)' }]);
-  assert.deepEqual(second, { created: 0, updated: 1 });
+  assert.deepEqual(second, { created: 0, updated: 1, skipped: 0 });
   assert.equal(catalogue.length, 1);
+});
+
+test('bl-match-key: a matched product whose BL data is missing is skipped — no update, no duplicate, nothing overwritten', () => {
+  const catalogue: BLRecord[] = [];
+  importRun(catalogue, 'kolba', [{ sku: '053-057ZB1', ean: '5905247629906', name: 'Latarka (Kolba)', features: { 'Moc': '300 lm' } }]);
+  const before = structuredClone(catalogue);
+  const run = importRun(
+    catalogue, 'sharg',
+    [{ sku: '139', ean: '5905247629906', name: 'Latarka (Sharg)' }, { sku: '140', ean: '', name: 'Nowy Sharg' }],
+    new Set([catalogue[0].id]),
+  );
+  assert.deepEqual(run, { created: 1, updated: 0, skipped: 1 });
+  assert.deepEqual(catalogue[0], before[0], 'the Kolba record is untouched');
+  assert.equal(catalogue.length, 2, 'the skipped product is not created as a duplicate');
+  assert.deepEqual(planUpsert(undefined, new Map()), { kind: 'create' });
+  assert.deepEqual(planUpsert(7, new Map()), { kind: 'skip', id: 7 });
+  assert.deepEqual(planUpsert(7, new Map([[7, 'data']])), { kind: 'update', id: 7, existing: 'data' });
 });
 
 test('bl-match-key: EAN is tried first, then only this supplier\'s prefixed SKU', () => {
