@@ -6,9 +6,10 @@
  *
  * What it answers:
  *   - does the assortment filter admit the same number of products as the preview;
- *   - where would the import's upsert key (EAN first, then SKU, one index for the whole
- *     catalogue) put products of two suppliers on one BaseLinker product — through a
- *     shared EAN (a product both carry) or through the SKU alone (possibly unrelated goods);
+ *   - where would the import's upsert key (findBLMatch in xml-integration/bl-match-key.ts:
+ *     EAN across suppliers, then the same supplier's `<SUPPLIER>-<feed sku>` only, HA-2.28)
+ *     put products of two suppliers on one BaseLinker product — through a shared EAN
+ *     (a product both carry) or through the SKU alone (must be 0 since HA-2.28);
  *   - what each supplier's sync would then touch;
  *   - do EANs look like EANs (lost leading zeros show up as odd lengths);
  *   - does Sharg report the same stock in the full feed as in the light feed;
@@ -22,6 +23,10 @@
  *   --from-file  read that connector's feed from a local file instead of fetching it
  *   --light-file read the Sharg light feed from a local file; without it the light feed is
  *                fetched when SHARG_TOKEN_LIGHT is set
+ *   --help       print this usage and exit
+ *
+ *   Fully offline (local samples): give --from-file for every connector in --order plus
+ *   --light-file; nothing is downloaded then.
  */
 
 import * as fs from 'fs';
@@ -44,9 +49,24 @@ import {
   type PairExample,
   type SlimProduct,
 } from '../xml-integration/feed-diagnostics';
+import { SUPPLIERS, type Supplier } from '../xml-integration/bl-match-key';
 
-const CONNECTOR_NAMES = ['kolba', 'sharg', 'spechurt'] as const;
-type ConnectorName = (typeof CONNECTOR_NAMES)[number];
+const CONNECTOR_NAMES = SUPPLIERS;
+type ConnectorName = Supplier;
+
+const USAGE = `Usage:
+  npx tsx scripts/xml-feed-diagnostics.ts [--order=kolba,sharg,spechurt] [--examples=15]
+    [--from-file=<connector>:<path>]… [--light-file=<path>]
+
+  --order      order in which the imports would run (default: kolba,sharg,spechurt)
+  --examples   how many SKU-only matches to print per supplier (default: 15)
+  --from-file  read that connector's feed from a local file instead of fetching it (repeatable)
+  --light-file read the Sharg light feed from a local file; without it the light feed is
+               fetched when SHARG_TOKEN_LIGHT is set
+  --help       print this and exit
+
+  Fully offline: --from-file for every connector in --order plus --light-file.
+  Read-only: never calls BaseLinker, writes nothing.`;
 
 const MARKUP_ENV: Record<ConnectorName, string> = {
   kolba: 'BASELINKER_MARKUP_KOLBA',
@@ -105,14 +125,19 @@ function printExamples(examples: readonly PairExample[]): void {
 
 async function main(): Promise<void> {
   const flags = process.argv.slice(2);
+  if (flags.includes('--help') || flags.includes('-h')) {
+    console.log(USAGE);
+    return;
+  }
   const unknown = flags.filter((f) => !/^--(order|examples|from-file|light-file)=/.test(f));
   if (unknown.length > 0) fail(`unknown argument: ${unknown.join(' ')}`);
 
   const orderRaw = flags.find((f) => f.startsWith('--order='))?.slice('--order='.length) ?? CONNECTOR_NAMES.join(',');
-  const order = orderRaw.split(',').map((s) => s.trim()).filter(Boolean);
-  if (order.length === 0 || order.some((s) => !isConnector(s)) || new Set(order).size !== order.length) {
+  const orderList = orderRaw.split(',').map((s) => s.trim()).filter(Boolean);
+  if (orderList.length === 0 || orderList.some((s) => !isConnector(s)) || new Set(orderList).size !== orderList.length) {
     fail(`--order must list each of ${CONNECTOR_NAMES.join(', ')} at most once`);
   }
+  const order = orderList as ConnectorName[];
   const maxExamples = parseInt(flags.find((f) => f.startsWith('--examples='))?.slice('--examples='.length) ?? '15', 10);
   if (isNaN(maxExamples) || maxExamples < 0) fail('--examples must be a number');
 
@@ -138,10 +163,10 @@ async function main(): Promise<void> {
   console.log('Feed diagnostics — read-only, no BaseLinker calls');
   console.log(`  import order : ${order.join(' → ')}`);
 
-  const bySupplier: Record<string, SlimProduct[]> = {};
+  const bySupplier: Partial<Record<ConnectorName, SlimProduct[]>> = {};
   let shargFullStock: Array<{ id: string; stock: number }> = [];
 
-  for (const name of order as ConnectorName[]) {
+  for (const name of order) {
     const connector = connectors[name];
     const xml = await readFeed(name, connector.config.xml_url, fromFile.get(name));
     const generated = generatedAt(xml);
@@ -207,7 +232,7 @@ async function main(): Promise<void> {
   console.log('SIMULATED SYNC of each supplier against that catalogue');
   console.log('═'.repeat(64));
   for (const name of order) {
-    const sync = simulateSync(name, bySupplier[name], catalogue, maxExamples);
+    const sync = simulateSync(name, bySupplier[name] ?? [], catalogue, maxExamples);
     console.log(`\n  ${name}: ${sync.inFeed} in feed → ${sync.matchedOwn} own products refreshed, ${sync.unmatched} not in the catalogue`);
     console.log(`    would write stock and price onto another supplier's product`);
     console.log(`      found through the EAN      : ${sync.foreignByEan}`);

@@ -24,7 +24,11 @@
  *                       Hydra sections instead of the first 40 rows (HA-2.25 review)
  *
  * Key behaviours:
- *   - Upsert key: EAN first, fallback SKU — no duplicates across runs
+ *   - Upsert key (xml-integration/bl-match-key.ts, HA-2.28): EAN across suppliers first,
+ *     then the SKU of the same supplier only — BL `sku` is `<SUPPLIER>-<feed sku>`
+ *     (e.g. SHARG-139). A shared record keeps the SKU of the supplier that created it and
+ *     carries every supplier's code as a parameter (`SKU Kolba` / `SKU Sharg` /
+ *     `SKU Spechurt`) plus `Źródło opisu`; parameters are merged, never replaced
  *   - Stock goes to a per-supplier warehouse: kolba → BASELINKER_WAREHOUSE_H1,
  *     sharg → _H2, spechurt → _H3
  *   - Selling price = price_purchase * (1 + markup%), markup from env per supplier
@@ -77,9 +81,18 @@ import {
 } from '../xml-integration/resolve-category';
 import { computeImportTags, mergeImportTags } from '../xml-integration/import-tags';
 import { permitGroupFor } from '../xml-integration/permit-rules';
+import {
+  SUPPLIERS,
+  addToMatchIndex,
+  emptyMatchIndex,
+  findBLMatch,
+  recordIdentity,
+  type BLMatchIndex,
+  type Supplier,
+} from '../xml-integration/bl-match-key';
 
-const CONNECTOR_NAMES = ['kolba', 'sharg', 'spechurt'] as const;
-type ConnectorName = (typeof CONNECTOR_NAMES)[number];
+const CONNECTOR_NAMES = SUPPLIERS;
+type ConnectorName = Supplier;
 
 // Per-supplier warehouse + markup — each wholesaler gets its own BL warehouse
 const WAREHOUSE_ENV: Record<ConnectorName, string> = {
@@ -180,46 +193,31 @@ function computeSellingPrice(p: NormalizedProduct, markupPct: number): { price: 
   return { price: p.price_gross, fromFallback: true, priceZero: p.price_gross === 0 };
 }
 
-// ── Existing BL products: EAN → id, SKU → id (upsert key, no duplicates) ──────
-
-interface BLIndex {
-  byEan: Map<string, number>;
-  bySku: Map<string, number>;
-  total: number;
-}
+// ── Existing BL products: EAN → id, prefixed SKU → id (upsert key, no duplicates) ──
+// The key itself (findBLMatch) lives in xml-integration/bl-match-key.ts and is shared by
+// import, sync, dry-run and scripts/xml-feed-diagnostics.ts.
 
 async function loadExistingProducts(
   getProductsList: (inventoryId: number, page?: number) => Promise<Record<string, { ean: string; sku: string }>>,
   inventoryId: number,
-): Promise<BLIndex> {
-  const byEan = new Map<string, number>();
-  const bySku = new Map<string, number>();
-  let total = 0;
+): Promise<BLMatchIndex> {
+  const index = emptyMatchIndex();
 
   for (let page = 1; ; page++) {
     const products = await getProductsList(inventoryId, page);
     const entries = Object.entries(products);
-    for (const [id, p] of entries) {
-      const numId = Number(id);
-      const ean = String(p.ean ?? '').trim();
-      const sku = String(p.sku ?? '').trim();
-      if (ean && !byEan.has(ean)) byEan.set(ean, numId);
-      if (sku && !bySku.has(sku)) bySku.set(sku, numId);
-      total++;
-    }
+    for (const [id, p] of entries) addToMatchIndex(index, Number(id), p.ean, p.sku);
     if (entries.length < 1000) break;
     await sleep(RATE_LIMIT_MS);
   }
 
-  return { byEan, bySku, total };
+  return index;
 }
 
-function findExistingId(p: NormalizedProduct, index: BLIndex): number | undefined {
-  const ean = (p.ean ?? '').trim();
-  if (ean && index.byEan.has(ean)) return index.byEan.get(ean);
-  const sku = (p.connector_sku ?? '').trim();
-  if (sku && index.bySku.has(sku)) return index.bySku.get(sku);
-  return undefined;
+/** Existing `text_fields.features` of a BL product as a plain map (defensive: an empty one may come back as `[]`). */
+function featuresOf(d: { text_fields?: { features?: unknown } }): Record<string, string> {
+  const f = d.text_fields?.features;
+  return f && typeof f === 'object' && !Array.isArray(f) ? (f as Record<string, string>) : {};
 }
 
 // ── Categories: dictionary lookup → Hydra tree number → BL category_id ───────
@@ -296,6 +294,7 @@ function toBLProduct(
   env: Env,
   categoryId: number,
   tags: string[],
+  identity: { sku: string; features: Record<string, string> },
 ): { product: Record<string, unknown>; priceFromFallback: boolean; priceZero: boolean } {
   const { price, fromFallback, priceZero } = computeSellingPrice(p, env.markupPct);
 
@@ -306,14 +305,15 @@ function toBLProduct(
 
   const textFields: Record<string, unknown> = { name: p.name };
   if (p.description_html) textFields.description = p.description_html;
-  if (Object.keys(p.features).length > 0) textFields.features = p.features;
+  // Merged with the record's existing parameters (recordIdentity) — BL replaces features wholesale
+  textFields.features = identity.features;
 
   // BL expects image entries prefixed "url:" (or "data:" for base64), max 16
   const images = p.images.slice(0, 16).map((img) => `url:${img.url}`);
 
   const product: Record<string, unknown> = {
     parent_id: 0,
-    sku: p.connector_sku ?? '',
+    sku: identity.sku,
     ean: p.ean ?? '',
     tax_rate: p.tax_rate ?? 23,
     weight: p.weight_g ? round2(p.weight_g / 1000) : 0, // BL stores kg
@@ -471,7 +471,7 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
   const hydraStockById = new Map<number, number>();
   if (hydraWarehouseId) {
     const matchedIds = [...new Set(
-      products.map((p) => findExistingId(p, index)).filter((id): id is number => id !== undefined),
+      products.map((p) => findBLMatch(index, connectorName, p.ean, p.connector_sku)?.id).filter((id): id is number => id !== undefined),
     )];
     if (matchedIds.length > 0) {
       console.log(`\nFetching Hydra own-stock for ${matchedIds.length} matched products…`);
@@ -490,7 +490,7 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
   const filteredProducts: NormalizedProduct[] = [];
   for (const p of products) {
     const r = resolved.get(p)!;
-    const existingId = findExistingId(p, index);
+    const existingId = findBLMatch(index, connectorName, p.ean, p.connector_sku)?.id;
     const hydraOwnStock = existingId !== undefined ? (hydraStockById.get(existingId) ?? 0) : 0;
     const { price } = computeSellingPrice(p, env.markupPct);
     const fr = filterProduct(p, r.hydraNum, p.stock ?? 0, hydraOwnStock, price, ASSORTMENT_RULES);
@@ -510,20 +510,26 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
     console.warn(`  ⚠ category-map.json points at numbers missing from hydra-categories.json: ${[...unknownNums].join(', ')}`);
   }
 
-  // Fetch current tags of products we are about to update, so re-imports
-  // preserve `approved`, `permit_off`, `permit_ok` and other admin tags
-  // (only IMPORT_OWNED_TAGS — auto/review/flag/age_18/permit/permit_review — are ours)
+  // Fetch current tags, SKU and parameters of products we are about to update (matched ones
+  // only, never the whole catalogue), so re-imports preserve `approved`, `permit_off`,
+  // `permit_ok` and other admin tags (only IMPORT_OWNED_TAGS — auto/review/flag/age_18/permit/
+  // permit_review — are ours), a shared record keeps its SKU and other suppliers' parameters
+  // survive (bl-match-key.ts recordIdentity).
   const matchedIds = [...new Set(
-    products.map((p) => findExistingId(p, index)).filter((id): id is number => id !== undefined),
+    products.map((p) => findBLMatch(index, connectorName, p.ean, p.connector_sku)?.id).filter((id): id is number => id !== undefined),
   )];
-  const existingTags = new Map<number, string[]>();
+  const existingData = new Map<number, { tags: string[]; sku: string; features: Record<string, string> }>();
   if (matchedIds.length > 0) {
-    console.log(`\nFetching tags of ${matchedIds.length} existing products (to preserve admin tags)…`);
+    console.log(`\nFetching tags and parameters of ${matchedIds.length} existing products (to preserve admin tags and other suppliers' parameters)…`);
     for (let i = 0; i < matchedIds.length; i += 100) {
       const chunk = matchedIds.slice(i, i + 100).map(String);
       const details = await bl.getProductsData(env.inventoryId, chunk);
       for (const [id, d] of Object.entries(details)) {
-        existingTags.set(Number(id), (d as { tags?: string[] }).tags ?? []);
+        existingData.set(Number(id), {
+          tags: d.tags ?? [],
+          sku: String(d.sku ?? ''),
+          features: featuresOf(d),
+        });
       }
       await sleep(RATE_LIMIT_MS);
     }
@@ -535,31 +541,39 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
   console.log(`\nUpserting ${products.length} products (~${Math.ceil(products.length * RATE_LIMIT_MS / 60000)} min)…`);
   for (const p of products) {
     const r = resolved.get(p)!;
-    const existingId = findExistingId(p, index);
+    const existingId = findBLMatch(index, connectorName, p.ean, p.connector_sku)?.id;
+    const existing = existingId !== undefined ? existingData.get(existingId) : undefined;
+    if (existingId !== undefined && !existing) {
+      // Without the record's current SKU and parameters the upsert would overwrite them
+      errors++;
+      console.warn(`\n  ⚠ ${p.connector_sku} (${p.name.slice(0, 50)}): BL product ${existingId} not returned by getInventoryProductsData — skipped, nothing overwritten`);
+      continue;
+    }
 
     // Admin tags (approved, permit_off, permit_ok, …) survive; ours are refreshed;
     // permit_off / permit_ok suppress permit_review (see import-tags.ts).
-    const tags = mergeImportTags(
-      existingId !== undefined ? (existingTags.get(existingId) ?? []) : [],
-      computeImportTags(r),
-    );
+    const tags = mergeImportTags(existing?.tags ?? [], computeImportTags(r));
     countPermitTags(tags, permitCounts);
 
-    const { product, priceFromFallback, priceZero } = toBLProduct(p, env, r.categoryId, tags);
+    // SKU: `<SUPPLIER>-<feed sku>`, or the creating supplier's SKU on a shared record;
+    // parameters merged with the record's existing ones
+    const identity = recordIdentity(connectorName, p.connector_sku, p.features, existing);
+    const { product, priceFromFallback, priceZero } = toBLProduct(p, env, r.categoryId, tags, identity);
     if (priceFromFallback) priceFallbacks++;
     if (priceZero) priceZeros++;
 
     try {
       const productId = await bl.addInventoryProduct(env.inventoryId, product, existingId);
-      if (existingId) {
+      if (existingId !== undefined) {
         updated++;
       } else {
         created++;
         // Register the new product so intra-feed duplicates update instead of re-creating
-        if (p.ean) index.byEan.set(p.ean.trim(), productId);
-        if (p.connector_sku) index.bySku.set(p.connector_sku.trim(), productId);
+        addToMatchIndex(index, productId, p.ean, identity.sku);
       }
-      process.stdout.write(existingId ? '.' : '+');
+      // A later repeat inside the feed merges with what was just written
+      existingData.set(productId, { tags, sku: identity.sku, features: identity.features });
+      process.stdout.write(existingId !== undefined ? '.' : '+');
     } catch (err) {
       errors++;
       console.warn(`\n  ⚠ ${p.connector_sku} (${p.name.slice(0, 50)}): ${err instanceof Error ? err.message : err}`);
@@ -603,8 +617,9 @@ async function runSync(connectorName: ConnectorName, env: Env, limit: number | n
   let matched = 0, unmatched = 0, priceFallbacks = 0, priceZeros = 0;
 
   for (const p of products) {
-    const id = findExistingId(p, index);
-    if (!id) { unmatched++; continue; }
+    // Same key as the import: EAN across suppliers, else this supplier's prefixed SKU only
+    const id = findBLMatch(index, connectorName, p.ean, p.connector_sku)?.id;
+    if (id === undefined) { unmatched++; continue; }
     matched++;
 
     stockUpdates[id] = { [env.warehouse]: p.stock ?? 0 };
@@ -685,7 +700,7 @@ async function runDryRun(
   const categoryMap = loadJson<CategoryMapFile>(CATEGORY_MAP_PATH, 'see xml-integration/category-map.json');
 
   // Load BL index once (needed for own-stock lookup, re-used across connectors)
-  let blIndex: BLIndex | null = null;
+  let blIndex: BLMatchIndex | null = null;
   let blReadCalls = 0;
   if (hydraWarehouseId) {
     const bl = await import('../src/lib/baselinker/client');
@@ -713,7 +728,7 @@ async function runDryRun(
     if (hydraWarehouseId && blIndex) {
       const bl = await import('../src/lib/baselinker/client');
       const matchedIds = [...new Set(
-        products.map((p) => findExistingId(p, blIndex!)).filter((id): id is number => id !== undefined),
+        products.map((p) => findBLMatch(blIndex!, connectorName, p.ean, p.connector_sku)?.id).filter((id): id is number => id !== undefined),
       )];
       if (matchedIds.length > 0) {
         console.log(`  Fetching own-stock for ${matchedIds.length} matched products…`);
@@ -759,7 +774,7 @@ async function runDryRun(
           tags: tags.join(','),
         });
       }
-      const existingId = blIndex ? findExistingId(p, blIndex) : undefined;
+      const existingId = blIndex ? findBLMatch(blIndex, connectorName, p.ean, p.connector_sku)?.id : undefined;
       const hydraOwnStock = existingId !== undefined ? (hydraStockById.get(existingId) ?? 0) : 0;
       // Selling price = purchase price + markup (same formula as import).
       // Falls back to feed gross price when markup env var is not set.
