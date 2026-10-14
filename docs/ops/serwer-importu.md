@@ -459,11 +459,14 @@ obejmuje liczby z podglądu i marżę tej hurtowni.
 
 ### Diagnostyka feedów — przed pierwszym importem
 
-Import szuka produktu w BaseLinkerze po EAN, a gdy go nie znajdzie — po samym SKU, w całym
-katalogu, bez względu na hurtownię. SKU Sharga to gołe liczby, SKU Spechurtu też bywa liczbą,
-więc dwa niezwiązane produkty mogłyby trafić w jeden rekord. Narzędzie pobiera feedy tak jak
-import, symuluje trzy importy i sync, i wypisuje same liczby z przykładami nazw. Nie woła
-BaseLinkera i niczego nie zapisuje.
+Import szuka produktu w BaseLinkerze po EAN między hurtowniami, a gdy EAN nie trafi — po SKU
+z przedrostkiem hurtowni (`KOLBA-…`, `SHARG-…`, `SPECHURT-…`), czyli tylko wśród produktów tej
+samej hurtowni (HA-2.28). Przed tą zmianą SKU było gołe i wspólne dla całego katalogu: SKU Sharga
+to liczby, SKU Spechurtu też bywa liczbą, więc dwa niezwiązane produkty zlewały się w jeden rekord
+(pomiar z 2026-10-14 na prawdziwych feedach dał liczby niezerowe). Narzędzie pobiera feedy tak jak
+import, symuluje trzy importy i sync tym samym kluczem co import, i wypisuje same liczby
+z przykładami nazw. Nie woła BaseLinkera i niczego nie zapisuje. Uruchamiasz je na kodzie
+po merge HA-2.28 (sekcja „Aktualizacja kodu”, bez `git switch main` przed merge PR-a).
 
 `hydra-import`:
 
@@ -479,9 +482,13 @@ Co odczytać:
 
 - `admitted by the assortment filter` — te same liczby co w podglądzie z kroku 6;
 - `same SKU only … earlier supplier` przy imporcie i `found through the SKU alone` przy sync —
-  **mają być 0**. Każda inna liczba to produkty, które by się zlały; pod spodem są przykłady par;
+  **mają być 0** dla każdej z trzech hurtowni. Każda inna liczba to produkty, które by się zlały;
+  pod spodem są przykłady par;
 - `same EAN as a product of an earlier supplier` — produkty, które naprawdę mają dwie hurtownie;
-  tu obowiązuje zasada z kroku 7 (wygrywa hurtownia importowana później);
+  tu obowiązuje zasada z kroku 7 (wygrywa hurtownia importowana później). Liczby z pomiaru
+  z 2026-10-14 (stary klucz): Sharg 5, Spechurt 122 — zmiana klucza nie powinna ich ruszyć;
+- `repeats inside own feed` — ten sam produkt dwa razy w jednym feedzie; drugi wpis nadpisuje
+  pierwszy (tak jak w imporcie);
 - `EAN shapes` — długości inne niż 8, 12, 13 i 14 cyfr to EAN-y, które po drodze straciły zera
   wiodące (znany błąd konektora Sharga, wpis w deferred);
 - `SHARG STOCK` — czy stan w pełnym feedzie, z którego korzystają import i sync, zgadza się
