@@ -406,11 +406,15 @@ Zasady, z których to wynika:
 - **Sync zaraz po imporcie tej samej hurtowni.** Import zapisuje tylko produkty, które
   przechodzą filtr, czyli mają stan; produkt wyprzedany u hurtowni zeruje dopiero sync. Produktu,
   który z feedu zniknął, nie zeruje nic (wpis w deferred).
-- **Limity są wstępne.** Same przerwy 0,7 s na produkt dają: Kolba 3140 → 37 min, Sharg 2280 →
-  27 min, Spechurt 1958 → 23 min; czas zapytań poznamy z pierwszego importu. Limit Kolby
-  zadziałałby dopiero przy średnio 2,2 s na zapytanie, Sharga przy 1,7 s, Spechurtu przy 2,1 s.
-  Po pierwszym imporcie limity i godziny są przeliczane z pola `duration=` w dzienniku i dopiero
-  wtedy powstaje ostateczna treść crontaba (krok 10).
+- **Limity są wstępne.** Pomiar pierwszego pełnego importu Kolby (2026-10-14): 3947 s dla 3142
+  produktów, czyli 1,26 s na produkt (przerwa 0,7 s plus odpowiedź BaseLinkera) — nie 0,7 s, jak
+  w szacunku (37 min), tylko 66 min. Przy tej stawce projekcja: Sharg 2296 → ok. 48 min plus
+  pobranie feedu (ok. 50 min), Spechurt 1959 → ok. 41 min. Limity z tabeli mieszczą się w tym
+  z zapasem: Kolba 150 min = 2,3× pomiaru, Sharg 90 min = 1,8× projekcji, Spechurt 90 min =
+  2,2× projekcji; limit zadziała dopiero przy średnio 2,9 s na produkt (Kolba), 2,4 s (Sharg)
+  i 2,8 s (Spechurt). Godziny w tabeli zostają. Sync nie ma jeszcze pomiaru (13 min to
+  założenie). Ostateczna treść crontaba (krok 10) powstaje z `duration=` importów Sharga
+  i Spechurtu i pierwszych sync.
 - **Co się dzieje przy limicie.** Import zatrzymany limitem zostawia hurtownię odświeżoną
   częściowo, a następnej nocy zaczyna od początku feedu. Za ciasny limit ucinałby więc co noc
   ten sam ogon — w dzienniku widać to jako `stopped-by=limit-…` noc w noc. Bez limitów
@@ -554,9 +558,10 @@ W tle, żeby zerwane połączenie SSH go nie przerwało.
 
 ```bash
 H=sharg                                    # hurtownia, na którą masz zgodę
+L=5400                                     # limit czasu w sekundach: Kolba 7200, Sharg i Spechurt 5400
 cd /home/hydra-import/hydra
-scripts/server/run-bl.sh --check "$H" import; echo "exit=$?"     # CHECK ok … catalogue 119068
-HYDRA_MAX_SECONDS=7200 nohup scripts/server/run-bl.sh "$H" import > /dev/null 2>&1 &
+HYDRA_MAX_SECONDS="$L" scripts/server/run-bl.sh --check "$H" import; echo "exit=$?"     # CHECK ok … catalogue 119068, limit ${L}s
+HYDRA_MAX_SECONDS="$L" nohup scripts/server/run-bl.sh "$H" import > /dev/null 2>&1 &
 sleep 5
 J="$(ls -t ~/logs/run-bl-*.log | head -n 1)"; tail -n 2 "$J"     # linia START: catalogue=119068, nazwa logu
 LOG="$(grep ' START ' "$J" | tail -n 1 | sed -n 's/.* log=\([^ ]*\).*/\1/p')"; echo "$LOG"
@@ -564,9 +569,11 @@ head -n 12 "$LOG"                          # inventory : 119068 oraz markup : +N
 tail -f "$LOG"                             # „+” nowy produkt, „.” aktualizacja; Ctrl-C kończy tylko podgląd
 ```
 
-Pierwszy import idzie z limitem `HYDRA_MAX_SECONDS=7200` (decyzja tj 2026-10-14: 3× szacunek dla
-Kolby; zdrowy przebieg go nie dotyka, zawieszony oddaje blokadę). Limit zatrzymuje cały import —
-w dzienniku `stopped-by=limit-…`, a hurtownia zostaje odświeżona częściowo.
+Pierwszy import idzie z limitem czasu (zdrowy przebieg go nie dotyka, zawieszony oddaje
+blokadę): Kolba `HYDRA_MAX_SECONDS=7200` (decyzja tj 2026-10-14: 3× szacunek 37 min; wyszło
+66 min), Sharg i Spechurt `5400` — to wartość z tabeli sekcji 7, więc pierwszy import sprawdza
+też limit, który pójdzie do crontaba. Limit zatrzymuje cały import — w dzienniku
+`stopped-by=limit-…`, a hurtownia zostaje odświeżona częściowo.
 
 Wrapper nie wystartuje z innym katalogiem niż `119068` (pilnuje tego znacznik). Gdyby mimo to log
 pokazał inny katalog albo inną marżę, albo import trzeba było przerwać: zatrzymanie opisuje
@@ -618,6 +625,11 @@ BaseLinker nie oddał tagów, SKU i parametrów; import ich nie ruszył (każdy 
 overwritten` i jest wliczony w `K errors`). Dalej liczby tagów i ostrzeżenia o cenach (`no purchase
 price` — cena z feedu zamiast marży; `price 0` — produkt bez ceny). Linia z `prod-guard`
 potwierdza, że odblokowanie dostał proces importu.
+
+Zakres liczników: w podsumowaniu importu `tags: auto / review / flag` liczy cały feed przed filtrem
+asortymentu (suma = liczba produktów feedu), a `permit tags:` tylko produkty zapisane. W podglądzie
+(krok 6) oba liczą cały feed — dlatego liczby tagów pozwoleń z podglądu są górną granicą tego, co
+trafi do BaseLinkera (Kolba: podgląd `14 / 2 784 / 14`, import `13 / 500 / 13`).
 
 Nic nie publikuje się samo: sklep pokazuje tylko produkty z tagiem `approved`.
 
