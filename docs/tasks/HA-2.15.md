@@ -1,7 +1,7 @@
 ---
 id: HA-2.15
 title: Import hurtowni na serwerze — cron sync i import
-status: review
+status: done
 difficulty: M
 model: claude-fable-5-1
 model_approved: null
@@ -130,3 +130,4 @@ Feedy hurtowni ważą 54–246 MB, Spechurt działa tylko z serwera 51.83.134.18
 - 2026-10-15 klucz deploy w ustawieniach repo na GitHubie: **niepotwierdzony** — w wiadomości tj pole stało jako szablon `<removed | pending>`. Po stronie tj; klucz nie jest już na serwerze, więc nic w imporcie od niego nie zależy.
 - 2026-10-15 PR #45 (`--base main`, `feat/ha-2.15-import-server`), `status: review`. Pierwsza bezobsługowa noc crona (2026-10-15 20:20 UTC, sześć przebiegów) nie jest blokerem PR: wynik trafi do notatek po wklejeniu dziennika przez tj rano 2026-10-16 (komendy: sekcja 10, „Sprawdzenie następnego dnia”; oczekiwane sześć par `START` / `END exit=0`, zero `SKIP`, pusty `cron-stderr.log`). Do tego czasu kryterium „`crontab -l` z sześcioma wpisami” jest spełnione (wklejone), a „pierwsza noc” — nieudowodniona.
 - 2026-10-15 uwaga o modelu (do decyzji tj): sesje tego zadania od kroku 8 działały na `claude-sonnet-5-5` (tak podaje środowisko sesji i tak są podpisane commity), a frontmatter mówi `model: claude-fable-5-1`, `effort: high` — decyzja tj z 2026-10-14 brzmiała „zostaje Fable/high”. Frontmatter bez zmian, `model_approved` nietknięte; reguła „`model:` = to, na czym pracujesz” i decyzja tj są tu sprzeczne, więc rozstrzyga tj.
+- 2026-10-15 — odbiór tj, PR #45: udowodnione — konto hydra-import + klon + .env.local 600 + marker 119068; preview i diagnostyka (0 kolizji SKU po HA-2.28); pierwszy import per hurtownia (Kolba 3947 s 2957/185, Sharg 3050 s 2279/5, Spechurt 2610 s 1831/122/2 err) i sync (61/84/89 s) bez cen 0/fallback na cudzych rekordach; red proofs flock (SKIP 20:02:55), HYDRA_MAX_SECONDS, marker/exit 78, test-run-bl.sh 82/82; crontab 6 linii UTC; grep key=/token= w diffie = 0; §S czyste; doc serwer-importu.md kompletny; sprzątanie /home/ubuntu. Niepokryte: pierwsza noc bez nadzoru (cron startuje dziś 20:20 UTC) — ocena jutro z journalu, ewentualne problemy jako osobny S-task, nie reopen 2.15. Model: frontmatter fable, commity Fable/Opus/Sonnet — przyjęte z adnotacją.
