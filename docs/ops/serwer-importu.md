@@ -406,15 +406,15 @@ Zasady, z których to wynika:
 - **Sync zaraz po imporcie tej samej hurtowni.** Import zapisuje tylko produkty, które
   przechodzą filtr, czyli mają stan; produkt wyprzedany u hurtowni zeruje dopiero sync. Produktu,
   który z feedu zniknął, nie zeruje nic (wpis w deferred).
-- **Limity są wstępne.** Pomiar pierwszego pełnego importu Kolby (2026-10-14): 3947 s dla 3142
-  produktów, czyli 1,26 s na produkt (przerwa 0,7 s plus odpowiedź BaseLinkera) — nie 0,7 s, jak
-  w szacunku (37 min), tylko 66 min. Przy tej stawce projekcja: Sharg 2296 → ok. 48 min plus
-  pobranie feedu (ok. 50 min), Spechurt 1959 → ok. 41 min. Limity z tabeli mieszczą się w tym
-  z zapasem: Kolba 150 min = 2,3× pomiaru, Sharg 90 min = 1,8× projekcji, Spechurt 90 min =
-  2,2× projekcji; limit zadziała dopiero przy średnio 2,9 s na produkt (Kolba), 2,4 s (Sharg)
-  i 2,8 s (Spechurt). Godziny w tabeli zostają. Sync nie ma jeszcze pomiaru (13 min to
-  założenie). Ostateczna treść crontaba (krok 10) powstaje z `duration=` importów Sharga
-  i Spechurtu i pierwszych sync.
+- **Limity są wstępne.** Pomiary pierwszych pełnych importów: Kolba (2026-10-14) 3947 s dla 3142
+  produktów, czyli 1,26 s na produkt, Sharg (2026-10-15) 3050 s dla 2284, czyli 1,34 s — przerwa
+  0,7 s plus odpowiedź BaseLinkera, nie same 0,7 s, jak w pierwszym szacunku (37 min dla Kolby
+  wobec 66 min w rzeczywistości). Spechurt przy 1,34 s: 1959 → ok. 44 min. Limity z tabeli
+  mieszczą się z zapasem: Kolba 150 min = 2,3× pomiaru, Sharg 90 min = 1,8× pomiaru, Spechurt
+  90 min = 2,1× projekcji; limit zadziała dopiero przy średnio 2,9 s na produkt (Kolba), 2,4 s
+  (Sharg) i 2,8 s (Spechurt). Godziny w tabeli zostają. Sync nie ma jeszcze pomiaru (13 min to
+  założenie). Ostateczna treść crontaba (krok 10) powstaje z `duration=` importu Spechurtu
+  i pierwszych sync.
 - **Co się dzieje przy limicie.** Import zatrzymany limitem zostawia hurtownię odświeżoną
   częściowo, a następnej nocy zaczyna od początku feedu. Za ciasny limit ucinałby więc co noc
   ten sam ogon — w dzienniku widać to jako `stopped-by=limit-…` noc w noc. Bez limitów
