@@ -569,6 +569,10 @@ head -n 12 "$LOG"                          # inventory : 119068 oraz markup : +N
 tail -f "$LOG"                             # „+” nowy produkt, „.” aktualizacja; Ctrl-C kończy tylko podgląd
 ```
 
+Podgląd na żywo (`tail` z opcją follow) nie kończy się sam po zakończeniu importu i przestaje się
+odświeżać — koniec importu widać w dzienniku (linia `END`), nie na ekranie. Ctrl-C kończy tylko
+podgląd.
+
 Pierwszy import idzie z limitem czasu (zdrowy przebieg go nie dotyka, zawieszony oddaje
 blokadę): Kolba `HYDRA_MAX_SECONDS=7200` (decyzja tj 2026-10-14: 3× szacunek 37 min; wyszło
 66 min), Sharg i Spechurt `5400` — to wartość z tabeli sekcji 7, więc pierwszy import sprawdza
@@ -641,6 +645,21 @@ sprzedaży produktów, które już są w katalogu; niczego nie tworzy.
 Każdy sync i każdy import **nadpisuje cenę sprzedaży** wyliczoną z ceny zakupu i marży z pliku
 env. Cena poprawiona ręcznie w BaseLinkerze nie przetrwa najbliższego uruchomienia (pytanie O-32
 jest otwarte).
+
+Co dokładnie robi sync (odczyt kodu, `runSync`):
+
+- iteruje po **całym feedzie** hurtowni (bez filtra stanu i asortymentu) i dopasowuje kluczem
+  importu: EAN między hurtowniami, inaczej prefiksowane SKU tej hurtowni;
+- dla każdego dopasowania zapisuje stan do magazynu tej hurtowni i cenę sprzedaży do grupy z env —
+  **także 0 i cenę brutto z feedu (fallback)**; cenę zakupu tylko wtedy, gdy jest > 0;
+- dotyczy to też rekordów utworzonych przez inną hurtownię (wspólny EAN): ich cenę sprzedaży
+  ustawia ta hurtownia, która robiła sync ostatnia, także gdy ma stan 0 albo cenę 0;
+- niczego nie tworzy: produkty feedu spoza BL są liczone jako „not in BL yet”.
+
+Oczekiwane `Matched` (szacunek: rekordy własne + dopasowania cudzych rekordów z diagnostyki
+2026-10-14): Kolba ok. 3142 + 446 = 3588, Sharg ok. 2279 + 45 = 2324, Spechurt ok. 1831 + 177 =
+2008; dryf feedów przesuwa to o kilkadziesiąt. `⚠ N products synced with price 0` obejmuje też
+własne zera (Kolba: 103 z importu), więc nagłówkiem jest przyrost ponad nie.
 
 **STOP — przed pierwszym sync.** Sync zapisuje ceny. Uruchamiasz go po zgodzie, gdy wyniki importu
 trzech hurtowni są wklejone.
