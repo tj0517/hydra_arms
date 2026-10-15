@@ -1,0 +1,48 @@
+---
+id: HA-2.29
+title: Lokalny stack Supabase na własnych portach (55321+) — współżycie z DCS na WSL
+status: in_progress
+difficulty: S
+model: sonnet-5.5
+model_approved: null
+effort: null
+branch: feat/ha-2.29-local-ports
+due: null
+depends_on: [HA-1.06]
+blocked_by_questions: []
+touches_db: false
+touches_prod: false
+pr: null
+---
+
+## Cel
+Lokalny stack Hydry używa domyślnych portów Supabase (54321–54329), tych samych co stack DCS (Seaclouds). Na WSL oba muszą stać jednocześnie, więc `npm run db:start` pada na „port is already allocated”. Sukces: Hydra ma własne porty, `db:start` rusza obok działającego DCS, testy i dev łączą się z właściwą bazą, a nikt nie musi zatrzymywać cudzego stacka.
+
+## Zakres
+- [ ] odczyt stanu bieżącego: wszystkie wystąpienia `5432x` w repo (`git grep -nE '5432[0-9]'` bez `package-lock.json`), `supabase/config.toml`, `.env.development.local.example`, fallbacki `SUPABASE_URL` w `tests/shop/**`, `scripts/lib/prodGuard.test.ts`, workflow CI
+- [ ] `supabase/config.toml`: porty 55321 (api), 55322 (db), 55320 (shadow), 55323 (studio), 55324 (inbucket), 55327 (analytics), 55329 (pooler) — zachować wyłączenia z `db:start -x …`
+- [ ] `.env.development.local.example`: URL na 55321; fallbacki w testach na 55321 (albo jeden wspólny fallback w `tests/shop/fixtures.ts`)
+- [ ] `prodGuard.test.ts`: potwierdzić odczytem, że guard sprawdza host, nie port — jeśli tak, bez zmian
+- [ ] `CLAUDE.md` (sekcja Commands/Supabase) i `docs/` tam, gdzie wymieniono 54321/54322
+
+## Gotowe, gdy
+- `npm run db:start` rusza przy działającym stacku DCS na 54321/54322 — **jak sprawdzić:** wklejony `docker ps` z obiema grupami kontenerów
+- `npm run db:reset` przechodzi — **jak sprawdzić:** wklejony ogon wyniku
+- pełny zestaw testów bez regresji względem 196/198 na WSL — **jak sprawdzić:** wklejona linia podsumowania
+- `git grep -nE '5432[0-9]'` poza `package-lock.json` zwraca tylko `prodGuard.test.ts` (jeśli zostawiony) — **jak sprawdzić:** wklejony wynik
+- red proof: `.env.development.local` wskazujący stary port → testy padają na połączeniu, nie przechodzą po cichu na inną bazę — **jak sprawdzić:** wklejony błąd
+
+## Poza zakresem
+- zmiana portów DCS/FA → ich repa
+- cokolwiek w `.env.local` (prod) — nie dotykać
+
+## Bramki STOP
+- przed zmianą `.github/workflows/*` — pokaż diff i czekaj
+
+## Kontekst
+- `supabase/config.toml` — źródło portów
+- `.env.development.local.example`, `tests/shop/fixtures.ts`, `scripts/lib/prodGuard.ts` — gdzie URL lokalny jest czytany
+- `docs/tasks/HA-1.06.md` — jak powstał lokalny stack
+
+## Notatki z realizacji
+- 2026-10-15 tj: Seaclouds zostaje na domyślnych portach; Hydra przechodzi na 553xx (decyzja przy starcie HA-2.06).
