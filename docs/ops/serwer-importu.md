@@ -389,13 +389,13 @@ niczego w sklepie nie zmienia.
 
 | Start (UTC) | Czas polski latem / zimą | Co | Limit | Najpóźniejszy koniec (UTC) |
 |---|---|---|---|---|
-| 20:20 | 22:20 / 21:20 | Kolba — import | 150 min | 22:51 |
-| 22:55 | 00:55 / 23:55 | Kolba — sync | 13 min | 23:09 |
+| 20:20 | 22:20 / 21:20 | Kolba — import | 140 min | 22:41 |
+| 22:55 | 00:55 / 23:55 | Kolba — sync | 10 min | 23:06 |
 | 23:15 | 01:15 / 00:15 | Sharg — import | 90 min | 00:46 |
-| 00:50 | 02:50 / 01:50 | Sharg — sync | 13 min | 01:04 |
-| 01:05–04:05 | | nic nie chodzi: o 02:00 UTC sklep kopiuje BaseLinkera, Spechurt generuje stan | | |
+| 00:50 | 02:50 / 01:50 | Sharg — sync | 10 min | 01:01 |
+| 01:01–04:05 | | nic nie chodzi: o 02:00 UTC sklep kopiuje BaseLinkera, Spechurt generuje stan | | |
 | 04:05 | 06:05 / 05:05 | Spechurt — import | 90 min | 05:36 |
-| 05:40 | 07:40 / 06:40 | Spechurt — sync | 13 min | 05:54 |
+| 05:40 | 07:40 / 06:40 | Spechurt — sync | 10 min | 05:51 |
 
 Zasady, z których to wynika:
 
@@ -406,15 +406,14 @@ Zasady, z których to wynika:
 - **Sync zaraz po imporcie tej samej hurtowni.** Import zapisuje tylko produkty, które
   przechodzą filtr, czyli mają stan; produkt wyprzedany u hurtowni zeruje dopiero sync. Produktu,
   który z feedu zniknął, nie zeruje nic (wpis w deferred).
-- **Limity są wstępne.** Pomiary pierwszych pełnych importów: Kolba (2026-10-14) 3947 s dla 3142
-  produktów, czyli 1,26 s na produkt, Sharg (2026-10-15) 3050 s dla 2284, czyli 1,34 s — przerwa
-  0,7 s plus odpowiedź BaseLinkera, nie same 0,7 s, jak w pierwszym szacunku (37 min dla Kolby
-  wobec 66 min w rzeczywistości). Spechurt przy 1,34 s: 1959 → ok. 44 min. Limity z tabeli
-  mieszczą się z zapasem: Kolba 150 min = 2,3× pomiaru, Sharg 90 min = 1,8× pomiaru, Spechurt
-  90 min = 2,1× projekcji; limit zadziała dopiero przy średnio 2,9 s na produkt (Kolba), 2,4 s
-  (Sharg) i 2,8 s (Spechurt). Godziny w tabeli zostają. Sync zmierzony 2026-10-15: 61 s (Kolba),
-  84 s (Sharg), 89 s (Spechurt); limit 13 min ma zapas ponad 8×. Ostateczna treść crontaba
-  (krok 10) powstaje z tych pomiarów.
+- **Limity z pomiarów** (decyzja tj 2026-10-15). Importy: Kolba 3947 s (1,26 s na produkt),
+  Sharg 3050 s (1,34 s), Spechurt 2610 s (1,34 s); synce 61 / 84 / 89 s. Reguła: import ok. 2×
+  zmierzony czas, w górę do 10 min — Kolba 140 min (8400 s, 2,13×), Spechurt 90 min (5400 s,
+  2,07×); Sharg zostaje przy 90 min (5400 s, 1,77×), bo ta wartość przeszła prawdziwy import;
+  sync 10 min (600 s, zapas co najmniej 6,7×). Limit zadziała dopiero przy średnio 2,7 s na
+  produkt (Kolba), 2,4 s (Sharg) i 2,8 s (Spechurt). Odstęp między startami jest większy niż
+  limit + 60 s; najmniejszy zapas to 240 s. Limity przeliczaj z pola `duration=` w dzienniku,
+  gdy feed urośnie.
 - **Co się dzieje przy limicie.** Import zatrzymany limitem zostawia hurtownię odświeżoną
   częściowo, a następnej nocy zaczyna od początku feedu. Za ciasny limit ucinałby więc co noc
   ten sam ogon — w dzienniku widać to jako `stopped-by=limit-…` noc w noc. Bez limitów
@@ -681,29 +680,29 @@ Do odczytania: `Matched N products`, linie `stock …: X updated` i `prices …:
 
 ## 10. Crontab
 
-Kształt zaakceptowany przez tj 2026-10-13. **Dokładna treść przechodzi przez STOP po pierwszym
-imporcie**, z limitami przeliczonymi z pomiaru. Do tego czasu niczego nie instalujesz.
-
-Szkic — limity wstępne:
+Kształt zaakceptowany przez tj 2026-10-13, treść ostateczna — 2026-10-15 (limity z pomiarów,
+sekcja 7). Zainstalowany na koncie `hydra-import` z pliku (`crontab <plik>`); pierwszy
+bezobsługowy przebieg: 2026-10-15 20:20 UTC.
 
 ```
 # Hydra Arms — import hurtowni do BaseLinkera (HA-2.15). Konto hydra-import. GODZINY W UTC.
 # Liczba przed komendą to limit czasu w sekundach; odstęp do następnego startu jest większy niż limit + 60 s.
+# Limity z pomiarów 2026-10-14/15: import ok. 2x zmierzony czas, sync 600 s.
 # Instrukcja: docs/ops/serwer-importu.md
 SHELL=/bin/sh
 PATH=/usr/local/bin:/usr/bin:/bin
 MAILTO=""
 
 # Kolba: import (22:20 czasu polskiego latem / 21:20 zimą), potem sync
-20 20 * * * HYDRA_MAX_SECONDS=9000 /home/hydra-import/hydra/scripts/server/run-bl.sh kolba import 2>>/home/hydra-import/cron-stderr.log
-55 22 * * * HYDRA_MAX_SECONDS=780 /home/hydra-import/hydra/scripts/server/run-bl.sh kolba sync 2>>/home/hydra-import/cron-stderr.log
+20 20 * * * HYDRA_MAX_SECONDS=8400 /home/hydra-import/hydra/scripts/server/run-bl.sh kolba import 2>>/home/hydra-import/cron-stderr.log
+55 22 * * * HYDRA_MAX_SECONDS=600 /home/hydra-import/hydra/scripts/server/run-bl.sh kolba sync 2>>/home/hydra-import/cron-stderr.log
 # Sharg: import (01:15 latem / 00:15 zimą), potem sync
 15 23 * * * HYDRA_MAX_SECONDS=5400 /home/hydra-import/hydra/scripts/server/run-bl.sh sharg import 2>>/home/hydra-import/cron-stderr.log
-50 0 * * * HYDRA_MAX_SECONDS=780 /home/hydra-import/hydra/scripts/server/run-bl.sh sharg sync 2>>/home/hydra-import/cron-stderr.log
-# 01:05-04:05 UTC nic nie chodzi: o 02:00 UTC sklep kopiuje BaseLinkera, Spechurt generuje stan
+50 0 * * * HYDRA_MAX_SECONDS=600 /home/hydra-import/hydra/scripts/server/run-bl.sh sharg sync 2>>/home/hydra-import/cron-stderr.log
+# 01:01-04:05 UTC nic nie chodzi: o 02:00 UTC sklep kopiuje BaseLinkera, Spechurt generuje stan
 # Spechurt: import (06:05 latem / 05:05 zimą), potem sync
 5 4 * * * HYDRA_MAX_SECONDS=5400 /home/hydra-import/hydra/scripts/server/run-bl.sh spechurt import 2>>/home/hydra-import/cron-stderr.log
-40 5 * * * HYDRA_MAX_SECONDS=780 /home/hydra-import/hydra/scripts/server/run-bl.sh spechurt sync 2>>/home/hydra-import/cron-stderr.log
+40 5 * * * HYDRA_MAX_SECONDS=600 /home/hydra-import/hydra/scripts/server/run-bl.sh spechurt sync 2>>/home/hydra-import/cron-stderr.log
 ```
 
 Co jest w tych liniach:
@@ -750,26 +749,105 @@ Skrypt importu odmawia zapisu do BaseLinkera, dopóki w otoczeniu **tego jednego
   komendą importu (`env … HA_ALLOW_PROD=1 npx tsx …`), po `--check` i po `flock`.
 - Nigdy w `.env.local`, w `~/.profile`, `~/.bashrc` ani w nagłówku crontaba.
 
-## 11. Porządki — propozycja
+## 11. Porządki — decyzje tj 2026-10-15
 
-Decyduje i usuwa tj. Wszystko poniżej leży na koncie `ubuntu` i po wdrożeniu nie jest potrzebne
-importowi. Pierwszą pozycję można zrobić od razu po kroku 4.
+Wszystko poniżej leży na koncie `ubuntu` i po wdrożeniu nie jest potrzebne importowi. Odczyt
+z 2026-10-15: `.env.local` 644 (3431 B), stary klon 2,0 GB, `~/.bash_history` z 4 liniami `key=` /
+`token=`, w `~/.ssh` klucz `github_deploy` i `config`; `count-adhoc.ts` bez danych dostępowych.
 
-| Co | Dlaczego |
+| Co | Decyzja |
 |---|---|
-| `/home/ubuntu/hydra/.env.local` | tryb 644; trzyma klucz Supabase service role, token Sanity, klucz Resend i stare dane BaseLinkera — żaden z nich nie jest potrzebny na serwerze (O-19, opcja B) |
-| `/home/ubuntu/hydra/scripts/count-adhoc.ts` | nieśledzony skrypt, treść nieznana — obejrzyj, zanim usuniesz klon |
-| cały `/home/ubuntu/hydra` | stary klon z lipca: kod bez filtra i bezpieczników, `hydra-categories.json` z ID sandboxa, 926 pakietów; uruchomiony przez pomyłkę pisałby według starego pliku env |
-| `~/spechurt-import.log` | log importu z lipca; 1 linia z kluczem lub tokenem w adresie |
-| `~/spechurt.xml`, `~/spechurt-2026-09-26.xml` | pełne feedy Spechurtu z cenami zakupu (18,8 MB i 17,4 MB); import pobiera feed sam |
-| `~/.bash_history` | mogą w niej być komendy z adresem feedu; sprawdź `grep -c -e 'key=' -e 'token=' ~/.bash_history` i przy wyniku innym niż 0 wyczyść historię (`history -c`, potem `: > ~/.bash_history`) |
-| `~/hydra-import.env` na serwerze i na Macu | plik pośredni z kroku 4; `ls ~/hydra-import.env` ma odpowiedzieć „No such file” w obu miejscach |
-| klucz w `~/.ssh` używany do GitHuba | nowe konto klonuje publiczne repo po HTTPS; sprawdź `ssh -T git@github.com`, czyj to klucz — jeśli osobisty z prawem zapisu, zdejmij go z serwera i z GitHuba |
+| `/home/ubuntu/hydra/.env.local` | usunąć (trzyma stare klucze Supabase service role, Sanity, Resend) |
+| `scripts/count-adhoc.ts`, `hydra-categories.json` (nieśledzone) | idą z klonem |
+| cały `/home/ubuntu/hydra` | usunąć |
+| `~/spechurt-import.log`, `~/spechurt.xml`, `~/spechurt-2026-09-26.xml` | usunąć |
+| `~/.bash_history` | wyczyścić (4 trafienia) |
+| `~/hydra-import.env` (serwer i Mac) | brak — potwierdzone |
+| `~/.ssh/github_deploy`, `.pub`, wpis w `~/.ssh/config` | usunąć z serwera; klucz deploy w ustawieniach repo na GitHubie usuwa tj |
+
+Jeden blok, `ubuntu`, z Maca. Najpierw z `GO=0` (odczyt i straże, niczego nie usuwa), po sprawdzeniu
+wyniku ten sam blok z `GO=1` w pierwszej linii (usuwa i drukuje weryfikację). Straże zatrzymują
+blok, gdy trwa import, klon jest dowiązaniem, nowy klon nie ma wrappera albo coś w cronie
+wskazuje na stary klon. `authorized_keys` i `known_hosts` nie są ruszane; `~/.ssh/config` znika
+tylko wtedy, gdy ma jeden blok `Host` i ten odwołuje się do `github_deploy`.
+
+```bash
+ssh hydra-srv 'GO=0 bash -s' <<'EOF'
+set -u
+fail() { echo "STOP: $*"; exit 1; }
+
+# ---- 0. gdzie jestem
+[ "$(id -un)" = ubuntu ] || fail "to nie jest konto ubuntu"
+cd /home/ubuntu || fail "brak katalogu domowego"
+OLD=/home/ubuntu/hydra
+NEW=/home/hydra-import/hydra
+
+# ---- 1. tylko odczyt
+echo "=== 1. odczyt"
+ls -la "$OLD/.env.local" "$OLD/scripts/count-adhoc.ts" ~/spechurt-import.log ~/spechurt.xml ~/spechurt-2026-09-26.xml ~/hydra-import.env 2>&1
+du -sh "$OLD"
+n=$(grep -c -e 'key=' -e 'token=' ~/.bash_history 2>/dev/null); echo "ubuntu: .bash_history, linii z key=/token=: ${n:-brak pliku}"
+n=$(sudo grep -c -e 'key=' -e 'token=' /home/hydra-import/.bash_history 2>/dev/null); echo "hydra-import: .bash_history, linii z key=/token=: ${n:-brak pliku}"
+echo "--- ~/.ssh/config:"; cat ~/.ssh/config 2>&1
+ls -la ~/.ssh
+pgrep -af run-bl || echo "brak procesów importu"
+echo "wpisy run-bl.sh w crontabie hydra-import (oczekiwane 6): $(sudo -u hydra-import crontab -l 2>/dev/null | grep -c 'run-bl.sh')"
+
+# ---- straże: jeśli któraś nie przejdzie, nic nie zostanie usunięte
+[ -d "$OLD/.git" ] || fail "$OLD nie jest klonem git"
+[ "$(readlink -f "$OLD")" = "$OLD" ] || fail "$OLD jest dowiązaniem symbolicznym"
+sudo test -x "$NEW/scripts/server/run-bl.sh" || fail "nowy klon $NEW nie ma wrappera"
+if pgrep -f run-bl >/dev/null; then fail "trwa uruchomienie importu"; fi
+if sudo grep -rsl -e "$OLD" /etc/crontab /etc/cron.d /var/spool/cron >/dev/null 2>&1; then fail "coś w cronie wskazuje na stary klon"; fi
+echo "straże: OK"
+
+if [ "${GO:-0}" != 1 ]; then
+  echo "=== TRYB PRÓBNY (GO=0): niczego nie usunięto. Powtórz z GO=1 w pierwszej linii."
+  exit 0
+fi
+
+# ---- 2. usuwanie
+echo "=== 2. usuwanie"
+rm -v -- "$OLD/.env.local"
+rm -rf -- "$OLD"
+rm -v -- ~/spechurt-import.log ~/spechurt.xml ~/spechurt-2026-09-26.xml
+: > ~/.bash_history
+rm -v -- ~/.ssh/github_deploy ~/.ssh/github_deploy.pub
+CFG=~/.ssh/config
+if [ -f "$CFG" ]; then
+  if grep -q github_deploy "$CFG"; then
+    hosts=$(grep -c -i -e '^[[:space:]]*Host[[:space:]]' "$CFG")
+    if [ "$hosts" = 1 ]; then rm -v -- "$CFG"
+    else echo "RĘCZNIE: $CFG ma inne bloki Host — usuń tylko blok z github_deploy"; fi
+  else echo "$CFG nie wspomina github_deploy — bez zmian"; fi
+fi
+
+# ---- 3. weryfikacja
+echo "=== 3. weryfikacja"
+for f in "$OLD" ~/spechurt-import.log ~/spechurt.xml ~/spechurt-2026-09-26.xml ~/hydra-import.env ~/.ssh/github_deploy ~/.ssh/github_deploy.pub; do
+  if [ -e "$f" ]; then echo "JEST:  $f"; else echo "brak:  $f"; fi
+done
+echo ".bash_history: $(wc -c < ~/.bash_history) B, linii z key=/token=: $(grep -c -e 'key=' -e 'token=' ~/.bash_history)"
+ls -la ~/.ssh
+if [ -s ~/.ssh/authorized_keys ]; then echo "authorized_keys: $(wc -l < ~/.ssh/authorized_keys) linii (nietknięte)"; else echo "UWAGA: authorized_keys puste lub brak"; fi
+ls -la ~
+du -sh ~
+echo "crontab hydra-import, wpisy run-bl.sh (6): $(sudo -u hydra-import crontab -l | grep -c 'run-bl.sh')"
+sudo test -x "$NEW/scripts/server/run-bl.sh" && echo "nowy klon: wrapper jest"
+EOF
+```
+
+W otwartej, interaktywnej sesji `ubuntu` wykonaj dodatkowo `history -c` i `unset HISTFILE` przed
+wyjściem — inaczej powłoka dopisze swoją historię z powrotem przy zamknięciu.
 
 Tokeny Sharga i klucz Spechurtu są też w publicznym repo, więc usunięcie plików z serwera ich nie
 chroni; chroni dopiero rotacja u hurtowni. Ryzyko zaakceptowane w HA-1.02 dotyczy migracji 004;
 próbka manifestu Sharga z tokenami pozostałych feedów jest osobnym wpisem w
 `docs/deferred-tasks.md`, do decyzji tj.
+
+Pliki podglądów, partii próbnej i diagnostyki na koncie `hydra-import` (`~/logs/preview-*.log`,
+`proba-*.log`, `diag-feedy.log`) nie są objęte retencją wrappera; `grep` = 0 był wklejony. Zostają
+do zamknięcia zadania.
 
 ## Obsługa
 
