@@ -60,4 +60,7 @@ Sklep sprzedaje asortyment dual-use. Produkt z pozwoleniem, rejestracją lub ogr
 - 2026-10-15 tj: decyzja 2 — nieznana kategoria, zerwany łańcuch albo korzeń bez „NN.” = nie 01/02; flagi nadal decydują.
 - 2026-10-15 tj: walidator body pisany ręcznie, bez nowej zależności; MANUAL_TESTS.md TC-11/12 z potwierdzeniem.
 - 2026-10-15 agent: stan prod (odczyt): definicja RPC `checkout_create_order` ma ten sam md5 co lokalna po 001–015 (651401a2…), kolumny/constrainty/policy `orders` identyczne — prod jest na poziomie 015 dla tych obiektów (list_migrations prod zwraca pustą listę — migracje wdrażane SQL Editorem).
+- 2026-10-15 tj: Option C (hydra_section SQL), unknown category = not 01/02, confirmation on every pickup order; old 5-arg RPC dropped (fail closed). Runbook note for go-live: apply 016 and deploy the app together — between them pickup orders are refused.
+- 2026-10-15 tj: `hydra_section` jako SECURITY INVOKER (wywołują ją service_role z route i właściciel RPC; wykonanie tylko service_role).
+- 2026-10-15 agent: pierwszy przebieg `npm run test:shop -- <plik>` uruchomił cały `tests/shop` (skrypt ma już ścieżkę) i padł na obcym serwerze na :3001 (404 HTML, brak linii [WebServer] = reuseExistingServer); po sprawdzeniu, że :3001 jest wolny, przebiegi: spec 16/16, test:shop 151 passed / 1 flaky (cart.spec.ts:112, znany) / 4 skipped, `npm run test` jw., test:unit 219/221 (te same 2 prod-guard).
 

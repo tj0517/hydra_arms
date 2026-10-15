@@ -95,7 +95,22 @@ const baseProduct = {
   brand: 'Test',
 }
 
+/** Remove the throw-away rows (and any order that references them). Idempotent. */
+async function cleanup() {
+  const ids = `${T_LICENSE},${T_ADULT},${T_SECTION_02}`
+  const items: { order_id: string }[] = await (await rest(`order_items?product_id=in.(${ids})&select=order_id`)).json()
+  const orderIds = [...new Set(items.map(i => i.order_id))]
+  if (orderIds.length) {
+    await rest(`order_items?order_id=in.(${orderIds.join(',')})`, { method: 'DELETE' })
+    await rest(`orders?id=in.(${orderIds.join(',')})`, { method: 'DELETE' })
+  }
+  await rest(`shop_products?id=in.(${ids})`, { method: 'DELETE' })
+  await rest(`shop_categories?id=eq.${T_CHILD_02}`, { method: 'DELETE' })
+  await rest(`shop_categories?id=eq.${T_ROOT_02}`, { method: 'DELETE' })
+}
+
 test.beforeAll(async () => {
+  await cleanup() // leftovers of an aborted earlier run
   const cats = await rest('shop_categories', {
     method: 'POST',
     json: [
@@ -116,8 +131,7 @@ test.beforeAll(async () => {
 })
 
 test.afterAll(async () => {
-  await rest(`shop_products?id=in.(${T_LICENSE},${T_ADULT},${T_SECTION_02})`, { method: 'DELETE' })
-  await rest(`shop_categories?id=in.(${T_CHILD_02},${T_ROOT_02})`, { method: 'DELETE' })
+  await cleanup()
 })
 
 test.describe('courier is refused for restricted products — no order row', () => {
@@ -239,7 +253,12 @@ test.describe('checkout_create_order refuses on its own (service role, no route 
 
   test('pickup route with confirmation → order created with pickup_confirmed_at', async () => {
     const sessionId = crypto.randomUUID()
-    const res = await rpc({ p_session_id: sessionId, p_fulfillment_route: 'pickup', p_pickup_confirmed: true })
+    const res = await rpc({
+      p_session_id: sessionId,
+      p_fulfillment_route: 'pickup',
+      p_pickup_confirmed: true,
+      p_items: [{ product_id: SECTION_01_PRODUCT, quantity: 1 }],
+    })
     expect(res.status).toBe(200)
     const [order] = await ordersForKey(sessionId)
     expect(order.pickup_confirmed_at).not.toBeNull()
@@ -286,7 +305,14 @@ test.describe('hydra_section()', () => {
 test.describe('checkout UI — pickup confirmation', () => {
   test.beforeEach(async ({ page }) => {
     await dismissCookies(page)
-    await page.addInitScript(() => localStorage.removeItem('hydra-cart'))
+    // Start from an empty cart, but only once per tab: the init script runs on every
+    // navigation, and the cart must survive the move from the product page to checkout.
+    await page.addInitScript(() => {
+      if (!sessionStorage.getItem('ha206-cart-reset')) {
+        localStorage.removeItem('hydra-cart')
+        sessionStorage.setItem('ha206-cart-reset', '1')
+      }
+    })
   })
 
   test('unchecked → error and no request; checked → order placed', async ({ page }) => {
@@ -302,9 +328,11 @@ test.describe('checkout UI — pickup confirmation', () => {
 
     await page.goto('/sklep/zamowienie', { waitUntil: 'domcontentloaded' })
     await hideBanner(page)
-    await page.getByLabel(/Imię/).fill('Test')
-    await page.getByLabel(/Nazwisko/).fill('User')
-    await page.getByLabel(/Email/).fill('test@example.com')
+    // Scoped to the form: the footer has an aria-label="Email" link as well.
+    const form = page.locator('#checkout-form')
+    await form.getByLabel(/Imię/).fill('Test')
+    await form.getByLabel(/Nazwisko/).fill('User')
+    await form.getByLabel(/Email/).fill('test@example.com')
 
     const confirmation = page.getByTestId('pickup-confirmation')
     await expect(confirmation).toBeVisible({ timeout: 10_000 })
