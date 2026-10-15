@@ -11,15 +11,25 @@
 
 const ALLOWED_HOSTS = new Set(['127.0.0.1', 'localhost']);
 
+/**
+ * Port of Hydra's own local API (supabase/config.toml [api] port, HA-2.29).
+ * A localhost URL on any other port is another project's stack (e.g. one still on
+ * the Supabase default API port) — the host alone cannot tell them apart.
+ */
+const LOCAL_API_PORT = '55321';
+
 function isAllowProd(): boolean {
   return process.env.HA_ALLOW_PROD === '1';
 }
 
-function supabaseHost(): string | null {
+function supabaseTarget(): { host: string; port: string } | null {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   if (!url) return null;
   try {
-    return new URL(url).hostname;
+    const parsed = new URL(url);
+    // URL.port is '' when the URL uses its scheme's default port.
+    const port = parsed.port || (parsed.protocol === 'https:' ? '443' : '80');
+    return { host: parsed.hostname, port };
   } catch {
     return null;
   }
@@ -27,7 +37,9 @@ function supabaseHost(): string | null {
 
 /**
  * Guard for scripts that write to Supabase.
- * Passes when NEXT_PUBLIC_SUPABASE_URL host is localhost or 127.0.0.1.
+ * Passes when NEXT_PUBLIC_SUPABASE_URL host is localhost or 127.0.0.1 AND the port is
+ * Hydra's local API port (55321). A localhost URL on another port always throws — the
+ * prod override does not unlock it: it is not prod, it is someone else's local stack.
  * Any other host (including production) requires HA_ALLOW_PROD=1.
  * Must be called after dotenv.config() so the URL is populated.
  *
@@ -35,15 +47,20 @@ function supabaseHost(): string | null {
  *   Override when calling from non-script contexts (e.g. playwright.config.ts).
  */
 export function assertNotProd(commandHint: string = 'npx tsx scripts/<name>.ts'): void {
-  const host = supabaseHost();
-  if (!host) {
+  const target = supabaseTarget();
+  if (!target) {
     throw new Error(
       '[prod-guard] NEXT_PUBLIC_SUPABASE_URL is not set — cannot verify database target.\n' +
       '  Set it in .env.development.local (local) or .env.local (prod) and run from the project root.'
     );
   }
+  const { host, port } = target;
   if (ALLOWED_HOSTS.has(host)) {
-    return;
+    if (port === LOCAL_API_PORT) return;
+    throw new Error(
+      `[prod-guard] Refused: NEXT_PUBLIC_SUPABASE_URL points to ${host}:${port}, but Hydra's local stack listens on ${LOCAL_API_PORT} — another project's local stack?\n` +
+      '  Fix NEXT_PUBLIC_SUPABASE_URL in .env.development.local (npm run db:start, then supabase status).'
+    );
   }
   if (isAllowProd()) {
     console.warn(
