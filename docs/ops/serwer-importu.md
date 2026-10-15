@@ -412,9 +412,9 @@ Zasady, z których to wynika:
   wobec 66 min w rzeczywistości). Spechurt przy 1,34 s: 1959 → ok. 44 min. Limity z tabeli
   mieszczą się z zapasem: Kolba 150 min = 2,3× pomiaru, Sharg 90 min = 1,8× pomiaru, Spechurt
   90 min = 2,1× projekcji; limit zadziała dopiero przy średnio 2,9 s na produkt (Kolba), 2,4 s
-  (Sharg) i 2,8 s (Spechurt). Godziny w tabeli zostają. Sync nie ma jeszcze pomiaru (13 min to
-  założenie). Ostateczna treść crontaba (krok 10) powstaje z `duration=` importu Spechurtu
-  i pierwszych sync.
+  (Sharg) i 2,8 s (Spechurt). Godziny w tabeli zostają. Sync zmierzony 2026-10-15: 61 s (Kolba),
+  84 s (Sharg), 89 s (Spechurt); limit 13 min ma zapas ponad 8×. Ostateczna treść crontaba
+  (krok 10) powstaje z tych pomiarów.
 - **Co się dzieje przy limicie.** Import zatrzymany limitem zostawia hurtownię odświeżoną
   częściowo, a następnej nocy zaczyna od początku feedu. Za ciasny limit ucinałby więc co noc
   ten sam ogon — w dzienniku widać to jako `stopped-by=limit-…` noc w noc. Bez limitów
@@ -656,10 +656,10 @@ Co dokładnie robi sync (odczyt kodu, `runSync`):
   ustawia ta hurtownia, która robiła sync ostatnia, także gdy ma stan 0 albo cenę 0;
 - niczego nie tworzy: produkty feedu spoza BL są liczone jako „not in BL yet”.
 
-Oczekiwane `Matched` (szacunek: rekordy własne + dopasowania cudzych rekordów z diagnostyki
-2026-10-14): Kolba ok. 3142 + 446 = 3588, Sharg ok. 2279 + 45 = 2324, Spechurt ok. 1831 + 177 =
-2008; dryf feedów przesuwa to o kilkadziesiąt. `⚠ N products synced with price 0` obejmuje też
-własne zera (Kolba: 103 z importu), więc nagłówkiem jest przyrost ponad nie.
+Zmierzone `Matched` (pierwszy sync, 2026-10-15): Kolba 3469 (10 384 poza BL, razem 13 853),
+Sharg 2318 (6703, razem 9021), Spechurt 2130 (4030, razem 6160); sync trwał 61 / 84 / 89 s.
+`⚠ N products synced with price 0` obejmuje też własne zera (Kolba: 103 z importu), więc
+nagłówkiem jest przyrost ponad nie; przy pierwszym sync nie było żadnego przyrostu.
 
 **STOP — przed pierwszym sync.** Sync zapisuje ceny. Uruchamiasz go po zgodzie, gdy wyniki importu
 trzech hurtowni są wklejone.
