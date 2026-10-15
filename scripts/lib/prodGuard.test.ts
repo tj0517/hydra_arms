@@ -9,8 +9,11 @@ import { assertNotProd, assertExternalProd } from './prodGuard.js';
 
 const PROD_URL = 'https://breqmmlcaxsvxcqlcmqc.supabase.co';
 const OTHER_REMOTE_URL = 'https://other-project.supabase.co';
-const LOCALHOST_URL = 'http://localhost:54321';
-const LOOPBACK_URL = 'http://127.0.0.1:54321';
+const LOCALHOST_URL = 'http://localhost:55321';
+const LOOPBACK_URL = 'http://127.0.0.1:55321';
+// Supabase default ports — another project's local stack on the same machine (HA-2.29).
+const FOREIGN_API_URL = 'http://127.0.0.1:54321';
+const FOREIGN_DB_PORT_URL = 'http://localhost:54322';
 
 function setEnv(vars: Record<string, string | undefined>) {
   for (const [k, v] of Object.entries(vars)) {
@@ -48,6 +51,32 @@ describe('assertNotProd', () => {
   test('127.0.0.1 URL → passes silently', () => {
     setEnv({ NEXT_PUBLIC_SUPABASE_URL: LOOPBACK_URL });
     assert.doesNotThrow(() => assertNotProd());
+  });
+
+  test("127.0.0.1:54321 (another project's stack) → throws naming the port", () => {
+    setEnv({ NEXT_PUBLIC_SUPABASE_URL: FOREIGN_API_URL });
+    assert.throws(
+      () => assertNotProd(),
+      (err: Error) => /54321/.test(err.message) && /another project's local stack\?/.test(err.message)
+    );
+  });
+
+  test('localhost:54322 → throws naming the port', () => {
+    setEnv({ NEXT_PUBLIC_SUPABASE_URL: FOREIGN_DB_PORT_URL });
+    assert.throws(
+      () => assertNotProd(),
+      (err: Error) => /54322/.test(err.message) && /another project's local stack\?/.test(err.message)
+    );
+  });
+
+  test('localhost without a port (default 80) → throws', () => {
+    setEnv({ NEXT_PUBLIC_SUPABASE_URL: 'http://localhost' });
+    assert.throws(() => assertNotProd(), /another project's local stack\?/);
+  });
+
+  test('wrong local port + prod override → still throws (not a prod switch)', () => {
+    setEnv({ NEXT_PUBLIC_SUPABASE_URL: FOREIGN_API_URL, HA_ALLOW_PROD: '1' });
+    assert.throws(() => assertNotProd(), /another project's local stack\?/);
   });
 
   test('prod URL + HA_ALLOW_PROD=1 → passes with warning', () => {

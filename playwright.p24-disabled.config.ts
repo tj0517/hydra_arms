@@ -7,9 +7,11 @@
 import { defineConfig, devices } from '@playwright/test'
 import * as path from 'path'
 import * as dotenv from 'dotenv'
+import { assertNotProd } from './scripts/lib/prodGuard'
 
 // Load local Supabase keys (never override with prod secrets)
 dotenv.config({ path: path.resolve(process.cwd(), '.env.development.local'), override: true })
+assertNotProd('npx playwright test --config playwright.p24-disabled.config.ts')
 
 export default defineConfig({
   testDir: './tests/shop/p24',

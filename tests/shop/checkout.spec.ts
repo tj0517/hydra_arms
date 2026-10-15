@@ -13,7 +13,7 @@ interface ApiProduct {
   is_active: boolean
 }
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'http://127.0.0.1:54321'
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'http://127.0.0.1:55321'
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
 const SYNC_SECRET = process.env.SYNC_SECRET ?? 'local-sync-secret-dev'
 

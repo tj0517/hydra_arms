@@ -33,6 +33,8 @@ npx tsx scripts/reset-shop-db.ts      # Wipe and re-seed shop tables
 ```bash
 npm run db:start     # Start local Supabase stack (slimmed — no Studio/imgproxy/etc.)
 npm run db:reset     # Drop + re-apply all migrations + seed.sql
+                     # Local stack ports are 55321 (API) / 55322 (DB) / 553xx (HA-2.29) so it can run beside
+                     # another project's Supabase stack on Supabase default ports. Local psql: 127.0.0.1:55322.
 npm run test:shop:local  # Shop E2E tests against the local stack (requires db:start)
 ```
 
@@ -66,6 +68,7 @@ All content pages follow this pattern: server component fetches from Sanity (via
 - **Sync**: `POST /api/shop/sync` (header: `x-sync-secret`, manual/VPS) or `GET` (Vercel cron, `Authorization: Bearer $CRON_SECRET`) or `npx tsx scripts/baselinker-sync.ts`. Runs nightly via Vercel cron (`vercel.json`); `/api/shop/orders/sync` (same auth scheme) every 4h. Sync never overwrites `product_type` or `source_warehouse`.
 - **Cart**: Client-side `useReducer` in `src/components/shop/CartProvider.tsx`, persisted to `localStorage` as `hydra-cart`.
 - **Checkout**: `POST /api/shop/checkout` — validates items/restrictions, then calls the `checkout_create_order` Postgres RPC (migration 006): stock decrement + order + items in one transaction. Pushes to BaseLinker after (non-fatal, `blockedRetries: 0`; orphans retried by `/api/shop/orders/sync`). Rate-limited per IP (`src/lib/rateLimit.ts`). **No payment gateway yet** — orders are created as `paid` (P24 planned, env vars templated).
+- **Pickup enforcement (HA-2.06)**: a product with `requires_license`, `age_min >= 18`, `!delivery_allowed`, a non-standard `product_type`, or in Hydra section 01/02 (`hydra_section(category_id)` — root name prefix `NN.`) is pickup-only. The checkout route refuses first; `checkout_create_order` refuses again (`PICKUP_ONLY`). A pickup order needs an explicit `pickup_confirmed: true`, stored as `orders.pickup_confirmed_at`.
 - **Public product data**: always select `PUBLIC_PRODUCT_COLUMNS` (`src/lib/shop/fetchProducts.ts`) — never `select('*')` on `shop_products` in anything that reaches the client (hides `price_purchase`, `notes_internal`, connector fields).
 - **Fulfillment routing**: `src/lib/shop/cartAnalysis.ts` — determines `own`, `sourced`, or `pickup` (`FulfillmentRoute`) based on `source_warehouse` and `product_type`.
 - **`product_type` enum**: `standard | age_restricted | pickup_only` — non-standard items always force `pickup` route.
