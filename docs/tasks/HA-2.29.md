@@ -1,7 +1,7 @@
 ---
 id: HA-2.29
 title: Lokalny stack Supabase na własnych portach (55321+) — współżycie z DCS na WSL
-status: in_progress
+status: review
 difficulty: S
 model: sonnet-5.5
 model_approved: null
@@ -12,7 +12,7 @@ depends_on: [HA-1.06]
 blocked_by_questions: []
 touches_db: false
 touches_prod: false
-pr: null
+pr: 43
 ---
 
 ## Cel
