@@ -46,3 +46,7 @@ Lokalny stack Hydry używa domyślnych portów Supabase (54321–54329), tych sa
 
 ## Notatki z realizacji
 - 2026-10-15 tj: Seaclouds zostaje na domyślnych portach; Hydra przechodzi na 553xx (decyzja przy starcie HA-2.06).
+- 2026-10-15 agent: `.github/workflows/ci.yml` bez zmian — CI buduje `.env.development.local` z `supabase status -o env` (API_URL z config.toml), w workflow nie ma żadnego `5432x`; bramka STOP nie wystąpiła.
+- 2026-10-15 agent: `prodGuard.ts` sprawdza `hostname` (nie port) → `prodGuard.test.ts` bez zmian (stałe `:54321` to tylko dane testowe URL-i).
+- 2026-10-15 agent: `.env.development.local` nie istniał na tej maszynie — utworzony (nietrackowany, w .gitignore) z `.env.development.local.example` + kluczami z `supabase status -o env`.
+- 2026-10-15 agent: red proof na starym porcie 54321 nie daje „connection refused” — port zajmuje stack DCS i przyjmuje klucz anon Hydry (PGRST205, brak tabeli `shop_products`). Dowód połączeniowy zrobiony na porcie bez nasłuchu (55399); luka guardów w deferred-tasks.

@@ -33,6 +33,8 @@ npx tsx scripts/reset-shop-db.ts      # Wipe and re-seed shop tables
 ```bash
 npm run db:start     # Start local Supabase stack (slimmed — no Studio/imgproxy/etc.)
 npm run db:reset     # Drop + re-apply all migrations + seed.sql
+                     # Local stack ports are 55321 (API) / 55322 (DB) / 553xx (HA-2.29) so it can run beside
+                     # another project's Supabase stack on the default 54321+. Local psql: 127.0.0.1:55322.
 npm run test:shop:local  # Shop E2E tests against the local stack (requires db:start)
 ```
 
