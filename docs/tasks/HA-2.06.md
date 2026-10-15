@@ -1,7 +1,7 @@
 ---
 id: HA-2.06
 title: Compliance — wymuszenie odbioru osobistego (pozwolenie, rejestracja, 18+)
-status: todo
+status: in_progress
 difficulty: M
 model: sonnet-5.5
 model_approved: null
@@ -55,3 +55,4 @@ Sklep sprzedaje asortyment dual-use. Produkt z pozwoleniem, rejestracją lub ogr
 - 2026-10-15 tj: praca w /home/tj/hydra_arms (korzeń repo na WSL, nie `hydra_arms/web`) — jak dla HA-2.15 (2026-10-13) i HA-2.28 (2026-10-14); hook guard i CLAUDE.md ładują się z tego korzenia.
 - 2026-10-15 tj: Playwright MCP niedostępny na tej maszynie — weryfikacja UI zrzutami z `page.screenshot()` w teście Playwright (`.playwright-mcp/ha-2.06-*.png`: niezaznaczone → błąd, zaznaczone → sukces).
 - 2026-10-15 tj: wstrzymane do HA-2.29 (porty lokalnego stacka)
+- 2026-10-15 tj: HA-2.29 zmergowane, wznowienie
