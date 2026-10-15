@@ -36,6 +36,13 @@ INSERT INTO shop_categories (id, name, parent_id, inventory_id) VALUES
   (10002,'Buty taktyczne',               10001, 35743),
   (11003,'Flagi i emblematy',            11001, 35743);
 
+-- Hydra-numbered tree (HA-2.06): root "01. …" is section 01 (broń palna), always pickup-only.
+-- Names mirror prod; the section is read from the root's "NN." prefix (hydra_section()).
+INSERT INTO shop_categories (id, name, parent_id, inventory_id) VALUES
+  (12001, '01. BROŃ PALNA',              NULL,  35743);
+INSERT INTO shop_categories (id, name, parent_id, inventory_id) VALUES
+  (12002, '1.1 Broń Krótka',             12001, 35743);
+
 -- ── Products ──────────────────────────────────────────────────────────────────
 -- product_type distribution:
 --   standard (15):      everyday tactical gear, no shipping restrictions
@@ -118,7 +125,13 @@ VALUES
 
   -- ── pickup_only / sharg ─────────────────────────────────────────────────
   (307001, 35743, 'KD-KA-001', '5901234567015', 'Kaburka udowa pistolet Glock 17/19 Czarna',
-   249.00, 23, 16, 0.45, 7005, 'pickup_only', TRUE, 'sharg', 0, TRUE, FALSE, 'Blackhawk');
+   249.00, 23, 16, 0.45, 7005, 'pickup_only', TRUE, 'sharg', 0, TRUE, FALSE, 'Blackhawk'),
+
+  -- ── section 01 without any flag (HA-2.06) ───────────────────────────────
+  -- standard / no licence / no age / delivery_allowed=TRUE, but the category chain
+  -- ends at root "01. BROŃ PALNA" → pickup-only by category alone (defence in depth)
+  (312001, 35743, 'TS-S01-001', '5901234567099', 'Produkt testowy sekcji 01 (bez flag)',
+   100.00, 23, 10, 0.10, 12002, 'standard', TRUE, 'own', 0, FALSE, TRUE, 'Test');
 
 -- ── Test helper ───────────────────────────────────────────────────────────────
 -- Wraps has_function_privilege so permission tests can verify REVOKE without
