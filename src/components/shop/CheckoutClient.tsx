@@ -23,6 +23,11 @@ export default function CheckoutClient() {
   const [error, setError] = useState('')
   const [idempotencyKey] = useState(() => crypto.randomUUID())
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>('pickup_all')
+  // HA-2.06: customer confirms that age and permits are checked at personal pickup.
+  // Required for every order (or order leg) with route 'pickup'; enforced again in
+  // the checkout route and in the checkout_create_order RPC.
+  const [pickupConfirmed, setPickupConfirmed] = useState(false)
+  const [pickupConfirmError, setPickupConfirmError] = useState(false)
   const [cartAlert, setCartAlert] = useState<{
     removedNames: string[]
     cappedNames: string[]
@@ -115,6 +120,13 @@ export default function CheckoutClient() {
     e.preventDefault()
     if (!items.length) return
 
+    // Checked before any request: in split mode the ship leg is created first, so a
+    // refused pickup leg would otherwise leave a half-placed order.
+    if (analysis.pickup && !pickupConfirmed) {
+      setPickupConfirmError(true)
+      return
+    }
+
     setStep('processing')
     setSubmitting(true)
     setError('')
@@ -155,6 +167,7 @@ export default function CheckoutClient() {
             shipping: form,
             idempotency_key: idempotencyKey + '-pickup',
             fulfillment_route: 'pickup',
+            pickup_confirmed: true,
           }),
         })
 
@@ -178,6 +191,7 @@ export default function CheckoutClient() {
             shipping: form,
             idempotency_key: idempotencyKey,
             fulfillment_route: analysis.route,
+            ...(analysis.route === 'pickup' ? { pickup_confirmed: true } : {}),
           }),
         })
 
@@ -398,6 +412,33 @@ export default function CheckoutClient() {
                   <Field label="Miasto" value={form.city} onChange={v => updateField('city', v)} required />
                   <Field label="Kod pocztowy" value={form.zip} onChange={v => updateField('zip', v)} required placeholder="00-000" />
                 </div>
+              </section>
+            )}
+
+            {analysis.pickup && (
+              <section className="space-y-3" data-testid="pickup-confirmation">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="pickup_confirmed"
+                    checked={pickupConfirmed}
+                    aria-invalid={pickupConfirmError}
+                    onChange={e => {
+                      setPickupConfirmed(e.target.checked)
+                      if (e.target.checked) setPickupConfirmError(false)
+                    }}
+                    className="mt-1 accent-[var(--color-accent)]"
+                  />
+                  <span className="text-sm text-text-dim">
+                    Rozumiem, że wiek oraz uprawnienia (pozwolenie, rejestracja) zostaną sprawdzone
+                    przy odbiorze osobistym w Hydra Arms, a bez nich zamówienie nie zostanie wydane.
+                  </span>
+                </label>
+                {pickupConfirmError && (
+                  <p role="alert" data-testid="pickup-confirmation-error" className="text-sm text-red-400">
+                    Potwierdź, że wiek i uprawnienia zostaną sprawdzone przy odbiorze osobistym.
+                  </p>
+                )}
               </section>
             )}
 

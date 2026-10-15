@@ -56,3 +56,8 @@ Sklep sprzedaje asortyment dual-use. Produkt z pozwoleniem, rejestracją lub ogr
 - 2026-10-15 tj: Playwright MCP niedostępny na tej maszynie — weryfikacja UI zrzutami z `page.screenshot()` w teście Playwright (`.playwright-mcp/ha-2.06-*.png`: niezaznaczone → błąd, zaznaczone → sukces).
 - 2026-10-15 tj: wstrzymane do HA-2.29 (porty lokalnego stacka)
 - 2026-10-15 tj: HA-2.29 zmergowane, wznowienie
+- 2026-10-15 tj: decyzja 1 — opcja C: jedna funkcja SQL `hydra_section(category_id)` używana przez route i RPC; dopasowanie po prefiksie nazwy korzenia „01.” / „02.” jak w HA-2.17. Ryzyko zmiany nazw korzeni → deferred (test strażnik: każdy korzeń z prod pasuje do `^\d\d\.`, osobne zadanie).
+- 2026-10-15 tj: decyzja 2 — nieznana kategoria, zerwany łańcuch albo korzeń bez „NN.” = nie 01/02; flagi nadal decydują.
+- 2026-10-15 tj: walidator body pisany ręcznie, bez nowej zależności; MANUAL_TESTS.md TC-11/12 z potwierdzeniem.
+- 2026-10-15 agent: stan prod (odczyt): definicja RPC `checkout_create_order` ma ten sam md5 co lokalna po 001–015 (651401a2…), kolumny/constrainty/policy `orders` identyczne — prod jest na poziomie 015 dla tych obiektów (list_migrations prod zwraca pustą listę — migracje wdrażane SQL Editorem).
+

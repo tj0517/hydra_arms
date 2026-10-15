@@ -192,9 +192,15 @@ update shop_products set product_type = 'age_restricted' where id = 619342679;
 1. Add Pistolet ALP to cart, go to `/sklep/zamowienie`
 2. **Expected:** blue "ODBIÓR W SIEDZIBIE HYDRA ARMS" banner
 3. **Expected:** NO street/city/zip fields — only Imię, Nazwisko, Email, Telefon
-4. Fill contact data, submit
-5. **Expected:** confirmation page shown
-6. **Supabase check:** `fulfillment_route = 'pickup'`
+4. **Expected (HA-2.06):** a checkbox "Rozumiem, że wiek oraz uprawnienia … zostaną sprawdzone przy odbiorze osobistym"
+5. Fill contact data, leave the checkbox **unchecked**, submit
+6. **Expected:** red message "Potwierdź, że wiek i uprawnienia zostaną sprawdzone przy odbiorze osobistym", no order created
+7. Tick the checkbox, submit
+8. **Expected:** confirmation page shown
+9. **Supabase check:** `fulfillment_route = 'pickup'` and `pickup_confirmed_at` is not null
+   ```sql
+   select id, fulfillment_route, pickup_confirmed_at from orders order by created_at desc limit 1;
+   ```
 
 ### TC-12 Mixed cart — standard + restricted → split selector
 **Use:** `/sklep/619344685` (standard, 6,50 PLN) + `/sklep/619342679` (age_restricted, 448,00 PLN)
@@ -206,10 +212,13 @@ update shop_products set product_type = 'age_restricted' where id = 619342679;
 3. Select **Podziel zamówienie**
 4. **Expected:** address section appears (for the standard product)
 5. **Expected:** summary splits: green "Wysyłka kurierska" (Śrut Apolo) + blue "Odbiór osobisty" (Pistolet ALP)
-6. Fill form + address, submit
-7. **Supabase check:** 2 separate order rows created
+6. **Expected (HA-2.06):** the pickup-confirmation checkbox is shown (the pickup leg exists)
+7. Fill form + address, leave the checkbox unchecked, submit
+8. **Expected:** red confirmation message, **no** order created (neither leg)
+9. Tick the checkbox, submit
+10. **Supabase check:** 2 separate order rows created; only the pickup one has `pickup_confirmed_at`
    ```sql
-   select id, fulfillment_route, total from orders order by created_at desc limit 2;
+   select id, fulfillment_route, total, pickup_confirmed_at from orders order by created_at desc limit 2;
    ```
 
 ### Teardown after TC-11/TC-12

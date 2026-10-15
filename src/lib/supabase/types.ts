@@ -246,6 +246,7 @@ export interface Database {
           bl_status_id: number | null;
           order_received_email_sent_at: string | null;
           payment_received_email_sent_at: string | null;
+          pickup_confirmed_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -263,6 +264,7 @@ export interface Database {
           bl_status_id?: number | null;
           order_received_email_sent_at?: string | null;
           payment_received_email_sent_at?: string | null;
+          pickup_confirmed_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -280,6 +282,7 @@ export interface Database {
           bl_status_id?: number | null;
           order_received_email_sent_at?: string | null;
           payment_received_email_sent_at?: string | null;
+          pickup_confirmed_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -428,8 +431,13 @@ export interface Database {
           p_shipping: Record<string, string>;
           p_fulfillment_route: string;
           p_items: Array<{ product_id: number; quantity: number }>;
+          p_pickup_confirmed?: boolean;
         };
         Returns: Array<{ order_id: string; order_total: number }>;
+      };
+      hydra_section: {
+        Args: { p_category_id: number };
+        Returns: string | null;
       };
       mark_order_paid: {
         Args: { p_order_id: string };

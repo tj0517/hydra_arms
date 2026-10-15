@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { analyzeCart } from '@/lib/shop/cartAnalysis'
+import { PICKUP_ONLY_SECTIONS } from '@/lib/shop/permitFlags'
 import { ORDER_SESSION_COOKIE, appendOrderSession } from '@/lib/shop/orderSession'
 import { rateLimit, getClientIp } from '@/lib/rateLimit'
 import { registerPayment } from '@/lib/shop/registerPayment'
@@ -25,7 +26,11 @@ interface CheckoutBody {
   }
   idempotency_key?: string
   fulfillment_route?: 'own' | 'sourced' | 'pickup'
+  /** HA-2.06: customer confirms age/permits are checked at pickup. Required (=== true) for pickup. */
+  pickup_confirmed?: boolean
 }
+
+const FULFILLMENT_ROUTES = ['own', 'sourced', 'pickup']
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const ZIP_RE = /^\d{2}-\d{3}$/
@@ -52,6 +57,20 @@ export async function POST(req: NextRequest) {
     }
     const s = body.shipping
     const isPickup = body.fulfillment_route === 'pickup'
+
+    if (body.fulfillment_route !== undefined && !FULFILLMENT_ROUTES.includes(body.fulfillment_route)) {
+      return NextResponse.json({ error: 'Nieprawidłowy sposób realizacji' }, { status: 400 })
+    }
+    if (body.pickup_confirmed !== undefined && typeof body.pickup_confirmed !== 'boolean') {
+      return NextResponse.json({ error: 'Nieprawidłowe potwierdzenie odbioru' }, { status: 400 })
+    }
+    // Explicit boolean, not "truthy": a pickup order must carry pickup_confirmed === true.
+    if (isPickup && body.pickup_confirmed !== true) {
+      return NextResponse.json(
+        { error: 'Potwierdź, że wiek i uprawnienia zostaną sprawdzone przy odbiorze osobistym' },
+        { status: 400 },
+      )
+    }
 
     if (!s?.email || !s?.firstName || !s?.lastName) {
       return NextResponse.json({ error: 'Brakuje wymaganych danych kontaktowych' }, { status: 400 })
@@ -129,6 +148,24 @@ export async function POST(req: NextRequest) {
 
     const productMap = new Map(products.map(p => [p.id, p]))
 
+    // Hydra section 01/02 forces pickup even when no flag is set (HA-2.06). The
+    // section comes from the single SQL function hydra_section(); the RPC applies
+    // the same rule again on its own. Fail closed if the lookup errors.
+    const categoryIds = [...new Set(products.map(p => p.category_id).filter((c): c is number => c != null))]
+    const sectionEntries = await Promise.all(
+      categoryIds.map(async id => {
+        const { data, error } = await supabase.rpc('hydra_section', { p_category_id: id })
+        return { id, section: data as string | null, error }
+      }),
+    )
+    if (sectionEntries.some(e => e.error)) {
+      console.error('[checkout] hydra_section lookup failed:', sectionEntries.find(e => e.error)?.error)
+      return NextResponse.json({ error: 'Nie udało się zweryfikować produktów' }, { status: 500 })
+    }
+    const pickupOnlyCategories = new Set(
+      sectionEntries.filter(e => e.section !== null && PICKUP_ONLY_SECTIONS.has(e.section)).map(e => e.id),
+    )
+
     for (const item of body.items) {
       const product = productMap.get(item.product_id)
       if (!product) {
@@ -143,7 +180,8 @@ export async function POST(req: NextRequest) {
         product.product_type !== 'standard' ||
         product.requires_license ||
         !product.delivery_allowed ||
-        product.age_min >= 18
+        product.age_min >= 18 ||
+        (product.category_id != null && pickupOnlyCategories.has(product.category_id))
       if (mustPickup && !isPickup) {
         return NextResponse.json({ error: `Produkt "${product.name}" jest dostępny wyłącznie do odbioru osobistego` }, { status: 400 })
       }
@@ -165,6 +203,7 @@ export async function POST(req: NextRequest) {
       p_shipping: body.shipping as unknown as Record<string, string>,
       p_fulfillment_route: fulfillmentRoute,
       p_items: body.items,
+      p_pickup_confirmed: isPickup && body.pickup_confirmed === true,
     })
 
     if (rpcError || !rpcData?.length) {
@@ -180,6 +219,23 @@ export async function POST(req: NextRequest) {
             NextResponse.json({ order_id: existing.id, status: existing.status, total: existing.total, duplicate: true }),
           )
         }
+      }
+
+      // Defence in depth: the route refuses first; these only fire if the RPC sees
+      // a state the route did not (e.g. a flag changed between the two reads).
+      const pickupMatch = rpcError?.message?.match(/PICKUP_ONLY:(\d+)/)
+      if (pickupMatch) {
+        const product = productMap.get(parseInt(pickupMatch[1], 10))
+        return NextResponse.json(
+          { error: `Produkt "${product?.name ?? pickupMatch[1]}" jest dostępny wyłącznie do odbioru osobistego` },
+          { status: 400 },
+        )
+      }
+      if (rpcError?.message?.includes('PICKUP_CONFIRMATION_REQUIRED')) {
+        return NextResponse.json(
+          { error: 'Potwierdź, że wiek i uprawnienia zostaną sprawdzone przy odbiorze osobistym' },
+          { status: 400 },
+        )
       }
 
       const stockMatch = rpcError?.message?.match(/INSUFFICIENT_STOCK:(\d+)/)
