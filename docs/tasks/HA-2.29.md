@@ -1,7 +1,7 @@
 ---
 id: HA-2.29
 title: Lokalny stack Supabase na własnych portach (55321+) — współżycie z DCS na WSL
-status: review
+status: done
 difficulty: S
 model: sonnet-5.5
 model_approved: null
@@ -54,3 +54,4 @@ Lokalny stack Hydry używa domyślnych portów Supabase (54321–54329), tych sa
 - 2026-10-15 agent: `prodGuard.ts` widzi wyłącznie `NEXT_PUBLIC_SUPABASE_URL` (URL API) — adresy DB nigdzie do niego nie trafiają, więc reguły dla 55322 nie dodano. Odmowa nie jest odblokowywana przez override prod (to nie prod, tylko cudzy stack). `scripts/lib/prodGuard.test.ts` nie wchodzi do `npm run test:unit` (glob `xml-integration/__tests__`) — uruchamiany osobno: `npx tsx --test scripts/lib/prodGuard.test.ts`.
 - 2026-10-15 agent: rebase na origin/main (zawiera HA-2.28, PR #42): INDEX — wiersz HA-2.29 po HA-2.28; deferred-tasks — zachowane oba wpisy.
 - 2026-10-15 tj: decyzje po review — dodać `assertNotProd()` do `playwright.p24-disabled.config.ts` (zrobione, odmowa na 54321 sprawdzona); `cart.spec.ts` uruchomiony raz: 1. próba timeout 30 s, retry zielony → flaky, zapisane w deferred razem z `product-detail.spec.ts:12`; nie blokuje PR.
+- 2026-10-15 tj: odebrane (PR #43) — porty 553xx, db:start obok DCS udowodnione, guard portu w prodGuard.ts z red proofami, wszystkie 5 configów Playwright odmawia startu na 54321; cart.spec.ts:112 flaky → deferred; luka agent-guard.sh (port) → osobne zadanie w deferred.
