@@ -765,6 +765,10 @@ z 2026-10-15: `.env.local` 644 (3431 B), stary klon 2,0 GB, `~/.bash_history` z 
 | `~/hydra-import.env` (serwer i Mac) | brak — potwierdzone |
 | `~/.ssh/github_deploy`, `.pub`, wpis w `~/.ssh/config` | usunąć z serwera; klucz deploy w ustawieniach repo na GitHubie usuwa tj |
 
+**Wykonane 2026-10-15** (tryb próbny, potem `GO=1`; wynik i weryfikacja w notatkach zadania):
+usunięto wszystkie pozycje z tabeli, `~/.ssh/config` miał jeden blok `Host`, `authorized_keys`
+nietknięte. Klucz deploy w ustawieniach repo na GitHubie — po stronie tj, niepotwierdzony.
+
 Jeden blok, `ubuntu`, z Maca. Najpierw z `GO=0` (odczyt i straże, niczego nie usuwa), po sprawdzeniu
 wyniku ten sam blok z `GO=1` w pierwszej linii (usuwa i drukuje weryfikację). Straże zatrzymują
 blok, gdy trwa import, klon jest dowiązaniem, nowy klon nie ma wrappera albo coś w cronie

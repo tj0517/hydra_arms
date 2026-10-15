@@ -1,7 +1,7 @@
 ---
 id: HA-2.15
 title: Import hurtowni na serwerze — cron sync i import
-status: in_progress
+status: review
 difficulty: M
 model: claude-fable-5-1
 model_approved: null
@@ -12,7 +12,7 @@ depends_on: [HA-2.11, HA-2.13, HA-2.14, HA-2.18, HA-2.26, HA-2.27, HA-2.28]
 blocked_by_questions: []
 touches_db: false
 touches_prod: true
-pr: null
+pr: 45
 ---
 
 ## Cel
@@ -126,3 +126,7 @@ Feedy hurtowni ważą 54–246 MB, Spechurt działa tylko z serwera 51.83.134.18
 - 2026-10-15 decyzja tj (sync zapisuje cenę bezwarunkowo): osobne zadanie S przed HA-2.09 (wpis w deferred zaktualizowany).
 - 2026-10-15 odczyt kroku 11 na koncie `ubuntu` (wklejone): `~/hydra/.env.local` 644, 3431 B (27.07); `scripts/count-adhoc.ts` 1773 B — skrypt do liczenia na konektorach, bez danych dostępowych w treści; `~/hydra` 2,0 GB, nieśledzone `count-adhoc.ts` i `hydra-categories.json`; `~/.bash_history` 4 linie z `key=` / `token=`; `~/.ssh`: `authorized_keys`, `config` (73 B), `github_deploy` + `.pub`, `known_hosts`; brak procesów importu; brak crontaba `ubuntu`; `~/hydra-import.env` nieobecny (usunięty też na Macu po `scp`).
 - 2026-10-15 decyzje tj (porządki, krok 11): (1) usunąć `~/hydra/.env.local`; (2) `count-adhoc.ts` — nieszkodliwy, idzie z klonem; (3) usunąć cały stary klon `/home/ubuntu/hydra`; (4) usunąć `spechurt-import.log`, `spechurt.xml`, `spechurt-2026-09-26.xml`; (5) wyczyścić `~/.bash_history` (4 trafienia) i historię bieżącej powłoki; (6) `hydra-import.env` — brak potwierdzony; (7) usunąć z serwera `~/.ssh/github_deploy`, `.pub` i wpis w `~/.ssh/config`, klucz deploy w ustawieniach repo na GitHubie usuwa tj. Skrypt jednym blokiem (odczyt i straże, tryb próbny `GO=0`, usuwanie `GO=1`, weryfikacja) w sekcji 11 instrukcji; wynik wykonania — do wklejenia, do tego czasu krok 11 jest „zdecydowany, niewykonany”.
+- 2026-10-15 krok 11 wykonany (wklejone przez tj): po próbie `GO=0` (straże OK, `~/.ssh/config` miał dokładnie jeden blok `Host`) i `GO=1` usunięto `/home/ubuntu/hydra/.env.local`, cały `/home/ubuntu/hydra` (2,0 GB), `spechurt-import.log`, `spechurt.xml`, `spechurt-2026-09-26.xml`, `~/.ssh/github_deploy` + `.pub` i `~/.ssh/config`. Weryfikacja: 7× „brak”, `.bash_history` konta `ubuntu` 0 B (0 trafień `key=` / `token=`), `authorized_keys` 1 linia nietknięta, `known_hosts` zostaje, `~` konta `ubuntu` 453 MB, crontab `hydra-import` ma 6 wpisów `run-bl.sh`, wrapper w nowym klonie jest. Interaktywne sesje serwera zamknięte z `history -c; unset HISTFILE`. Historia konta `hydra-import` wyczyszczona osobno (0 B); 7 trafień, które tam były, to własne komendy `grep -cE 'key=|token='` pasujące do swojego wzorca, nie adresy feedów.
+- 2026-10-15 klucz deploy w ustawieniach repo na GitHubie: **niepotwierdzony** — w wiadomości tj pole stało jako szablon `<removed | pending>`. Po stronie tj; klucz nie jest już na serwerze, więc nic w imporcie od niego nie zależy.
+- 2026-10-15 PR #45 (`--base main`, `feat/ha-2.15-import-server`), `status: review`. Pierwsza bezobsługowa noc crona (2026-10-15 20:20 UTC, sześć przebiegów) nie jest blokerem PR: wynik trafi do notatek po wklejeniu dziennika przez tj rano 2026-10-16 (komendy: sekcja 10, „Sprawdzenie następnego dnia”; oczekiwane sześć par `START` / `END exit=0`, zero `SKIP`, pusty `cron-stderr.log`). Do tego czasu kryterium „`crontab -l` z sześcioma wpisami” jest spełnione (wklejone), a „pierwsza noc” — nieudowodniona.
+- 2026-10-15 uwaga o modelu (do decyzji tj): sesje tego zadania od kroku 8 działały na `claude-sonnet-5-5` (tak podaje środowisko sesji i tak są podpisane commity), a frontmatter mówi `model: claude-fable-5-1`, `effort: high` — decyzja tj z 2026-10-14 brzmiała „zostaje Fable/high”. Frontmatter bez zmian, `model_approved` nietknięte; reguła „`model:` = to, na czym pracujesz” i decyzja tj są tu sprzeczne, więc rozstrzyga tj.
