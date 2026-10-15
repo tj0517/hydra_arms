@@ -1,7 +1,7 @@
 ---
 id: HA-2.06
 title: Compliance — wymuszenie odbioru osobistego (pozwolenie, rejestracja, 18+)
-status: review
+status: done
 difficulty: M
 model: sonnet-5.5
 model_approved: null
@@ -63,4 +63,4 @@ Sklep sprzedaje asortyment dual-use. Produkt z pozwoleniem, rejestracją lub ogr
 - 2026-10-15 tj: Option C (hydra_section SQL), unknown category = not 01/02, confirmation on every pickup order; old 5-arg RPC dropped (fail closed). Runbook note for go-live: apply 016 and deploy the app together — between them pickup orders are refused.
 - 2026-10-15 tj: `hydra_section` jako SECURITY INVOKER (wywołują ją service_role z route i właściciel RPC; wykonanie tylko service_role).
 - 2026-10-15 agent: pierwszy przebieg `npm run test:shop -- <plik>` uruchomił cały `tests/shop` (skrypt ma już ścieżkę) i padł na obcym serwerze na :3001 (404 HTML, brak linii [WebServer] = reuseExistingServer); po sprawdzeniu, że :3001 jest wolny, przebiegi: spec 16/16, test:shop 151 passed / 1 flaky (cart.spec.ts:112, znany) / 4 skipped, `npm run test` jw., test:unit 219/221 (te same 2 prod-guard).
-
+- 2026-10-15 tj: odebrane (PR #44) — reguła odbioru (flagi + sekcja 01/02 przez hydra_section) w route i RPC, potwierdzenie przy każdym odbiorze zapisane w orders.pickup_confirmed_at, stara 5-arg RPC usunięta (fail closed), ACL obu funkcji tylko service_role; 16/16 spec, test:shop 0 fail, unit = baseline. Prod: 016 wgrywa tj w SQL Editor tuż przed deployem Vercela.
