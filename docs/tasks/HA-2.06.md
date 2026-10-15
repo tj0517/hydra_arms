@@ -1,7 +1,7 @@
 ---
 id: HA-2.06
 title: Compliance — wymuszenie odbioru osobistego (pozwolenie, rejestracja, 18+)
-status: in_progress
+status: review
 difficulty: M
 model: sonnet-5.5
 model_approved: null
@@ -12,7 +12,7 @@ depends_on: [HA-1.06, HA-2.17, HA-2.29]
 blocked_by_questions: []
 touches_db: true
 touches_prod: true
-pr: null
+pr: 44
 ---
 
 ## Cel
