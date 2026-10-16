@@ -1,6 +1,7 @@
 import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { registerTransaction, p24PaymentUrl, getP24Mode } from '@/lib/p24'
+import { getCheckoutGate } from '@/lib/shop/shopMode'
 
 /**
  * Create a new payment attempt for a pending_payment order.
@@ -13,6 +14,11 @@ export async function registerPayment(
   orderId: string,
   opts: { baseUrl: string | undefined; email: string; description?: string },
 ): Promise<{ paymentUrl: string; p24SessionId: string }> {
+  // HA-2.08 defence in depth: the checkout route refuses first, but this function is also
+  // reached from the retry route. Throws before any DB row or outbound P24 call.
+  const gate = getCheckoutGate()
+  if (!gate.allowed) throw new Error(`Payment registration refused by shop-mode gate: ${gate.reason}`)
+
   const baseUrl = opts.baseUrl
   if (!baseUrl) throw new Error('SHOP_BASE_URL is not configured')
 

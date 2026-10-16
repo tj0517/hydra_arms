@@ -7,6 +7,8 @@ import GlobalCursor from "@/components/GlobalCursor";
 import { CartProvider } from "@/components/shop/CartProvider";
 import { GraphicsCapabilityProvider } from "@/lib/GraphicsCapabilityContext";
 import CartTrigger from "@/components/shop/CartTrigger";
+import TestModeBanner from "@/components/shop/TestModeBanner";
+import { getPaymentMarks, isVerificationMode } from "@/lib/shop/shopMode";
 import { sanityFetch } from "@/sanity/client";
 import { siteSettingsQuery, navigationQuery } from "@/sanity/queries";
 
@@ -45,8 +47,9 @@ export default async function MainLayout({
         <Nav navLinks={navLinks} logo={siteSettings?.logo ?? undefined} />
         {children}
         <NewsletterBarConditional />
-        <Footer navLinks={navLinks} siteSettings={siteSettings} />
+        <Footer navLinks={navLinks} siteSettings={siteSettings} paymentMarks={getPaymentMarks()} />
         <CartTrigger />
+        {isVerificationMode() && <TestModeBanner />}
       </GraphicsCapabilityProvider>
     </CartProvider>
   );

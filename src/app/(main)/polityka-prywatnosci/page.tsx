@@ -21,16 +21,16 @@ export default function PolitykaPrywatnosciPage() {
 
           <Section title="§ 1. Postanowienia ogólne">
             <ol className="space-y-3 list-none">
-              <Li n="1">Administratorem danych osobowych zbieranych za pośrednictwem Serwisu Internetowego działającego pod adresem <span className="text-accent">https://hydra-arms.com</span> jest HYDRA ARMS Sp. z o.o. z siedzibą w Krakowie (30-614), ul. Cechowa 44B, wpisana do rejestru przedsiębiorców Krajowego Rejestru Sądowego pod numerem KRS: 0001111593, posiadająca numery NIP: 6793302181 oraz REGON: 528976880, o kapitale zakładowym w wysokości 5.100,00 PLN (dalej zwana: „Administratorem&quot;).</Li>
+              <Li n="1">Administratorem danych osobowych zbieranych za pośrednictwem Serwisu Internetowego działającego pod adresem <span className="text-accent">https://hydra-arms.com</span> (oraz powiązanych podstron i wersji roboczych) jest HYDRA ARMS Sp. z o.o. z siedzibą w Krakowie (30-614), ul. Cechowa 44B, wpisana do rejestru przedsiębiorców Krajowego Rejestru Sądowego pod numerem KRS: 0001111593, posiadająca numery NIP: 6793302181 oraz REGON: 528976880, o kapitale zakładowym w wysokości 5.100,00 PLN (dalej zwana: „Administratorem”).</Li>
               <Li n="2">
-                Kontakt z Administratorem w sprawach związanych z ochroną danych osobowych jest możliwy za pośrednictwem:
+                Kontakt z Administratorem w sprawach związanych z ochroną danych osobowych oraz realizacją praw osób, których dane dotyczą, jest możliwy za pośrednictwem:
                 <ul className="mt-2 space-y-2 border-l border-accent/20 pl-6">
                   <SubLi l="a">adresu poczty elektronicznej: <span className="text-accent">rodo@hydra-arms.pl</span></SubLi>
                   <SubLi l="b">formularzy kontaktowych w ramach Serwisu.</SubLi>
                   <SubLi l="c">poczty tradycyjnej na adres siedziby: ul. Cechowa 44B, 30-614 Kraków.</SubLi>
                 </ul>
               </Li>
-              <Li n="3">Administrator oświadcza, że przetwarza dane osobowe użytkowników Serwisu w zgodności z Rozporządzeniem Parlamentu Europejskiego i Rady (UE) 2016/679 z dnia 27 kwietnia 2016 r. (RODO) oraz polską ustawą z dnia 10 maja 2018 r. o ochronie danych osobowych.</Li>
+              <Li n="3">Administrator oświadcza, że przetwarza dane osobowe użytkowników Serwisu (dalej: „Klienci” lub „Użytkownicy”) w zgodności z Rozporządzeniem Parlamentu Europejskiego i Rady (UE) 2016/679 z dnia 27 kwietnia 2016 r. w sprawie ochrony osób fizycznych w związku z przetwarzaniem danych osobowych i w sprawie swobodnego przepływu takich danych oraz uchylenia dyrektywy 95/46/WE (ogólne rozporządzenie o ochronie danych, dalej: „RODO”), a także polską ustawą z dnia 10 maja 2018 r. o ochronie danych osobowych.</Li>
             </ol>
           </Section>
 
@@ -40,11 +40,11 @@ export default function PolitykaPrywatnosciPage() {
 
               <ProcessBlock title="1. Rejestracja i prowadzenie Konta Klienta w Sklepie">
                 <Row label="Zakres danych">imię, nazwisko, adres e-mail, numer telefonu, adres zamieszkania/dostawy, hasło (w formie bezpiecznie zaszyfrowanej jednostronnym algorytmem).</Row>
-                <Row label="Podstawa prawna">art. 6 ust. 1 lit. b RODO – niezbędność do wykonania umowy o świadczenie usługi drogą elektroniczną.</Row>
+                <Row label="Podstawa prawna">art. 6 ust. 1 lit. b RODO – niezbędność do wykonania umowy o świadczenie usługi drogą elektroniczną (prowadzenie konta).</Row>
                 <Row label="Okres przechowywania">do czasu zgłoszenia żądania usunięcia Konta przez Klienta lub rozwiązania umowy przez Administratora zgodnie z Regulaminem.</Row>
               </ProcessBlock>
 
-              <ProcessBlock title="2. Obsługa i realizacja zamówień (towary niekoncesjonowane, usługi CNC/3D)">
+              <ProcessBlock title="2. Obsługa, realizacja zamówień i dostawa towarów niekoncesjonowanych oraz komercyjnych usług inżynieryjnych (CNC/3D)">
                 <Row label="Zakres danych">imię, nazwisko, adres dostawy, adres rozliczeniowy, numer telefonu, adres e-mail; w przypadku podmiotów gospodarczych dodatkowo: pełna nazwa firmy i NIP.</Row>
                 <Row label="Podstawa prawna">art. 6 ust. 1 lit. b RODO – niezbędność do wykonania umowy sprzedaży lub umowy o świadczenie usług.</Row>
                 <Row label="Okres przechowywania">przez czas niezbędny do pełnej realizacji zamówienia/usługi, a następnie przez okres przedawnienia ewentualnych roszczeń cywilnoprawnych (standardowo 6 lat od końca roku, w którym umowa została sfinalizowana).</Row>
@@ -52,35 +52,35 @@ export default function PolitykaPrywatnosciPage() {
 
               <ProcessBlock title={'3. Obowiązkowa weryfikacja wieku (Kategoria \u201eTowary 18+\u201d)'}>
                 <Row label="Zakres danych">imię, nazwisko, data urodzenia, status pełnoletności (potwierdzony dokumentem tożsamości).</Row>
-                <Row label="Podstawa prawna">art. 6 ust. 1 lit. c RODO – wypełnienie obowiązku prawnego związanego z zakazem udostępniania i sprzedaży wyrobów ograniczonych wiekowo osobom nieletnim.</Row>
+                <Row label="Podstawa prawna">art. 6 ust. 1 lit. c RODO – wypełnienie obowiązku prawnego spoczywającego na Administratorze związanego z zakazem udostępniania i sprzedaży wyrobów niebezpiecznych lub ograniczonych wiekowo osobom nieletnim.</Row>
                 <Row label="Okres przechowywania">dane weryfikowane są w czasie rzeczywistym (przy odbiorze/doręczeniu); Administrator nie archiwizuje skanów dowodów tożsamości, a jedynie odnotowuje fakt pozytywnej weryfikacji.</Row>
               </ProcessBlock>
 
-              <ProcessBlock title="4. Internetowa rezerwacja towarów koncesjonowanych">
+              <ProcessBlock title="4. Obsługa procesu internetowej rezerwacji towarów koncesjonowanych oraz weryfikacja usług w zakresie koncesjonowanym">
                 <Row label="Zakres danych">imię, nazwisko, adres e-mail, adres zamieszkania/siedziby, numer PESEL, numer telefonu, seria i numer dokumentu tożsamości, seria i numer pozwolenia na broń / promesy lub poświadczeń koncesyjnych podmiotu.</Row>
-                <Row label="Podstawa prawna">art. 6 ust. 1 lit. b RODO w zw. z przepisami ustawy z dnia 13 czerwca 2019 r. o wykonywaniu działalności gospodarczej w zakresie wytwarzania i obrotu materiałami wybuchowymi, bronią, amunicją oraz wyrobami i technologią o przeznaczeniu wojskowym lub policyjnym.</Row>
-                <Row label="Okres przechowywania">do momentu sfinalizowania zakupu w stacjonarnym punkcie sprzedaży lub anulowania/wygaśnięcia rezerwacji internetowej.</Row>
+                <Row label="Podstawa prawna">art. 6 ust. 1 lit. b RODO (działania dążące do zawarcia umowy i podjęte na żądanie osoby przed jej zawarciem) w zw. z przepisami ustawy z dnia 13 czerwca 2019 r. o wykonywaniu działalności gospodarczej w zakresie wytwarzania i obrotu materiałami wybuchowymi, bronią, amunicją oraz wyrobami i technologią o przeznaczeniu wojskowym lub policyjnym.</Row>
+                <Row label="Okres przechowywania">do momentu sfinalizowania zakupu/usługi w stacjonarnym punkcie sprzedaży lub anulowania/wygaśnięcia rezerwacji internetowej.</Row>
               </ProcessBlock>
 
-              <ProcessBlock title="5. Obowiązki podatkowo-księgowe i ewidencja obrotu strategicznego">
-                <Row label="Zakres danych">dane niezbędne do wystawienia faktury VAT oraz pełne dane wymagane przepisami prawa do prowadzenia urzędowych ksiąg ewidencji obrotu bronią, amunicją oraz towarami i technologiami o znaczeniu strategicznym (dual-use).</Row>
-                <Row label="Podstawa prawna">art. 6 ust. 1 lit. c RODO – wypełnienie obowiązku prawnego wynikającego z przepisów ustawy o podatku od towarów i usług, Ordynacji podatkowej, ustawy o rachunkowości oraz ustawy o obrocie z zagranicą towarami, technologiami i usługami o znaczeniu strategicznym.</Row>
-                <Row label="Okres przechowywania">dane księgowe przez 5 lat od końca roku kalendarzowego, w którym upłynął termin płatności podatku. Dane ewidencyjne dotyczące obrotu bronią i towarami strategicznymi przez rygorystyczne, wieloletnie lub wieczyste okresy określone wprost w przepisach ustaw koncesyjnych.</Row>
+              <ProcessBlock title="5. Wypełnianie ustawowych obowiązków prawnych, podatkowo-księgowych oraz ewidencyjnych (Kontrola Koncesyjna i Eksportowa)">
+                <Row label="Zakres danych">dane niezbędne do wystawienia faktury VAT (imię, nazwisko, adres, NIP) oraz pełne dane wymagane przepisami prawa do prowadzenia urzędowych ksiąg ewidencji obrotu bronią, amunicją oraz towarami i technologiami o znaczeniu strategicznym (dual-use).</Row>
+                <Row label="Podstawa prawna">art. 6 ust. 1 lit. c RODO – wypełnienie obowiązku prawnego ciążącego na Administratorze wynikającego z przepisów ustawy o podatku od towarów i usług, Ordynacji podatkowej, ustawy o rachunkowości, ustawy o wykonywaniu działalności w zakresie obrotu bronią oraz ustawy o obrocie z zagranicą towarami, technologiami i usługami o znaczeniu strategicznym.</Row>
+                <Row label="Okres przechowywania">dane księgowe – przez okres 5 lat od końca roku kalendarzowego, w którym upłynął termin płatności podatku. Dane ewidencyjne dotyczące obrotu bronią i towarami strategicznymi – przez rygorystyczne, wieloletnie lub wieczyste okresy przechowywania rejestrów określone wprost w przepisach ustaw koncesyjnych i kontrolnych.</Row>
               </ProcessBlock>
 
-              <ProcessBlock title="6. Obsługa reklamacji i odstąpień od umowy">
+              <ProcessBlock title="6. Obsługa procedur reklamacyjnych oraz oświadczeń o odstąpieniu od umowy">
                 <Row label="Zakres danych">imię, nazwisko, adres e-mail, numer telefonu, adres korespondencyjny, numer zamówienia, numer rachunku bankowego (w celu realizacji zwrotu środków).</Row>
-                <Row label="Podstawa prawna">art. 6 ust. 1 lit. c RODO – wypełnienie obowiązku prawnego wynikającego z przepisów ustawy o prawach konsumenta oraz Kodeksu Cywilnego.</Row>
+                <Row label="Podstawa prawna">art. 6 ust. 1 lit. c RODO – wypełnienie obowiązku prawnego wynikającego z przepisów ustawy o prawach konsumenta oraz Kodeksu Cywilnego (rękojmia/zgodność towaru).</Row>
                 <Row label="Okres przechowywania">przez czas trwania procedury reklamacyjnej/zwrotu oraz przez okres niezbędny do obrony lub dochodzenia roszczeń (standardowo 1 rok od zakończenia procedury).</Row>
               </ProcessBlock>
 
-              <ProcessBlock title="7. Formularz kontaktowy i zapytania ofertowe">
+              <ProcessBlock title="7. Obsługa formularza kontaktowego, zapytań ofertowych i bieżącej korespondencji (e-mail/telefon)">
                 <Row label="Zakres danych">imię, nazwisko, adres e-mail, numer telefonu, nazwa podmiotu, treść wiadomości, załączone pliki techniczne i specyfikacje CAD.</Row>
-                <Row label="Podstawa prawna">art. 6 ust. 1 lit. f RODO – prawnie uzasadniony interes Administratora polegający na sprawnej komunikacji i obsłudze zapytań techniczno-ofertowych.</Row>
-                <Row label="Okres przechowywania">do czasu ostatecznego zakończenia korespondencji handlowej/technicznej lub zgłoszenia skutecznego sprzeciwu przez Klienta, nie dłużej niż przez 2 lata od ostatniego kontaktu.</Row>
+                <Row label="Podstawa prawna">art. 6 ust. 1 lit. f RODO – prawnie uzasadniony interes Administratora polegający na sprawnej komunikacji, budowaniu relacji z klientami, obsłudze zapytań techniczno-ofertowych oraz ochronie przed nadużyciami.</Row>
+                <Row label="Okres przechowywania">do czasu ostatecznego zakończenia korespondencji handlowej/technicznej lub zgłoszenia skutecznego sprzeciwu przez Klienta, nie dłużej jednak niż przez okres 2 lat od ostatniego kontaktu.</Row>
               </ProcessBlock>
 
-              <ProcessBlock title="8. Działania marketingowe i Newsletter">
+              <ProcessBlock title="8. Działania marketingowe i informacyjne (Newsletter)">
                 <Row label="Zakres danych">imię, adres e-mail.</Row>
                 <Row label="Podstawa prawna">art. 6 ust. 1 lit. a RODO – dobrowolna, wyraźna zgoda Klienta wyrażona w Serwisie.</Row>
                 <Row label="Okres przechowywania">do momentu wycofania zgody przez Klienta (wypisania się z subskrypcji Newslettera).</Row>
@@ -90,14 +90,14 @@ export default function PolitykaPrywatnosciPage() {
           </Section>
 
           <Section title="§ 3. Kategorie odbiorców danych osobowych">
-            <p className="mb-4">W celu prawidłowego działania Sklepu oraz realizacji restrykcyjnych procedur prawnych, dane osobowe mogą być przekazywane następującym kategoriom podmiotów przetwarzających:</p>
+            <p className="mb-4">W celu zapewnienia najwyższego poziomu obsługi, prawidłowego działania Sklepu oraz realizacji restrykcyjnych procedur prawnych, dane osobowe mogą być przekazywane następującym kategoriom podmiotów przetwarzających:</p>
             <ul className="space-y-2 border-l border-accent/20 pl-6">
               {[
                 "Dostawcom usług technologicznych, IT oraz hostingu (w tym podmiotom utrzymującym infrastrukturę serwerową oraz systemy e-commerce).",
                 "Operatorom płatności elektronicznych (w celu bezpiecznego procesowania i autoryzacji transakcji on-line).",
                 "Podmiotom świadczącym usługi logistyczne, pocztowe i kurierskie (w celu doręczania przesyłek niekoncesjonowanych, w tym kurierom realizującym procedurę weryfikacji tożsamości i pełnoletności odbiorcy).",
                 "Podmiotom świadczącym zewnętrzne usługi księgowe, audytorskie, prawne oraz doradcze na rzecz Administratora.",
-                "ORGANOM PAŃSTWOWYM I SŁUŻBOM: W związku ze specyfiką branży, w przypadkach określonych przepisami prawa, Administrator ma bezwzględny obowiązek udostępnić dane osobowe uprawnionym organom państwowym – w szczególności Policji, Żandarmerii Wojskowej, Agencji Bezpieczeństwa Wewnętrznego, organom celno-skarbowym, sądom, prokuraturze oraz organom kontroli obrotu towarami o znaczeniu strategicznym (Ministerstwo Rozwoju i Technologii).",
+                "ORGANOM PAŃSTWOWYM I SŁUŻBOM: W związku ze specyfiką branży, w przypadkach określonych przepisami prawa, Administrator ma bezwzględny obowiązek udostępnić dane osobowe uprawnionym organom państwowym – w szczególności Policji, Żandarmerii Wojskowej, Agencji Bezpieczeństwa Wewnętrznego, organom celno-skarbowym, sądom, prokuraturze oraz organom kontroli obrotu towarami o znaczeniu strategicznym (Ministerstwo Rozwoju i Technologii) – wyłącznie w granicach uprawnień i obowiązków wynikających z ustaw koncesyjnych, karnych i karnoskarbowych.",
               ].map((item, i) => (
                 <li key={i} className="flex gap-3">
                   <span className="text-accent/50 select-none shrink-0">{i + 1}.</span>
@@ -111,7 +111,7 @@ export default function PolitykaPrywatnosciPage() {
             <ol className="space-y-3 list-none">
               <Li n="1">Dane osobowe Klientów nie będą wykorzystywane do podejmowania decyzji opartych wyłącznie na zautomatyzowanym przetwarzaniu, w tym profilowaniu, które wywoływałoby wobec Klienta skutki prawne lub w podobny sposób istotnie na niego wpływało.</Li>
               <Li n="2">Wykorzystywanie plików cookies do celów statystycznych lub personalizacji reklam nie stanowi profilowania w rozumieniu decyzji zautomatyzowanych.</Li>
-              <Li n="3">Administrator co do zasady nie przekazuje danych osobowych poza obszar EOG. W przypadku korzystania z globalnych dostawców narzędzi analitycznych lub marketingowych (np. Google LLC, Meta Platforms), transfer danych odbywa się wyłącznie z zachowaniem najwyższych standardów bezpieczeństwa, w oparciu o Standardowe Klauzule Umowne (SCC) zatwierdzone przez Komisję Europejską.</Li>
+              <Li n="3">Administrator co do zasady nie przekazuje danych osobowych poza obszar EOG. W przypadku korzystania z globalnych dostawców narzędzi analitycznych lub marketingowych (np. Google LLC, Meta Platforms), transfer danych odbywa się wyłącznie z zachowaniem najwyższych standardów bezpieczeństwa, w oparciu o Standardowe Klauzule Umowne (SCC) zatwierdzone przez Komisję Europejską lub w ramach ram prawnych certyfikowanych umów międzynarodowych zapewniających odpowiedni stopień ochrony danych.</Li>
             </ol>
           </Section>
 
@@ -132,9 +132,15 @@ export default function PolitykaPrywatnosciPage() {
                   <span>{item}</span>
                 </li>
               ))}
+              <li className="flex gap-3">
+                <span className="text-accent/50 select-none shrink-0">8.</span>
+                <span>W celu realizacji swoich praw Użytkownik może skontaktować się pod następującym adresem poczty elektronicznej: <span className="text-accent">rodo@hydra-arms.pl</span>.</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-accent/50 select-none shrink-0">9.</span>
+                <span>Prawo wniesienia skargi do organu nadzorczego – Prezesa Urzędu Ochrony Danych Osobowych (ul. Stawki 2, 00-193 Warszawa), w przypadku uznania, że przetwarzanie danych osobowych narusza przepisy prawa.</span>
+              </li>
             </ul>
-            <p className="mt-4">W celu realizacji swoich praw Użytkownik może skontaktować się pod adresem: <span className="text-accent">rodo@hydra-arms.pl</span>.</p>
-            <p className="mt-3">Przysługuje również prawo wniesienia skargi do organu nadzorczego – Prezesa Urzędu Ochrony Danych Osobowych (ul. Stawki 2, 00-193 Warszawa).</p>
           </Section>
 
           <div className="border-t border-white/10 pt-8 mt-8">

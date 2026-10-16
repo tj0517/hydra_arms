@@ -71,6 +71,7 @@ async function getCheckoutBody(request: import('@playwright/test').APIRequestCon
     product: p,
     body: {
       items: [{ product_id: p.id, quantity: 1 }],
+      terms_accepted: true,
       shipping: {
         firstName: 'Test',
         lastName: 'User',
@@ -148,6 +149,7 @@ test.describe('checkout — pending_payment status', () => {
     try {
       const body = {
         items: [{ product_id: p.id, quantity: 1 }],
+        terms_accepted: true,
         shipping: {
           firstName: 'Test', lastName: 'User', email: 'test@example.com',
           phone: '123456789', street: 'Testowa 1', city: 'Kraków', zip: '30-001',

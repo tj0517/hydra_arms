@@ -4,6 +4,7 @@ import { addOrder, getOrderStatusList, getOrders } from '@/lib/baselinker/client
 import { mapBLStatus } from '@/lib/shop/blStatusMap'
 import { isSyncAuthorized, isCronAuthorized } from '@/lib/apiAuth'
 import type { BLOrder } from '@/lib/baselinker/types'
+import { canPushToBaseLinker } from '@/lib/shop/shopMode'
 
 export const maxDuration = 300
 
@@ -36,6 +37,11 @@ async function runOrderSync() {
   if (blStatusId === 0) {
     console.log('[orders/sync] Phase A skipped — BASELINKER_STATUS_PAID not set')
   }
+  // HA-2.08: no orphan retry in verification mode (or with an unknown SHOP_MODE).
+  const blPushAllowed = canPushToBaseLinker()
+  if (!blPushAllowed) {
+    console.log('[orders/sync] Phase A skipped — SHOP_MODE does not allow BaseLinker pushes')
+  }
 
   // Only retry paid orders — pending_payment orders must not go to BL before payment.
   const { data: orphaned } = await supabase
@@ -43,11 +49,13 @@ async function runOrderSync() {
     .select('id, shipping_address, fulfillment_route')
     .is('baselinker_order_id', null)
     .eq('status', 'paid')
+    // HA-2.08: test orders (verification mode) are never pushed, whatever SHOP_MODE is now.
+    .eq('is_test', false)
     .gt('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
 
   phaseA.found = orphaned?.length ?? 0
 
-  for (const order of blStatusId === 0 ? [] : orphaned ?? []) {
+  for (const order of blStatusId === 0 || !blPushAllowed ? [] : orphaned ?? []) {
     phaseA.retried++
     try {
       const addr = order.shipping_address as Record<string, string> | null

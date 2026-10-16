@@ -5,6 +5,7 @@ import { addOrder } from '@/lib/baselinker/client'
 import { incrementBlMockCounter } from '@/lib/baselinker/mockCounter'
 import { SHOP_CACHE_TAG } from '@/lib/shop/fetchProducts'
 import { sendPaymentReceivedEmail } from '@/lib/email/orderEmails'
+import { canPushToBaseLinker } from '@/lib/shop/shopMode'
 
 /**
  * Atomically transitions an order from pending_payment → paid, then pushes
@@ -38,6 +39,23 @@ export async function markOrderPaid(
 
   // Status just changed to paid — reserved stock window opened, bust cache.
   revalidateTag(SHOP_CACHE_TAG, 'max')
+
+  // HA-2.08: test orders (created in verification mode) never reach BaseLinker. The column is the
+  // source of truth, whatever SHOP_MODE is now; the mode check is a second, independent guard.
+  const { data: flag } = await supabase
+    .from('orders')
+    .select('is_test')
+    .eq('id', orderId)
+    .single()
+  // No row / read error → unknown → fail closed.
+  if (!flag || flag.is_test) {
+    console.log('[markOrderPaid] Skipping BL push — test order (orders.is_test)')
+    return { changed: true }
+  }
+  if (!canPushToBaseLinker()) {
+    console.log('[markOrderPaid] Skipping BL push — SHOP_MODE does not allow it (verification or unknown)')
+    return { changed: true }
+  }
 
   const blStatusId = parseInt(
     process.env.BASELINKER_ORDER_STATUS_ID ?? process.env.BASELINKER_STATUS_PAID ?? '0',

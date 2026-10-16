@@ -31,6 +31,7 @@ export default defineConfig({
     '**/notify-ip-api.spec.ts',   // playwright.p24-notify-ip.config.ts (HA-2.20)
     '**/bl-mock-off.spec.ts',     // playwright.bl-mock-off.config.ts  (HA-2.20)
     '**/order-link-no-secret.spec.ts', // playwright.order-link-no-secret.config.ts (HA-2.19)
+    '**/verification-server/**',  // playwright.verification*.config.ts (HA-2.08)
   ],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
@@ -62,6 +63,9 @@ export default defineConfig({
       SHOP_BASE_URL: `http://localhost:${PORT}`,
       ORDER_LINK_SECRET: process.env.ORDER_LINK_SECRET,
       P24_MODE: process.env.P24_MODE ?? 'mock',
+      // Empty (not absent) for the same reason as P24_NOTIFY_ALLOWED_IPS: a SHOP_MODE exported in
+      // the shell must not leak into the default server. Banner/verification tests have own configs (HA-2.08).
+      SHOP_MODE: '',
       // Empty (not absent): webServer env is additive over the test-runner's
       // process.env, so an explicit '' guarantees the notify IP filter is OFF
       // here and the mock-pay -> notify path keeps working (HA-2.20).

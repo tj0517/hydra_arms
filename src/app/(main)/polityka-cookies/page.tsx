@@ -21,7 +21,7 @@ export default function PolitykaCookiesPage() {
 
           <Section title="§ 1. Postanowienia ogólne">
             <ol className="space-y-3 list-none">
-              <Li n="1">Serwis HYDRA ARMS działający pod adresem docelowym <span className="text-accent">https://hydra-arms.com</span> wykorzystuje technologię plików cookies (tzw. „ciasteczka&quot;) oraz podobne technologie śledzące i analityczne.</Li>
+              <Li n="1">Serwis HYDRA ARMS działający pod adresem docelowym <span className="text-accent">https://hydra-arms.com</span> (oraz roboczym adresem deweloperskim) wykorzystuje technologię plików cookies (tzw. „ciasteczka”) oraz podobne technologie śledzące i analityczne.</Li>
               <Li n="2">Pliki cookies to małe pliki tekstowe i informacyjne wysyłane przez serwer WWW i zapisywane na urządzeniu końcowym Użytkownika (np. komputerze, laptopie, smartfonie, tablecie), z którego korzysta on podczas przeglądania stron internetowych.</Li>
               <Li n="3">Administratorem danych generowanych przez pliki cookies (w zakresie, w jakim mogą one stanowić dane osobowe lub pozwalać na identyfikację cyfrową Użytkownika) jest HYDRA ARMS Sp. z o.o. z siedzibą w Krakowie. Szczegóły w <a href="/polityka-prywatnosci" className="text-accent hover:text-white transition-colors">Polityce Prywatności</a>.</Li>
             </ol>
@@ -32,7 +32,7 @@ export default function PolitykaCookiesPage() {
 
             <div className="space-y-6">
               <div>
-                <h3 className="font-[var(--font-mono)] text-white/70 text-xs uppercase tracking-[0.15em] mb-3">Ze względu na czas przechowywania</h3>
+                <h3 className="font-[var(--font-mono)] text-white/70 text-xs uppercase tracking-[0.15em] mb-3">Ze względu na czas ich przechowywania na urządzeniu końcowym</h3>
                 <ul className="space-y-2 border-l border-accent/20 pl-6">
                   <SubLi l="a"><strong className="text-white/80">Cookies sesyjne (session cookies):</strong> pliki o charakterze tymczasowym, które są automatycznie usuwane z urządzenia Użytkownika z chwilą wylogowania z Serwisu, opuszczenia strony internetowej lub całkowitego wyłączenia przeglądarki internetowej.</SubLi>
                   <SubLi l="b"><strong className="text-white/80">Cookies stałe (persistent cookies):</strong> pliki, które pozostają zapisane na urządzeniu Użytkownika przez czas określony w parametrach samego pliku cookie lub do momentu ich samodzielnego, ręcznego usunięcia przez Użytkownika w ustawieniach przeglądarki.</SubLi>
@@ -40,19 +40,19 @@ export default function PolitykaCookiesPage() {
               </div>
 
               <div>
-                <h3 className="font-[var(--font-mono)] text-white/70 text-xs uppercase tracking-[0.15em] mb-3">Ze względu na cel stosowania</h3>
+                <h3 className="font-[var(--font-mono)] text-white/70 text-xs uppercase tracking-[0.15em] mb-3">Ze względu na cel ich stosowania i funkcję w Serwisie</h3>
                 <ul className="space-y-3 border-l border-accent/20 pl-6">
                   <li>
-                    <p><span className="text-accent/80">a)</span> <strong className="text-white/80">Niezbędne pliki cookies:</strong> pliki o krytycznym znaczeniu dla prawidłowego i bezpiecznego funkcjonowania Serwisu. Umożliwiają korzystanie z podstawowych usług (np. utrzymanie bezpiecznej sesji po zalogowaniu, zapamiętywanie produktów dodanych do koszyka, mechanizmy uwierzytelniania transakcji płatniczych). Bez tych plików Serwis nie jest w stanie funkcjonować poprawnie. Ich zablokowanie uniemożliwi dokonywanie zakupów, rezerwacji oraz logowanie. <span className="text-accent/60">Zgoda prawna na ich instalację nie jest wymagana.</span></p>
+                    <p><span className="text-accent/80">a)</span> <strong className="text-white/80">Niezbędne pliki cookies:</strong> pliki o krytycznym znaczeniu dla prawidłowego i bezpiecznego funkcjonowania Serwisu. Umożliwiają korzystanie z podstawowych usług i technologii (np. utrzymanie bezpiecznej sesji po zalogowaniu do Konta, zapamiętywanie produktów dodanych do koszyka zakupowego, mechanizmy uwierzytelniania transakcji płatniczych oraz działanie systemów technicznej weryfikacji dostępu). Bez tych plików Serwis nie jest w stanie funkcjonować poprawnie. Ich zablokowanie uniemożliwi dokonywanie zakupów, rezerwacji oraz logowanie. <span className="text-accent/60">Zgoda prawna na ich instalację nie jest wymagana.</span></p>
                   </li>
                   <li>
-                    <p><span className="text-accent/80">b)</span> <strong className="text-white/80">Analityczne/wydajnościowe pliki cookies:</strong> pozwalają Administratorowi na zbieranie zagregowanych, anonimowych i czysto statystycznych informacji o sposobie korzystania z Serwisu (np. które podstrony są najczęściej odwiedzane, czas trwania wizyty, źródła ruchu). Administrator korzysta m.in. z narzędzi Google Analytics.</p>
+                    <p><span className="text-accent/80">b)</span> <strong className="text-white/80">Analityczne/wydajnościowe pliki cookies:</strong> pozwalają Administratorowi na zbieranie zagregowanych, anonimowych i czysto statystycznych informacji o sposobie korzystania z Serwisu przez Użytkowników (np. które podstrony są najczęściej odwiedzane, czas trwania wizyty, źródła ruchu). Służą wyłącznie do optymalizacji ergonomii i poprawy wydajności witryny. W tym zakresie Administrator korzysta z profesjonalnych narzędzi dostarczanych przez podmioty zewnętrzne, m.in. Google Analytics.</p>
                   </li>
                   <li>
-                    <p><span className="text-accent/80">c)</span> <strong className="text-white/80">Funkcjonalne pliki cookies:</strong> pozwalają na zapamiętanie wyborów i preferencji dokonanych indywidualnie przez Użytkownika (np. preferowany język strony, odnotowanie faktu złożenia oświadczenia o pełnoletności dla kategorii produktowych 18+).</p>
+                    <p><span className="text-accent/80">c)</span> <strong className="text-white/80">Funkcjonalne pliki cookies:</strong> pozwalają na zapamiętanie wyborów, preferencji i ustawień dokonanych indywidualnie przez Użytkownika (np. preferowany język strony, rozmiar czcionki, układ graficzny, a także odnotowanie faktu złożenia oświadczenia o pełnoletności dla kategorii produktowych 18+), co znacznie ułatwia ponowne korzystanie z Serwisu.</p>
                   </li>
                   <li>
-                    <p><span className="text-accent/80">d)</span> <strong className="text-white/80">Marketingowe/reklamowe pliki cookies:</strong> wykorzystywane są w celu dopasowywania i targetowania treści reklamowych do zdiagnozowanych preferencji i zainteresowań Użytkowników, zarówno w Serwisie jak i na zewnętrznych platformach (np. Meta Ads, Google Ads), a także do precyzyjnego mierzenia efektywności prowadzonych kampanii promocyjnych.</p>
+                    <p><span className="text-accent/80">d)</span> <strong className="text-white/80">Marketingowe/reklamowe pliki cookies:</strong> wykorzystywane są w celu dopasowywania i targetowania treści reklamowych oraz promocyjnych do zdiagnozowanych preferencji i zainteresowań Użytkowników. Dotyczy to reklam wyświetlanych zarówno bezpośrednio w Serwisie, jak i na zewnętrznych platformach i sieciach reklamowych (np. Meta Ads, Google Ads). Pozwalają one również na precyzyjne mierzenie efektywności prowadzonych kampanii promocyjnych.</p>
                   </li>
                 </ul>
               </div>
@@ -61,11 +61,11 @@ export default function PolitykaCookiesPage() {
 
           <Section title="§ 3. Zarządzanie plikami cookies, preferencje i wyrażanie zgody">
             <ol className="space-y-4 list-none">
-              <Li n="1">Podczas pierwszej wizyty Użytkownika w Serwisie (lub po wyczyszczeniu pamięci podręcznej) wyświetlany jest interaktywny komunikat (Cookie Banner) informujący o stosowaniu technologii plików cookies.</Li>
+              <Li n="1">Podczas pierwszej wizyty Użytkownika w Serwisie (lub po wyczyszczeniu pamięci podręcznej), wyświetlany jest interaktywny komunikat (tzw. Cookie Banner) informujący o stosowaniu technologii plików cookies.</Li>
               <Li n="2">Instalacja plików analitycznych, funkcjonalnych oraz marketingowych odbywa się WYŁĄCZNIE po wyrażeniu przez Użytkownika świadomej i wyraźnej zgody za pośrednictwem panelu zarządzania na banerze cookies. Użytkownik może zaakceptować wszystkie pliki, odrzucić pliki opcjonalne lub dostosować zgody szczegółowo.</Li>
               <Li n="3">Użytkownik ma prawo w każdej chwili zmienić swoje preferencje lub całkowicie wycofać udzielone zgody.</Li>
               <Li n="4">
-                Użytkownik posiada niezależną możliwość konfiguracji własnej przeglądarki internetowej w taki sposób, aby blokowała ona automatyczną obsługę plików cookies. Przykładowe ścieżki konfiguracji:
+                Użytkownik posiada niezależną możliwość konfiguracji własnej przeglądarki internetowej w taki sposób, aby blokowała ona automatyczną obsługę plików cookies, usuwała je lub informowała o ich każdorazowym przesłaniu na urządzenie. Przykładowe ścieżki konfiguracji:
                 <ul className="mt-2 space-y-2 border-l border-accent/20 pl-6">
                   <li className="flex gap-3"><span className="text-accent/40 shrink-0">—</span><span><strong className="text-white/70">Google Chrome:</strong> Ustawienia → Prywatność i bezpieczeństwo → Pliki cookie i inne dane witryn.</span></li>
                   <li className="flex gap-3"><span className="text-accent/40 shrink-0">—</span><span><strong className="text-white/70">Mozilla Firefox:</strong> Opcje → Prywatność i bezpieczeństwo → Ciasteczka i dane witryn.</span></li>

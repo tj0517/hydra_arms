@@ -7,6 +7,7 @@ import { ORDER_SESSION_COOKIE, appendOrderSession } from '@/lib/shop/orderSessio
 import { rateLimit, getClientIp } from '@/lib/rateLimit'
 import { registerPayment } from '@/lib/shop/registerPayment'
 import { sendOrderReceivedEmail } from '@/lib/email/orderEmails'
+import { getCheckoutGate } from '@/lib/shop/shopMode'
 
 interface CheckoutItem {
   product_id: number
@@ -28,6 +29,8 @@ interface CheckoutBody {
   fulfillment_route?: 'own' | 'sourced' | 'pickup'
   /** HA-2.06: customer confirms age/permits are checked at pickup. Required (=== true) for pickup. */
   pickup_confirmed?: boolean
+  /** HA-2.08: customer accepted Regulamin + Polityka prywatności. Required (=== true) in every mode. */
+  terms_accepted?: boolean
 }
 
 const FULFILLMENT_ROUTES = ['own', 'sourced', 'pickup']
@@ -41,6 +44,17 @@ const IDEMPOTENCY_KEY_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-
 const MAX_QTY_PER_ITEM = 20
 
 export async function POST(req: NextRequest) {
+  // HA-2.08: fail closed before anything is read or written. Unknown SHOP_MODE, or verification
+  // mode with a P24 mode other than mock/sandbox, creates no order and no payment row.
+  const gate = getCheckoutGate()
+  if (!gate.allowed) {
+    console.error(`[checkout] refused by shop-mode gate: ${gate.reason}`)
+    return NextResponse.json(
+      { error: 'Sklep jest chwilowo niedostępny dla zamówień. Spróbuj ponownie później.' },
+      { status: 503 },
+    )
+  }
+
   const limit = rateLimit(`checkout:${getClientIp(req)}`, 5, 60_000)
   if (!limit.ok) {
     return NextResponse.json(
@@ -92,6 +106,15 @@ export async function POST(req: NextRequest) {
       if (!Number.isInteger(item.quantity) || item.quantity <= 0 || item.quantity > MAX_QTY_PER_ITEM) {
         return NextResponse.json({ error: 'Nieprawidłowa ilość' }, { status: 400 })
       }
+    }
+
+    // HA-2.08: acceptance of Regulamin + Polityka prywatności is enforced here, not only by the
+    // button. Explicit boolean, not "truthy" — same rule as pickup_confirmed.
+    if (body.terms_accepted !== true) {
+      return NextResponse.json(
+        { error: 'Zaakceptuj regulamin sklepu i politykę prywatności, aby złożyć zamówienie' },
+        { status: 400 },
+      )
     }
 
     const supabase = createAdminClient()
@@ -252,6 +275,20 @@ export async function POST(req: NextRequest) {
     }
 
     const { order_id: orderId, order_total: total } = rpcData[0]
+
+    // HA-2.08: an order created in verification mode is a test order, marked BEFORE any payment is
+    // registered. If the mark cannot be written we stop here: no payment row, no e-mail, so the
+    // order can never become a paid-but-unmarked row that a later live mode would push to BaseLinker.
+    if (gate.shopMode === 'verification') {
+      const { error: markError } = await supabase
+        .from('orders')
+        .update({ is_test: true })
+        .eq('id', orderId)
+      if (markError) {
+        console.error(`[checkout] could not mark order ${orderId} as test order:`, markError)
+        return NextResponse.json({ error: 'Nie udało się utworzyć zamówienia' }, { status: 500 })
+      }
+    }
 
     // Register a P24 payment attempt and get the redirect URL
     const shipping = body.shipping

@@ -28,6 +28,8 @@ export default function CheckoutClient() {
   // the checkout route and in the checkout_create_order RPC.
   const [pickupConfirmed, setPickupConfirmed] = useState(false)
   const [pickupConfirmError, setPickupConfirmError] = useState(false)
+  // HA-2.08: Regulamin + Polityka prywatności. The server refuses the order without it too.
+  const [termsAccepted, setTermsAccepted] = useState(false)
   const [cartAlert, setCartAlert] = useState<{
     removedNames: string[]
     cappedNames: string[]
@@ -118,7 +120,7 @@ export default function CheckoutClient() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!items.length) return
+    if (!items.length || !termsAccepted) return
 
     // Checked before any request: in split mode the ship leg is created first, so a
     // refused pickup leg would otherwise leave a half-placed order.
@@ -141,6 +143,7 @@ export default function CheckoutClient() {
             items: standardItems.map(i => ({ product_id: i.product.id, quantity: i.quantity })),
             shipping: form,
             idempotency_key: idempotencyKey + '-ship',
+            terms_accepted: true,
             fulfillment_route: shippingAnalysis.route,
           }),
         })
@@ -166,6 +169,7 @@ export default function CheckoutClient() {
             items: restrictedItems.map(i => ({ product_id: i.product.id, quantity: i.quantity })),
             shipping: form,
             idempotency_key: idempotencyKey + '-pickup',
+            terms_accepted: true,
             fulfillment_route: 'pickup',
             pickup_confirmed: true,
           }),
@@ -190,6 +194,7 @@ export default function CheckoutClient() {
             items: items.map(i => ({ product_id: i.product.id, quantity: i.quantity })),
             shipping: form,
             idempotency_key: idempotencyKey,
+            terms_accepted: true,
             fulfillment_route: analysis.route,
             ...(analysis.route === 'pickup' ? { pickup_confirmed: true } : {}),
           }),
@@ -503,18 +508,38 @@ export default function CheckoutClient() {
               </div>
             </div>
 
+            <label className="flex items-start gap-3 cursor-pointer" data-testid="terms-acceptance">
+              <input
+                type="checkbox"
+                name="terms_accepted"
+                checked={termsAccepted}
+                onChange={e => setTermsAccepted(e.target.checked)}
+                className="mt-1 accent-[var(--color-accent)]"
+              />
+              <span className="text-xs text-text-dim leading-relaxed">
+                Zapoznałem(-am) się z{' '}
+                <a href="/regulamin" target="_blank" rel="noopener noreferrer" className="text-accent underline underline-offset-2 hover:text-white">
+                  Regulaminem sklepu
+                </a>{' '}
+                oraz{' '}
+                <a href="/polityka-prywatnosci" target="_blank" rel="noopener noreferrer" className="text-accent underline underline-offset-2 hover:text-white">
+                  Polityką prywatności
+                </a>{' '}
+                i akceptuję ich treść.
+              </span>
+            </label>
+
             <button
               type="submit"
               form="checkout-form"
-              disabled={submitting}
+              disabled={submitting || !termsAccepted}
+              data-testid="place-order"
               className="w-full py-4 bg-accent text-black font-[var(--font-mono)] text-xs tracking-[0.2em] uppercase hover:bg-accent/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               ZŁÓŻ ZAMÓWIENIE
             </button>
 
-            <p className="font-[var(--font-mono)] text-[9px] text-text-dim/50 tracking-wider text-center">
-              Składając zamówienie akceptujesz regulamin sklepu
-            </p>
+
           </aside>
         </div>
       </div>
