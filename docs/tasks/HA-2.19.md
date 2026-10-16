@@ -1,7 +1,7 @@
 ---
 id: HA-2.19
 title: Podpisany link statusu zamówienia dla gościa
-status: in_progress
+status: review
 difficulty: M
 model: sonnet-5.5
 model_approved: null
@@ -12,7 +12,7 @@ depends_on: [HA-2.07]
 blocked_by_questions: []
 touches_db: false
 touches_prod: false
-pr: null
+pr: 46
 ---
 
 ## Cel
