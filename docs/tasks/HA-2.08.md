@@ -1,7 +1,7 @@
 ---
 id: HA-2.08
 title: Tryb weryfikacji P24 — mock, telefon, strony prawne
-status: in_progress
+status: review
 difficulty: M
 model: sonnet-5.5
 model_approved: null
@@ -12,7 +12,7 @@ depends_on: [HA-2.03, HA-2.07, HA-2.16]
 blocked_by_questions: []
 touches_db: true
 touches_prod: true
-pr: null
+pr: 47
 ---
 
 ## Cel
