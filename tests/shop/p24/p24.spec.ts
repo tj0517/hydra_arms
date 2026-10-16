@@ -110,6 +110,7 @@ async function doCheckout(request: import('@playwright/test').APIRequestContext,
   const res = await request.post('/api/shop/checkout', {
     data: {
       items: [{ product_id: p.id, quantity: 1 }],
+      terms_accepted: true,
       shipping: {
         firstName: 'Test', lastName: 'Tester',
         email: 'test@example.com', phone: '123456789',

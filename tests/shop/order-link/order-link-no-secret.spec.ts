@@ -39,6 +39,7 @@ test('no secret: e-mail is sent without a status link; page and API refuse any t
   const res = await request.post('/api/shop/checkout', {
     data: {
       items: [{ product_id: product.id, quantity: 1 }],
+      terms_accepted: true,
       shipping: {
         firstName: 'Test', lastName: 'Tester', email: 'test@example.com', phone: '123456789',
         street: 'Testowa 1', city: 'Kraków', zip: '30-001',

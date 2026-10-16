@@ -247,6 +247,7 @@ export interface Database {
           order_received_email_sent_at: string | null;
           payment_received_email_sent_at: string | null;
           pickup_confirmed_at: string | null;
+          is_test: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -265,6 +266,7 @@ export interface Database {
           order_received_email_sent_at?: string | null;
           payment_received_email_sent_at?: string | null;
           pickup_confirmed_at?: string | null;
+          is_test?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -283,6 +285,7 @@ export interface Database {
           order_received_email_sent_at?: string | null;
           payment_received_email_sent_at?: string | null;
           pickup_confirmed_at?: string | null;
+          is_test?: boolean;
           created_at?: string;
           updated_at?: string;
         };

@@ -23,7 +23,7 @@ Etap 1: bezpieczny fundament (audyt 2026-09-22). Etap 2: płatności i uruchomie
 | HA-2.05 | Marże per hurtownia (i ewentualnie per kategoria) | todo | S | HA-2.04, HA-2.16 | — | — |
 | HA-2.06 | Compliance — wymuszenie odbioru osobistego (pozwolenie, rejestracja, 18+) | done | M | HA-1.06, HA-2.17, HA-2.29 | — | — |
 | HA-2.07 | Maile — potwierdzenie zamówienia i płatności | done | M | HA-2.03 | — | — |
-| HA-2.08 | Tryb weryfikacji P24 — mock, telefon, strony prawne | todo | M | HA-2.03, HA-2.07, HA-2.16 | — | — |
+| HA-2.08 | Tryb weryfikacji P24 — mock, telefon, strony prawne | in_progress | M | HA-2.03, HA-2.07, HA-2.16 | — | — |
 | HA-2.09 | Start sprzedaży — przełączenie na produkcję | todo | M | HA-1.02, HA-1.03, HA-1.07, HA-2.02, HA-2.03, HA-2.04, HA-2.05, HA-2.06, HA-2.07, HA-2.08, HA-2.15, HA-2.16, HA-2.19, HA-2.20, HA-2.21, HA-2.23 | — | — |
 | HA-2.10 | Filtry katalogu dla podkategorii P1 | done | L | HA-2.04 | — | — |
 | HA-2.11 | Spechurt — podgląd i walidacja na aktualnym feedzie z serwera | done | S | HA-2.04 | — | — |

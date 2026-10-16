@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import SubpageHero from "@/components/SubpageHero";
 import Link from "next/link";
+import { DEFAULT_TELEFON } from "@/lib/siteDefaults";
 
 interface KontaktClientProps {
   companyName?: string;
@@ -16,6 +17,7 @@ interface KontaktClientProps {
   uei?: string;
   adresSiedziby?: string;
   adresSklep?: string;
+  telefon?: string;
   emailRD?: string;
   emailB2G?: string;
   emailHandel?: string;
@@ -38,6 +40,7 @@ export default function KontaktClient({
   uei = "YUXMMDP8MNP4",
   adresSiedziby = "ul. Cechowa 44B\n30-614 Kraków",
   adresSklep = "ul. Gdańska 22\n31-411 Kraków",
+  telefon: telefonProp,
   emailRD = "office@hydra-arms.com",
   emailB2G = "office@hydra-arms.com",
   emailHandel = "office@hydra-arms.com",
@@ -51,6 +54,8 @@ export default function KontaktClient({
     { name: "Wewnętrzny System Kontroli", desc: "" },
   ],
 }: KontaktClientProps) {
+  // Sanity may return null/empty — same fallback as the footer.
+  const telefon = telefonProp || DEFAULT_TELEFON;
   const departments = [
     { key: "R&D", label: "R&D — Badania i Rozwój", email: emailRD },
     { key: "B2G", label: "B2G — Sektor rządowy", email: emailB2G },
@@ -195,6 +200,15 @@ export default function KontaktClient({
                       <p className="text-white font-bold tracking-[0.15em]">{companyName}</p>
                       <p className="text-accent/40 text-[11px] whitespace-pre-line leading-[1.8] mt-1">{adresSiedziby}</p>
                       <p className="text-accent/30 text-[11px]">Sklep: {adresSklep.split("\n").join(", ")}</p>
+                      <p className="text-[12px]">
+                        <a
+                          href={`tel:${telefon.replace(/\s/g, "")}`}
+                          data-testid="kontakt-phone"
+                          className="text-accent/70 hover:text-white transition-colors duration-200"
+                        >
+                          Tel: {telefon}
+                        </a>
+                      </p>
                       <div className="border-t border-accent/10 my-2" />
                       {([
                         ["NIP", nip],

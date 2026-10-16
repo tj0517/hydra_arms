@@ -103,6 +103,7 @@ async function doCheckout(
   const res = await request.post('/api/shop/checkout', {
     data: {
       items: [{ product_id: p.id, quantity: 1 }],
+      terms_accepted: true,
       shipping: {
         firstName: 'Test', lastName: 'Tester',
         email: overrides.email ?? 'test@example.com', phone: '123456789',

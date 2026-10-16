@@ -73,6 +73,7 @@ async function ordersForKey(key: string): Promise<{ id: string; fulfillment_rout
 function body(productId: number, route: 'own' | 'sourced' | 'pickup', extra: Record<string, unknown> = {}) {
   return {
     items: [{ product_id: productId, quantity: 1 }],
+    terms_accepted: true,
     shipping: SHIPPING,
     idempotency_key: crypto.randomUUID(),
     fulfillment_route: route,
@@ -337,6 +338,10 @@ test.describe('checkout UI — pickup confirmation', () => {
     const confirmation = page.getByTestId('pickup-confirmation')
     await expect(confirmation).toBeVisible({ timeout: 10_000 })
     await confirmation.scrollIntoViewIfNeeded()
+
+    // HA-2.08: Regulamin/Polityka acceptance is required in every mode — tick it so this
+    // test keeps exercising the pickup confirmation only.
+    await page.getByTestId('terms-acceptance').getByRole('checkbox').check()
 
     // unchecked → client-side error, nothing sent
     let checkoutCalls = 0

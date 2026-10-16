@@ -24,7 +24,7 @@ export default async function KontaktPage() {
       sanityFetch<{
         companyName?: string; nip?: string; regon?: string; koncesja?: string;
         krs?: string; ncage?: string; duns?: string; bdo?: string; uei?: string;
-        adresSiedziby?: string; adresSklep?: string;
+        adresSiedziby?: string; adresSklep?: string; telefon?: string;
         emailRD?: string; emailB2G?: string; emailHandel?: string; emailBiuro?: string;
         facebookUrl?: string; instagramUrl?: string;
       }>({ query: siteSettingsQuery }),
@@ -45,6 +45,7 @@ export default async function KontaktPage() {
       uei={settings?.uei}
       adresSiedziby={settings?.adresSiedziby}
       adresSklep={settings?.adresSklep}
+      telefon={settings?.telefon}
       emailRD={settings?.emailRD}
       emailB2G={settings?.emailB2G}
       emailHandel={settings?.emailHandel}

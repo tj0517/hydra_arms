@@ -3,6 +3,7 @@
 import { useRef, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { DEFAULT_TELEFON } from "@/lib/siteDefaults";
 
 const DEFAULT_NAV_LINKS = [
   { href: "/uslugi", label: "Usługi" },
@@ -61,7 +62,7 @@ export default function Footer({
   const emailB2g = siteSettings?.emailB2g ?? "gov@hydra-arms.com";
   const emailHandel = siteSettings?.emailHandel ?? "sprzedaz@hydra-arms.com";
   const logoUrl = siteSettings?.logo ?? "/logo-footer.png";
-  const telefon = siteSettings?.telefon ?? "511 307 179";
+  const telefon = siteSettings?.telefon || DEFAULT_TELEFON;
   const footerRef = useRef<HTMLElement>(null);
   const [visible, setVisible] = useState(false);
 
@@ -238,6 +239,15 @@ export default function Footer({
                 [ {label} ]
               </Link>
             ))}
+          </div>
+          {/* HA-2.08: slot for the official P24 payment-method marks. Placeholder only — the asset is
+              registered in config/inputs.ts (P24 marks, owner: tj) and must be downloaded from P24. */}
+          <div
+            data-testid="p24-payment-marks"
+            aria-label="Miejsce na oznaczenia metod płatności Przelewy24"
+            className="flex h-9 w-full max-w-xs items-center justify-center border border-dashed border-white/15 font-[var(--font-mono)] text-[10px] uppercase tracking-[0.2em] text-text-dim/50"
+          >
+            [ metody płatności ]
           </div>
           {/* Copyright / realizacja */}
           <span className="font-[var(--font-mono)] text-xs text-text-dim/50 uppercase tracking-[0.15em]">

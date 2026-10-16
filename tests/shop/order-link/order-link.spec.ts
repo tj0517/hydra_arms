@@ -53,6 +53,7 @@ async function checkout(request: APIRequestContext): Promise<{ orderId: string; 
   const res = await request.post('/api/shop/checkout', {
     data: {
       items: [{ product_id: product.id, quantity: 1 }],
+      terms_accepted: true,
       shipping: PII,
       idempotency_key: crypto.randomUUID(),
       fulfillment_route: 'own',
