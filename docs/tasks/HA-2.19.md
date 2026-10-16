@@ -1,7 +1,7 @@
 ---
 id: HA-2.19
 title: Podpisany link statusu zamówienia dla gościa
-status: review
+status: done
 difficulty: M
 model: sonnet-5.5
 model_approved: null
@@ -50,3 +50,4 @@ Klient bez konta musi mieć w mailu link do statusu swojego zamówienia, który 
 - 2026-10-16 tj: katalog roboczy `/home/tj/hydra_arms` (klon WSL) zatwierdzony dla HA-2.19, jak dla HA-2.15, HA-2.28 i HA-2.06; preflight spełniony, gdy toplevel zawiera `CLAUDE.md` i `.claude/settings.json` z hookiem `agent-guard.sh`.
 - 2026-10-16 tj: dowody UI bez Playwright MCP — zrzuty z samego testu Playwright (`page.screenshot()`) do `.playwright-mcp/ha-2.19-*.png` (minimum: ważny token i wygasły token; element w widoku, ~2 s czekania na GSAP). Nie instalować ani nie konfigurować serwerów MCP.
 - 2026-10-16 tj: Docker — stack DCS (Seaclouds) może działać na domyślnych portach Supabase; stack Hydry na 553xx (HA-2.29). Zatrzymać tylko, gdy port Hydry (55321/55322/553xx) jest zajęty; `docker ps` w raporcie.
+- 2026-10-16 tj: odbiór PR #46 po 1 rundzie — przyjęte. Udowodnione: red proofy wygasłego, sfałszowanego i cudzego linku (test na zepsutej weryfikacji → czerwony, na prawdziwej → zielony), odpowiedź bez adresu/danych osobowych (dokładna lista pól), link w obu mailach weryfikuje się tylko dla swojego zamówienia, brak linku przy pustym SHOP_BASE_URL i bez sekretu. CI zielone. Zostaje: ORDER_LINK_SECRET w Vercelu (tj), unieważnianie linków i krok CI dla no-secret w deferred.
