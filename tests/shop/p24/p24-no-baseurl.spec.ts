@@ -11,6 +11,8 @@
  * Run: npm run test:p24:no-baseurl
  */
 import { test, expect } from '@playwright/test'
+import { existsSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'http://127.0.0.1:55321'
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
@@ -91,5 +93,35 @@ test.describe('SHOP_BASE_URL unset — fail-closed', () => {
     expect(res.status()).toBe(500)
     const json = await res.json()
     expect(json.error).toBe('SHOP_BASE_URL not configured')
+  })
+
+  // HA-2.19: resolves the 2026-09-30 deferred entry (`SHOP_BASE_URL ?? ''` → relative link).
+  // ORDER_LINK_SECRET is set in this config, so "no link" is down to the empty SHOP_BASE_URL alone.
+  test('order e-mail: no status link and no relative href when SHOP_BASE_URL is empty', async ({ request }) => {
+    const { products } = await (await request.get('/api/shop/products?in_stock=true')).json()
+    const product = (products as Array<{ id: number; product_type: string }>).find(p => p.product_type === 'standard')
+    if (!product) throw new Error('No standard product in seed')
+
+    const res = await request.post('/api/shop/checkout', {
+      data: {
+        items: [{ product_id: product.id, quantity: 1 }],
+        shipping: {
+          firstName: 'Test', lastName: 'Tester', email: 'test@example.com', phone: '123456789',
+          street: 'Testowa 1', city: 'Kraków', zip: '30-001',
+        },
+        idempotency_key: crypto.randomUUID(),
+        fulfillment_route: 'own',
+      },
+      headers: { 'x-forwarded-for': '10.3.0.2' },
+    })
+    expect(res.status()).toBe(200)
+    const { order_id: orderId } = await res.json()
+
+    const file = join(process.cwd(), 'test-results', 'mock-emails', `${orderId}-order_received.html`)
+    expect(existsSync(file)).toBe(true)
+    const html = readFileSync(file, 'utf8')
+    expect(html).toContain('Czeka na płatność')   // the mail itself was sent
+    expect(html).not.toContain('/sklep/status/')
+    expect(html).not.toMatch(/href="\//)          // no relative link of any kind
   })
 })

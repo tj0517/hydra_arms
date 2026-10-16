@@ -11,6 +11,16 @@ assertNotProd('npx playwright test');
 if (!process.env.P24_CRC_KEY) {
   throw new Error('P24_CRC_KEY must be set in .env.development.local to run shop tests (see .env.development.local.example)')
 }
+// Clearly fake HMAC key for the guest order-link tests (HA-2.19). Set on the runner's own
+// env too, so specs sign tokens with the same value the dev server verifies with.
+process.env.ORDER_LINK_SECRET = 'fake-order-link-secret-for-playwright-only'
+
+// Port of the dev server under test. Default 3001 (CI, docs). HYDRA_TEST_PORT is a local
+// override for machines where 3001 is taken (e.g. a DCS dev server on WSL); one value drives
+// webServer, baseURL and SHOP_BASE_URL so they cannot disagree. Re-exported to workers via env.
+const PORT = process.env.HYDRA_TEST_PORT || '3001';
+if (!/^\d{2,5}$/.test(PORT)) throw new Error(`HYDRA_TEST_PORT must be a port number, got "${PORT}"`);
+process.env.HYDRA_TEST_PORT = PORT;
 
 export default defineConfig({
   testDir: './tests',
@@ -20,6 +30,7 @@ export default defineConfig({
     '**/p24-no-baseurl.spec.ts',
     '**/notify-ip-api.spec.ts',   // playwright.p24-notify-ip.config.ts (HA-2.20)
     '**/bl-mock-off.spec.ts',     // playwright.bl-mock-off.config.ts  (HA-2.20)
+    '**/order-link-no-secret.spec.ts', // playwright.order-link-no-secret.config.ts (HA-2.19)
   ],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
@@ -27,28 +38,29 @@ export default defineConfig({
   workers: process.env.CI ? 2 : 2,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
   use: {
-    baseURL: 'http://localhost:3001',
+    baseURL: `http://localhost:${PORT}`,
     trace: 'on-first-retry',
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
   ],
   webServer: {
-    command: 'npm run dev -- -p 3001',
-    url: 'http://localhost:3001',
+    command: `npm run dev -- -p ${PORT}`,
+    url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 90_000,
     // Explicitly forward local Supabase vars so the Next.js dev server uses the
     // local stack even if .env.local (with prod keys) is present in the project root.
     env: {
-      PORT: '3001',
+      PORT,
       NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
       NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
       SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
       BASELINKER_MOCK: process.env.BASELINKER_MOCK ?? 'true',
       BASELINKER_STATUS_PAID: process.env.BASELINKER_STATUS_PAID ?? '',
       RESEND_MOCK: 'true',
-      SHOP_BASE_URL: 'http://localhost:3001',
+      SHOP_BASE_URL: `http://localhost:${PORT}`,
+      ORDER_LINK_SECRET: process.env.ORDER_LINK_SECRET,
       P24_MODE: process.env.P24_MODE ?? 'mock',
       // Empty (not absent): webServer env is additive over the test-runner's
       // process.env, so an explicit '' guarantees the notify IP filter is OFF

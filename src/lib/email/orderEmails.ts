@@ -6,6 +6,7 @@ import type { OrderStatus } from '@/lib/supabase/types'
 import { getResendClient, isEmailMockMode } from './resendClient'
 import { incrementEmailMockCounter, type OrderEmailType } from './mockCounter'
 import { getCompanyInfo } from './company'
+import { buildOrderStatusUrl } from '@/lib/shop/orderLink'
 import { renderOrderReceivedEmail, renderPaymentReceivedEmail, type OrderEmailData } from './templates'
 
 const FROM = process.env.RESEND_FROM_EMAIL ?? 'zamowienia@hydra-arms.com'
@@ -88,6 +89,8 @@ async function loadOrderEmailData(orderId: string): Promise<OrderEmailData | nul
       unitPrice: item.unit_price,
     })),
     company,
+    // null when ORDER_LINK_SECRET or SHOP_BASE_URL is missing → mail goes out without the link.
+    statusUrl: buildOrderStatusUrl(order.id),
   }
 }
 
