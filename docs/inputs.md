@@ -28,7 +28,7 @@ może ją zmienić.
 | `NEW_SUBCATEGORY_DEFAULT_PRIORITY` | client | O-22 | HA-2.18 | `xml-integration/assortment-rules.ts` | nie |
 | `SITE_URL` ⟨nazwa wstępna⟩ | client | O-31 | HA-2.21 | jeszcze nie — HA-2.21 | nie |
 | `SHOP_BASE_URL` | client | O-31 | HA-2.21 | `src/lib/shop/registerPayment.ts`<br>`src/app/api/shop/checkout/route.ts`<br>`src/app/api/shop/payments/p24/register/route.ts`<br>`src/app/api/shop/payments/p24/mock-pay/route.ts`<br>`src/lib/email/templates.ts` | nie |
-| `ORDER_LINK_SECRET` ⟨nazwa wstępna⟩ | tj | — | HA-2.19 | jeszcze nie — HA-2.19 | tak |
+| `ORDER_LINK_SECRET` | tj | — | HA-2.19 | `src/lib/shop/orderLink.ts`<br>`src/lib/shop/guestOrderStatus.ts`<br>`src/lib/email/orderEmails.ts` | tak |
 
 ## Potwierdzone (1)
 

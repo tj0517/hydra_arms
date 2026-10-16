@@ -16,6 +16,8 @@ export interface OrderEmailData {
   email: string
   items: OrderEmailItem[]
   company: CompanyInfo
+  /** Absolute signed guest status link (HA-2.19); null → the link is omitted. */
+  statusUrl: string | null
 }
 
 const mono = `'Courier New', Courier, monospace`
@@ -66,13 +68,26 @@ function companyBlock(company: CompanyInfo): string {
   <p style="margin:0;font-family:${mono};font-size:11px;color:${dim};letter-spacing:0.04em;">NIP ${escapeHtml(company.nip)} &nbsp;&middot;&nbsp; REGON ${escapeHtml(company.regon)} &nbsp;&middot;&nbsp; KRS ${escapeHtml(company.krs)}</p>`
 }
 
+function statusLinkBlock(statusUrl: string | null): string {
+  if (!statusUrl) return ''
+  return `
+  <p style="margin:0 0 12px;font-family:${mono};font-size:11px;color:${dim};line-height:1.8;letter-spacing:0.03em;">
+    Status zamówienia sprawdzisz bez logowania pod tym linkiem (ważny 30 dni):<br>
+    <a href="${escapeHtml(statusUrl)}" style="color:${green};text-decoration:none;word-break:break-all;">${escapeHtml(statusUrl)}</a>
+  </p>`
+}
+
+// Without SHOP_BASE_URL there is no absolute address, so the sentence stays
+// but carries no link (a relative href is useless in a mail client).
 function accountNudge(): string {
-  const baseUrl = process.env.SHOP_BASE_URL ?? ''
-  const href = `${baseUrl}/konto/zamowienia`
+  const baseUrl = (process.env.SHOP_BASE_URL ?? '').trim().replace(/\/+$/, '')
+  const href = /^https?:\/\/[^/]/.test(baseUrl) ? `${baseUrl}/konto/zamowienia` : null
+  const link = href
+    ? ` — <a href="${escapeHtml(href)}" style="color:${green};text-decoration:none;">${escapeHtml(href)}</a>`
+    : ''
   return `
   <p style="margin:0;font-family:${mono};font-size:11px;color:${dim};line-height:1.8;letter-spacing:0.03em;">
-    Aby sprawdzić status zamówienia, załóż konto (lub zaloguj się) na ten sam adres e-mail —
-    <a href="${escapeHtml(href)}" style="color:${green};text-decoration:none;">${escapeHtml(href)}</a>
+    Możesz też założyć konto (lub zalogować się) na ten sam adres e-mail, aby widzieć wszystkie swoje zamówienia${link}
   </p>`
 }
 
@@ -158,6 +173,7 @@ function orderBody(data: OrderEmailData, statusLabel: string): string {
 
         <p style="margin:0 0 16px;font-family:${mono};font-size:10px;color:rgba(19,255,21,0.15);letter-spacing:0.1em;">&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;</p>
 
+        ${statusLinkBlock(data.statusUrl)}
         ${accountNudge()}
 
         <p style="margin:20px 0 16px;font-family:${mono};font-size:10px;color:rgba(19,255,21,0.15);letter-spacing:0.1em;">&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;</p>
