@@ -4,6 +4,7 @@ import { useRef, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { DEFAULT_TELEFON } from "@/lib/siteDefaults";
+import type { PaymentMarks } from "@/lib/shop/paymentMarks";
 
 const DEFAULT_NAV_LINKS = [
   { href: "/uslugi", label: "Usługi" },
@@ -41,9 +42,11 @@ type SiteSettings = {
 export default function Footer({
   navLinks,
   siteSettings,
+  paymentMarks = { kind: "none" },
 }: {
   navLinks?: { href: string; label: string }[];
   siteSettings?: SiteSettings;
+  paymentMarks?: PaymentMarks;
 } = {}) {
   const links = DEFAULT_NAV_LINKS;
   const company = siteSettings?.companyName ?? "HYDRA ARMS SP. Z O.O.";
@@ -240,15 +243,29 @@ export default function Footer({
               </Link>
             ))}
           </div>
-          {/* HA-2.08: slot for the official P24 payment-method marks. Placeholder only — the asset is
-              registered in config/inputs.ts (P24 marks, owner: tj) and must be downloaded from P24. */}
-          <div
-            data-testid="p24-payment-marks"
-            aria-label="Miejsce na oznaczenia metod płatności Przelewy24"
-            className="flex h-9 w-full max-w-xs items-center justify-center border border-dashed border-white/15 font-[var(--font-mono)] text-[10px] uppercase tracking-[0.2em] text-text-dim/50"
-          >
-            [ metody płatności ]
-          </div>
+          {/* HA-2.08: slot for the official P24 payment-method marks. The real file (public/payment-marks/
+              p24-marks.*, registered in config/inputs.ts, owner: tj) is shown in every mode; the neutral
+              placeholder only in verification/dev (decision: src/lib/shop/paymentMarks.ts). */}
+          {paymentMarks.kind === "image" && (
+            <Image
+              data-testid="p24-payment-marks"
+              src={paymentMarks.src}
+              alt="Metody płatności Przelewy24"
+              width={320}
+              height={36}
+              unoptimized
+              className="h-9 w-auto max-w-xs object-contain"
+            />
+          )}
+          {paymentMarks.kind === "placeholder" && (
+            <div
+              data-testid="p24-payment-marks"
+              aria-label="Miejsce na oznaczenia metod płatności Przelewy24"
+              className="flex h-9 w-full max-w-xs items-center justify-center border border-dashed border-white/15 font-[var(--font-mono)] text-[10px] uppercase tracking-[0.2em] text-text-dim/50"
+            >
+              [ metody płatności ]
+            </div>
+          )}
           {/* Copyright / realizacja */}
           <span className="font-[var(--font-mono)] text-xs text-text-dim/50 uppercase tracking-[0.15em]">
             [ REALIZACJA ... ]

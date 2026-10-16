@@ -74,6 +74,20 @@ test.describe('verification mode — banner', () => {
   }
 })
 
+test.describe('verification mode — footer P24 marks slot', () => {
+  test('placeholder is visible in the footer (no real asset yet); screenshot', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 })
+    await dismissCookies(page)
+    await gotoStable(page, '/')
+    await hideBanner(page)
+    const slot = page.getByTestId('p24-payment-marks')
+    await expect(slot).toHaveCount(1)
+    await shot(page, '9-verification-footer', slot)
+    await expect(slot).toBeVisible()
+    await expect(slot).toContainText(/metody płatności/i)
+  })
+})
+
 test.describe('verification mode — full path on the P24 mock', () => {
   test('listing → product → cart → checkout → mock payment → confirmation', async ({ page, request }) => {
     // 7 screenshots x 2 s GSAP wait + cold dev-server compiles of each route

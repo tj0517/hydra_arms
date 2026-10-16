@@ -1,6 +1,15 @@
 import 'server-only'
+import { existsSync } from 'fs'
+import path from 'path'
 import { parseShopMode } from '../../../config/inputsCheck'
 import { getP24Mode } from '@/lib/p24/mode'
+import {
+  decidePaymentMarks,
+  PAYMENT_MARKS_BASENAME,
+  PAYMENT_MARKS_DIR,
+  PAYMENT_MARKS_EXTENSIONS,
+  type PaymentMarks,
+} from '@/lib/shop/paymentMarks'
 import {
   evaluateCheckoutGate,
   isBaseLinkerPushAllowed,
@@ -24,4 +33,16 @@ export function getCheckoutGate(): CheckoutGate {
 
 export function canPushToBaseLinker(): boolean {
   return isBaseLinkerPushAllowed(process.env.SHOP_MODE)
+}
+
+/** Footer slot for the P24 marks: the real file if it exists in public/, else the mode-dependent placeholder. */
+export function getPaymentMarks(): PaymentMarks {
+  const ext = PAYMENT_MARKS_EXTENSIONS.find(e =>
+    existsSync(path.join(process.cwd(), 'public', PAYMENT_MARKS_DIR, `${PAYMENT_MARKS_BASENAME}.${e}`)),
+  )
+  return decidePaymentMarks({
+    rawShopMode: process.env.SHOP_MODE,
+    nodeEnv: process.env.NODE_ENV,
+    assetSrc: ext ? `/${PAYMENT_MARKS_DIR}/${PAYMENT_MARKS_BASENAME}.${ext}` : null,
+  })
 }
