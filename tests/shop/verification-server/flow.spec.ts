@@ -180,6 +180,7 @@ test.describe('verification mode — BaseLinker is never called', () => {
         },
         idempotency_key: key,
         fulfillment_route: 'own',
+        shipping_method: 'dhl',
       },
       headers: uniqueIp(),
     })

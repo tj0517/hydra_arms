@@ -111,6 +111,7 @@ async function doCheckout(
       },
       idempotency_key: crypto.randomUUID(),
       fulfillment_route: 'own',
+      shipping_method: 'dhl',
     },
     headers: uniqueIpHeaders(),
   })
@@ -293,6 +294,7 @@ test.describe('payment email — forced send failure', () => {
         total: 10,
         shipping_address: { firstName: 'No', lastName: 'Email' }, // no `email` key
         fulfillment_route: 'own',
+        shipping_method: 'dhl',
       }),
     })
     const [order] = await createRes.json()

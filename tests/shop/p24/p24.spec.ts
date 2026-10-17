@@ -118,6 +118,7 @@ async function doCheckout(request: import('@playwright/test').APIRequestContext,
       },
       idempotency_key: crypto.randomUUID(),
       fulfillment_route: 'own',
+      shipping_method: 'dhl',
     },
     headers: uniqueIpHeaders(),
   })

@@ -7,6 +7,15 @@ import type { FreshProductData } from './CartProvider'
 import Link from 'next/link'
 import { analyzeCart, mustPickup } from '@/lib/shop/cartAnalysis'
 import { createClient } from '@/lib/supabase/client'
+import {
+  PARCEL_METHODS,
+  SHIPPING_METHOD_LABELS,
+  normalizeLockerCode,
+  shippingCost,
+  type ParcelMethod,
+  type ShippingPriceList,
+} from '@/lib/shop/shipping'
+import InpostLockerPicker, { type LockerPoint } from './InpostLockerPicker'
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
@@ -14,7 +23,14 @@ const fmt = (n: number) =>
 type Step = 'shipping' | 'processing' | 'error'
 type DeliveryMode = 'pickup_all' | 'split'
 
-export default function CheckoutClient() {
+export default function CheckoutClient({
+  priceList,
+  geowidgetToken,
+}: {
+  /** null = price list missing/invalid in env → parcel delivery unavailable (server refuses too). */
+  priceList: ShippingPriceList | null
+  geowidgetToken: string | null
+}) {
   const { items, total, clearCart, removeItem, syncCart } = useCart()
   const router = useRouter()
   const [step, setStep] = useState<Step>('shipping')
@@ -40,6 +56,25 @@ export default function CheckoutClient() {
   const standardItems = items.filter(i => !mustPickup(i.product))
   const restrictedItems = items.filter(i => mustPickup(i.product))
   const shippingAnalysis = analyzeCart(standardItems)
+
+  // HA-2.02: delivery. A leg that ships exists for an all-shippable cart and for the
+  // ship leg of a split cart. The cost shown here mirrors the server rule; the server
+  // computes the charged amount itself from env + the goods it sums (tj D1: in a split
+  // order only the shipped goods count toward the free-delivery threshold).
+  const isSplit = analysis.isMixed && deliveryMode === 'split'
+  const hasShipLeg = !analysis.pickup || isSplit
+  const shipSubtotal = isSplit
+    ? standardItems.reduce((sum, i) => sum + (i.product.price ?? 0) * i.quantity, 0)
+    : total
+  const [shippingMethod, setShippingMethod] = useState<ParcelMethod | null>(null)
+  const [methodError, setMethodError] = useState(false)
+  const [lockerCode, setLockerCode] = useState('')
+  const [lockerPoint, setLockerPoint] = useState<LockerPoint | null>(null)
+  const [lockerError, setLockerError] = useState(false)
+  const deliveryCost = hasShipLeg && shippingMethod && priceList
+    ? shippingCost(shippingMethod, shipSubtotal, priceList)
+    : 0
+  const missingForFree = priceList ? Math.max(0, priceList.freeThreshold - shipSubtotal) : 0
 
   const [form, setForm] = useState({
     firstName: '',
@@ -128,6 +163,25 @@ export default function CheckoutClient() {
       setPickupConfirmError(true)
       return
     }
+    let deliveryPoint: LockerPoint | null = null
+    if (hasShipLeg) {
+      if (!shippingMethod) {
+        setMethodError(true)
+        return
+      }
+      if (shippingMethod === 'inpost_locker') {
+        const code = normalizeLockerCode(lockerCode)
+        if (!code) {
+          setLockerError(true)
+          return
+        }
+        deliveryPoint = lockerPoint?.id === code
+          ? lockerPoint
+          : { id: code, name: null, address: null, postcode: null, city: null }
+      }
+    }
+    // Method id and locker only — never an amount (HA-2.02).
+    const delivery = { shipping_method: shippingMethod, ...(deliveryPoint ? { delivery_point: deliveryPoint } : {}) }
 
     setStep('processing')
     setSubmitting(true)
@@ -145,6 +199,7 @@ export default function CheckoutClient() {
             idempotency_key: idempotencyKey + '-ship',
             terms_accepted: true,
             fulfillment_route: shippingAnalysis.route,
+            ...delivery,
           }),
         })
 
@@ -172,6 +227,7 @@ export default function CheckoutClient() {
             terms_accepted: true,
             fulfillment_route: 'pickup',
             pickup_confirmed: true,
+            shipping_method: 'pickup',
           }),
         })
 
@@ -196,7 +252,9 @@ export default function CheckoutClient() {
             idempotency_key: idempotencyKey,
             terms_accepted: true,
             fulfillment_route: analysis.route,
-            ...(analysis.route === 'pickup' ? { pickup_confirmed: true } : {}),
+            ...(analysis.route === 'pickup'
+              ? { pickup_confirmed: true, shipping_method: 'pickup' }
+              : delivery),
           }),
         })
 
@@ -381,9 +439,75 @@ export default function CheckoutClient() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Email" type="email" value={form.email} onChange={v => updateField('email', v)} required />
-                <Field label="Telefon" type="tel" value={form.phone} onChange={v => updateField('phone', v)} />
+                <Field label="Telefon" type="tel" value={form.phone} onChange={v => updateField('phone', v)} required={hasShipLeg} />
               </div>
             </section>
+
+            {hasShipLeg && (
+              <section className="space-y-4" data-testid="shipping-methods">
+                <h2 className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-[0.25em] uppercase border-b border-white/10 pb-3">
+                  Sposób dostawy{isSplit ? ' — produkty wysyłkowe' : ''}
+                </h2>
+                {priceList ? (
+                  <>
+                    <div className="border border-white/10 divide-y divide-white/10">
+                      {PARCEL_METHODS.map(m => {
+                        const cost = shippingCost(m, shipSubtotal, priceList)
+                        const selected = shippingMethod === m
+                        return (
+                          <label
+                            key={m}
+                            data-testid={`shipping-method-${m}`}
+                            className={`flex items-center gap-4 px-4 py-3 cursor-pointer transition-colors ${selected ? 'bg-white/[0.04]' : 'hover:bg-white/[0.02]'}`}
+                          >
+                            <input
+                              type="radio"
+                              name="shipping_method"
+                              value={m}
+                              checked={selected}
+                              onChange={() => { setShippingMethod(m); setMethodError(false) }}
+                              className="accent-[var(--color-accent)]"
+                            />
+                            <span className="flex-1 font-[var(--font-mono)] text-[10px] text-white tracking-widest uppercase">
+                              {SHIPPING_METHOD_LABELS[m]}
+                            </span>
+                            <span className="font-[var(--font-mono)] text-xs text-white/80">
+                              {cost === 0 ? 'GRATIS' : `${fmt(cost)} PLN`}
+                            </span>
+                          </label>
+                        )
+                      })}
+                    </div>
+                    <p className="font-[var(--font-mono)] text-[9px] text-text-dim tracking-wider" data-testid="free-shipping-hint">
+                      {missingForFree > 0
+                        ? `Darmowa dostawa od ${fmt(priceList.freeThreshold)} PLN — brakuje ${fmt(missingForFree)} PLN${isSplit ? ' (liczą się produkty wysyłkowe)' : ''}`
+                        : 'Darmowa dostawa — wartość produktów przekracza próg'}
+                    </p>
+                    {methodError && (
+                      <p role="alert" data-testid="shipping-method-error" className="text-sm text-red-400">
+                        Wybierz sposób dostawy.
+                      </p>
+                    )}
+                    {shippingMethod === 'inpost_locker' && (
+                      <InpostLockerPicker
+                        token={geowidgetToken}
+                        code={lockerCode}
+                        point={lockerPoint}
+                        invalid={lockerError}
+                        onCodeChange={c => { setLockerCode(c); setLockerError(false) }}
+                        onPointSelected={p => { setLockerPoint(p); setLockerCode(p.id); setLockerError(false) }}
+                      />
+                    )}
+                  </>
+                ) : (
+                  <div role="alert" data-testid="shipping-unavailable" className="border border-red-500/30 bg-red-500/5 px-5 py-4">
+                    <p className="text-sm text-red-300">
+                      Dostawa jest chwilowo niedostępna. Spróbuj ponownie później lub skontaktuj się ze sklepem.
+                    </p>
+                  </div>
+                )}
+              </section>
+            )}
 
             {analysis.pickup && !(analysis.isMixed && deliveryMode === 'split') ? (
               <section className="space-y-5">
@@ -498,13 +622,28 @@ export default function CheckoutClient() {
                 <span className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-widest">PRODUKTY</span>
                 <span className="font-[var(--font-mono)] text-sm text-white">{fmt(total)} PLN</span>
               </div>
-              <div className="flex justify-between">
-                <span className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-widest">DOSTAWA</span>
-                <span className="font-[var(--font-mono)] text-sm text-text-dim">do ustalenia</span>
+              <div className="flex justify-between gap-4" data-testid="summary-delivery">
+                <span className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-widest">
+                  DOSTAWA{hasShipLeg && shippingMethod ? ` · ${SHIPPING_METHOD_LABELS[shippingMethod].toUpperCase()}` : ''}
+                </span>
+                <span className="font-[var(--font-mono)] text-sm text-white whitespace-nowrap">
+                  {!hasShipLeg
+                    ? 'odbiór osobisty · 0,00 PLN'
+                    : !shippingMethod
+                    ? <span className="text-text-dim">wybierz sposób</span>
+                    : deliveryCost === 0
+                    ? 'GRATIS'
+                    : `${fmt(deliveryCost)} PLN`}
+                </span>
               </div>
+              {isSplit && (
+                <p className="font-[var(--font-mono)] text-[9px] text-text-dim/70 tracking-wider">
+                  Odbiór osobisty produktów z ograniczeniami: 0,00 PLN
+                </p>
+              )}
               <div className="flex justify-between pt-3 border-t border-white/10">
                 <span className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-widest uppercase">Razem</span>
-                <span className="font-[var(--font-mono)] text-xl text-accent">{fmt(total)} PLN</span>
+                <span className="font-[var(--font-mono)] text-xl text-accent" data-testid="summary-total">{fmt(total + deliveryCost)} PLN</span>
               </div>
             </div>
 

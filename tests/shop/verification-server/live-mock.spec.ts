@@ -37,6 +37,7 @@ test.describe('live + P24 mock', () => {
         },
         idempotency_key: key,
         fulfillment_route: 'own',
+        shipping_method: 'dhl',
       },
       headers: { 'x-forwarded-for': '10.5.0.1' },
     })

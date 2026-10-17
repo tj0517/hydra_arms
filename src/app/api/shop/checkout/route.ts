@@ -8,6 +8,8 @@ import { rateLimit, getClientIp } from '@/lib/rateLimit'
 import { registerPayment } from '@/lib/shop/registerPayment'
 import { sendOrderReceivedEmail } from '@/lib/email/orderEmails'
 import { getCheckoutGate } from '@/lib/shop/shopMode'
+import { isShippingMethod, normalizeLockerCode } from '@/lib/shop/shipping'
+import { getShippingPriceList } from '@/lib/shop/shippingPrices'
 
 interface CheckoutItem {
   product_id: number
@@ -31,17 +33,30 @@ interface CheckoutBody {
   pickup_confirmed?: boolean
   /** HA-2.08: customer accepted Regulamin + Polityka prywatności. Required (=== true) in every mode. */
   terms_accepted?: boolean
+  /** HA-2.02: delivery method id (allow-list). The cost is computed server-side; any amount sent is ignored. */
+  shipping_method?: unknown
+  /** HA-2.02: InPost Paczkomat for shipping_method = inpost_locker. Only `id` is validated and authoritative. */
+  delivery_point?: unknown
 }
 
 const FULFILLMENT_ROUTES = ['own', 'sourced', 'pickup']
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const ZIP_RE = /^\d{2}-\d{3}$/
+// HA-2.02 (tj D3): phone required for every shipped method — InPost sends the pickup code by SMS.
+const PHONE_RE = /^\+?[0-9][0-9 -]{7,15}[0-9]$/
 // Client-generated key = crypto.randomUUID() (+ '-ship'/'-pickup' for split carts).
 // It doubles as the guest access token, so reject anything low-entropy.
 const IDEMPOTENCY_KEY_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(-ship|-pickup)?$/i
 
 const MAX_QTY_PER_ITEM = 20
+
+/** Informational Paczkomat fields from the Geowidget: strings only, trimmed, BL length limit. */
+function pointField(v: unknown): string | null {
+  if (typeof v !== 'string') return null
+  const t = v.trim().slice(0, 100)
+  return t || null
+}
 
 export async function POST(req: NextRequest) {
   // HA-2.08: fail closed before anything is read or written. Unknown SHOP_MODE, or verification
@@ -86,6 +101,47 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // HA-2.02: delivery method from the allow-list, consistent with the route; checked before any DB call.
+    if (!isShippingMethod(body.shipping_method)) {
+      return NextResponse.json({ error: 'Wybierz sposób dostawy' }, { status: 400 })
+    }
+    const shippingMethod = body.shipping_method
+    if (isPickup !== (shippingMethod === 'pickup')) {
+      return NextResponse.json({ error: 'Wybrany sposób dostawy nie pasuje do zamówienia' }, { status: 400 })
+    }
+    let deliveryPoint: { id: string; name: string | null; address: string | null; postcode: string | null; city: string | null } | null = null
+    if (shippingMethod === 'inpost_locker') {
+      const raw = (typeof body.delivery_point === 'object' && body.delivery_point !== null
+        ? body.delivery_point
+        : {}) as Record<string, unknown>
+      const code = normalizeLockerCode(raw.id)
+      if (!code) {
+        return NextResponse.json({ error: 'Wybierz Paczkomat lub wpisz poprawny kod automatu (np. KRA01M)' }, { status: 400 })
+      }
+      deliveryPoint = {
+        id: code,
+        name: pointField(raw.name),
+        address: pointField(raw.address),
+        postcode: pointField(raw.postcode),
+        city: pointField(raw.city),
+      }
+    }
+    // Price list from env, read only here. Fail closed: no valid price list → no parcel order.
+    let shippingPrice: number | null = null
+    let freeThreshold: number | null = null
+    if (shippingMethod !== 'pickup') {
+      const priceList = getShippingPriceList()
+      if (!priceList.ok) {
+        console.error(`[checkout] shipping price list invalid: ${priceList.invalid.join(', ')}`)
+        return NextResponse.json(
+          { error: 'Dostawa jest chwilowo niedostępna. Spróbuj ponownie później lub skontaktuj się ze sklepem.' },
+          { status: 503 },
+        )
+      }
+      shippingPrice = priceList.priceList.prices[shippingMethod]
+      freeThreshold = priceList.priceList.freeThreshold
+    }
+
     if (!s?.email || !s?.firstName || !s?.lastName) {
       return NextResponse.json({ error: 'Brakuje wymaganych danych kontaktowych' }, { status: 400 })
     }
@@ -100,6 +156,10 @@ export async function POST(req: NextRequest) {
 
     if (!isPickup && !ZIP_RE.test(s.zip)) {
       return NextResponse.json({ error: 'Nieprawidłowy kod pocztowy (format: 00-000)' }, { status: 400 })
+    }
+
+    if (!isPickup && (typeof s.phone !== 'string' || !PHONE_RE.test(s.phone.trim()))) {
+      return NextResponse.json({ error: 'Podaj numer telefonu — przewoźnik wysyła na niego powiadomienia' }, { status: 400 })
     }
 
     for (const item of body.items) {
@@ -227,6 +287,10 @@ export async function POST(req: NextRequest) {
       p_fulfillment_route: fulfillmentRoute,
       p_items: body.items,
       p_pickup_confirmed: isPickup && body.pickup_confirmed === true,
+      p_shipping_method: shippingMethod,
+      p_shipping_price: shippingPrice,
+      p_free_threshold: freeThreshold,
+      p_delivery_point: deliveryPoint,
     })
 
     if (rpcError || !rpcData?.length) {
@@ -261,6 +325,23 @@ export async function POST(req: NextRequest) {
         )
       }
 
+      if (rpcError?.message?.includes('DELIVERY_POINT_REQUIRED')) {
+        return NextResponse.json({ error: 'Wybierz Paczkomat lub wpisz poprawny kod automatu (np. KRA01M)' }, { status: 400 })
+      }
+      if (
+        rpcError?.message?.includes('INVALID_SHIPPING_METHOD') ||
+        rpcError?.message?.includes('SHIPPING_METHOD_ROUTE_MISMATCH')
+      ) {
+        return NextResponse.json({ error: 'Wybrany sposób dostawy nie pasuje do zamówienia' }, { status: 400 })
+      }
+      if (rpcError?.message?.includes('SHIPPING_PRICE_MISSING')) {
+        console.error('[checkout] RPC refused: shipping price missing')
+        return NextResponse.json(
+          { error: 'Dostawa jest chwilowo niedostępna. Spróbuj ponownie później lub skontaktuj się ze sklepem.' },
+          { status: 503 },
+        )
+      }
+
       const stockMatch = rpcError?.message?.match(/INSUFFICIENT_STOCK:(\d+)/)
       if (stockMatch) {
         const product = productMap.get(parseInt(stockMatch[1], 10))
@@ -274,7 +355,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Nie udało się utworzyć zamówienia' }, { status: 500 })
     }
 
-    const { order_id: orderId, order_total: total } = rpcData[0]
+    const { order_id: orderId, order_total: total, order_shipping_cost: shippingCost } = rpcData[0]
 
     // HA-2.08: an order created in verification mode is a test order, marked BEFORE any payment is
     // registered. If the mark cannot be written we stop here: no payment row, no e-mail, so the
@@ -319,6 +400,7 @@ export async function POST(req: NextRequest) {
         session_token: sessionId,
         status: 'pending_payment',
         total,
+        shipping_cost: shippingCost,
         payment_url: paymentUrl,
       }),
     )

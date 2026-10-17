@@ -5,6 +5,8 @@ import { mapBLStatus } from '@/lib/shop/blStatusMap'
 import { isSyncAuthorized, isCronAuthorized } from '@/lib/apiAuth'
 import type { BLOrder } from '@/lib/baselinker/types'
 import { canPushToBaseLinker } from '@/lib/shop/shopMode'
+import { BL_ORDER_COLUMNS, buildBlOrderParams } from '@/lib/shop/blOrderPayload'
+import { recordBlMockDelivery } from '@/lib/baselinker/mockCounter'
 
 export const maxDuration = 300
 
@@ -46,7 +48,7 @@ async function runOrderSync() {
   // Only retry paid orders — pending_payment orders must not go to BL before payment.
   const { data: orphaned } = await supabase
     .from('orders')
-    .select('id, shipping_address, fulfillment_route')
+    .select(BL_ORDER_COLUMNS)
     .is('baselinker_order_id', null)
     .eq('status', 'paid')
     // HA-2.08: test orders (verification mode) are never pushed, whatever SHOP_MODE is now.
@@ -58,8 +60,7 @@ async function runOrderSync() {
   for (const order of blStatusId === 0 || !blPushAllowed ? [] : orphaned ?? []) {
     phaseA.retried++
     try {
-      const addr = order.shipping_address as Record<string, string> | null
-      if (!addr) continue
+      if (!order.shipping_address) continue
 
       const { data: items } = await supabase
         .from('order_items')
@@ -68,40 +69,9 @@ async function runOrderSync() {
 
       if (!items?.length) continue
 
-      const isPickup = order.fulfillment_route === 'pickup'
-
-      const blOrderId = await addOrder({
-        order_status_id: blStatusId,
-        currency: 'PLN',
-        payment_method: 'Przelew',
-        payment_method_cod: 0,
-        paid: 1,
-        user_login: addr.email ?? '',
-        phone: addr.phone ?? '',
-        email: addr.email ?? '',
-        delivery_method: isPickup ? 'Odbiór osobisty' : 'Kurier',
-        delivery_price: 0,
-        delivery_fullname: `${addr.firstName ?? ''} ${addr.lastName ?? ''}`.trim(),
-        delivery_address: addr.street ?? '',
-        delivery_city: addr.city ?? '',
-        delivery_postcode: addr.zip ?? '',
-        delivery_country_code: 'PL',
-        products: items.map(item => {
-          const snap = (item.product_snapshot ?? {}) as Record<string, unknown>
-          return {
-            storage: 'db' as const,
-            storage_id: 0,
-            product_id: String(snap.id ?? '0'),
-            variant_id: 0,
-            name: (snap.name as string) ?? 'Produkt',
-            sku: (snap.sku as string) ?? '',
-            ean: (snap.ean as string) ?? '',
-            quantity: item.quantity,
-            price_brutto: item.unit_price,
-            tax_rate: (snap.tax_rate as number) ?? 23,
-          }
-        }),
-      }, { blockedRetries: 1 })
+      const params = buildBlOrderParams(order, items, blStatusId)
+      const blOrderId = await addOrder(params, { blockedRetries: 1 })
+      if (process.env.BASELINKER_MOCK === 'true') recordBlMockDelivery(order.id, params)
 
       await supabase
         .from('orders')

@@ -38,6 +38,7 @@ function body(productId: number, key: string, extra: Record<string, unknown> = {
     },
     idempotency_key: key,
     fulfillment_route: 'own',
+    shipping_method: 'dhl',
     ...extra,
   }
 }

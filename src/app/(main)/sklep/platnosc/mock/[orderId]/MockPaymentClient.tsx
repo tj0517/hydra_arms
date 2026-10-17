@@ -71,7 +71,7 @@ export default function MockPaymentClient({
         {/* Amount */}
         <div className="border border-white/10 px-6 py-5 text-center">
           <p className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-[0.25em] uppercase mb-2">Do zapłaty</p>
-          <p className="font-[var(--font-mono)] text-3xl text-accent">
+          <p className="font-[var(--font-mono)] text-3xl text-accent" data-testid="mock-payment-amount">
             {fmt(parseFloat(amount))} {currency}
           </p>
         </div>

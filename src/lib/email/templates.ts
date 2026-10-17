@@ -1,5 +1,6 @@
 import 'server-only'
 import type { CompanyInfo } from './company'
+import { isShippingMethod, SHIPPING_METHOD_LABELS } from '@/lib/shop/shipping'
 
 export interface OrderEmailItem {
   name: string
@@ -11,6 +12,11 @@ export interface OrderEmailData {
   orderId: string
   total: number
   fulfillmentRoute: string | null
+  /** HA-2.02: NULL for orders created before migration 018 (then no delivery line, total only). */
+  shippingMethod: string | null
+  shippingCost: number | null
+  /** InPost Paczkomat code for shipping_method = inpost_locker. */
+  deliveryPointId: string | null
   firstName: string
   lastName: string
   email: string
@@ -32,7 +38,12 @@ const escapeHtml = (s: string) =>
 const fmt = (n: number) =>
   new Intl.NumberFormat('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
 
-function describeDelivery(route: string | null): string {
+function describeDelivery(route: string | null, method: string | null, pointId: string | null): string {
+  if (route !== 'pickup' && isShippingMethod(method)) {
+    return method === 'inpost_locker' && pointId
+      ? `${SHIPPING_METHOD_LABELS[method]} ${pointId}`
+      : SHIPPING_METHOD_LABELS[method]
+  }
   switch (route) {
     case 'pickup':
       return 'Odbiór osobisty w siedzibie HYDRA ARMS'
@@ -133,6 +144,21 @@ function wrap(titleBar: string, bootLines: string, body: string): string {
 </html>`
 }
 
+// HA-2.02: goods + delivery above RAZEM, so the e-mail adds up to the charged total.
+function deliveryRows(data: OrderEmailData): string {
+  if (!isShippingMethod(data.shippingMethod) || data.shippingCost === null) return ''
+  const goods = data.items.reduce((sum, i) => sum + i.quantity * i.unitPrice, 0)
+  const row = (label: string, value: string) => `
+          <tr>
+            <td style="padding:8px 0 0;font-family:${mono};font-size:11px;color:${dim};letter-spacing:0.1em;">${label}</td>
+            <td style="padding:8px 0 0;font-family:${mono};font-size:12px;color:#e8ffe8;text-align:right;">${value}</td>
+          </tr>`
+  return (
+    row('PRODUKTY', `${fmt(goods)} PLN`) +
+    row(`DOSTAWA &middot; ${escapeHtml(SHIPPING_METHOD_LABELS[data.shippingMethod].toUpperCase())}`, `${fmt(data.shippingCost)} PLN`)
+  )
+}
+
 function orderBody(data: OrderEmailData, statusLabel: string): string {
   const fullName = `${data.firstName} ${data.lastName}`.trim()
   return `
@@ -150,7 +176,7 @@ function orderBody(data: OrderEmailData, statusLabel: string): string {
               </tr>
               <tr>
                 <td style="font-family:${mono};font-size:11px;color:${dim};letter-spacing:0.08em;padding:4px 0;vertical-align:top;">DOSTAWA</td>
-                <td style="font-family:${mono};font-size:12px;color:#e8ffe8;padding:4px 0;">${escapeHtml(describeDelivery(data.fulfillmentRoute))}</td>
+                <td style="font-family:${mono};font-size:12px;color:#e8ffe8;padding:4px 0;">${escapeHtml(describeDelivery(data.fulfillmentRoute, data.shippingMethod, data.deliveryPointId))}</td>
               </tr>
               ${fullName ? `<tr>
                 <td style="font-family:${mono};font-size:11px;color:${dim};letter-spacing:0.08em;padding:4px 0;vertical-align:top;">ODBIORCA</td>
@@ -165,6 +191,7 @@ function orderBody(data: OrderEmailData, statusLabel: string): string {
           ${itemsTable(data.items)}
         </table>
         <table cellpadding="0" cellspacing="0" style="width:100%;border-top:1px solid ${border};margin-bottom:24px;">
+          ${deliveryRows(data)}
           <tr>
             <td style="padding:10px 0 0;font-family:${mono};font-size:11px;color:${dim};letter-spacing:0.1em;">RAZEM</td>
             <td style="padding:10px 0 0;font-family:${mono};font-size:15px;color:${green};text-align:right;">${fmt(data.total)} PLN</td>

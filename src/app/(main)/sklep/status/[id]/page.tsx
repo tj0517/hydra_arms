@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { getGuestOrderStatus } from '@/lib/shop/guestOrderStatus'
+import { isShippingMethod, SHIPPING_METHOD_LABELS } from '@/lib/shop/shipping'
 
 // Bearer link: never indexed, never cached, never leaked through Referer.
 export const metadata: Metadata = {
@@ -73,7 +74,10 @@ export default async function GuestOrderStatusPage({
   const { order } = result
   const delivery = order.fulfillment_route === 'pickup'
     ? 'Odbiór osobisty w siedzibie HYDRA ARMS'
+    : isShippingMethod(order.shipping_method)
+    ? SHIPPING_METHOD_LABELS[order.shipping_method]
     : 'Dostawa kurierem'
+  const hasDeliveryCost = isShippingMethod(order.shipping_method) && order.shipping_cost !== null
 
   return (
     <main className="min-h-screen pt-32 pb-20 px-6">
@@ -112,6 +116,12 @@ export default async function GuestOrderStatusPage({
               </p>
             </div>
           ))}
+          {hasDeliveryCost && (
+            <div className="px-6 py-3 flex justify-between items-center" data-testid="order-status-delivery">
+              <span className={monoLabel}>Dostawa · {delivery}</span>
+              <span className="font-[var(--font-mono)] text-sm text-white">{fmt(order.shipping_cost ?? 0)} PLN</span>
+            </div>
+          )}
           <div className="px-6 py-4 flex justify-between items-center">
             <span className={monoLabel}>Razem</span>
             <span className="font-[var(--font-mono)] text-xl text-accent">{fmt(order.total)} PLN</span>

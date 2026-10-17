@@ -77,6 +77,7 @@ function body(productId: number, route: 'own' | 'sourced' | 'pickup', extra: Rec
     shipping: SHIPPING,
     idempotency_key: crypto.randomUUID(),
     fulfillment_route: route,
+    shipping_method: route === 'pickup' ? 'pickup' : 'dhl', // HA-2.02
     ...extra,
   }
 }
@@ -221,6 +222,10 @@ test.describe('checkout_create_order refuses on its own (service role, no route 
         p_user_id: null,
         p_shipping: SHIPPING,
         p_items: [{ product_id: T_LICENSE, quantity: 1 }],
+        // HA-2.02: method must match the route; parcel methods carry a price list.
+        p_shipping_method: args.p_fulfillment_route === 'pickup' ? 'pickup' : 'dhl',
+        p_shipping_price: 19.99,
+        p_free_threshold: 500,
         ...args,
       },
     })
@@ -265,24 +270,30 @@ test.describe('checkout_create_order refuses on its own (service role, no route 
     expect(order.pickup_confirmed_at).not.toBeNull()
   })
 
-  test('the old 5-argument signature is gone and the new ones are service_role only', async () => {
+  test('the old 5- and 6-argument signatures are gone and the new one is service_role only', async () => {
     const priv = async (role: string, sig: string) => {
       const res = await rest('rpc/test_fn_privilege', { method: 'POST', json: { role_name: role, func_sig: sig } })
       expect(res.status).toBe(200)
       return (await res.json()) as boolean
     }
-    const rpcSig = 'public.checkout_create_order(text,uuid,jsonb,text,jsonb,boolean)'
+    // HA-2.02 (migration 018) replaced the 6-argument signature from 016.
+    const rpcSig = 'public.checkout_create_order(text,uuid,jsonb,text,jsonb,boolean,text,numeric,numeric,jsonb)'
     for (const role of ['anon', 'authenticated']) {
       expect(await priv(role, rpcSig), `${role} on checkout_create_order`).toBe(false)
       expect(await priv(role, 'public.hydra_section(bigint)'), `${role} on hydra_section`).toBe(false)
     }
     expect(await priv('service_role', rpcSig)).toBe(true)
     // old signature no longer resolves
-    const gone = await rest('rpc/test_fn_privilege', {
-      method: 'POST',
-      json: { role_name: 'service_role', func_sig: 'public.checkout_create_order(text,uuid,jsonb,text,jsonb)' },
-    })
-    expect(gone.status).toBeGreaterThanOrEqual(400)
+    for (const oldSig of [
+      'public.checkout_create_order(text,uuid,jsonb,text,jsonb)',
+      'public.checkout_create_order(text,uuid,jsonb,text,jsonb,boolean)',
+    ]) {
+      const gone = await rest('rpc/test_fn_privilege', {
+        method: 'POST',
+        json: { role_name: 'service_role', func_sig: oldSig },
+      })
+      expect(gone.status, oldSig).toBeGreaterThanOrEqual(400)
+    }
   })
 })
 

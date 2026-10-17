@@ -2,6 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
 import { assertNotProd } from './scripts/lib/prodGuard';
+import { TEST_SHIPPING_ENV } from './tests/shop/shippingEnv';
 
 // Load local dev env first (.env.development.local — local Supabase stack, BASELINKER_MOCK=true).
 // override: true ensures these win over anything already in process.env so the dev server
@@ -32,6 +33,7 @@ export default defineConfig({
     '**/bl-mock-off.spec.ts',     // playwright.bl-mock-off.config.ts  (HA-2.20)
     '**/order-link-no-secret.spec.ts', // playwright.order-link-no-secret.config.ts (HA-2.19)
     '**/verification-server/**',  // playwright.verification*.config.ts (HA-2.08)
+    '**/shipping-env/**',         // playwright.shipping-env.config.ts (HA-2.02)
   ],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
@@ -53,6 +55,7 @@ export default defineConfig({
     // Explicitly forward local Supabase vars so the Next.js dev server uses the
     // local stack even if .env.local (with prod keys) is present in the project root.
     env: {
+      ...TEST_SHIPPING_ENV, // HA-2.02
       PORT,
       NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
       NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',

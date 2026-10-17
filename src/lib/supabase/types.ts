@@ -2,6 +2,7 @@ export type ProductType = 'standard' | 'age_restricted' | 'pickup_only';
 export type SourceWarehouse = string; // 'own' | supplier name (e.g. 'sharg', 'kolba', 'spechurt')
 export type FulfillmentRoute = 'own' | 'sourced' | 'pickup';
 export type OrderStatus = 'pending_payment' | 'paid' | 'shipped' | 'delivered' | 'cancelled';
+export type ShippingMethod = 'dhl' | 'dpd' | 'inpost_courier' | 'inpost_locker' | 'pickup';
 
 export interface Database {
   public: {
@@ -248,6 +249,13 @@ export interface Database {
           payment_received_email_sent_at: string | null;
           pickup_confirmed_at: string | null;
           is_test: boolean;
+          shipping_method: ShippingMethod | null;
+          shipping_cost: number | null;
+          delivery_point_id: string | null;
+          delivery_point_name: string | null;
+          delivery_point_address: string | null;
+          delivery_point_postcode: string | null;
+          delivery_point_city: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -267,6 +275,13 @@ export interface Database {
           payment_received_email_sent_at?: string | null;
           pickup_confirmed_at?: string | null;
           is_test?: boolean;
+          shipping_method?: ShippingMethod | null;
+          shipping_cost?: number | null;
+          delivery_point_id?: string | null;
+          delivery_point_name?: string | null;
+          delivery_point_address?: string | null;
+          delivery_point_postcode?: string | null;
+          delivery_point_city?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -286,6 +301,13 @@ export interface Database {
           payment_received_email_sent_at?: string | null;
           pickup_confirmed_at?: string | null;
           is_test?: boolean;
+          shipping_method?: ShippingMethod | null;
+          shipping_cost?: number | null;
+          delivery_point_id?: string | null;
+          delivery_point_name?: string | null;
+          delivery_point_address?: string | null;
+          delivery_point_postcode?: string | null;
+          delivery_point_city?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -435,8 +457,12 @@ export interface Database {
           p_fulfillment_route: string;
           p_items: Array<{ product_id: number; quantity: number }>;
           p_pickup_confirmed?: boolean;
+          p_shipping_method?: ShippingMethod;
+          p_shipping_price?: number | null;
+          p_free_threshold?: number | null;
+          p_delivery_point?: { id: string; name?: string | null; address?: string | null; postcode?: string | null; city?: string | null } | null;
         };
-        Returns: Array<{ order_id: string; order_total: number }>;
+        Returns: Array<{ order_id: string; order_total: number; order_shipping_cost: number }>;
       };
       hydra_section: {
         Args: { p_category_id: number };
