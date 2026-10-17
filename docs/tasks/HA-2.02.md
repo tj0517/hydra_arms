@@ -48,3 +48,10 @@ Checkout nie liczy dostawy, więc kwota zamówienia, a zaraz i płatności P24, 
 ## Notatki z realizacji
 - 2026-10-06 tj: budujemy na cenach wstępnych (klient poda cennik „na dniach”). Kurier dotyczy tylko koszyków w całości bez pozwolenia, rejestracji i 18+ (grupa D klienta), reguła już w `analyzeCart`.
 - 2026-10-16 tj: cennik w zmiennych z rejestru (env); InPost Paczkomat w tym zadaniu (widget + kod automatu w zamówieniu i w BL); wartości wstępne DHL 19,99 / DPD 17,99 / InPost 14,99 / darmowa od 500 zł; model Opus high (zakres urósł o Paczkomat).
+- 2026-10-17 tj: STOP 1 — InPost Geowidget zatwierdzony: skrypt i CSS z `geowidget.inpost.pl`, ładowane tylko na `/sklep/zamowienie`, dopiero po wyborze Paczkomatu i tylko przy ustawionym `INPOST_GEOWIDGET_TOKEN`; bez tokenu ręczne pole kodu. Token publiczny (`secret: false`), w rejestrze jako placeholder, właściciel tj. Do O-35 dopisany punkt (g) o InPost w politykach; uwagi o skrypcie bez wersji i o geolokalizacji → deferred.
+- 2026-10-17 tj: STOP 2 — migracja 018 zatwierdzona w wersji z draftu, z dodatkowym wymaganiem: red proof, że `anon` i `authenticated` nie mogą wywołać nowej sygnatury `checkout_create_order(...)` (przyjmuje cenę i próg — bezpośrednie wywołanie nie może pozwolić przeglądarce ustawić ceny dostawy); `has_function_privilege` przed/po, czerwono przy celowo brakującym REVOKE; pokazać, że stara sygnatura 6-argumentowa nie istnieje.
+- 2026-10-17 tj: D1 — A: próg darmowej dostawy liczony tylko od towarów wysyłanych (noga wysyłkowa).
+- 2026-10-17 tj: D2 — A: tylko Paczkomaty (bez PaczkoPunktów), ścisły wzorzec kodu.
+- 2026-10-17 tj: D3 — B: przy Paczkomacie adres domowy i telefon zostają wymagane. Telefon wymagany dla każdej metody wysyłkowej (SMS InPost); adres wymagany jak dziś.
+- 2026-10-17 tj: D4 — A: fail closed — brak metody/ceny blokuje checkout; prod nie przyjmuje jeszcze prawdziwych zamówień.
+- 2026-10-17 tj: strona statusu dla gościa pokazuje metodę i koszt, bez kodu automatu; dowolny wybór odbioru osobistego dla koszyków wysyłkowych → deferred.
