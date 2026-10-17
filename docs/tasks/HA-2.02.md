@@ -1,12 +1,12 @@
 ---
 id: HA-2.02
 title: Koszty i metody dostawy w checkoucie
-status: todo
+status: in_progress
 difficulty: M
-model: null
+model: claude-opus-5-5
 model_approved: null
-effort: null
-branch: null
+effort: high
+branch: feat/ha-2.02-shipping-methods
 due: null
 depends_on: [HA-2.01, HA-2.16]
 blocked_by_questions: []
@@ -47,3 +47,4 @@ Checkout nie liczy dostawy, więc kwota zamówienia, a zaraz i płatności P24, 
 
 ## Notatki z realizacji
 - 2026-10-06 tj: budujemy na cenach wstępnych (klient poda cennik „na dniach”). Kurier dotyczy tylko koszyków w całości bez pozwolenia, rejestracji i 18+ (grupa D klienta), reguła już w `analyzeCart`.
+- 2026-10-16 tj: cennik w zmiennych z rejestru (env); InPost Paczkomat w tym zadaniu (widget + kod automatu w zamówieniu i w BL); wartości wstępne DHL 19,99 / DPD 17,99 / InPost 14,99 / darmowa od 500 zł; model Opus high (zakres urósł o Paczkomat).
