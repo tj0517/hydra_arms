@@ -1,7 +1,7 @@
 ---
 id: HA-2.02
 title: Koszty i metody dostawy w checkoucie
-status: review
+status: done
 difficulty: M
 model: claude-opus-5-5
 model_approved: null
@@ -55,3 +55,4 @@ Checkout nie liczy dostawy, więc kwota zamówienia, a zaraz i płatności P24, 
 - 2026-10-17 tj: D3 — B: przy Paczkomacie adres domowy i telefon zostają wymagane. Telefon wymagany dla każdej metody wysyłkowej (SMS InPost); adres wymagany jak dziś.
 - 2026-10-17 tj: D4 — A: fail closed — brak metody/ceny blokuje checkout; prod nie przyjmuje jeszcze prawdziwych zamówień.
 - 2026-10-17 tj: strona statusu dla gościa pokazuje metodę i koszt, bez kodu automatu; dowolny wybór odbioru osobistego dla koszyków wysyłkowych → deferred.
+- 2026-10-17 tj: odbiór — przyjęte (PR #48). Udowodnione: total = towary + dostawa (5 przypadków na lokalnej bazie), kwota od klienta ignorowana, pickup_only nadal wymusza odbiór, REVOKE na nowej sygnaturze (anon/authenticated false), stara 6-arg usunięta, inputs:check live = 6 placeholderów. DX → deferred (HA-2.09), DY → A (odbiór działa przy zepsutym cenniku). Merge dopiero po migracji 018 na prod i 5 zmiennych SHIPPING_* w Vercelu.
