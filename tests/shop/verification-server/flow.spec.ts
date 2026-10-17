@@ -136,6 +136,10 @@ test.describe('verification mode — full path on the P24 mock', () => {
     await form.getByLabel(/Ulica/).fill('Testowa 1')
     await form.getByLabel(/Miasto/).fill('Kraków')
     await form.getByLabel(/Kod pocztowy/).fill('30-001')
+    // HA-2.02: a shipped order needs a delivery method (the cost is computed by the server).
+    if (await page.getByTestId('shipping-methods').isVisible()) {
+      await page.getByTestId('shipping-method-dhl').click()
+    }
     const terms = page.getByTestId('terms-acceptance')
     await expect(page.getByTestId('place-order')).toBeDisabled()
     await shot(page, '4-checkout-terms-unticked', terms)
