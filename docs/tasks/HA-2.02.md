@@ -1,7 +1,7 @@
 ---
 id: HA-2.02
 title: Koszty i metody dostawy w checkoucie
-status: in_progress
+status: review
 difficulty: M
 model: claude-opus-5-5
 model_approved: null
@@ -12,7 +12,7 @@ depends_on: [HA-2.01, HA-2.16]
 blocked_by_questions: []
 touches_db: true
 touches_prod: true
-pr: null
+pr: 48
 ---
 
 ## Cel
