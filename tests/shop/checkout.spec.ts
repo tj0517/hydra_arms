@@ -83,6 +83,7 @@ async function getCheckoutBody(request: import('@playwright/test').APIRequestCon
       },
       idempotency_key: crypto.randomUUID(),
       fulfillment_route: 'own',
+      shipping_method: 'dhl',
     },
   }
 }
@@ -156,6 +157,7 @@ test.describe('checkout — pending_payment status', () => {
         },
         idempotency_key: crypto.randomUUID(),
         fulfillment_route: 'own',
+        shipping_method: 'dhl',
       }
 
       const checkoutRes = await request.post('/api/shop/checkout', { data: body, headers: uniqueIpHeaders() })

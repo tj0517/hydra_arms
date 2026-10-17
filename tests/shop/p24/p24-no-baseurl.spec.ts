@@ -68,6 +68,7 @@ test.describe('SHOP_BASE_URL unset — fail-closed', () => {
         },
         idempotency_key: crypto.randomUUID(),
         fulfillment_route: 'own',
+        shipping_method: 'dhl',
       },
       headers: { 'x-forwarded-for': '10.3.0.1' },
     })
@@ -113,6 +114,7 @@ test.describe('SHOP_BASE_URL unset — fail-closed', () => {
         },
         idempotency_key: crypto.randomUUID(),
         fulfillment_route: 'own',
+        shipping_method: 'dhl',
       },
       headers: { 'x-forwarded-for': '10.3.0.2' },
     })

@@ -57,6 +57,7 @@ async function checkout(request: APIRequestContext): Promise<{ orderId: string; 
       shipping: PII,
       idempotency_key: crypto.randomUUID(),
       fulfillment_route: 'own',
+      shipping_method: 'dhl',
     },
     headers: { 'x-forwarded-for': `10.4.0.${(ipCounter++ % 250) + 1}` },
   })
@@ -159,7 +160,8 @@ test.describe('status API — red proofs', () => {
     const text = await res.text()
     expectNoPii(text)
     const { order } = JSON.parse(text)
-    expect(Object.keys(order).sort()).toEqual(['fulfillment_route', 'id', 'items', 'status', 'total'])
+    // HA-2.02 adds delivery method + cost; never the Paczkomat code or address (tj 2026-10-17).
+    expect(Object.keys(order).sort()).toEqual(['fulfillment_route', 'id', 'items', 'shipping_cost', 'shipping_method', 'status', 'total'])
     for (const item of order.items) expect(Object.keys(item).sort()).toEqual(['name', 'quantity', 'unit_price'])
   })
 })

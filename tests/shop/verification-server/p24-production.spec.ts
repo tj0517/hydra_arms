@@ -37,6 +37,7 @@ test.describe('verification + P24 production', () => {
         },
         idempotency_key: key,
         fulfillment_route: 'own',
+        shipping_method: 'dhl',
       },
       headers: { 'x-forwarded-for': '10.4.0.1' },
     })

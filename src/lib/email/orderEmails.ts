@@ -60,7 +60,7 @@ async function loadOrderEmailData(orderId: string): Promise<OrderEmailData | nul
 
   const { data: order } = await supabase
     .from('orders')
-    .select('id, total, shipping_address, fulfillment_route')
+    .select('id, total, shipping_address, fulfillment_route, shipping_method, shipping_cost, delivery_point_id')
     .eq('id', orderId)
     .single()
 
@@ -80,6 +80,9 @@ async function loadOrderEmailData(orderId: string): Promise<OrderEmailData | nul
     orderId: order.id,
     total: order.total ?? 0,
     fulfillmentRoute: order.fulfillment_route,
+    shippingMethod: order.shipping_method,
+    shippingCost: order.shipping_cost,
+    deliveryPointId: order.delivery_point_id,
     firstName: addr.firstName ?? '',
     lastName: addr.lastName ?? '',
     email: addr.email ?? '',

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { isShippingMethod, SHIPPING_METHOD_LABELS } from '@/lib/shop/shipping'
 
 interface OrderData {
   id: string
@@ -11,6 +12,13 @@ interface OrderData {
   total: number | null
   shipping_address: Record<string, string> | null
   fulfillment_route: string | null
+  shipping_method: string | null
+  shipping_cost: number | null
+  delivery_point_id: string | null
+  delivery_point_name: string | null
+  delivery_point_address: string | null
+  delivery_point_postcode: string | null
+  delivery_point_city: string | null
   created_at: string
   items: {
     quantity: number
@@ -71,6 +79,9 @@ export default function OrderConfirmationClient({ orderId }: { orderId: string }
   }
 
   const addr = order.shipping_address
+  // HA-2.02: orders created before migration 018 have no method/cost — show the total only.
+  const methodLabel = isShippingMethod(order.shipping_method) ? SHIPPING_METHOD_LABELS[order.shipping_method] : null
+  const goods = order.items.reduce((sum, i) => sum + i.unit_price * i.quantity, 0)
 
   return (
     <main className="min-h-screen pt-32 pb-20 px-6">
@@ -141,9 +152,21 @@ export default function OrderConfirmationClient({ orderId }: { orderId: string }
               </div>
             )
           })}
+          {methodLabel && order.shipping_cost !== null && (
+            <div className="px-6 py-3 space-y-2" data-testid="confirmation-delivery">
+              <div className="flex justify-between items-center">
+                <span className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-widest uppercase">Produkty</span>
+                <span className="font-[var(--font-mono)] text-sm text-white">{fmt(goods)} PLN</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-widest uppercase">Dostawa · {methodLabel}</span>
+                <span className="font-[var(--font-mono)] text-sm text-white">{fmt(order.shipping_cost)} PLN</span>
+              </div>
+            </div>
+          )}
           <div className="px-6 py-4 flex justify-between items-center">
             <span className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-widest uppercase">Razem</span>
-            <span className="font-[var(--font-mono)] text-xl text-accent">{fmt(order.total ?? 0)} PLN</span>
+            <span className="font-[var(--font-mono)] text-xl text-accent" data-testid="confirmation-total">{fmt(order.total ?? 0)} PLN</span>
           </div>
         </section>
 
@@ -162,6 +185,17 @@ export default function OrderConfirmationClient({ orderId }: { orderId: string }
           </section>
         ) : addr && (
           <section className="border border-white/10 px-6 py-5 space-y-2">
+            {order.delivery_point_id && (
+              <div className="mb-4 space-y-1" data-testid="confirmation-locker">
+                <h2 className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-[0.25em] uppercase mb-2">Paczkomat InPost</h2>
+                <p className="text-sm text-white">{order.delivery_point_id}</p>
+                {(order.delivery_point_address || order.delivery_point_city) && (
+                  <p className="text-sm text-text-dim">
+                    {[order.delivery_point_address, [order.delivery_point_postcode, order.delivery_point_city].filter(Boolean).join(' ')].filter(Boolean).join(', ')}
+                  </p>
+                )}
+              </div>
+            )}
             <h2 className="font-[var(--font-mono)] text-[10px] text-text-dim tracking-[0.25em] uppercase mb-3">Adres dostawy</h2>
             <p className="text-sm text-white">{addr.firstName} {addr.lastName}</p>
             <p className="text-sm text-text-dim">{addr.street}</p>

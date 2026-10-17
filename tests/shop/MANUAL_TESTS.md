@@ -366,6 +366,36 @@ update shop_products set product_type = 'standard' where id = 619342679;
 
 ---
 
+## 7. Delivery (HA-2.02)
+
+Automated coverage: `tests/shop/shipping.spec.ts` (totals, refusals, P24 amount, BL payload, UI) and
+`npm run test:shipping-env` (broken price list). Tests run **without** `INPOST_GEOWIDGET_TOKEN`, so the
+InPost map itself is only checked by hand.
+
+### TC-28 InPost Geowidget with a real token
+**Needs:** the public Geowidget token for the domain under test in `INPOST_GEOWIDGET_TOKEN`
+(InPost Manager Paczek → Moje konto → API → Geowidget). The token is bound to a domain — on
+`localhost` the widget may answer "błędny token dla tej domeny"; test on the deployed domain.
+
+1. Standard product in cart → `/sklep/zamowienie` → pick **InPost Paczkomat**
+2. **Expected:** map loads below the methods; DevTools → Network shows `inpost-geowidget.js` and
+   `inpost-geowidget.css` from `geowidget.inpost.pl` only after Paczkomat was picked (not on page load)
+3. Pick a locker on the map → **Expected:** code field filled (e.g. `KRA01M`), name + address shown under it
+4. Only Paczkomaty on the map, no PaczkoPunkty (tj D2, `config="parcelCollect247"`)
+5. Place the order → confirmation shows "Paczkomat InPost" + code; e-mail shows "InPost Paczkomat KRA01M"
+6. **Supabase check:**
+   ```sql
+   select id, shipping_method, shipping_cost, total, delivery_point_id, delivery_point_address
+   from orders order by created_at desc limit 1;
+   ```
+
+### TC-29 Manual Paczkomat code (no token)
+1. `INPOST_GEOWIDGET_TOKEN` empty → pick **InPost Paczkomat**
+2. **Expected:** no map, no request to `inpost` in Network; only the "Kod Paczkomatu" field
+3. Type `kra01m` → shown as `KRA01M`; type `POP-KRA1` and submit → "Wpisz poprawny kod Paczkomatu"
+
+---
+
 ## Supabase Quick Checks
 
 ```sql

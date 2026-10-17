@@ -46,6 +46,7 @@ test('no secret: e-mail is sent without a status link; page and API refuse any t
       },
       idempotency_key: crypto.randomUUID(),
       fulfillment_route: 'own',
+      shipping_method: 'dhl',
     },
     headers: { 'x-forwarded-for': '10.6.0.1' },
   })

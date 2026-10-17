@@ -5,13 +5,16 @@ import { verifyOrderLinkToken } from './orderLink'
 /**
  * What the token-gated guest status page may show (tj decision 2026-10-16):
  * status, items, total, delivery route. No shipping address, no name, e-mail
- * or phone — those columns are never selected.
+ * or phone — those columns are never selected. HA-2.02 adds the delivery method
+ * and cost; the Paczkomat code/address is not shown here (tj 2026-10-17).
  */
 export interface GuestOrderStatus {
   id: string
   status: string
   total: number
   fulfillment_route: string | null
+  shipping_method: string | null
+  shipping_cost: number | null
   items: { name: string; quantity: number; unit_price: number }[]
 }
 
@@ -35,7 +38,7 @@ export async function getGuestOrderStatus(
 
     const { data: order } = await supabase
       .from('orders')
-      .select('id, status, total, fulfillment_route')
+      .select('id, status, total, fulfillment_route, shipping_method, shipping_cost')
       .eq('id', id)
       .maybeSingle()
     // Valid signature but no such order: same neutral answer as a bad token.
@@ -53,6 +56,8 @@ export async function getGuestOrderStatus(
         status: order.status,
         total: order.total ?? 0,
         fulfillment_route: order.fulfillment_route,
+        shipping_method: order.shipping_method,
+        shipping_cost: order.shipping_cost,
         // product_snapshot is reduced to the product name — nothing else leaves the server.
         items: (items ?? []).map(item => ({
           name: ((item.product_snapshot as Record<string, unknown> | null)?.name as string | undefined) ?? 'Produkt',

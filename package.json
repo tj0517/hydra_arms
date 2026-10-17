@@ -16,6 +16,7 @@
     "test:order-link:no-secret": "playwright test --config playwright.order-link-no-secret.config.ts",
     "test:p24:notify-ip": "playwright test --config playwright.p24-notify-ip.config.ts",
     "test:bl-mock-off": "playwright test --config playwright.bl-mock-off.config.ts",
+    "test:shipping-env": "playwright test --config playwright.shipping-env.config.ts",
     "test:verification": "playwright test --config playwright.verification.config.ts",
     "test:verification:p24-prod": "playwright test --config playwright.verification-p24-prod.config.ts",
     "test:verification:live-mock": "playwright test --config playwright.verification-live-mock.config.ts",

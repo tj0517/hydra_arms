@@ -9,7 +9,7 @@ Start sprzedaży (HA-2.09) z `SHOP_MODE=live` nie przejdzie, dopóki jakikolwiek
 `placeholder`. `⟨nazwa wstępna⟩` = nazwa jeszcze nie istnieje w kodzie; zadanie właściciela
 może ją zmienić.
 
-## Do dostarczenia (17)
+## Do dostarczenia (19)
 
 | nazwa | właściciel | pytanie | zadanie | gdzie użyte | sekret |
 |---|---|---|---|---|---|
@@ -21,10 +21,12 @@ może ją zmienić.
 | `BASELINKER_MARKUP_KOLBA` | client | O-07 | HA-2.05 | `scripts/xml-to-baselinker.ts` | nie |
 | `BASELINKER_MARKUP_SHARG` | client | O-07 | HA-2.05 | `scripts/xml-to-baselinker.ts` | nie |
 | `BASELINKER_MARKUP_SPECHURT` | client | O-07 | HA-2.05 | `scripts/xml-to-baselinker.ts` | nie |
-| `SHIPPING_PRICE_DHL` ⟨nazwa wstępna⟩ | client | O-10 | HA-2.02 | jeszcze nie — HA-2.02 | nie |
-| `SHIPPING_PRICE_DPD` ⟨nazwa wstępna⟩ | client | O-10 | HA-2.02 | jeszcze nie — HA-2.02 | nie |
-| `SHIPPING_PRICE_INPOST` ⟨nazwa wstępna⟩ | client | O-10 | HA-2.02 | jeszcze nie — HA-2.02 | nie |
-| `FREE_SHIPPING_THRESHOLD` ⟨nazwa wstępna⟩ | client | O-10 | HA-2.02 | jeszcze nie — HA-2.02 | nie |
+| `SHIPPING_PRICE_DHL` | client | O-10 | HA-2.02 | `src/lib/shop/shippingPrices.ts`<br>`src/app/api/shop/checkout/route.ts`<br>`src/app/(main)/sklep/zamowienie/page.tsx` | nie |
+| `SHIPPING_PRICE_DPD` | client | O-10 | HA-2.02 | `src/lib/shop/shippingPrices.ts`<br>`src/app/api/shop/checkout/route.ts`<br>`src/app/(main)/sklep/zamowienie/page.tsx` | nie |
+| `SHIPPING_PRICE_INPOST` | client | O-10 | HA-2.02 | `src/lib/shop/shippingPrices.ts`<br>`src/app/api/shop/checkout/route.ts`<br>`src/app/(main)/sklep/zamowienie/page.tsx` | nie |
+| `SHIPPING_PRICE_INPOST_LOCKER` | client | O-10 | HA-2.02 | `src/lib/shop/shippingPrices.ts`<br>`src/app/api/shop/checkout/route.ts`<br>`src/app/(main)/sklep/zamowienie/page.tsx` | nie |
+| `FREE_SHIPPING_THRESHOLD` | client | O-10 | HA-2.02 | `src/lib/shop/shippingPrices.ts`<br>`src/app/api/shop/checkout/route.ts`<br>`src/app/(main)/sklep/zamowienie/page.tsx` | nie |
+| `INPOST_GEOWIDGET_TOKEN` | tj | — | HA-2.02 | `src/app/(main)/sklep/zamowienie/page.tsx`<br>`src/components/shop/InpostLockerPicker.tsx` | nie |
 | `NEW_SUBCATEGORY_DEFAULT_PRIORITY` | client | O-22 | HA-2.18 | `xml-integration/assortment-rules.ts` | nie |
 | `SITE_URL` ⟨nazwa wstępna⟩ | client | O-31 | HA-2.21 | jeszcze nie — HA-2.21 | nie |
 | `SHOP_BASE_URL` | client | O-31 | HA-2.21 | `src/lib/shop/registerPayment.ts`<br>`src/app/api/shop/checkout/route.ts`<br>`src/app/api/shop/payments/p24/register/route.ts`<br>`src/app/api/shop/payments/p24/mock-pay/route.ts`<br>`src/lib/email/templates.ts` | nie |
@@ -48,10 +50,12 @@ może ją zmienić.
 - `BASELINKER_MARKUP_KOLBA` — Percent on purchase price (25 = +25%). Client gave no rates on 2026-10-06; 30% is the working assumption in HA-2.05. See also O-32 (markup sheet, HA-2.22).
 - `BASELINKER_MARKUP_SHARG` — See BASELINKER_MARKUP_KOLBA.
 - `BASELINKER_MARKUP_SPECHURT` — See BASELINKER_MARKUP_KOLBA.
-- `SHIPPING_PRICE_DHL` — Carrier confirmed by the client 2026-10-06 (DHL, DPD, InPost); prices not given. HA-2.02 may move the price list to a shipping_methods table or Sanity — then source changes from env.
+- `SHIPPING_PRICE_DHL` — Gross PLN, dot decimal (e.g. 19.99). Carriers confirmed by the client 2026-10-06 (DHL, DPD, InPost); prices not given — preliminary values only. Missing/invalid → checkout refuses parcel orders (fail closed).
 - `SHIPPING_PRICE_DPD` — See SHIPPING_PRICE_DHL.
-- `SHIPPING_PRICE_INPOST` — See SHIPPING_PRICE_DHL.
-- `FREE_SHIPPING_THRESHOLD` — Order value (PLN gross) above which shipping is free. Personal pickup is always 0 and needs no input.
+- `SHIPPING_PRICE_INPOST` — InPost courier. See SHIPPING_PRICE_DHL.
+- `SHIPPING_PRICE_INPOST_LOCKER` — InPost Paczkomat (added in HA-2.02, tj 2026-10-16). Preliminary value = InPost courier. See SHIPPING_PRICE_DHL.
+- `FREE_SHIPPING_THRESHOLD` — Goods subtotal (PLN gross) from which parcel delivery is free; in a split order only the shipped goods count (tj D1 2026-10-17). Personal pickup is always 0 and needs no input.
+- `INPOST_GEOWIDGET_TOKEN` — InPost Geowidget PUBLIC token (Manager Paczek → Moje konto → API → Geowidget), bound to the site domain; sent to the browser by design. Unset → the checkout shows a manual Paczkomat code field instead of the map and loads nothing from InPost.
 - `NEW_SUBCATEGORY_DEFAULT_PRIORITY` — Closed list: P1 | P2 | P3 (case-sensitive); unset = P2. Default priority of every subcategory the correction sheet (2026-09-29) added without a P1/P2/P3 column — tj 2026-10-09: P2 = not imported until the client answers O-22. Only P1 admits those nodes to the import filter; the answer per subcategory is a `priority` edit on the row in assortment-rules.ts `newSubcategories`, this env moves all unanswered rows at once.
 - `SITE_URL` — Canonical, og:url, og:image, sitemap, robots. Today two hardcoded constants point at hydraarms.pl (src/app/layout.tsx, src/app/sitemap.ts); the regulamin names hydra-arms.com. O-31 decides which.
 - `SHOP_BASE_URL` — Same undecided domain as SITE_URL (O-31), already live: P24 urlReturn/urlStatus and order links in e-mails. Registered on tj decision 2026-10-08 so the launch gate cannot pass with the wrong host here. HA-2.21 may merge it with SITE_URL.

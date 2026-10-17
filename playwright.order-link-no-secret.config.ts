@@ -2,6 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
 import { assertNotProd } from './scripts/lib/prodGuard';
+import { TEST_SHIPPING_ENV } from './tests/shop/shippingEnv';
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env.development.local'), override: true });
 assertNotProd('npx playwright test --config playwright.order-link-no-secret.config.ts');
@@ -35,6 +36,7 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 90_000,
     env: {
+      ...TEST_SHIPPING_ENV, // HA-2.02
       PORT: '3006',
       NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
       NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',

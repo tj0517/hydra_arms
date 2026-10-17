@@ -2,7 +2,8 @@ import 'server-only'
 import { revalidateTag } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { addOrder } from '@/lib/baselinker/client'
-import { incrementBlMockCounter } from '@/lib/baselinker/mockCounter'
+import { incrementBlMockCounter, recordBlMockDelivery } from '@/lib/baselinker/mockCounter'
+import { BL_ORDER_COLUMNS, buildBlOrderParams } from '@/lib/shop/blOrderPayload'
 import { SHOP_CACHE_TAG } from '@/lib/shop/fetchProducts'
 import { sendPaymentReceivedEmail } from '@/lib/email/orderEmails'
 import { canPushToBaseLinker } from '@/lib/shop/shopMode'
@@ -68,7 +69,7 @@ export async function markOrderPaid(
 
   const { data: order } = await supabase
     .from('orders')
-    .select('id, shipping_address, fulfillment_route')
+    .select(BL_ORDER_COLUMNS)
     .eq('id', orderId)
     .single()
 
@@ -81,51 +82,11 @@ export async function markOrderPaid(
 
   if (!items?.length) return { changed: true }
 
-  const addr = order.shipping_address as Record<string, string> | null
-  if (!addr) return { changed: true }
-
-  const isPickup = order.fulfillment_route === 'pickup'
+  if (!order.shipping_address) return { changed: true }
 
   try {
-    const blOrderId = await addOrder(
-      {
-        order_status_id: blStatusId,
-        currency: 'PLN',
-        payment_method: 'Przelew',
-        payment_method_cod: 0,
-        paid: 1,
-        user_login: addr.email ?? '',
-        phone: addr.phone ?? '',
-        email: addr.email ?? '',
-        delivery_method: isPickup
-          ? 'Odbiór osobisty'
-          : order.fulfillment_route === 'own'
-          ? 'Kurier — magazyn własny'
-          : 'Kurier — zamówienie u dostawcy',
-        delivery_price: 0,
-        delivery_fullname: `${addr.firstName ?? ''} ${addr.lastName ?? ''}`.trim(),
-        delivery_address: addr.street ?? '',
-        delivery_city: addr.city ?? '',
-        delivery_postcode: addr.zip ?? '',
-        delivery_country_code: 'PL',
-        products: items.map(item => {
-          const snap = (item.product_snapshot ?? {}) as Record<string, unknown>
-          return {
-            storage: 'db' as const,
-            storage_id: 0,
-            product_id: String(snap.id ?? '0'),
-            variant_id: 0,
-            name: (snap.name as string) ?? 'Produkt',
-            sku: (snap.sku as string) ?? '',
-            ean: (snap.ean as string) ?? '',
-            quantity: item.quantity,
-            price_brutto: item.unit_price,
-            tax_rate: (snap.tax_rate as number) ?? 23,
-          }
-        }),
-      },
-      { blockedRetries: 0 },
-    )
+    const params = buildBlOrderParams(order, items, blStatusId)
+    const blOrderId = await addOrder(params, { blockedRetries: 0 })
 
     await supabase
       .from('orders')
@@ -137,6 +98,7 @@ export async function markOrderPaid(
 
     if (process.env.BASELINKER_MOCK === 'true') {
       incrementBlMockCounter(orderId)
+      recordBlMockDelivery(orderId, params)
     }
     console.log(`[markOrderPaid] BL order created: ${blOrderId} → order: ${orderId}`)
     return { changed: true, blOrderId }

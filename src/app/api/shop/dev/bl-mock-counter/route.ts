@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getBlMockCounter } from '@/lib/baselinker/mockCounter'
+import { getBlMockCounter, getBlMockDelivery } from '@/lib/baselinker/mockCounter'
 
 // Only available when BASELINKER_MOCK=true — 404 otherwise
 export async function GET(req: NextRequest) {
@@ -12,5 +12,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Missing orderId' }, { status: 400 })
   }
 
-  return NextResponse.json({ orderId, count: getBlMockCounter(orderId) })
+  // delivery: delivery fields of the last mock addOrder payload (HA-2.02), never buyer data.
+  return NextResponse.json({ orderId, count: getBlMockCounter(orderId), delivery: getBlMockDelivery(orderId) })
 }

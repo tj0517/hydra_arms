@@ -47,6 +47,7 @@ async function placeOrder(request: APIRequestContext) {
       },
       idempotency_key: crypto.randomUUID(),
       fulfillment_route: 'own',
+      shipping_method: 'dhl',
     },
     headers: uniqueIp(),
   })

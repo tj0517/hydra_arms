@@ -259,6 +259,14 @@ export interface BLAddOrderParams {
   delivery_city: string;
   delivery_postcode: string;
   delivery_country_code: string;
+  /** Seller comment, varchar(200) — HA-2.02 puts the fulfillment route here. */
+  admin_comments?: string;
+  /** Pick-up point delivery (InPost Paczkomat, HA-2.02): id varchar(40), others varchar(100). */
+  delivery_point_id?: string;
+  delivery_point_name?: string;
+  delivery_point_address?: string;
+  delivery_point_postcode?: string;
+  delivery_point_city?: string;
   products: BLOrderProduct[];
 }
 
