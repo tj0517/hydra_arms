@@ -59,3 +59,6 @@ Listing sklepu (`/sklep`) jest dziś zbudowany w języku wizualnym strony firmow
 
 ## Notatki z realizacji
 - 2026-10-19 tj (wf-plan): D1 A — korzeń „00.” ukryty w drzewie (produkty widoczne w „Wszystkie” i w wyszukiwarce); D2 A — etykiety wyliczane z nazwy BL w kodzie, bez migracji; D4 — Opus high mimo trudności M (zadanie projektowe, pierwszy render ma być do przyjęcia). Seed dostaje korzeń „00.” z produktem, bo bez niego test ukrycia nie ma na czym działać.
+- 2026-10-19 agent: sesja na Fable 5.1 (claude-fable-5-1), nie na Opusie — tj: „correct per the task rules, leave it”.
+- 2026-10-19 tj: STOP 1 zaakceptowany (zrzuty desktop: sidebar z drzewem, chipsy, toolbar, stan pusty, sortowanie + spec typograficzny). Dwie poprawki bez ponownej akceptacji: (1) etykieta sortowania z jednym dwukropkiem — „Sortuj: Nazwa A–Z”, „Sortuj: Cena od najniższej”; (2) kolejność drzewa zawsze po surowej nazwie BL (numerowanej), nigdy po etykiecie — komentarz przy sortowaniu w `buildTree`.
+- 2026-10-19 agent (tymczasowo, do decyzji tj — wpis w deferred): pływający koszyk kolidował z paskiem „Filtry · Sortuj” i z CTA arkusza na mobile; na `/sklep` poniżej 1024 px koszyk siedzi nad paskiem (`bottom-20 lg:bottom-6` w `CartTrigger.tsx`), arkusz ma z-1100. Poza listingiem bez zmian.

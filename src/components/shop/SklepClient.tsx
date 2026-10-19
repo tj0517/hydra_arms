@@ -10,6 +10,7 @@ import CartDrawer from './CartDrawer';
 import FiltersSidebar from './FiltersSidebar';
 import ActiveFilterChips from './ActiveFilterChips';
 import ListingToolbar from './ListingToolbar';
+import MobileFilterSheet from './MobileFilterSheet';
 import {
   DELIVERY_MODE_LABELS,
   isDeliveryMode,
@@ -33,6 +34,8 @@ interface SklepClientProps {
  * 2026-10-19, D1 A) — its products stay listed under "Wszystkie" and in search.
  */
 function buildTree(categories: ShopCategory[]): CategoryTreeNode[] {
+  // Sort by the RAW BaseLinker name (the numbered one: "01. …", "1.1 …"), never by the
+  // display label — the Hydra numbering is the intended order (decision tj 2026-10-19).
   const parents = categories
     .filter(c => !c.parent_id && !isWorkingCategory(c.name))
     .sort((a, b) => a.name.localeCompare(b.name, 'pl'));
@@ -412,7 +415,7 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
           </aside>
 
           {/* Product area */}
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0" data-testid="product-area">
             <div ref={toolbarRef} className="scroll-mt-24 mb-6">
               <ListingToolbar
                 count={filteredAndSorted.length}
@@ -505,7 +508,22 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
         </div>
       </div>
 
-      {/* Mobile (< 1024 px): sticky bottom bar + bottom sheet — after STOP 1 approval (HA-2.30) */}
+      {/* Mobile (< 1024 px): sticky bottom bar + bottom sheet with the same tree and filters */}
+      <MobileFilterSheet
+        tree={tree}
+        counts={categoryCounts}
+        totalCount={products.length}
+        selectedCategory={selectedCategory}
+        onSelectCategory={selectCategory}
+        filters={filters}
+        actions={actions}
+        options={options}
+        activeFilterCount={activeFilterCount + (selectedCategory !== null ? 1 : 0)}
+        resultCount={filteredAndSorted.length}
+        sortBy={sortBy}
+        onSortChange={v => { setSortBy(v); setPage(1); }}
+        onClearAll={clearAllFilters}
+      />
     </>
   );
 }

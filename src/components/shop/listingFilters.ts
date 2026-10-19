@@ -9,11 +9,12 @@ import type { ShopCategory } from '@/lib/supabase/types';
 
 export type SortKey = 'name_asc' | 'name_desc' | 'price_asc' | 'price_desc' | 'newest';
 
+// Labels are rendered after "Sortuj:" — one colon in the button ("Sortuj: Cena od najniższej").
 export const SORT_OPTIONS: { value: SortKey; label: string }[] = [
-  { value: 'name_asc',   label: 'Nazwa: A–Z' },
-  { value: 'name_desc',  label: 'Nazwa: Z–A' },
-  { value: 'price_asc',  label: 'Cena: od najniższej' },
-  { value: 'price_desc', label: 'Cena: od najwyższej' },
+  { value: 'name_asc',   label: 'Nazwa A–Z' },
+  { value: 'name_desc',  label: 'Nazwa Z–A' },
+  { value: 'price_asc',  label: 'Cena od najniższej' },
+  { value: 'price_desc', label: 'Cena od najwyższej' },
   { value: 'newest',     label: 'Najnowsze' },
 ];
 
