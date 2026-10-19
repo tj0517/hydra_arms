@@ -1,7 +1,7 @@
 ---
 id: HA-2.30
 title: Listing w stylu e-commerce — sidebar z drzewem kategorii, filtry akordeonowe, chipsy, bottom sheet na mobile, ludzkie etykiety kategorii
-status: review
+status: done
 difficulty: M
 model: Fable 5.1 (claude-fable-5-1)
 model_approved: null
@@ -62,3 +62,4 @@ Listing sklepu (`/sklep`) jest dziś zbudowany w języku wizualnym strony firmow
 - 2026-10-19 agent: sesja na Fable 5.1 (claude-fable-5-1), nie na Opusie — tj: „correct per the task rules, leave it”.
 - 2026-10-19 tj: STOP 1 zaakceptowany (zrzuty desktop: sidebar z drzewem, chipsy, toolbar, stan pusty, sortowanie + spec typograficzny). Dwie poprawki bez ponownej akceptacji: (1) etykieta sortowania z jednym dwukropkiem — „Sortuj: Nazwa A–Z”, „Sortuj: Cena od najniższej”; (2) kolejność drzewa zawsze po surowej nazwie BL (numerowanej), nigdy po etykiecie — komentarz przy sortowaniu w `buildTree`.
 - 2026-10-19 agent (tymczasowo, do decyzji tj — wpis w deferred): pływający koszyk kolidował z paskiem „Filtry · Sortuj” i z CTA arkusza na mobile; na `/sklep` poniżej 1024 px koszyk siedzi nad paskiem (`bottom-20 lg:bottom-6` w `CartTrigger.tsx`), arkusz ma z-1100. Poza listingiem bez zmian.
+- 2026-10-19 tj: odbiór — przyjęte (PR #51). Udowodnione: drzewo bez „00.” + produkt z „00.” widoczny (test + seed 12000/312002), chipsy i „Wyczyść wszystko” (test), bottom sheet 375 px (test), etykiety przez categoryDisplayName w każdym miejscu JSX + 8 testów jednostkowych z dwoma red proofami, kontrakt URL identyczny z main (8 kluczy), guardy typografii 0/0/0/0, pełny test:shop 244 passed / 3 flaky znane. Decyzja: pływający koszyk na /sklep < 1024 px zostaje nad paskiem (bottom-20 lg:bottom-6) do HA-2.32 — tam decyzja razem z headerem. Model: Fable 5.1 zamiast Opus — przyjęte z adnotacją.
