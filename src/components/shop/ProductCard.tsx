@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { ShoppingCart, Check } from 'lucide-react';
 import type { ShopProduct, ShopCategory } from '@/lib/supabase/types';
 import { useCart } from './CartProvider';
+import { categoryDisplayName } from '@/lib/shop/categoryLabel';
 
 interface ProductCardProps {
   product: ShopProduct;
@@ -27,9 +28,7 @@ export default function ProductCard({ product, categories }: ProductCardProps) {
   const category = categories.find(c => c.id === product.category_id);
   const parentCategory = category?.parent_id ? categories.find(c => c.id === category.parent_id) : null;
   const categoryLabel = category
-    ? parentCategory
-      ? parentCategory.name
-      : category.name
+    ? categoryDisplayName(parentCategory ? parentCategory.name : category.name)
     : null;
 
   useEffect(() => {
