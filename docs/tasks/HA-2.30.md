@@ -1,7 +1,7 @@
 ---
 id: HA-2.30
 title: Listing w stylu e-commerce — sidebar z drzewem kategorii, filtry akordeonowe, chipsy, bottom sheet na mobile, ludzkie etykiety kategorii
-status: in_progress
+status: review
 difficulty: M
 model: Fable 5.1 (claude-fable-5-1)
 model_approved: null
@@ -12,7 +12,7 @@ depends_on: []
 blocked_by_questions: []
 touches_db: false
 touches_prod: false
-pr: null
+pr: 51
 ---
 
 ## Cel
