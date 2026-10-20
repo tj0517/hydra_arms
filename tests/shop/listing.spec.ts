@@ -35,6 +35,8 @@ async function settleCatalog(page: Page) {
 
 const productLinks = (page: Page) => page.getByTestId('product-area').locator('a[href^="/sklep/"]');
 const productNames = (page: Page) => page.getByTestId('product-area').locator('a[href^="/sklep/"] h3');
+/** Total matching products from the toolbar ("25 produktów") — the grid itself shows at most one page (24). */
+const totalCount = async (page: Page) => Number((await page.getByTestId('product-count').innerText()).match(/\d+/)?.[0]);
 const sidebar = (page: Page) => page.locator('aside').first();
 const chips = (page: Page) => page.getByTestId('active-filters').locator('button[data-chip]');
 
@@ -208,7 +210,8 @@ test.describe('/sklep — listing page', () => {
   test('delivery mode filter separates shippable from pickup-only products', async ({ page }) => {
     await goToShop(page);
 
-    const initialCount = await productLinks(page).count();
+    // HA-2.31: the seed has 25 products, one more than a page — compare against the toolbar total
+    const initialCount = await totalCount(page);
     const aside = sidebar(page);
 
     await aside.getByText('Tylko odbiór osobisty', { exact: true }).click();
@@ -362,7 +365,7 @@ test.describe('/sklep — listing page', () => {
     await settleCatalog(page);
     await page.screenshot({ path: `${SHOT_DIR}/ha-2.30-mobile-bar.png` });
 
-    const allCount = await productNames(page).count();
+    const allCount = await totalCount(page); // toolbar total, not the paginated grid (HA-2.31: 25 products)
 
     await bar.getByRole('button', { name: /^Filtry/ }).click();
     const sheet = page.getByTestId('mobile-filter-sheet');

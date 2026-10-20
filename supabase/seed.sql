@@ -152,6 +152,29 @@ VALUES
   (312002, 35743, 'TS-S00-001', '5901234567098', 'Produkt testowy do przypisania',
    50.00, 23, 5, 0.10, 12000, 'standard', TRUE, 'own', 0, FALSE, TRUE, 'Test');
 
+-- ── Product card states (HA-2.31, decisions tj 2026-10-20) ────────────────────
+-- Seed data only, no schema change. Three standard/shippable products:
+--   313001: price_compare > price → the card shows the struck-through catalogue price
+--           (every other seed product has price_compare NULL → red proof: no <s>)
+--   313002: stock = 0 → "Niedostępny" line, disabled button (D2; also unblocks
+--           the deferred cart.spec.ts "out-of-stock product cannot be added")
+--   313003: images → local packshot under public/ (synthetic drawing on pure white,
+--           not a wholesaler photo) so the 1:1 / object-contain rendering is testable (D4)
+INSERT INTO shop_products
+  (id, inventory_id, sku, ean, name,
+   price, price_compare, tax_rate, stock, weight,
+   category_id, product_type, is_active,
+   source_warehouse,
+   age_min, requires_license, delivery_allowed, brand, images)
+VALUES
+  (313001, 35743, 'TS-PC-001', '5901234567101', 'Plecak taktyczny 3-Day Assault Olive (promocja)',
+   299.00, 349.00, 23, 9, 1.40, 2003, 'standard', TRUE, 'own', 0, FALSE, TRUE, 'Test', NULL),
+  (313002, 35743, 'TS-OOS-001', '5901234567102', 'Rękawice taktyczne Nomex Czarne (wyprzedane)',
+   159.00, NULL, 23, 0, 0.20, 3005, 'standard', TRUE, 'own', 0, FALSE, TRUE, 'Test', NULL),
+  (313003, 35743, 'TS-IMG-001', '5901234567103', 'Ładownica uniwersalna MOLLE Olive (ze zdjęciem)',
+    79.00, NULL, 23, 12, 0.15, 2005, 'standard', TRUE, 'own', 0, FALSE, TRUE, 'Test',
+   '{"1": "/img/seed/packshot-test.png"}'::jsonb);
+
 -- ── Test helper ───────────────────────────────────────────────────────────────
 -- Wraps has_function_privilege so permission tests can verify REVOKE without
 -- calling the revoked function directly (PG17.6.1.111 Docker crashes with SIGSEGV

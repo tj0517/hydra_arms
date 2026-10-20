@@ -52,3 +52,8 @@ Karta produktu na listingu i w „powiązanych” na PDP ma dziś dwa równorzę
 
 ## Notatki z realizacji
 - 2026-10-19 tj (wf-plan): zadanie wydzielone z pakietu UI listingu; zależy od HA-2.30 (wspólne etykiety kategorii i tokeny typografii).
+- 2026-10-20 agent: sesja na Fable 5.1 (claude-fable-5-1). Preflight OK (SUPABASE_TARGET=local, hook, HA-2.30 na origin/main). Brak Playwright MCP na WSL — zrzuty z page.screenshot() w tests/shop/product-card.spec.ts do .playwright-mcp/ha-2.31-*.png.
+- 2026-10-20 tj: STOP 1 zaakceptowany. D1 — linia stanu dokładnie wg tabeli (5 wariantów): „Niedostępny” / „Tylko odbiór osobisty w Krakowie” / „Ostatnie sztuki · tylko odbiór osobisty w Krakowie” / „Dostępny · wysyłka kurierem” / „Ostatnie sztuki · wysyłka kurierem”; etykiety przycisku „Do koszyka” / „Dodano do koszyka” / „Limit w koszyku” przyjęte.
+- 2026-10-20 tj: D2 — produkt ze stanem 0 trafia do seeda (same dane, bez zmiany schematu); służy testowi „Niedostępny” i red proof 2; jeśli odblokowuje odłożony test cart.spec.ts:52, włączyć go i odnotować w raporcie, nie szerzej.
+- 2026-10-20 tj: D3 — karta mówi „wysyłka kurierem” dla produktów sekcji 01/02, a checkout odmawia kuriera przez hydra_section(); mustPickup() NIE zmieniać w tym zadaniu; wpis w docs/deferred-tasks.md jako bloker HA-2.09 (osobne zadanie S: jedno źródło prawdy).
+- 2026-10-20 tj: D4 — seed dostaje jeden produkt z images wskazującym na lokalny plik pod public/ (białe tło, bez zewnętrznych URL), zrzut karty desktop + mobile w dowodach. Znana luka: sekcje sklepu z Sanity (product picker) nierenderowalne lokalnie — w raporcie jako niezweryfikowane lokalnie.
