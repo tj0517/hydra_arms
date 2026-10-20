@@ -706,12 +706,15 @@ Do odczytania: `Matched N products`, linie `stock …: X updated` i `prices …:
 
 Kształt zaakceptowany przez tj 2026-10-13, treść ostateczna — 2026-10-15 (limity z pomiarów,
 sekcja 7). Zainstalowany na koncie `hydra-import` z pliku (`crontab <plik>`); pierwszy
-bezobsługowy przebieg: 2026-10-15 20:20 UTC.
+bezobsługowy przebieg: 2026-10-15 20:20 UTC. Spechurt przesunięty na 04:35 / 06:50 UTC
+z limitem importu 7200 s — treść zaakceptowana przez tj 2026-10-20 (HA-2.33, sekcja 7);
+pozostałe cztery linie bez zmian.
 
 ```
-# Hydra Arms — import hurtowni do BaseLinkera (HA-2.15). Konto hydra-import. GODZINY W UTC.
+# Hydra Arms — import hurtowni do BaseLinkera (HA-2.15, HA-2.33). Konto hydra-import. GODZINY W UTC.
 # Liczba przed komendą to limit czasu w sekundach; odstęp do następnego startu jest większy niż limit + 60 s.
 # Limity z pomiarów 2026-10-14/15: import ok. 2x zmierzony czas, sync 600 s.
+# Spechurt import 7200 s (HA-2.33): 2610 s importu + do 1800 s ponawiania pobrania (3 próby co 600 s) + zapas.
 # Instrukcja: docs/ops/serwer-importu.md
 SHELL=/bin/sh
 PATH=/usr/local/bin:/usr/bin:/bin
@@ -723,15 +726,16 @@ MAILTO=""
 # Sharg: import (01:15 latem / 00:15 zimą), potem sync
 15 23 * * * HYDRA_MAX_SECONDS=5400 /home/hydra-import/hydra/scripts/server/run-bl.sh sharg import 2>>/home/hydra-import/cron-stderr.log
 50 0 * * * HYDRA_MAX_SECONDS=600 /home/hydra-import/hydra/scripts/server/run-bl.sh sharg sync 2>>/home/hydra-import/cron-stderr.log
-# 01:01-04:05 UTC nic nie chodzi: o 02:00 UTC sklep kopiuje BaseLinkera, Spechurt generuje stan
-# Spechurt: import (06:05 latem / 05:05 zimą), potem sync
-5 4 * * * HYDRA_MAX_SECONDS=5400 /home/hydra-import/hydra/scripts/server/run-bl.sh spechurt import 2>>/home/hydra-import/cron-stderr.log
-40 5 * * * HYDRA_MAX_SECONDS=600 /home/hydra-import/hydra/scripts/server/run-bl.sh spechurt sync 2>>/home/hydra-import/cron-stderr.log
+# 01:01-04:35 UTC nic nie chodzi: o 02:00 UTC sklep kopiuje BaseLinkera
+# Spechurt: feed pusty o 04:05 UTC cztery noce z rzędu (15-19.10.2026), pełny o 05:40 UTC; koniec okna regeneracji nieznany
+# Spechurt: import (06:35 latem / 05:35 zimą) z ponawianiem pustego feedu, potem sync (08:50 / 07:50)
+35 4 * * * HYDRA_MAX_SECONDS=7200 /home/hydra-import/hydra/scripts/server/run-bl.sh spechurt import 2>>/home/hydra-import/cron-stderr.log
+50 6 * * * HYDRA_MAX_SECONDS=600 /home/hydra-import/hydra/scripts/server/run-bl.sh spechurt sync 2>>/home/hydra-import/cron-stderr.log
 ```
 
 Co jest w tych liniach:
 
-- crontab należy do konta `hydra-import` (`crontab -e` po `sudo -iu hydra-import`;
+- crontab należy do konta `hydra-import` (`crontab <plik>` po `sudo -iu hydra-import`;
   `crontab -l` na koncie `ubuntu` zostaje pusty);
 - każda linia woła wrapper, który sam załatwia blokadę, logi i odblokowanie prod; linie nie
   zawierają `HA_ALLOW_PROD`;
@@ -748,8 +752,8 @@ Co jest w tych liniach:
 Instalacja, po akceptacji treści — `hydra-import`:
 
 ```bash
-crontab -e                                  # wklej zaakceptowaną treść, zapisz
-crontab -l                                  # wklej wynik
+crontab /sciezka/do/crontab-hydra-import.txt   # plik z zaakceptowaną treścią (nie crontab -e)
+crontab -l                                      # wklej wynik
 ```
 
 Sprawdzenie następnego dnia — `hydra-import`:

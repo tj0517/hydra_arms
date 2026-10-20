@@ -48,4 +48,4 @@ Etap 1: bezpieczny fundament (audyt 2026-09-22). Etap 2: płatności i uruchomie
 | HA-2.30 | Listing w stylu e-commerce — sidebar z drzewem kategorii, filtry akordeonowe, chipsy, bottom sheet na mobile, ludzkie etykiety kategorii | done | M | — | — | — |
 | HA-2.31 | Karta produktu — packshot w całości, jedno CTA, cena przekreślona, linia stanu i dostawy, tagi pozwolenie/18+ | done | M | HA-2.30 | — | feat/ha-2.31-product-card, PR #52 |
 | HA-2.32 | Header sklepu — stały link Sklep, wyszukiwarka w headerze na /sklep, breadcrumby na PDP, naprawa CTA „Sklep” na home | done | S | HA-2.30 | feat/ha-2.32-shop-header, PR #53 | — |
-| HA-2.33 | Pusty feed = błąd importu (z ponowną próbą); harmonogram Spechurta po oknie regeneracji | in_progress | S | HA-2.15 | — | — |
+| HA-2.33 | Pusty feed = błąd importu (z ponowną próbą); harmonogram Spechurta po oknie regeneracji | review | S | HA-2.15 | feat/ha-2.33-empty-feed-retry | — |
