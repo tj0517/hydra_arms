@@ -1,0 +1,94 @@
+{
+  "/": {
+    "desktop": [
+      {
+        "label": "Usługi",
+        "href": "/uslugi"
+      },
+      {
+        "label": "O nas",
+        "href": "/o-nas"
+      },
+      {
+        "label": "Współpraca",
+        "href": "/wspolpraca"
+      },
+      {
+        "label": "Kontakt",
+        "href": "/kontakt"
+      },
+      {
+        "label": "[ Sklep ]",
+        "href": "/sklep"
+      }
+    ],
+    "mobile": [
+      {
+        "label": "Usługi",
+        "href": "/uslugi"
+      },
+      {
+        "label": "O nas",
+        "href": "/o-nas"
+      },
+      {
+        "label": "Współpraca",
+        "href": "/wspolpraca"
+      },
+      {
+        "label": "Kontakt",
+        "href": "/kontakt"
+      },
+      {
+        "label": "[ Sklep ]",
+        "href": "/sklep"
+      }
+    ]
+  },
+  "/uslugi": {
+    "desktop": [
+      {
+        "label": "Usługi",
+        "href": "/uslugi"
+      },
+      {
+        "label": "O nas",
+        "href": "/o-nas"
+      },
+      {
+        "label": "Współpraca",
+        "href": "/wspolpraca"
+      },
+      {
+        "label": "Kontakt",
+        "href": "/kontakt"
+      },
+      {
+        "label": "[ Sklep ]",
+        "href": "/sklep"
+      }
+    ],
+    "mobile": [
+      {
+        "label": "Usługi",
+        "href": "/uslugi"
+      },
+      {
+        "label": "O nas",
+        "href": "/o-nas"
+      },
+      {
+        "label": "Współpraca",
+        "href": "/wspolpraca"
+      },
+      {
+        "label": "Kontakt",
+        "href": "/kontakt"
+      },
+      {
+        "label": "[ Sklep ]",
+        "href": "/sklep"
+      }
+    ]
+  }
+}

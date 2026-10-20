@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import HeaderSearch from "@/components/shop/HeaderSearch";
 
 const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*!?";
 
@@ -129,12 +130,16 @@ export default function Nav({ navLinks, logo }: { navLinks?: { href: string; lab
             />
           </Link>
 
+          {/* Shop search — only on /sklep* (HA-2.32) */}
+          {isShop && <HeaderSearch />}
+
           {/* Desktop links */}
           <ul className="hidden lg:flex gap-5 lg:gap-9 list-none items-center">
             {links.map((item) => (
               <ScrambleNavLink key={item.href} href={item.href} label={item.label} active={pathname === item.href} />
             ))}
-            {isShop ? (
+            <li><ScrambleButton href="/sklep" label="Sklep" /></li>
+            {isShop && (
               loggedIn ? (
                 <li>
                   <Link
@@ -170,8 +175,6 @@ export default function Nav({ navLinks, logo }: { navLinks?: { href: string; lab
                   </li>
                 </>
               )
-            ) : (
-              <li><ScrambleButton href="/sklep" label="Sklep" /></li>
             )}
           </ul>
 
@@ -222,7 +225,13 @@ export default function Nav({ navLinks, logo }: { navLinks?: { href: string; lab
             {link.label}
           </Link>
         ))}
-        {isShop ? (
+        <Link
+          href="/sklep"
+          className="font-[var(--font-mono)] text-2xl uppercase tracking-[0.2em] transition-colors duration-300 text-text-dim hover:text-white"
+        >
+          <span className="text-text-dim">[</span> <span className="text-accent">Sklep</span> <span className="text-text-dim">]</span>
+        </Link>
+        {isShop && (
           loggedIn ? (
             <Link
               href="/konto"
@@ -246,13 +255,6 @@ export default function Nav({ navLinks, logo }: { navLinks?: { href: string; lab
               </Link>
             </>
           )
-        ) : (
-          <Link
-            href="/sklep"
-            className="font-[var(--font-mono)] text-2xl uppercase tracking-[0.2em] transition-colors duration-300 text-text-dim hover:text-white"
-          >
-            <span className="text-text-dim">[</span> <span className="text-accent">Sklep</span> <span className="text-text-dim">]</span>
-          </Link>
         )}
       </div>
     </>
