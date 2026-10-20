@@ -340,9 +340,11 @@ printf '\n=== %s run-bl end: %s %s (exit %s, %ss)%s\n' "$(now)" "$supplier" "$mo
 
 # The import exits 0 even when products failed, so its own summary goes into the journal.
 # The patterns are fixed text and digits: nothing else from the log can ride along.
-result="$(grep -aoE 'Import done: [0-9]+ created, [0-9]+ updated, [0-9]+ errors|Sync done: [0-9]+ products refreshed' "$run_log" 2>/dev/null | tail -n 1)"
+# An empty feed ends the import with exit 1 and `[fatal] empty feed after N attempts` (HA-2.33);
+# that line is the result of such a run.
+result="$(grep -aoE 'Import done: [0-9]+ created, [0-9]+ updated, [0-9]+ errors|Sync done: [0-9]+ products refreshed|\[fatal\] empty feed after [0-9]+ attempts?' "$run_log" 2>/dev/null | tail -n 1)"
 if [ -z "$result" ]; then
-  result="$(grep -aoE 'Matched [0-9]+ products, [0-9]+ not in BL yet|Nothing to (import|sync)\.' "$run_log" 2>/dev/null | tail -n 1)"
+  result="$(grep -aoE 'Matched [0-9]+ products, [0-9]+ not in BL yet' "$run_log" 2>/dev/null | tail -n 1)"
 fi
 # The import also counts matched products it skipped because BaseLinker returned no data
 # for them (already inside "errors"; nothing was overwritten) — carried along when present.

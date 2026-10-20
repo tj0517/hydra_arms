@@ -280,6 +280,12 @@ run marker-missing good --cmd 'echo "Matched 0 products, 2280 not in BL yet (run
 has "a sync that matched nothing shows in the END line" "$LAST" 'result="Matched 0 products, 2280 not in BL yet"'
 run marker-missing good --cmd 'true' sharg sync
 has "no summary → result none" "$LAST" 'result="none"'
+run marker-missing good --cmd 'printf "Received 0.0 MB\nParsed 0 products\n"; echo "[fatal] empty feed after 3 attempts" >&2; exit 1' spechurt import
+expect "an empty feed ends the run with exit 1" 1 "$RC"
+has "the empty-feed fatal line is the result of the END line" "$LAST" 'spechurt import .*END exit=1 .*result="\[fatal\] empty feed after 3 attempts"'
+has "and the failed run is reported on stderr" "$(cat "$T/err")" '^run-bl: spechurt import: run ended with exit 1'
+run marker-missing good --cmd 'echo "[fatal] empty feed after 1 attempt (no retry for --from-file)" >&2; exit 1' kolba sync
+has "a single-attempt empty feed is captured without the reason suffix" "$LAST" 'result="\[fatal\] empty feed after 1 attempt"'
 before="$(find "$LOGS" -name 'spechurt-sync-*.log' | wc -l | tr -d ' ')"
 run marker-missing good --cmd 'true' spechurt sync
 run marker-missing good --cmd 'true' spechurt sync

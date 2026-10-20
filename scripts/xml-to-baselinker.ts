@@ -37,6 +37,10 @@
  *   - Sharg: the connector itself filters to defence categories (SHARG_DEFENCE_PATTERNS)
  *   - Rate limit: BL free plan ~100 req/min — 700 ms sleep between calls;
  *     on ERROR_BLOCKED_TOKEN blCall waits out the block and retries
+ *   - Empty feed = error (HA-2.33, xml-integration/feed-guard.ts): an empty body or 0 parsed
+ *     products is re-fetched FEED_RETRY_ATTEMPTS times, FEED_RETRY_DELAY_S apart (3 / 600 s;
+ *     never for --from-file); then `[fatal] empty feed after N attempts`, exit 1 — in every
+ *     mode, for every supplier. Only `--limit` may legitimately leave nothing to write.
  *
  * Categories & review tags (no auto-created supplier categories):
  *   - The BL category tree is built once by scripts/bl-build-categories.ts
@@ -81,6 +85,7 @@ import {
 } from '../xml-integration/resolve-category';
 import { computeImportTags, mergeImportTags } from '../xml-integration/import-tags';
 import { permitGroupFor } from '../xml-integration/permit-rules';
+import { fetchFeedWithRetry, retryPolicyFromEnv, type FeedAttempt } from '../xml-integration/feed-guard';
 import {
   SUPPLIERS,
   addToMatchIndex,
@@ -337,22 +342,31 @@ async function fetchAndParse(connectorName: ConnectorName, fromFilePath?: string
   const { connectors } = await import('../xml-integration/connectors');
   const connector = connectors[connectorName];
 
-  let xml: string;
-  if (fromFilePath) {
-    console.log(`\nReading feed from file: ${fromFilePath}…`);
-    xml = fs.readFileSync(fromFilePath, 'utf8');
-    console.log(`Read ${(xml.length / 1024 / 1024).toFixed(1)} MB`);
-  } else {
-    const url = connector.config.xml_url;
-    console.log(`\nFetching feed: ${url.split('?')[0]}…`);
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Feed fetch failed: HTTP ${res.status} ${res.statusText}`);
-    xml = await res.text();
-    console.log(`Received ${(xml.length / 1024 / 1024).toFixed(1)} MB`);
-  }
+  const attempt = async (): Promise<FeedAttempt<NormalizedProduct>> => {
+    let xml: string;
+    if (fromFilePath) {
+      console.log(`\nReading feed from file: ${fromFilePath}…`);
+      xml = fs.readFileSync(fromFilePath, 'utf8');
+      console.log(`Read ${(xml.length / 1024 / 1024).toFixed(1)} MB`);
+    } else {
+      const url = connector.config.xml_url;
+      console.log(`\nFetching feed: ${url.split('?')[0]}…`);
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`Feed fetch failed: HTTP ${res.status} ${res.statusText}`);
+      xml = await res.text();
+      console.log(`Received ${(xml.length / 1024 / 1024).toFixed(1)} MB`);
+    }
+    const products = connector.parse(xml);
+    console.log(`Parsed ${products.length} products`);
+    return { xml, products };
+  };
 
-  const products = connector.parse(xml);
-  console.log(`Parsed ${products.length} products`);
+  // HA-2.33: an empty feed (empty body or 0 products — Spechurt during its regeneration
+  // window) is re-fetched per FEED_RETRY_ATTEMPTS / FEED_RETRY_DELAY_S (3 / 600 s), never for
+  // --from-file. After the last attempt EmptyFeedError reaches main().catch → `[fatal] empty
+  // feed after N attempts`, exit 1 — run-bl.sh copies it into the journal's END result.
+  const policy = retryPolicyFromEnv(process.env, { fromFile: fromFilePath !== undefined });
+  const { products } = await fetchFeedWithRetry(attempt, policy, { sleep, warn: (line) => console.warn(line) });
 
   if (connectorName === 'sharg') {
     await mergeShargParameters(products, connector.config.extra as { gateway_url?: string });
@@ -445,7 +459,8 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
     products = products.filter((p) => (p.stock ?? 0) > 0).slice(0, limit);
     console.log(`Filtered to ${products.length} in-stock products (--limit=${limit})`);
   }
-  if (products.length === 0) { console.log('Nothing to import.'); return; }
+  // The feed itself was non-empty (fetchAndParse guarantees it) — only --limit can leave nothing
+  if (products.length === 0) { console.log(`No in-stock products left after --limit=${limit} — nothing written.`); return; }
 
   console.log('\nLoading existing BL products (dedup index)…');
   const index = await loadExistingProducts(bl.getProductsList, env.inventoryId);
@@ -610,7 +625,8 @@ async function runSync(connectorName: ConnectorName, env: Env, limit: number | n
     products = products.filter((p) => (p.stock ?? 0) > 0).slice(0, limit);
     console.log(`Filtered to ${products.length} in-stock products (--limit=${limit})`);
   }
-  if (products.length === 0) { console.log('Nothing to sync.'); return; }
+  // The feed itself was non-empty (fetchAndParse guarantees it) — only --limit can leave nothing
+  if (products.length === 0) { console.log(`No in-stock products left after --limit=${limit} — nothing refreshed.`); return; }
 
   console.log('\nLoading existing BL products (match index)…');
   const index = await loadExistingProducts(bl.getProductsList, env.inventoryId);

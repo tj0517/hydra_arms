@@ -1,18 +1,18 @@
 ---
 id: HA-2.33
 title: Pusty feed = błąd importu (z ponowną próbą); harmonogram Spechurta po oknie regeneracji
-status: todo
+status: done
 difficulty: S
-model: null
+model: claude-fable-5-1
 model_approved: null
 effort: null
-branch: null
+branch: feat/ha-2.33-empty-feed-retry
 due: null
 depends_on: [HA-2.15]
 blocked_by_questions: []
 touches_db: false
 touches_prod: true
-pr: null
+pr: 55
 ---
 
 ## Cel
@@ -64,3 +64,12 @@ Cztery noce crona (15/16–18/19.10) pokazały, że import Spechurta o 04:05 UTC
 - 2026-10-19 tj: D1 = B — przesunięcie Spechurta (04:35 / 06:50 UTC) plus ponowna próba przy pustym feedzie; A (samo przesunięcie) odrzucone, bo okno regeneracji znane z jednej próbki.
 - 2026-10-19 tj: D2 (nadrobienie zaległości ręcznym importem vs pierwsza noc) — do rozstrzygnięcia przy bramce w trakcie zadania.
 - 2026-10-19 numeracja: HA-2.30–2.32 zajęte tego samego dnia przez plan UI listingu (gałąź `docs/ha-2.30-2.32-plan`), stąd HA-2.33; gałąź planu oparta na tamtej, żeby INDEX nie konfliktował.
+- 2026-10-20 agent (preflight): sesja WSL `/home/tj/hydra_arms` (zatwierdzona), `SUPABASE_TARGET=local` ustawione w sesji, hook `agent-guard.sh` zarejestrowany; model `claude-fable-5-1` (prompt mówił Sonnet — wpisany ten, na którym agent faktycznie działa). Gałąź `feat/ha-2.33-empty-feed-retry` z `main` po merge'u PR #53/#54.
+- 2026-10-20 agent: `xml-integration/feed-guard.ts` — `classifyFeed` (`empty-body` / `no-products` / `ok`), `retryPolicyFromEnv` (domyślnie 3 / 600 s; `--from-file` → 1 próba; zła wartość env = odmowa, nie cicha wartość domyślna, jak `HYDRA_MAX_SECONDS` we wrapperze), `fetchFeedWithRetry` z wstrzykiwanym `sleep`/`warn`; 17 testów (`feed-guard.test.ts`), w tym próbka `spechurt_sample.xml` → `ok`. Skrypt: `fetchAndParse` owinięte w politykę; `Nothing to import.` / `Nothing to sync.` zastąpione przez `No in-stock products left after --limit=N — nothing written/refreshed.` (`exit 0`); błąd po ostatniej próbie idzie przez `main().catch` → `[fatal] empty feed after N attempts`, `exit 1`. Wrapper: pierwszy `grep` wyniku ma trzeci wzorzec `\[fatal\] empty feed after [0-9]+ attempts?`, wzorzec `Nothing to (import|sync)\.` usunięty; `test-run-bl.sh` 82 → 86 przypadków.
+- 2026-10-20 agent: komunikat ma liczbę pojedynczą/mnogą (`1 attempt` / `3 attempts`), bo kryterium wrappera żąda dosłownie `after 3 attempts`, a kryterium `--from-file` pisze `1 attempt(s)` — oba spełnić jednym literałem się nie da; wzorzec wrappera łapie obie formy. Wiersz „Obsługa” nazwany `END exit=1 … result="[fatal] empty feed …"`, nie `ERROR … empty feed` — wrapper nie pisze linii `ERROR` dla błędu importu; alarmem jest `END exit=1` i linia w `cron-stderr.log`.
+- 2026-10-20 tj (Mac, `npx tsx scripts/xml-to-baselinker.ts spechurt --dry-run --from-file=spechurt:/dev/null; echo exit=$?`, wklejone): `Read 0.0 MB`, `Parsed 0 products`, `[warn] empty feed (empty body) — attempt 1/1, giving up`, `[fatal] empty feed after 1 attempt (no retry for --from-file)`, `exit=1`.
+- 2026-10-20 tj: STOP 1 — treść crontaba zaakceptowana bez zmian (Spechurt `35 4` z `HYDRA_MAX_SECONDS=7200`, `50 6` z `600`, pozostałe cztery linie bez zmian); wpisana do sekcji 10 `docs/ops/serwer-importu.md`. Instalacja z pliku (`crontab <plik>`) po merge'u.
+- 2026-10-20 tj: D2 = A — ręczny `spechurt import` przez wrapper po merge'u, w dzień, poza oknem crona (`HYDRA_MAX_SECONDS=7200 scripts/server/run-bl.sh spechurt import` po `--check spechurt import`). Wynik i pierwsza noc → do tych notatek.
+- 2026-10-20 tj: decyzja 3 — limit synców zostaje 600 s; sync z pustym feedem kończy się `exit=124 stopped-by=limit-600s` zamiast `[fatal] empty feed` — konsekwencja opisana w sekcji 7 i w deferred.
+- 2026-10-20 tj: sesja szła na Fable przy prompcie „Sonnet · low” — `model:` zostaje jak wpisane, `model_approved` nietknięte.
+- 2026-10-20 tj: odbiór PR #55 — udowodnione: feed-guard (17 testów, 3 mutanty czerwone), skrypt bez „Nothing to …”, red proof /dev/null na Macu (exit=1), wrapper 86/86 lokalnie z red proofem 84/2, sekcja 10 zgodna z zatwierdzonym crontabem, §S czyste, src/ nietknięte. Po merge'u (tj): test-run-bl.sh na serwerze, crontab -l, ręczny import Spechurta (D2 = A), pierwsza noc — wyniki do tej sekcji. Sesja na Fable przy prompcie Sonnet·low — przyjęte z adnotacją. Poza zakresem, do deferred: błąd HTTP feedu (5xx) nie wchodzi w retry — tylko pusta odpowiedź 200.
