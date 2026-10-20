@@ -1,7 +1,7 @@
 ---
 id: HA-2.32
 title: Header sklepu — stały link Sklep, wyszukiwarka w headerze na /sklep, breadcrumby na PDP, naprawa CTA „Sklep” na home
-status: review
+status: done
 difficulty: S
 model: claude-fable-5-1
 model_approved: null
@@ -55,3 +55,4 @@ Na stronach `/sklep/*` nawigacja zamienia link „Sklep” na „Zaloguj / Zarej
 - 2026-10-20 tj (D2 → A): eyebrow kategorii nad tytułem PDP zostaje obok breadcrumba (duplikat ścieżki) — konsolidacja w przyszłym przejściu PDP, zapis w `docs/deferred-tasks.md`.
 - 2026-10-20 agent: D1 A (`key` po `q` w `sklep/page.tsx`) wdrożone i wycofane — własna wyszukiwarka listingu synchronizuje `?q=` przy każdym wpisanym znaku (`router.replace`), więc klucz przemontowywał listing w trakcie pisania (7 testów `product-card.spec.ts` czerwonych, utrata fokusu w polu). Szukaj z headera działa z PDP i spoza listingu; z samego `/sklep` nie zmienia frazy — test oznaczony `fixme`, decyzja tj otwarta.
 - 2026-10-20 tj (D1, druga runda → A2): na samym `/sklep` formularz wyszukiwarki w headerze wysyła jako pełne przeładowanie strony; na każdej innej trasie zostaje nawigacja w aplikacji. Żaden plik listingu nietknięty. Powód porzucenia podejścia z `key`: toolbar listingu zapisuje `?q=` przy każdym wpisanym znaku, więc listing kluczowany po `q` przemontowywał się w trakcie pisania.
+- 2026-10-20 tj: odbiór PR #53 — wszystkie kryteria udowodnione testami Playwright (Sklep link desktop+mobile, breadcrumby 312001/312002 + BreadcrumbList, header search → ?q= z chipem także z samego /sklep przez pełne przeładowanie, CTA home, regresja listy linków nav z red proof), build zielony; model claude-fable-5-1 (prompt zakładał Sonnet).
