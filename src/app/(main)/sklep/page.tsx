@@ -67,7 +67,11 @@ const SHOP_DISABLED = process.env.SHOP_DISABLED === 'true';
 
 // ── Page ───────────────────────────────────────────────────────────────────────
 
-export default async function SklepPage() {
+export default async function SklepPage({ searchParams }: { searchParams: Promise<{ q?: string | string[] }> }) {
+  // HA-2.32: the header search navigates to /sklep?q=…; keying the listing by q remounts it
+  // so it re-reads the URL (decision tj 2026-10-20, 1A — the only change in this file).
+  const { q } = await searchParams;
+  const listingKey = Array.isArray(q) ? q[0] ?? '' : q ?? '';
   if (SHOP_DISABLED) {
     return (
       <main>
@@ -124,7 +128,7 @@ export default async function SklepPage() {
       </div>
 
       <Suspense fallback={null}>
-        <SklepClient products={products} categories={categories} />
+        <SklepClient key={listingKey} products={products} categories={categories} />
       </Suspense>
     </main>
   );
