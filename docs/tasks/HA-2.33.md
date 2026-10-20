@@ -1,7 +1,7 @@
 ---
 id: HA-2.33
 title: Pusty feed = błąd importu (z ponowną próbą); harmonogram Spechurta po oknie regeneracji
-status: review
+status: done
 difficulty: S
 model: claude-fable-5-1
 model_approved: null
@@ -72,3 +72,4 @@ Cztery noce crona (15/16–18/19.10) pokazały, że import Spechurta o 04:05 UTC
 - 2026-10-20 tj: D2 = A — ręczny `spechurt import` przez wrapper po merge'u, w dzień, poza oknem crona (`HYDRA_MAX_SECONDS=7200 scripts/server/run-bl.sh spechurt import` po `--check spechurt import`). Wynik i pierwsza noc → do tych notatek.
 - 2026-10-20 tj: decyzja 3 — limit synców zostaje 600 s; sync z pustym feedem kończy się `exit=124 stopped-by=limit-600s` zamiast `[fatal] empty feed` — konsekwencja opisana w sekcji 7 i w deferred.
 - 2026-10-20 tj: sesja szła na Fable przy prompcie „Sonnet · low” — `model:` zostaje jak wpisane, `model_approved` nietknięte.
+- 2026-10-20 tj: odbiór PR #55 — udowodnione: feed-guard (17 testów, 3 mutanty czerwone), skrypt bez „Nothing to …”, red proof /dev/null na Macu (exit=1), wrapper 86/86 lokalnie z red proofem 84/2, sekcja 10 zgodna z zatwierdzonym crontabem, §S czyste, src/ nietknięte. Po merge'u (tj): test-run-bl.sh na serwerze, crontab -l, ręczny import Spechurta (D2 = A), pierwsza noc — wyniki do tej sekcji. Sesja na Fable przy prompcie Sonnet·low — przyjęte z adnotacją. Poza zakresem, do deferred: błąd HTTP feedu (5xx) nie wchodzi w retry — tylko pusta odpowiedź 200.
