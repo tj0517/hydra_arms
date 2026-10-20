@@ -1,12 +1,12 @@
 ---
 id: HA-2.32
 title: Header sklepu — stały link Sklep, wyszukiwarka w headerze na /sklep, breadcrumby na PDP, naprawa CTA „Sklep” na home
-status: todo
+status: in_progress
 difficulty: S
-model: null
+model: claude-fable-5-1
 model_approved: null
 effort: null
-branch: null
+branch: feat/ha-2.32-shop-header
 due: null
 depends_on: [HA-2.30]
 blocked_by_questions: []

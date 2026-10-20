@@ -1,7 +1,7 @@
 /**
  * Product detail page (/sklep/[id]) E2E tests
  */
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { dismissCookies, hideBanner } from './fixtures';
 
 test.describe('/sklep/[id] — product detail page', () => {
@@ -78,5 +78,76 @@ test.describe('/sklep/[id] — product detail page', () => {
   test('non-existent product returns 404 page', async ({ page }) => {
     const response = await page.goto('/sklep/999999999', { waitUntil: 'domcontentloaded' });
     expect(response?.status()).toBe(404);
+  });
+});
+
+/**
+ * HA-2.32 — breadcrumbs on the PDP. Seed: 312001 sits in 12002 „1.1 Broń Krótka"
+ * (parent 12001 „01. BROŃ PALNA"); 312002 sits in 12000 „00. DO PRZYPISANIA",
+ * the importer's working bucket that is never shown publicly.
+ */
+test.describe('/sklep/[id] — breadcrumbs (HA-2.32)', () => {
+  const SHOT_DIR = '.playwright-mcp';
+
+  async function openPdp(page: Page, id: number, width: number) {
+    await dismissCookies(page);
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(`/sklep/${id}`, { waitUntil: 'domcontentloaded' });
+    await hideBanner(page);
+    await page.getByTestId('breadcrumbs').waitFor({ timeout: 20_000 });
+  }
+
+  const crumbs = (page: Page) =>
+    page.getByTestId('breadcrumbs').locator('li').evaluateAll(els =>
+      els.map(li => {
+        const a = li.querySelector('a');
+        return { label: (li.firstElementChild?.textContent ?? '').trim(), href: a?.getAttribute('href') ?? null };
+      }),
+    );
+
+  test('product in a category shows Sklep › root › subcategory › name with ?cat= links', async ({ page }) => {
+    await openPdp(page, 312001, 1280);
+    expect(await crumbs(page)).toEqual([
+      { label: 'Sklep', href: '/sklep' },
+      { label: 'Broń palna', href: '/sklep?cat=12001' },
+      { label: 'Broń krótka', href: '/sklep?cat=12002' },
+      { label: 'Produkt testowy sekcji 01 (bez flag)', href: null },
+    ]);
+    await page.waitForTimeout(2000);
+    await page.screenshot({ path: `${SHOT_DIR}/ha-2.32-pdp-312001-desktop.png` });
+
+    // the category crumb lands on the listing filtered by that category
+    await page.getByTestId('breadcrumbs').getByRole('link', { name: 'Broń krótka' }).click();
+    await expect(page).toHaveURL(/\/sklep\?cat=12002/, { timeout: 10_000 });
+  });
+
+  test('product in the „00." bucket shows only Sklep › name', async ({ page }) => {
+    await openPdp(page, 312002, 1280);
+    expect(await crumbs(page)).toEqual([
+      { label: 'Sklep', href: '/sklep' },
+      { label: 'Produkt testowy do przypisania', href: null },
+    ]);
+    await page.waitForTimeout(2000);
+    await page.screenshot({ path: `${SHOT_DIR}/ha-2.32-pdp-312002-desktop.png` });
+  });
+
+  test('breadcrumb JSON-LD is a BreadcrumbList that mirrors the trail', async ({ page }) => {
+    await openPdp(page, 312001, 1280);
+    const raw = await page.getByTestId('breadcrumbs').locator('script[type="application/ld+json"]').textContent();
+    const ld = JSON.parse(raw ?? '{}');
+    expect(ld['@type']).toBe('BreadcrumbList');
+    expect(ld.itemListElement.map((i: { name: string; item: string; position: number }) => [i.position, i.name, i.item])).toEqual([
+      [1, 'Sklep', 'https://hydraarms.pl/sklep'],
+      [2, 'Broń palna', 'https://hydraarms.pl/sklep?cat=12001'],
+      [3, 'Broń krótka', 'https://hydraarms.pl/sklep?cat=12002'],
+      [4, 'Produkt testowy sekcji 01 (bez flag)', 'https://hydraarms.pl/sklep/312001'],
+    ]);
+  });
+
+  test('breadcrumbs render on mobile', async ({ page }) => {
+    await openPdp(page, 312001, 390);
+    await expect(page.getByTestId('breadcrumbs').getByRole('link', { name: 'Broń krótka' })).toBeVisible();
+    await page.waitForTimeout(2000);
+    await page.screenshot({ path: `${SHOT_DIR}/ha-2.32-pdp-312001-mobile.png` });
   });
 });

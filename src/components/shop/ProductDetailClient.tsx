@@ -8,6 +8,8 @@ import type { ShopProduct, ShopCategory } from '@/lib/supabase/types';
 import { useCart } from './CartProvider';
 import CartDrawer from './CartDrawer';
 import { categoryDisplayName } from '@/lib/shop/categoryLabel';
+import { productBreadcrumbs } from '@/lib/shop/breadcrumbs';
+import Breadcrumbs from './Breadcrumbs';
 
 import ProductCard from './ProductCard';
 
@@ -120,8 +122,9 @@ export default function ProductDetailClient({ product, categories, related }: Pr
 
       <div className="max-w-[1300px] mx-auto px-[clamp(32px,5vw,64px)] pt-32 pb-16">
 
-        {/* Back button */}
-        <div className="mb-10">
+        {/* Breadcrumbs + back button (HA-2.32) */}
+        <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <Breadcrumbs items={productBreadcrumbs(product, categories)} currentPath={`/sklep/${product.id}`} />
           <Link
             href="/sklep"
             className="font-[var(--font-mono)] text-[11px] text-text-dim hover:text-accent transition-colors tracking-[0.2em] uppercase border border-white/10 hover:border-accent/30 px-4 py-2 inline-flex items-center"
