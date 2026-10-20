@@ -1,7 +1,7 @@
 ---
 id: HA-2.31
 title: Karta produktu — packshot w całości, jedno CTA, cena przekreślona, linia stanu i dostawy, tagi pozwolenie/18+
-status: in_progress
+status: review
 difficulty: M
 model: claude-fable-5-1
 model_approved: null
@@ -12,7 +12,7 @@ depends_on: [HA-2.30]
 blocked_by_questions: []
 touches_db: false
 touches_prod: false
-pr: null
+pr: 52
 ---
 
 ## Cel
