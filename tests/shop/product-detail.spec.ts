@@ -213,16 +213,20 @@ test.describe('/sklep/[id] — shop header (HA-2.32)', () => {
     expect(await chip.locator('b').count()).toBe(0);
   });
 
-  // Open decision (tj): with the listing keyed by q (D1 A) the listing's own toolbar search
-  // remounted the grid on every keystroke (7 product-card tests red), so the key was reverted;
-  // header search from /sklep itself does not apply until the approach is decided.
-  test.fixme('header search from the listing itself replaces the phrase', async ({ page }) => {
+  // On /sklep itself the header form submits as a full page load (decision tj 2026-10-20, A2):
+  // the listing reads ?q= only when it mounts, and keying it by q remounted the grid on every
+  // toolbar keystroke. Elsewhere it stays an in-app navigation (tests above).
+  test('header search from the listing itself reloads /sklep?q= and shows the chip', async ({ page }) => {
     await openPdp(page, 1280, '/sklep?q=pierwsza');
     await expect(page.getByTestId('active-filters').locator('[data-chip="q"]')).toContainText('pierwsza', { timeout: 20_000 });
     const field = page.getByTestId('header-search').getByRole('searchbox');
     await field.fill('druga');
-    await field.press('Enter');
-    await expect(page).toHaveURL(/\/sklep\?q=druga$/, { timeout: 10_000 });
+    await Promise.all([
+      page.waitForNavigation({ waitUntil: 'domcontentloaded', url: /\/sklep\?q=druga$/, timeout: 10_000 }),
+      field.press('Enter'),
+    ]);
+    await hideBanner(page);
+    await expect(page).toHaveURL(/\/sklep\?q=druga$/);
     await expect(page.getByTestId('active-filters').locator('[data-chip="q"]')).toContainText('druga', { timeout: 20_000 });
     await page.waitForTimeout(500);
     await expect(page).toHaveURL(/\/sklep\?q=druga$/);
