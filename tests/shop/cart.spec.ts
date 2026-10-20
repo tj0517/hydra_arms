@@ -64,7 +64,13 @@ test.describe('Cart', () => {
     const addBtn = page.getByRole('button', { name: /BRAK W MAGAZYNIE|DODAJ DO KOSZYKA/i });
     await expect(addBtn).toBeDisabled();
     await addBtn.click({ force: true }).catch(() => null);
-    expect(await page.evaluate(() => localStorage.getItem('hydra-cart'))).toBeNull();
+    // CartProvider may persist an empty cart ("[]") on hydration — the cart must simply hold nothing
+    const items = await page.evaluate(() => {
+      const raw = localStorage.getItem('hydra-cart');
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : Object.values(parsed);
+    });
+    expect(items).toEqual([]);
   });
 
   test('adding same product twice increases quantity', async ({ page }) => {
