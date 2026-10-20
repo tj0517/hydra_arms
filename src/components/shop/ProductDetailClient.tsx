@@ -7,6 +7,7 @@ import DOMPurify from 'isomorphic-dompurify';
 import type { ShopProduct, ShopCategory } from '@/lib/supabase/types';
 import { useCart } from './CartProvider';
 import CartDrawer from './CartDrawer';
+import { categoryDisplayName } from '@/lib/shop/categoryLabel';
 
 import ProductCard from './ProductCard';
 
@@ -46,9 +47,6 @@ function sanitizeHtml(html: string): string {
     .trim();
 }
 
-function cleanName(name: string): string {
-  return name.replace(/\s+/g, ' ').trim();
-}
 
 export default function ProductDetailClient({ product, categories, related }: Props) {
   const { addItem, openCart, items } = useCart();
@@ -231,7 +229,7 @@ export default function ProductDetailClient({ product, categories, related }: Pr
                   href={`/sklep?cat=${category.id}`}
                   className="font-[var(--font-mono)] text-[11px] text-text-dim tracking-[0.22em] uppercase hover:text-accent transition-colors block truncate"
                 >
-                  {parentCategory ? `${cleanName(parentCategory.name)} · ` : ''}{cleanName(category.name)}
+                  {parentCategory ? `${categoryDisplayName(parentCategory.name)} · ` : ''}{categoryDisplayName(category.name)}
                 </Link>
               )}
               <h1 className="text-3xl md:text-4xl font-semibold text-white leading-tight">{product.name}</h1>
@@ -379,7 +377,7 @@ export default function ProductDetailClient({ product, categories, related }: Pr
           <div className="mt-16 pt-10 border-t border-white/8">
             <div className="pb-4 mb-8 border-b border-white/8">
               <span className="font-[var(--font-mono)] text-xs text-text-dim/60 tracking-[0.25em] uppercase">
-                {category ? `Więcej z kategorii: ${cleanName(category.name)}` : 'Inne produkty'}
+                {category ? `Więcej z kategorii: ${categoryDisplayName(category.name)}` : 'Inne produkty'}
               </span>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">

@@ -4,28 +4,40 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import type { ShopProduct, ShopCategory } from '@/lib/supabase/types';
 import { mustPickup } from '@/lib/shop/cartAnalysis';
+import { categoryDisplayName, isWorkingCategory } from '@/lib/shop/categoryLabel';
 import ProductCard from './ProductCard';
 import CartDrawer from './CartDrawer';
-
-function catLabel(name: string): string {
-  if (name.includes(' > ')) return name.split(' > ').at(-1) ?? name;
-  if (name.includes('/')) return name.split('/').at(-1)?.trim() ?? name;
-  return name;
-}
+import FiltersSidebar from './FiltersSidebar';
+import ActiveFilterChips from './ActiveFilterChips';
+import ListingToolbar from './ListingToolbar';
+import MobileFilterSheet from './MobileFilterSheet';
+import {
+  DELIVERY_MODE_LABELS,
+  isDeliveryMode,
+  isSortKey,
+  type ActiveChip,
+  type CategoryTreeNode,
+  type DeliveryMode,
+  type FilterActions,
+  type FilterOptions,
+  type FilterState,
+  type SortKey,
+} from './listingFilters';
 
 interface SklepClientProps {
   products: ShopProduct[];
   categories: ShopCategory[];
 }
 
-interface CategoryNode {
-  category: ShopCategory;
-  children: ShopCategory[];
-}
-
-function buildTree(categories: ShopCategory[]): CategoryNode[] {
+/**
+ * Two-level public tree. The "00." working root is omitted (decision tj
+ * 2026-10-19, D1 A) — its products stay listed under "Wszystkie" and in search.
+ */
+function buildTree(categories: ShopCategory[]): CategoryTreeNode[] {
+  // Sort by the RAW BaseLinker name (the numbered one: "01. …", "1.1 …"), never by the
+  // display label — the Hydra numbering is the intended order (decision tj 2026-10-19).
   const parents = categories
-    .filter(c => !c.parent_id)
+    .filter(c => !c.parent_id && !isWorkingCategory(c.name))
     .sort((a, b) => a.name.localeCompare(b.name, 'pl'));
 
   return parents.map(parent => ({
@@ -35,16 +47,6 @@ function buildTree(categories: ShopCategory[]): CategoryNode[] {
       .sort((a, b) => a.name.localeCompare(b.name, 'pl')),
   }));
 }
-
-type SortKey = 'name_asc' | 'name_desc' | 'price_asc' | 'price_desc' | 'newest';
-
-const SORT_OPTIONS: { value: SortKey; label: string }[] = [
-  { value: 'name_asc',   label: 'NAZWA A→Z' },
-  { value: 'name_desc',  label: 'NAZWA Z→A' },
-  { value: 'price_asc',  label: 'CENA ↑' },
-  { value: 'price_desc', label: 'CENA ↓' },
-  { value: 'newest',     label: 'NAJNOWSZE' },
-];
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debounced, setDebounced] = useState(value);
@@ -57,32 +59,29 @@ function useDebounce<T>(value: T, delay: number): T {
 
 const PAGE_SIZE = 24;
 
-// URL value ↔ label for the universal "shippable / pickup only" filter (dostawa=).
-// Values are the known set the ?dostawa= param is validated against.
-type DeliveryMode = 'wysylka' | 'odbior';
-const DELIVERY_MODE_LABELS: Record<DeliveryMode, string> = {
-  wysylka: 'Wysyłka kurierem',
-  odbior: 'Tylko odbiór osobisty',
-};
-function isDeliveryMode(v: string | null): v is DeliveryMode {
-  return v === 'wysylka' || v === 'odbior';
-}
+const PAGER_BUTTON =
+  'h-9 min-w-9 px-3 text-[13px] border transition-colors disabled:opacity-60 disabled:cursor-not-allowed';
 
 export default function SklepClient({ products, categories }: SklepClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   // ── State — initialized from URL params on mount ────────────────────────
-  const [selectedCategory, setSelectedCategory] = useState<number | null>(
-    () => { const v = searchParams.get('cat'); return v ? parseInt(v, 10) : null; }
-  );
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(() => {
+    const v = searchParams.get('cat');
+    if (!v) return null;
+    const id = parseInt(v, 10);
+    // Validated against the known set: an unknown ?cat= is dropped, not applied.
+    return categories.some(c => c.id === id) ? id : null;
+  });
   const [searchInput, setSearchInput] = useState(() => searchParams.get('q') ?? '');
   const [onlyInStock, setOnlyInStock] = useState(() => searchParams.get('stock') === '1');
   const [priceMinInput, setPriceMinInput] = useState(() => searchParams.get('min') ?? '');
   const [priceMaxInput, setPriceMaxInput] = useState(() => searchParams.get('max') ?? '');
-  const [sortBy, setSortBy] = useState<SortKey>(
-    () => (searchParams.get('sort') as SortKey | null) ?? 'name_asc'
-  );
+  const [sortBy, setSortBy] = useState<SortKey>(() => {
+    const v = searchParams.get('sort');
+    return isSortKey(v) ? v : 'name_asc';
+  });
   // selectedSpecs: { [specKey]: string[] } — multi-select per key, OR within key, AND between keys
   const [selectedSpecs, setSelectedSpecs] = useState<Record<string, string[]>>({});
   // Universal filters (HA-2.10). Validated against the known set on read — an
@@ -96,21 +95,6 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
     () => { const v = searchParams.get('dostawa'); return isDeliveryMode(v) ? v : null; }
   );
   const [page, setPage] = useState(1);
-  const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
-  const [desktopPanelOpen, setDesktopPanelOpen] = useState(true);
-  const [sortOpen, setSortOpen] = useState(false);
-  const sortRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!sortOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
-        setSortOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [sortOpen]);
 
   // Debounce text and price inputs — UI updates immediately, filter/URL follow after delay
   const search = useDebounce(searchInput, 200);
@@ -135,13 +119,6 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
   // ── Derived structures ──────────────────────────────────────────────────
   const tree = useMemo(() => buildTree(categories), [categories]);
 
-  const activeParent = useMemo(
-    () => tree.find(({ category: parent, children }) =>
-      parent.id === selectedCategory || children.some(c => c.id === selectedCategory)
-    ) ?? null,
-    [tree, selectedCategory]
-  );
-
   const allDescendants = useMemo(() => {
     const map = new Map<number, number[]>();
     function descendants(id: number): number[] {
@@ -159,6 +136,22 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
     for (const c of categories) descendants(c.id);
     return map;
   }, [categories]);
+
+  // Products per category, descendants included — the counts next to tree nodes.
+  const categoryCounts = useMemo(() => {
+    const direct = new Map<number, number>();
+    for (const p of products) {
+      if (p.category_id === null) continue;
+      direct.set(p.category_id, (direct.get(p.category_id) ?? 0) + 1);
+    }
+    const total = new Map<number, number>();
+    for (const c of categories) {
+      let n = direct.get(c.id) ?? 0;
+      for (const d of allDescendants.get(c.id) ?? []) n += direct.get(d) ?? 0;
+      total.set(c.id, n);
+    }
+    return total;
+  }, [products, categories, allDescendants]);
 
   // Use reduce instead of spread — Math.min/max(...arr) throws on very large arrays
   const priceRange = useMemo(() => {
@@ -299,12 +292,7 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
     toolbarRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [filteredAndSorted, page]);
 
-  // Badge counts
-  const activeSpecCount = Object.values(selectedSpecs).filter(vals => vals.length > 0).length;
-  const activeFilterCount =
-    [onlyInStock, priceMinInput !== '', priceMaxInput !== '', selectedBrand !== null, deliveryMode !== null]
-      .filter(Boolean).length + activeSpecCount;
-
+  // ── Actions ─────────────────────────────────────────────────────────────
   function selectCategory(id: number | null) {
     setSelectedCategory(id);
     setSelectedSpecs({}); // specs are category-specific — reset on category change
@@ -324,13 +312,11 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
     setPage(1);
   }
 
-  // Used by the empty-state button — keeps category so user stays in context
+  // Sidebar "Wyczyść filtry" — keeps category, query and sort
   function clearNonCategoryFilters() {
-    setSearchInput('');
     setOnlyInStock(false);
     setPriceMinInput('');
     setPriceMaxInput('');
-    setSortBy('name_asc');
     setSelectedSpecs({});
     setSelectedBrand(null);
     setDeliveryMode(null);
@@ -357,465 +343,125 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
     setPage(1);
   }
 
-  const hasAnyFilter =
-    selectedCategory !== null ||
-    searchInput !== '' ||
-    activeFilterCount > 0 ||
-    sortBy !== 'name_asc';
+  const filters: FilterState = { onlyInStock, deliveryMode, priceMinInput, priceMaxInput, selectedBrand, selectedSpecs };
+  const actions: FilterActions = {
+    toggleStock: () => { setOnlyInStock(v => !v); setPage(1); },
+    setDeliveryMode: mode => { setDeliveryMode(mode); setPage(1); },
+    setPriceMin: v => { setPriceMinInput(v); setPage(1); },
+    setPriceMax: v => { setPriceMaxInput(v); setPage(1); },
+    setBrand: brand => { setSelectedBrand(brand); setPage(1); },
+    toggleSpec,
+    clearSpec,
+  };
+  const options: FilterOptions = { priceRange, availableBrands, availableSpecs };
 
-  // ── Sub-components ──────────────────────────────────────────────────────
-  const CategoryPill = ({
-    active,
-    onClick,
-    children,
-    small = false,
-  }: {
-    active: boolean;
-    onClick: () => void;
-    children: React.ReactNode;
-    small?: boolean;
-  }) => (
-    <button
-      onClick={onClick}
-      className={`flex-shrink-0 whitespace-nowrap border font-[var(--font-mono)] tracking-[0.15em] transition-colors ${
-        small ? 'px-3 py-2 text-[10px]' : 'px-4 py-2.5 text-[11px]'
-      } ${
-        active
-          ? 'border-accent text-accent bg-accent/5'
-          : 'border-white/12 text-text-dim hover:border-white/25 hover:text-white'
-      }`}
-    >
-      {children}
-    </button>
-  );
+  // Badge counts
+  const activeSpecCount = Object.values(selectedSpecs).filter(vals => vals.length > 0).length;
+  const activeFilterCount =
+    [onlyInStock, priceMinInput !== '' || priceMaxInput !== '', selectedBrand !== null, deliveryMode !== null]
+      .filter(Boolean).length + activeSpecCount;
 
-  const CategoryBar = (
-    <div className="mb-8">
-      <div className="flex flex-wrap items-center gap-2 pb-3">
-        {/* eslint-disable-next-line react-hooks/static-components -- pre-existing, fixed in HA-1.10 */}
-        <CategoryPill active={selectedCategory === null} onClick={() => selectCategory(null)}>
-          WSZYSTKIE
-        </CategoryPill>
-        {tree.map(({ category: parent, children }) => {
-          const isParentActive = selectedCategory === parent.id;
-          const hasActiveChild = children.some(c => c.id === selectedCategory);
-          return (
-            <CategoryPill
-              key={parent.id}
-              active={isParentActive || hasActiveChild}
-              onClick={() => selectCategory(parent.id)}
-            >
-              {catLabel(parent.name).toUpperCase()}
-            </CategoryPill>
-          );
-        })}
-      </div>
-
-      {activeParent && activeParent.children.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 pt-3 pb-1 border-t border-white/5">
-          <span className="flex-shrink-0 font-[var(--font-mono)] text-[9px] text-white/20 tracking-widest pr-1">▸</span>
-          {activeParent.children.map(child => (
-            <CategoryPill
-              key={child.id}
-              small
-              active={selectedCategory === child.id}
-              onClick={() => selectCategory(child.id)}
-            >
-              {catLabel(child.name)}
-            </CategoryPill>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-
-  // Reusable checkbox row used in both stock filter and spec filters
-  const CheckRow = ({
-    checked,
-    onToggle,
-    label,
-    badge,
-  }: {
-    checked: boolean;
-    onToggle: () => void;
-    label: string;
-    badge?: string;
-  }) => (
-    <label className="flex items-center gap-2.5 cursor-pointer group">
-      <div
-        onClick={onToggle}
-        className={`w-4 h-4 border flex items-center justify-center flex-shrink-0 transition-colors ${
-          checked ? 'border-accent bg-accent/10' : 'border-white/20 group-hover:border-white/40'
-        }`}
-      >
-        {checked && (
-          <svg width="8" height="6" viewBox="0 0 8 6" fill="none">
-            <path d="M1 3L3 5L7 1" stroke="currentColor" strokeWidth="1.2" className="text-accent" />
-          </svg>
-        )}
-      </div>
-      <span
-        onClick={onToggle}
-        className={`font-[var(--font-mono)] text-[10px] tracking-[0.1em] transition-colors select-none flex-1 ${
-          checked ? 'text-white' : 'text-text-dim group-hover:text-white/70'
-        }`}
-      >
-        {label}
-        {badge !== undefined && (
-          <span className="text-white/25 ml-1">({badge})</span>
-        )}
-      </span>
-    </label>
-  );
-
-  const FiltersPanel = (
-    <div className="space-y-5">
-      <div className="pb-2 border-b border-white/8 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="font-[var(--font-mono)] text-[11px] text-text-dim/60 tracking-[0.25em] uppercase">Filtry</span>
-          {activeFilterCount > 0 && (
-            <span className="bg-accent text-bg font-[var(--font-mono)] text-[9px] px-1.5 py-0.5 tracking-widest leading-none">
-              {activeFilterCount}
-            </span>
-          )}
-        </div>
-        {activeFilterCount > 0 && (
-          <button
-            onClick={() => {
-              setOnlyInStock(false);
-              setPriceMinInput('');
-              setPriceMaxInput('');
-              setSelectedSpecs({});
-              setSelectedBrand(null);
-              setDeliveryMode(null);
-              setPage(1);
-            }}
-            className="font-[var(--font-mono)] text-[9px] text-text-dim/50 hover:text-accent transition-colors tracking-widest"
-          >
-            WYCZYŚĆ
-          </button>
-        )}
-      </div>
-
-      {/* Availability */}
-      <div>
-        <p className="font-[var(--font-mono)] text-[10px] text-text-dim/40 tracking-[0.3em] uppercase mb-2.5">Dostępność</p>
-        {/* eslint-disable-next-line react-hooks/static-components -- pre-existing, fixed in HA-1.10 */}
-        <CheckRow
-          checked={onlyInStock}
-          onToggle={() => { setOnlyInStock(v => !v); setPage(1); }}
-          label="Tylko dostępne"
-        />
-      </div>
-
-      {/* Delivery mode — universal filter (HA-2.10), derived from mustPickup() */}
-      <div>
-        <p className="font-[var(--font-mono)] text-[10px] text-text-dim/40 tracking-[0.3em] uppercase mb-2.5">Dostawa</p>
-        <div className="space-y-1.5">
-          {(Object.keys(DELIVERY_MODE_LABELS) as DeliveryMode[]).map(mode => (
-            <CheckRow
-              key={mode}
-              checked={deliveryMode === mode}
-              onToggle={() => { setDeliveryMode(prev => (prev === mode ? null : mode)); setPage(1); }}
-              label={DELIVERY_MODE_LABELS[mode]}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Brand — universal filter (HA-2.10), shop-wide (not category-gated) */}
-      {availableBrands.length > 0 && (
-        <div>
-          <div className="flex items-center justify-between mb-2.5">
-            <p className="font-[var(--font-mono)] text-[10px] text-text-dim/40 tracking-[0.3em] uppercase">Marka</p>
-            {selectedBrand !== null && (
-              <button
-                onClick={() => { setSelectedBrand(null); setPage(1); }}
-                className="font-[var(--font-mono)] text-[9px] text-text-dim/40 hover:text-accent transition-colors tracking-widest"
-              >
-                WYCZYŚĆ
-              </button>
-            )}
-          </div>
-          <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-            {availableBrands.map(({ brand, count }) => (
-              <CheckRow
-                key={brand}
-                checked={selectedBrand === brand}
-                onToggle={() => { setSelectedBrand(prev => (prev === brand ? null : brand)); setPage(1); }}
-                label={brand}
-                badge={String(count)}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Price range */}
-      <div>
-        <p className="font-[var(--font-mono)] text-[10px] text-text-dim/40 tracking-[0.3em] uppercase mb-2.5">Cena (PLN)</p>
-        <div className="flex items-center gap-2">
-          <input
-            type="number"
-            value={priceMinInput}
-            onChange={e => { setPriceMinInput(e.target.value); setPage(1); }}
-            placeholder={String(priceRange.min)}
-            min={0}
-            className="w-full bg-transparent border border-white/15 px-2 py-1.5 font-[var(--font-mono)] text-[11px] text-white placeholder-text-dim/30 focus:outline-none focus:border-accent/40 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-          />
-          <span className="font-[var(--font-mono)] text-[10px] text-text-dim/30 flex-shrink-0">—</span>
-          <input
-            type="number"
-            value={priceMaxInput}
-            onChange={e => { setPriceMaxInput(e.target.value); setPage(1); }}
-            placeholder={String(priceRange.max)}
-            min={0}
-            className="w-full bg-transparent border border-white/15 px-2 py-1.5 font-[var(--font-mono)] text-[11px] text-white placeholder-text-dim/30 focus:outline-none focus:border-accent/40 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-          />
-        </div>
-        {(priceMinInput !== '' || priceMaxInput !== '') && (
-          <button
-            onClick={() => { setPriceMinInput(''); setPriceMaxInput(''); setPage(1); }}
-            className="mt-1.5 font-[var(--font-mono)] text-[9px] text-text-dim/40 hover:text-accent transition-colors tracking-widest"
-          >
-            WYCZYŚĆ CENĘ
-          </button>
-        )}
-      </div>
-
-      {/* Spec filters — auto-derived from products in selected category */}
-      {availableSpecs.length > 0 && (
-        <>
-          <div className="h-px bg-white/5" />
-          <div className="space-y-5">
-            {availableSpecs.map(({ key, values }) => {
-              const selected = selectedSpecs[key] ?? [];
-              return (
-                <div key={key}>
-                  <div className="flex items-center justify-between mb-2.5">
-                    <p className="font-[var(--font-mono)] text-[10px] text-text-dim/40 tracking-[0.3em] uppercase">
-                      {key}
-                    </p>
-                    {selected.length > 0 && (
-                      <button
-                        onClick={() => clearSpec(key)}
-                        className="font-[var(--font-mono)] text-[9px] text-text-dim/40 hover:text-accent transition-colors tracking-widest"
-                      >
-                        WYCZYŚĆ
-                      </button>
-                    )}
-                  </div>
-                  <div className="space-y-1.5">
-                    {values.map(({ val, count }) => (
-                      <CheckRow
-                        key={val}
-                        checked={selected.includes(val)}
-                        onToggle={() => toggleSpec(key, val)}
-                        label={val}
-                        badge={String(count)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </>
-      )}
-
-      {/* Hint when no category selected */}
-      {selectedCategory === null && availableSpecs.length === 0 && (
-        <p className="font-[var(--font-mono)] text-[9px] text-text-dim/30 tracking-[0.15em] leading-relaxed border border-white/5 p-3">
-          Wybierz kategorię, aby zobaczyć filtry specyfikacji
-        </p>
-      )}
-    </div>
-  );
+  // ── Active-filter chips — one per active filter, category and query included ──
+  const chips: ActiveChip[] = [];
+  if (selectedCategory !== null) {
+    const cat = categories.find(c => c.id === selectedCategory);
+    if (cat) chips.push({ id: 'cat', label: categoryDisplayName(cat.name), onRemove: () => selectCategory(null) });
+  }
+  if (searchInput.trim()) {
+    chips.push({ id: 'q', label: `Szukaj: „${searchInput.trim()}”`, onRemove: () => { setSearchInput(''); setPage(1); } });
+  }
+  if (onlyInStock) chips.push({ id: 'stock', label: 'Tylko dostępne', onRemove: actions.toggleStock });
+  if (deliveryMode) {
+    chips.push({ id: 'dostawa', label: DELIVERY_MODE_LABELS[deliveryMode], onRemove: () => actions.setDeliveryMode(null) });
+  }
+  if (priceMinInput !== '' || priceMaxInput !== '') {
+    const label =
+      priceMinInput !== '' && priceMaxInput !== '' ? `Cena: ${priceMinInput}–${priceMaxInput} zł`
+      : priceMinInput !== '' ? `Cena: od ${priceMinInput} zł`
+      : `Cena: do ${priceMaxInput} zł`;
+    chips.push({ id: 'cena', label, onRemove: () => { setPriceMinInput(''); setPriceMaxInput(''); setPage(1); } });
+  }
+  if (selectedBrand) chips.push({ id: 'marka', label: `Marka: ${selectedBrand}`, onRemove: () => actions.setBrand(null) });
+  for (const [key, vals] of Object.entries(selectedSpecs)) {
+    for (const val of vals) {
+      chips.push({ id: `spec:${key}:${val}`, label: `${key}: ${val}`, onRemove: () => toggleSpec(key, val) });
+    }
+  }
 
   // ── Render ──────────────────────────────────────────────────────────────
   return (
     <>
       <CartDrawer />
 
-      <div className="max-w-[1400px] mx-auto px-[clamp(32px,5vw,64px)] py-12">
+      <div className="max-w-[1400px] mx-auto px-[clamp(16px,5vw,64px)] py-10 lg:py-12 pb-24 lg:pb-12">
+        <div className="flex gap-10 xl:gap-14 items-start">
 
-        {desktopPanelOpen && <div className="hidden md:block">{CategoryBar}</div>}
-
-        {/* Toolbar */}
-        <div ref={toolbarRef} className="flex items-center justify-between gap-4 mb-8 pb-5 border-b border-white/10 scroll-mt-24">
-          <div className="flex items-center gap-3">
-            {/* Mobile: categories + filters toggle */}
-            <button
-              onClick={() => setMobilePanelOpen(v => !v)}
-              className="md:hidden font-[var(--font-mono)] text-[10px] tracking-widest border border-white/15 px-3 py-2 text-text-dim hover:border-accent/40 hover:text-accent transition-colors flex items-center gap-2"
-            >
-              {mobilePanelOpen ? '[ ZAMKNIJ ]' : '[ KATEGORIE / FILTRY ]'}
-              {(activeFilterCount > 0 || selectedCategory !== null) && (
-                <span className="bg-accent text-bg text-[9px] px-1.5 py-0.5 leading-none">
-                  {activeFilterCount + (selectedCategory !== null ? 1 : 0)}
-                </span>
-              )}
-            </button>
-            {/* Desktop: category bar toggle */}
-            <button
-              onClick={() => setDesktopPanelOpen(v => !v)}
-              className="hidden md:flex font-[var(--font-mono)] text-[10px] tracking-widest border border-white/15 px-3 py-2 text-text-dim hover:border-accent/40 hover:text-accent transition-colors items-center gap-2"
-            >
-              {desktopPanelOpen ? '[ UKRYJ KATEGORIE ]' : '[ POKAŻ KATEGORIE ]'}
-              {!desktopPanelOpen && selectedCategory !== null && (
-                <span className="bg-accent text-bg text-[9px] px-1.5 py-0.5 leading-none">1</span>
-              )}
-            </button>
-            <span className="hidden md:inline font-[var(--font-mono)] text-[10px] text-text-dim tracking-widest">
-              {filteredAndSorted.length} PRODUKTÓW
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {hasAnyFilter && (
-              <button
-                onClick={clearAllFilters}
-                className="hidden md:flex items-center gap-1.5 font-[var(--font-mono)] text-[10px] text-text-dim/50 hover:text-accent transition-colors tracking-widest"
-              >
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                  <path d="M2 2L8 8M8 2L2 8" stroke="currentColor" strokeWidth="1.2"/>
-                </svg>
-                WYCZYŚĆ FILTRY
-              </button>
-            )}
-
-            {/* Sort */}
-            <div className="relative" ref={sortRef}>
-              <button
-                onClick={() => setSortOpen(o => !o)}
-                className={`flex items-center gap-2 border font-[var(--font-mono)] text-[10px] tracking-widest px-3 py-2.5 transition-colors ${
-                  sortOpen
-                    ? 'border-accent/40 text-white'
-                    : 'border-white/15 text-text-dim hover:border-white/25 hover:text-white'
-                }`}
-              >
-                <span className="text-text-dim/50">[</span>
-                <span className={sortBy !== 'name_asc' ? 'text-accent' : ''}>
-                  {SORT_OPTIONS.find(o => o.value === sortBy)?.label}
-                </span>
-                <span className="text-text-dim/50">]</span>
-                <svg
-                  className={`shrink-0 text-text-dim/40 transition-transform duration-200 ${sortOpen ? 'rotate-180' : ''}`}
-                  width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5"
-                >
-                  <path d="M2 4l4 4 4-4"/>
-                </svg>
-              </button>
-
-              {sortOpen && (
-                <div className="absolute right-0 top-full mt-1 z-50 border border-white/15 bg-[#0a0b0a] min-w-full">
-                  {SORT_OPTIONS.map((opt, i) => (
-                    <button
-                      key={opt.value}
-                      onClick={() => { setSortBy(opt.value); setPage(1); setSortOpen(false); }}
-                      className={`w-full text-left flex items-center justify-between gap-4 px-3 py-2 font-[var(--font-mono)] text-[10px] tracking-widest transition-colors ${
-                        i < SORT_OPTIONS.length - 1 ? 'border-b border-white/5' : ''
-                      } ${
-                        sortBy === opt.value
-                          ? 'text-accent bg-accent/5'
-                          : 'text-text-dim hover:text-white hover:bg-white/[0.03]'
-                      }`}
-                    >
-                      {opt.label}
-                      {sortBy === opt.value && <span className="text-accent text-[9px]">▸</span>}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Search */}
-            <div className="relative">
-              <input
-                type="text"
-                value={searchInput}
-                onChange={e => { setSearchInput(e.target.value); setPage(1); }}
-                placeholder="SZUKAJ..."
-                className="bg-transparent border border-white/15 px-3 py-2.5 font-[var(--font-mono)] text-xs text-white placeholder-text-dim/40 tracking-widest focus:outline-none focus:border-accent/40 transition-colors w-24 sm:w-48 md:w-64"
+          {/* Sidebar — category tree + filters (desktop ≥ 1024 px) */}
+          <aside className="hidden lg:block w-64 flex-shrink-0" aria-label="Kategorie i filtry">
+            <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto pr-3 -mr-3 pb-6">
+              <FiltersSidebar
+                tree={tree}
+                counts={categoryCounts}
+                totalCount={products.length}
+                selectedCategory={selectedCategory}
+                onSelectCategory={selectCategory}
+                filters={filters}
+                actions={actions}
+                options={options}
+                activeFilterCount={activeFilterCount}
+                onClearFilters={clearNonCategoryFilters}
               />
-              {searchInput && (
-                <button
-                  onClick={() => { setSearchInput(''); setPage(1); }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-text-dim hover:text-accent transition-colors font-[var(--font-mono)] text-xs"
-                >×</button>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile: categories + filters panel */}
-        {mobilePanelOpen && (
-          <div className="md:hidden mb-6 border border-white/10 p-5 bg-bg/95 space-y-5">
-            <div>
-              <p className="font-[var(--font-mono)] text-[11px] text-text-dim/60 tracking-[0.25em] uppercase pb-2 mb-3 border-b border-white/8">
-                Kategorie
-              </p>
-              {CategoryBar}
-            </div>
-            <div className="h-px bg-white/5" />
-            {FiltersPanel}
-            {hasAnyFilter && (
-              <button
-                onClick={() => { clearAllFilters(); setMobilePanelOpen(false); }}
-                className="w-full font-[var(--font-mono)] text-[10px] text-text-dim/50 hover:text-accent transition-colors tracking-widest py-2 border border-white/10 hover:border-accent/30"
-              >
-                WYCZYŚĆ WSZYSTKIE FILTRY
-              </button>
-            )}
-          </div>
-        )}
-
-        <div className="flex gap-10">
-
-          {/* Sidebar — filters (always visible on desktop) */}
-          <aside className="hidden md:block w-60 flex-shrink-0">
-            <div className="sticky top-24">
-              {FiltersPanel}
             </div>
           </aside>
 
-          {/* Product grid */}
-          <div className="flex-1 min-w-0">
+          {/* Product area */}
+          <div className="flex-1 min-w-0" data-testid="product-area">
+            <div ref={toolbarRef} className="scroll-mt-24 mb-6">
+              <ListingToolbar
+                count={filteredAndSorted.length}
+                searchInput={searchInput}
+                onSearchChange={v => { setSearchInput(v); setPage(1); }}
+                sortBy={sortBy}
+                onSortChange={v => { setSortBy(v); setPage(1); }}
+              />
+            </div>
+
+            <ActiveFilterChips chips={chips} onClearAll={clearAllFilters} />
+
             {paginated.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-32 gap-4">
-                <div className="border border-white/10 p-6">
-                  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" className="text-white/15 mx-auto">
-                    <circle cx="16" cy="16" r="12" stroke="currentColor" strokeWidth="1"/>
-                    <line x1="10" y1="16" x2="22" y2="16" stroke="currentColor" strokeWidth="1"/>
-                  </svg>
-                </div>
-                <p className="font-[var(--font-mono)] text-xs text-text-dim tracking-widest">[ BRAK WYNIKÓW ]</p>
-                {hasAnyFilter && (
+              <div className="flex flex-col items-center justify-center py-28 gap-4 text-center border border-white/10">
+                <p className="text-[18px] text-text font-medium">Brak wyników</p>
+                <p className="text-[14px] text-text-dim max-w-sm">
+                  Żaden produkt nie pasuje do wybranych filtrów. Usuń część filtrów albo zmień frazę.
+                </p>
+                {chips.length > 0 && (
                   <button
-                    onClick={clearNonCategoryFilters}
-                    className="font-[var(--font-mono)] text-[10px] text-accent tracking-widest hover:underline"
+                    type="button"
+                    onClick={clearAllFilters}
+                    className="mt-2 h-10 px-5 bg-accent text-bg text-[13px] font-medium hover:opacity-90 transition-opacity"
                   >
-                    WYCZYŚĆ FILTRY
+                    Wyczyść filtry
                   </button>
                 )}
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
+                <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
                   {paginated.map(p => (
                     <ProductCard key={p.id} product={p} categories={categories} />
                   ))}
                 </div>
 
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-center gap-2 mt-16 pt-8 border-t border-white/10">
+                  <nav aria-label="Paginacja" className="flex items-center justify-center gap-2 mt-16 pt-8 border-t border-white/10">
                     <button
+                      type="button"
                       disabled={page <= 1}
                       onClick={() => setPage(p => p - 1)}
-                      className="font-[var(--font-mono)] text-[10px] text-text-dim hover:text-accent disabled:opacity-20 disabled:cursor-not-allowed transition-colors tracking-widest px-3 py-2"
+                      className={`${PAGER_BUTTON} border-transparent text-text-dim hover:text-text`}
                     >
-                      <span className="hidden sm:inline">← POPRZEDNIA</span>
-                      <span className="sm:hidden">←</span>
+                      <span className="hidden sm:inline">← Poprzednia</span>
+                      <span className="sm:hidden" aria-label="Poprzednia">←</span>
                     </button>
                     <div className="flex gap-1">
                       {Array.from({ length: totalPages }, (_, i) => i + 1)
@@ -827,15 +473,17 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
                         }, [])
                         .map((n, i) =>
                           n === '…' ? (
-                            <span key={`e-${i}`} className="w-8 h-8 flex items-center justify-center font-[var(--font-mono)] text-[10px] text-white/20">…</span>
+                            <span key={`e-${i}`} className="h-9 w-9 flex items-center justify-center text-[13px] text-text-dim">…</span>
                           ) : (
                             <button
+                              type="button"
                               key={n}
+                              aria-current={n === page ? 'page' : undefined}
                               onClick={() => setPage(n as number)}
-                              className={`w-8 h-8 font-[var(--font-mono)] text-[10px] border transition-colors ${
+                              className={`${PAGER_BUTTON} tabular-nums ${
                                 n === page
                                   ? 'border-accent text-accent'
-                                  : 'border-white/15 text-text-dim hover:border-accent/40 hover:text-accent'
+                                  : 'border-white/20 text-text hover:border-white/50'
                               }`}
                             >
                               {n}
@@ -844,20 +492,38 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
                         )}
                     </div>
                     <button
+                      type="button"
                       disabled={page >= totalPages}
                       onClick={() => setPage(p => p + 1)}
-                      className="font-[var(--font-mono)] text-[10px] text-text-dim hover:text-accent disabled:opacity-20 disabled:cursor-not-allowed transition-colors tracking-widest px-3 py-2"
+                      className={`${PAGER_BUTTON} border-transparent text-text-dim hover:text-text`}
                     >
-                      <span className="hidden sm:inline">NASTĘPNA →</span>
-                      <span className="sm:hidden">→</span>
+                      <span className="hidden sm:inline">Następna →</span>
+                      <span className="sm:hidden" aria-label="Następna">→</span>
                     </button>
-                  </div>
+                  </nav>
                 )}
               </>
             )}
           </div>
         </div>
       </div>
+
+      {/* Mobile (< 1024 px): sticky bottom bar + bottom sheet with the same tree and filters */}
+      <MobileFilterSheet
+        tree={tree}
+        counts={categoryCounts}
+        totalCount={products.length}
+        selectedCategory={selectedCategory}
+        onSelectCategory={selectCategory}
+        filters={filters}
+        actions={actions}
+        options={options}
+        activeFilterCount={activeFilterCount + (selectedCategory !== null ? 1 : 0)}
+        resultCount={filteredAndSorted.length}
+        sortBy={sortBy}
+        onSortChange={v => { setSortBy(v); setPage(1); }}
+        onClearAll={clearAllFilters}
+      />
     </>
   );
 }

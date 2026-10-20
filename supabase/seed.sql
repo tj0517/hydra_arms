@@ -43,14 +43,20 @@ INSERT INTO shop_categories (id, name, parent_id, inventory_id) VALUES
 INSERT INTO shop_categories (id, name, parent_id, inventory_id) VALUES
   (12002, '1.1 Broń Krótka',             12001, 35743);
 
+-- Working root "00. DO PRZYPISANIA" (HA-2.30): the importer's bucket for products it
+-- cannot map. Hidden from the public category tree (isWorkingCategory, decision tj
+-- 2026-10-19 D1 A); its products stay visible under "Wszystkie" and in search.
+INSERT INTO shop_categories (id, name, parent_id, inventory_id) VALUES
+  (12000, '00. DO PRZYPISANIA',          NULL,  35743);
+
 -- ── Products ──────────────────────────────────────────────────────────────────
 -- product_type distribution:
---   standard (15):      everyday tactical gear, no shipping restrictions
+--   standard (16):      everyday tactical gear, no shipping restrictions (one in the "00." root)
 --   age_restricted (3): weapons-related; age_min=18 → mustPickup() = true
 --   pickup_only (2):    delivery_allowed=false → mustPickup() = true regardless of age
 --
 -- source_warehouse distribution:
---   'own' (10):   item physically in Hydra Arms warehouse
+--   'own' (11):   item physically in Hydra Arms warehouse
 --   'sharg' (10): must be sourced from Sharg supplier before shipping
 
 INSERT INTO shop_products
@@ -132,6 +138,19 @@ VALUES
   -- ends at root "01. BROŃ PALNA" → pickup-only by category alone (defence in depth)
   (312001, 35743, 'TS-S01-001', '5901234567099', 'Produkt testowy sekcji 01 (bez flag)',
    100.00, 23, 10, 0.10, 12002, 'standard', TRUE, 'own', 0, FALSE, TRUE, 'Test');
+
+-- ── working root "00." (HA-2.30) ─────────────────────────────────────────
+-- Active, shippable product sitting in the hidden "00. DO PRZYPISANIA" root:
+-- the listing must show it without a category filter while the tree omits "00.".
+INSERT INTO shop_products
+  (id, inventory_id, sku, ean, name,
+   price, tax_rate, stock, weight,
+   category_id, product_type, is_active,
+   source_warehouse,
+   age_min, requires_license, delivery_allowed, brand)
+VALUES
+  (312002, 35743, 'TS-S00-001', '5901234567098', 'Produkt testowy do przypisania',
+   50.00, 23, 5, 0.10, 12000, 'standard', TRUE, 'own', 0, FALSE, TRUE, 'Test');
 
 -- ── Test helper ───────────────────────────────────────────────────────────────
 -- Wraps has_function_privilege so permission tests can verify REVOKE without
