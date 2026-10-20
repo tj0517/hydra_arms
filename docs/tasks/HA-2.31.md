@@ -1,18 +1,18 @@
 ---
 id: HA-2.31
 title: Karta produktu — packshot w całości, jedno CTA, cena przekreślona, linia stanu i dostawy, tagi pozwolenie/18+
-status: todo
+status: done
 difficulty: M
-model: null
+model: claude-fable-5-1
 model_approved: null
 effort: null
-branch: null
+branch: feat/ha-2.31-product-card
 due: null
 depends_on: [HA-2.30]
 blocked_by_questions: []
 touches_db: false
 touches_prod: false
-pr: null
+pr: 52
 ---
 
 ## Cel
@@ -52,3 +52,9 @@ Karta produktu na listingu i w „powiązanych” na PDP ma dziś dwa równorzę
 
 ## Notatki z realizacji
 - 2026-10-19 tj (wf-plan): zadanie wydzielone z pakietu UI listingu; zależy od HA-2.30 (wspólne etykiety kategorii i tokeny typografii).
+- 2026-10-20 agent: sesja na Fable 5.1 (claude-fable-5-1). Preflight OK (SUPABASE_TARGET=local, hook, HA-2.30 na origin/main). Brak Playwright MCP na WSL — zrzuty z page.screenshot() w tests/shop/product-card.spec.ts do .playwright-mcp/ha-2.31-*.png.
+- 2026-10-20 tj: STOP 1 zaakceptowany. D1 — linia stanu dokładnie wg tabeli (5 wariantów): „Niedostępny” / „Tylko odbiór osobisty w Krakowie” / „Ostatnie sztuki · tylko odbiór osobisty w Krakowie” / „Dostępny · wysyłka kurierem” / „Ostatnie sztuki · wysyłka kurierem”; etykiety przycisku „Do koszyka” / „Dodano do koszyka” / „Limit w koszyku” przyjęte.
+- 2026-10-20 tj: D2 — produkt ze stanem 0 trafia do seeda (same dane, bez zmiany schematu); służy testowi „Niedostępny” i red proof 2; jeśli odblokowuje odłożony test cart.spec.ts:52, włączyć go i odnotować w raporcie, nie szerzej.
+- 2026-10-20 tj: D3 — karta mówi „wysyłka kurierem” dla produktów sekcji 01/02, a checkout odmawia kuriera przez hydra_section(); mustPickup() NIE zmieniać w tym zadaniu; wpis w docs/deferred-tasks.md jako bloker HA-2.09 (osobne zadanie S: jedno źródło prawdy).
+- 2026-10-20 tj: D4 — seed dostaje jeden produkt z images wskazującym na lokalny plik pod public/ (białe tło, bez zewnętrznych URL), zrzut karty desktop + mobile w dowodach. Znana luka: sekcje sklepu z Sanity (product picker) nierenderowalne lokalnie — w raporcie jako niezweryfikowane lokalnie.
+- 2026-10-20 tj: odbiór (PR #52). Udowodnione: jeden CTA bez zagnieżdżenia (link + przycisk jako rodzeństwo, Tab do obu), packshot object-contain 1:1 na jasnym tle (test computed style + seed 313003), przekreślenie tylko przy price_compare > price (+ red proof), 5 wariantów linii stanu, tagi pełnymi słowami (+ red proof), cart.spec bez test.skip. Niezweryfikowane lokalnie: sekcje sklepu z Sanity. Model: Fable zamiast Sonnet (M). Dalej: mustPickup() ↔ hydra_section() jako zadanie S przed HA-2.09 (deferred); nakładanie pływającego koszyka na mobile → HA-2.32.

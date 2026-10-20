@@ -52,20 +52,25 @@ test.describe('Cart', () => {
   test('out-of-stock product cannot be added', async ({ page }) => {
     const res = await page.request.get('/api/shop/products?page=1');
     const { products } = await res.json();
+    // Seed has one sold-out product since HA-2.31 (313002) — no skip escape hatch.
     const outOfStock = products.find((p: { stock: number }) => p.stock === 0);
-    if (!outOfStock) { test.skip(); return; }
+    expect(outOfStock, 'seed must contain a product with stock = 0').toBeTruthy();
 
     await page.goto(`/sklep/${outOfStock.id}`, { waitUntil: 'domcontentloaded' });
     await hideBanner(page);
-    await page.waitForTimeout(1000);
 
-    const addBtn = page.getByRole('button', { name: /DODAJ DO KOSZYKA/i });
-    // Detail page shows "PRODUKT NIEDOSTĘPNY" text and disables the button
-    const oosText = page.getByText(/PRODUKT NIEDOSTĘPNY/i);
-
-    const isDisabled = await addBtn.isDisabled().catch(() => false);
-    const hasOos = await oosText.isVisible().catch(() => false);
-    expect(isDisabled || hasOos).toBe(true);
+    // Detail page shows "PRODUKT NIEDOSTĘPNY" and renders the CTA disabled as "[ BRAK W MAGAZYNIE ]"
+    await expect(page.getByText(/PRODUKT NIEDOSTĘPNY/i)).toBeVisible({ timeout: 10_000 });
+    const addBtn = page.getByRole('button', { name: /BRAK W MAGAZYNIE|DODAJ DO KOSZYKA/i });
+    await expect(addBtn).toBeDisabled();
+    await addBtn.click({ force: true }).catch(() => null);
+    // CartProvider may persist an empty cart ("[]") on hydration — the cart must simply hold nothing
+    const items = await page.evaluate(() => {
+      const raw = localStorage.getItem('hydra-cart');
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : Object.values(parsed);
+    });
+    expect(items).toEqual([]);
   });
 
   test('adding same product twice increases quantity', async ({ page }) => {
@@ -114,29 +119,24 @@ test.describe('Cart', () => {
     await dismissCookies(page);
     await page.goto('/sklep', { waitUntil: 'domcontentloaded' });
     await hideBanner(page);
-    await page.waitForSelector('a[href^="/sklep/"]', { timeout: 20_000 });
+    await page.getByTestId('product-card').first().waitFor({ timeout: 20_000 });
 
-    const cards = page.locator('a[href^="/sklep/"]');
-    const cardCount = await cards.count();
-    let clicked = false;
+    // HA-2.31: one "Do koszyka" button per card (visible text, not a title attribute).
+    // Click the first enabled one — the seed has in-stock products on page 1.
+    const addBtn = page
+      .getByTestId('product-area')
+      .getByTestId('product-card')
+      .getByRole('button', { name: 'Do koszyka' })
+      .and(page.locator('button:enabled'))
+      .first();
+    await expect(addBtn).toBeVisible({ timeout: 10_000 });
+    await addBtn.click();
 
-    for (let i = 0; i < Math.min(cardCount, 8); i++) {
-      const card = cards.nth(i);
-      const addBtn = card.locator('button').filter({ hasText: 'DODAJ DO KOSZYKA' });
-      if (await addBtn.isEnabled().catch(() => false)) {
-        await addBtn.click();
-        clicked = true;
-        break;
-      }
-    }
-
-    if (!clicked) { test.skip(); return; }
-
-    await page.waitForTimeout(300);
+    await expect(page.getByRole('button', { name: 'Dodano do koszyka' }).first()).toBeVisible();
     const cart = await page.evaluate(() => localStorage.getItem('hydra-cart'));
     expect(cart).not.toBeNull();
     const parsed = JSON.parse(cart!);
     const items = Array.isArray(parsed) ? parsed : Object.values(parsed);
-    expect(items.length).toBeGreaterThan(0);
+    expect(items.length).toBe(1);
   });
 });
