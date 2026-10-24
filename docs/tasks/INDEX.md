@@ -24,7 +24,7 @@ Etap 1: bezpieczny fundament (audyt 2026-09-22). Etap 2: płatności i uruchomie
 | HA-2.06 | Compliance — wymuszenie odbioru osobistego (pozwolenie, rejestracja, 18+) | done | M | HA-1.06, HA-2.17, HA-2.29 | — | — |
 | HA-2.07 | Maile — potwierdzenie zamówienia i płatności | done | M | HA-2.03 | — | — |
 | HA-2.08 | Tryb weryfikacji P24 — mock, telefon, strony prawne | done | M | HA-2.03, HA-2.07, HA-2.16 | — | — |
-| HA-2.09 | Start sprzedaży — przełączenie na produkcję | todo | M | HA-1.02, HA-1.03, HA-1.07, HA-2.02, HA-2.03, HA-2.04, HA-2.05, HA-2.06, HA-2.07, HA-2.08, HA-2.15, HA-2.16, HA-2.19, HA-2.20, HA-2.21, HA-2.23 | — | — |
+| HA-2.09 | Start sprzedaży — przełączenie na produkcję | todo | M | HA-1.02, HA-1.03, HA-1.07, HA-2.02, HA-2.03, HA-2.04, HA-2.05, HA-2.06, HA-2.07, HA-2.08, HA-2.15, HA-2.16, HA-2.19, HA-2.20, HA-2.21, HA-2.23, HA-2.35 | — | — |
 | HA-2.10 | Filtry katalogu dla podkategorii P1 | done | L | HA-2.04 | — | — |
 | HA-2.11 | Spechurt — podgląd i walidacja na aktualnym feedzie z serwera | done | S | HA-2.04 | — | — |
 | HA-2.12 | Kategoryzacja Kolby — reguły do drzewa Hydry | done | L | HA-2.04 | — | — |
@@ -49,3 +49,6 @@ Etap 1: bezpieczny fundament (audyt 2026-09-22). Etap 2: płatności i uruchomie
 | HA-2.31 | Karta produktu — packshot w całości, jedno CTA, cena przekreślona, linia stanu i dostawy, tagi pozwolenie/18+ | done | M | HA-2.30 | — | feat/ha-2.31-product-card, PR #52 |
 | HA-2.32 | Header sklepu — stały link Sklep, wyszukiwarka w headerze na /sklep, breadcrumby na PDP, naprawa CTA „Sklep” na home | done | S | HA-2.30 | feat/ha-2.32-shop-header, PR #53 | — |
 | HA-2.33 | Pusty feed = błąd importu (z ponowną próbą); harmonogram Spechurta po oknie regeneracji | done | S | HA-2.15 | feat/ha-2.33-empty-feed-retry, PR #55 | — |
+| HA-2.34 | Migracja 019 — listing w Postgresie: shop_listing, shop_tree, kolumna pickup_only, indeksy, wyszukiwarka trgm+unaccent | todo | L | — | — | — |
+| HA-2.35 | /sklep liczony na serwerze — URL jako stan (page, spec), SklepClient bez filtrowania, cache per kombinacja filtrów | todo | L | HA-2.34 | — | — |
+| HA-2.36 | Reszta bez pełnej listy — bloki Sanity na małych zapytaniach, picker z ?q= i ?ids=, sitemap pętlą, usunięcie fetchShopData | todo | M | HA-2.35 | — | — |

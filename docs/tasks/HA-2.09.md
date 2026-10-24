@@ -8,7 +8,7 @@ model_approved: null
 effort: null
 branch: null
 due: null
-depends_on: [HA-1.02, HA-1.03, HA-1.07, HA-2.02, HA-2.03, HA-2.04, HA-2.05, HA-2.06, HA-2.07, HA-2.08, HA-2.15, HA-2.16, HA-2.19, HA-2.20, HA-2.21, HA-2.23]
+depends_on: [HA-1.02, HA-1.03, HA-1.07, HA-2.02, HA-2.03, HA-2.04, HA-2.05, HA-2.06, HA-2.07, HA-2.08, HA-2.15, HA-2.16, HA-2.19, HA-2.20, HA-2.21, HA-2.23, HA-2.35]
 blocked_by_questions: []
 touches_db: true
 touches_prod: true
@@ -50,3 +50,4 @@ Po akceptacji P24 sklep ma zacząć realną sprzedaż. To moment, w którym zam�
 ## Notatki z realizacji
 - 2026-10-06 tj: dopisane zależności od HA-2.16, 2.19, 2.20, 2.21, 2.23 (plan „większość projektu na wartościach wstępnych”).
 - 2026-10-19 tj (poza zadaniem, odczyt Vercela i Supabase): w env Production **nigdy nie było `SUPABASE_SERVICE_ROLE_KEY`** — `/api/shop/sync`, `/api/shop/orders/sync` i checkout padały na prod pustym 500 (`Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY` w Runtime Logs); 592 produkty w `shop_products` pochodziły z lokalnego `baselinker-sync.ts` na katalogu sandboxa 107789. Zrobione 2026-10-19: `SUPABASE_SERVICE_ROLE_KEY` i `SYNC_SECRET` dodane; `BASELINKER_TOKEN` → konto klienta, `BASELINKER_INVENTORY_ID=119068`, `BASELINKER_PRICE_GROUP=104511` (nowa; bez niej sklep brał „pierwszą grupę” z produktu); Redeploy. Sandbox usunięty z Supabase (592 produkty, 4 zamówienia testowe z 22.08 — `orders` puste). 5 084 produkty `auto` z ceną > 0 otagowane `approved` (`scripts/bl-approve.ts`). **Nadal nie w Vercelu, do tego zadania:** `BASELINKER_ORDER_SOURCE_ID`, `BASELINKER_STATUS_*` (push zamówień pomijany), `BASELINKER_WAREHOUSE_HYDRA`. Kryterium do dopisania przy go-live: odczyt listy env Production vs `.env.local.example` — nazwy, nie wartości.
+- 2026-10-24 tj (wf-plan): zależność od HA-2.35 — po syncu z katalogu 119068 dzisiejszy listing pokaże 1 000 z 5 084 produktów; start bez listingu server-side odrzucony (D2 = A).
