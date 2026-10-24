@@ -73,3 +73,4 @@ Dzisiejszy listing (`fetchShopData`) ściąga cały katalog do przeglądarki: za
 - 2026-10-24 tj (wf-plan): `revalidateTag(SHOP_CACHE_TAG)` po płatności już jest w `markOrderPaid.ts` — nic do zrobienia.
 - 2026-10-24 tj: liczniki wg B — każdy licznik liczony ze wszystkimi pozostałymi filtrami (dziś specs ignorują markę i dostawę, brands ignorują specs); HA-2.35 ma to w kryteriach jako świadomą zmianę, nie regres.
 - 2026-10-24 tj: STOP 1 — sygnatury `shop_listing(bigint[],text,boolean,numeric,numeric,text,text,jsonb,text,integer)` i `shop_tree()` zatwierdzone w wersji pokazanej (bez DEFAULT-ów; `p_q` przycięte, `%`/`_` dosłownie; nieznane `p_sort` → `name_asc`; `p_page` NULL/< 1 → 1). STOP 2 — kolumna `pickup_only` zatwierdzona w wersji pokazanej (4 kolumny źródłowe NOT NULL lokalnie i na prod).
+- 2026-10-24 tj: 286 ms = zimny start; funkcja w sesji 74/42 ms, ciało 47 ms (temp 908), wąska wersja 28 ms bez temp → 020 w tym PR (wariant A), bez D i bez work_mem
