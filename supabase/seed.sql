@@ -175,6 +175,52 @@ VALUES
     79.00, NULL, 23, 12, 0.15, 2005, 'standard', TRUE, 'own', 0, FALSE, TRUE, 'Test',
    '{"1": "/img/seed/packshot-test.png"}'::jsonb);
 
+-- ── Listing in Postgres (HA-2.34) ────────────────────────────────────────────
+-- Seed data only, no schema change. Exercised by tests/shop/listing-rpc.spec.ts:
+--   4003 "Lunety i lornetki": 304002 + 314001..314003 carry features → two keys with
+--        ≥ 2 values (Powiększenie, Średnica obiektywu) and one single-value key
+--        (Wodoodporność, must not be offered); brands Vortex Optics ×3, Delta Optical ×1
+--   314001: Polish diacritics in the name (search without diacritics)
+--   314002/314003: identical name → tiebreaker by id
+--   314004: "Ćwiek …", stock 1, reserved by the paid seed order below → listed stock 0
+--   314005: "Czarny proch …" — sorts before "Ćwiek" in Polish order (C < Ć < D;
+--           a root/English collation puts "Ćwiek" first); price NULL → NULLS LAST;
+--           licence + no delivery → pickup_only
+-- Only four new shippable products: listing.spec.ts compares page counts (max 24)
+-- of the wysylka/odbior filters with the total, so shippable must stay ≤ 24.
+INSERT INTO shop_products
+  (id, inventory_id, sku, ean, name,
+   price, tax_rate, stock, weight,
+   category_id, product_type, is_active,
+   source_warehouse,
+   age_min, requires_license, delivery_allowed, brand, features)
+VALUES
+  (314001, 35743, 'TS-LUN-001', '5901234567201', 'Luneta celownicza Łowca 3-9x40 z podświetlaną siatką',
+   1290.00, 23, 4, 0.55, 4003, 'standard', TRUE, 'sharg', 0, FALSE, TRUE, 'Delta Optical',
+   '{"Powiększenie": "3-9x", "Średnica obiektywu": "40 mm", "Wodoodporność": "IPX7"}'::jsonb),
+  (314002, 35743, 'TS-DAL-001', '5901234567202', 'Dalmierz laserowy 800 m',
+   899.00, 23, 3, 0.20, 4003, 'standard', TRUE, 'sharg', 0, FALSE, TRUE, 'Vortex Optics',
+   '{"Powiększenie": "6x", "Średnica obiektywu": "25 mm", "Wodoodporność": "IPX7"}'::jsonb),
+  (314003, 35743, 'TS-DAL-002', '5901234567203', 'Dalmierz laserowy 800 m',
+   899.00, 23, 2, 0.20, 4003, 'standard', TRUE, 'sharg', 0, FALSE, TRUE, 'Vortex Optics',
+   '{"Powiększenie": "6x", "Średnica obiektywu": "25 mm", "Wodoodporność": "IPX7"}'::jsonb),
+  (314004, 35743, 'TS-CWI-001', '5901234567204', 'Ćwiek mosiężny do pasa',
+     9.00, 23, 1, 0.01, 2005, 'standard', TRUE, 'own', 0, FALSE, TRUE, 'Test', NULL),
+  (314005, 35743, 'TS-PRO-001', '5901234567205', 'Czarny proch strzelniczy 250 g',
+     NULL, 23, 6, 0.25, 7004, 'pickup_only', TRUE, 'own', 18, TRUE, FALSE, 'Test', NULL);
+
+UPDATE shop_products
+   SET features = '{"Powiększenie": "10x", "Średnica obiektywu": "42 mm", "Wodoodporność": "IPX7"}'::jsonb
+ WHERE id = 304002;
+
+-- Paid order not yet in BaseLinker → reserves the only unit of 314004.
+-- is_test = TRUE and no shipping address: the orders sync never pushes it
+-- (it would set baselinker_order_id and release the reservation).
+INSERT INTO orders (id, status, is_test, baselinker_order_id)
+VALUES ('00000000-0000-4000-8000-000000002034', 'paid', TRUE, NULL);
+INSERT INTO order_items (order_id, product_id, quantity, unit_price)
+VALUES ('00000000-0000-4000-8000-000000002034', 314004, 1, 9.00);
+
 -- ── Test helper ───────────────────────────────────────────────────────────────
 -- Wraps has_function_privilege so permission tests can verify REVOKE without
 -- calling the revoked function directly (PG17.6.1.111 Docker crashes with SIGSEGV

@@ -84,6 +84,8 @@ export interface Database {
           shipping_class: string;
           // ── Filters (migration 014) ──────────────────────────────────────
           brand: string | null;
+          // ── Listing (migration 019) — GENERATED, mirror of mustPickup() ──
+          pickup_only: boolean;
         };
         Insert: {
           id: number;
@@ -128,6 +130,7 @@ export interface Database {
           dimensions?: { l: number; w: number; h: number } | null;
           shipping_class?: string;
           brand?: string | null;
+          pickup_only?: never;
         };
         Update: {
           id?: number;
@@ -172,6 +175,7 @@ export interface Database {
           dimensions?: { l: number; w: number; h: number } | null;
           shipping_class?: string;
           brand?: string | null;
+          pickup_only?: never;
         };
         Relationships: [];
       };
@@ -468,6 +472,25 @@ export interface Database {
         Args: { p_category_id: number };
         Returns: string | null;
       };
+      shop_listing: {
+        Args: {
+          p_category_ids: number[] | null;
+          p_q: string | null;
+          p_in_stock: boolean | null;
+          p_min: number | null;
+          p_max: number | null;
+          p_brand: string | null;
+          p_delivery: 'wysylka' | 'odbior' | null;
+          p_specs: Record<string, string[]> | null;
+          p_sort: 'name_asc' | 'name_desc' | 'price_asc' | 'price_desc' | 'newest' | null;
+          p_page: number | null;
+        };
+        Returns: ShopListingResult;
+      };
+      shop_tree: {
+        Args: Record<string, never>;
+        Returns: ShopTreeResult;
+      };
       mark_order_paid: {
         Args: { p_order_id: string };
         Returns: boolean;
@@ -494,6 +517,28 @@ export interface Database {
 
 export type ShopProduct = Database['public']['Tables']['shop_products']['Row'];
 export type ShopCategory = Database['public']['Tables']['shop_categories']['Row'];
+
+/** One shop_listing card: PUBLIC_PRODUCT_COLUMNS without description; stock is net of reservations. */
+export type ShopListingItem = Omit<ShopProduct,
+  | 'description' | 'inventory_id' | 'synced_at' | 'connector' | 'connector_product_id'
+  | 'connector_sku' | 'primary_source' | 'review_flags' | 'completeness_score'
+  | 'notes_internal' | 'sync_locked_fields' | 'price_purchase' | 'pickup_only'>;
+
+/** shop_listing() result (migration 019). */
+export interface ShopListingResult {
+  items: ShopListingItem[];
+  total: number;
+  brands: Array<{ brand: string; count: number }>;
+  specs: Array<{ key: string; values: Array<{ val: string; count: number }> }>;
+  page: number;
+  page_size: number;
+}
+
+/** shop_tree() result (migration 019): count = active products directly in the category. */
+export interface ShopTreeResult {
+  categories: Array<{ id: number; name: string; parent_id: number | null; count: number }>;
+  price: { min: number | null; max: number | null };
+}
 export type CartItem = Database['public']['Tables']['cart_items']['Row'];
 export type Order = Database['public']['Tables']['orders']['Row'];
 export type OrderItem = Database['public']['Tables']['order_items']['Row'];
