@@ -1,18 +1,18 @@
 ---
 id: HA-2.34
 title: Migracja 019 — listing w Postgresie: shop_listing, shop_tree, kolumna pickup_only, indeksy, wyszukiwarka trgm+unaccent
-status: todo
+status: done
 difficulty: L
-model: null
+model: claude-opus-5-5
 model_approved: null
-effort: null
-branch: null
+effort: high
+branch: feat/ha-2.34-shop-listing
 due: null
 depends_on: []
 blocked_by_questions: []
 touches_db: true
 touches_prod: true
-pr: null
+pr: 57
 ---
 
 ## Cel
@@ -71,3 +71,7 @@ Dzisiejszy listing (`fetchShopData`) ściąga cały katalog do przeglądarki: za
 ## Notatki z realizacji
 - 2026-10-24 tj (wf-plan): D1 = A — `pickup_only` jako kolumna GENERATED (sync nie zapisuje `product_type`, więc kolumna liczona w syncu odpadła). Reguła „tylko odbiór” zostaje w dwóch językach (TS + SQL), spójność pilnuje test porównawczy.
 - 2026-10-24 tj (wf-plan): `revalidateTag(SHOP_CACHE_TAG)` po płatności już jest w `markOrderPaid.ts` — nic do zrobienia.
+- 2026-10-24 tj: liczniki wg B — każdy licznik liczony ze wszystkimi pozostałymi filtrami (dziś specs ignorują markę i dostawę, brands ignorują specs); HA-2.35 ma to w kryteriach jako świadomą zmianę, nie regres.
+- 2026-10-24 tj: STOP 1 — sygnatury `shop_listing(bigint[],text,boolean,numeric,numeric,text,text,jsonb,text,integer)` i `shop_tree()` zatwierdzone w wersji pokazanej (bez DEFAULT-ów; `p_q` przycięte, `%`/`_` dosłownie; nieznane `p_sort` → `name_asc`; `p_page` NULL/< 1 → 1). STOP 2 — kolumna `pickup_only` zatwierdzona w wersji pokazanej (4 kolumny źródłowe NOT NULL lokalnie i na prod).
+- 2026-10-24 tj: 286 ms = zimny start; funkcja w sesji 74/42 ms, ciało 47 ms (temp 908), wąska wersja 28 ms bez temp → 020 w tym PR (wariant A), bez D i bez work_mem
+- 2026-10-24 tj: odbiór PR #57 — 11/11 listing-rpc.spec.ts na 019+020 (red proofs: uprawnienia, rezerwacja, metaznaki LIKE, pickup_only bez syncu, identyczny JSON 019=020 w 6 scenariuszach); prod = 019+020 wgrane ręcznie przez tj; EXPLAIN na prod: 019 74/42 ms z temp 908, 020 52 ms bez temp (zimny start ~300–370 ms raz na sesję); checkout.spec:214 flaky (sprzed zadania) → deferred.
