@@ -181,7 +181,9 @@ VALUES
 --        ≥ 2 values (Powiększenie, Średnica obiektywu) and one single-value key
 --        (Wodoodporność, must not be offered); brands Vortex Optics ×3, Delta Optical ×1
 --   314001: Polish diacritics in the name (search without diacritics)
---   314002/314003: identical name → tiebreaker by id
+--   314002/314003: identical name → tiebreaker by id; 314003 sold out (stock 0) so
+--           cart.spec.ts still finds a stock-0 product on page 1 of /api/shop/products
+--           (name order — the new C/Ć/D names pushed 313002 to page 2)
 --   314004: "Ćwiek …", stock 1, reserved by the paid seed order below → listed stock 0
 --   314005: "Czarny proch …" — sorts before "Ćwiek" in Polish order (C < Ć < D;
 --           a root/English collation puts "Ćwiek" first); price NULL → NULLS LAST;
@@ -202,7 +204,7 @@ VALUES
    899.00, 23, 3, 0.20, 4003, 'standard', TRUE, 'sharg', 0, FALSE, TRUE, 'Vortex Optics',
    '{"Powiększenie": "6x", "Średnica obiektywu": "25 mm", "Wodoodporność": "IPX7"}'::jsonb),
   (314003, 35743, 'TS-DAL-002', '5901234567203', 'Dalmierz laserowy 800 m',
-   899.00, 23, 2, 0.20, 4003, 'standard', TRUE, 'sharg', 0, FALSE, TRUE, 'Vortex Optics',
+   899.00, 23, 0, 0.20, 4003, 'standard', TRUE, 'sharg', 0, FALSE, TRUE, 'Vortex Optics',
    '{"Powiększenie": "6x", "Średnica obiektywu": "25 mm", "Wodoodporność": "IPX7"}'::jsonb),
   (314004, 35743, 'TS-CWI-001', '5901234567204', 'Ćwiek mosiężny do pasa',
      9.00, 23, 1, 0.01, 2005, 'standard', TRUE, 'own', 0, FALSE, TRUE, 'Test', NULL),

@@ -1,7 +1,7 @@
 ---
 id: HA-2.34
 title: Migracja 019 — listing w Postgresie: shop_listing, shop_tree, kolumna pickup_only, indeksy, wyszukiwarka trgm+unaccent
-status: in_progress
+status: review
 difficulty: L
 model: claude-opus-5-5
 model_approved: null
