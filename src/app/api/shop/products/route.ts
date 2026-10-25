@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { PUBLIC_PRODUCT_COLUMNS } from '@/lib/shop/fetchProducts';
+import { PUBLIC_PRODUCT_COLUMNS } from '@/lib/shop/shopCache';
 import type { ProductType } from '@/lib/supabase/types';
 
 const PAGE_SIZE = 24;

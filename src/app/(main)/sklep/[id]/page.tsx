@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import ProductDetailClient from '@/components/shop/ProductDetailClient';
 import { createPublicClient } from '@/lib/supabase/public';
-import { PUBLIC_PRODUCT_COLUMNS } from '@/lib/shop/fetchProducts';
+import { PUBLIC_PRODUCT_COLUMNS } from '@/lib/shop/shopCache';
 import type { ShopProduct, ShopCategory } from '@/lib/supabase/types';
 
 async function fetchProduct(id: number): Promise<{ product: ShopProduct; categories: ShopCategory[]; related: ShopProduct[] } | null> {

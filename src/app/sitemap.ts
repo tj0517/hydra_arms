@@ -18,6 +18,26 @@ const staticRoutes: MetadataRoute.Sitemap = [
   { url: `${BASE_URL}/regulamin`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.3 },
 ]
 
+// PostgREST caps a response at 1 000 rows, so page through every active product.
+const PRODUCT_PAGE = 1000
+
+async function fetchActiveProductIds(): Promise<{ id: number; updated_at: string | null }[]> {
+  const sb = createPublicClient()
+  if (!sb) return []
+  const all: { id: number; updated_at: string | null }[] = []
+  for (let from = 0; ; from += PRODUCT_PAGE) {
+    const { data, error } = await sb
+      .from('shop_products')
+      .select('id, updated_at')
+      .eq('is_active', true)
+      .order('id', { ascending: true })
+      .range(from, from + PRODUCT_PAGE - 1)
+    if (error) throw new Error(`sitemap products failed: ${error.message}`)
+    all.push(...(data ?? []))
+    if (!data || data.length < PRODUCT_PAGE) return all
+  }
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [newsPosts, blogPosts, products] = await Promise.allSettled([
     sanityFetch<{ slug: string; publishedAt?: string }[]>({
@@ -26,16 +46,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     sanityFetch<{ slug: string; publishedAt?: string }[]>({
       query: groq`*[_type == "blogPost"] | order(publishedAt desc) { "slug": slug.current, publishedAt }`,
     }),
-    (async () => {
-      const sb = createPublicClient()
-      if (!sb) return []
-      const { data } = await sb
-        .from('shop_products')
-        .select('id, updated_at')
-        .eq('is_active', true)
-        .limit(500)
-      return data ?? []
-    })(),
+    fetchActiveProductIds(),
   ])
 
   const newsRoutes: MetadataRoute.Sitemap =
@@ -60,7 +71,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const productRoutes: MetadataRoute.Sitemap =
     products.status === 'fulfilled' && Array.isArray(products.value)
-      ? (products.value as { id: number; updated_at?: string }[]).map((p) => ({
+      ? products.value.map((p) => ({
           url: `${BASE_URL}/sklep/${p.id}`,
           lastModified: p.updated_at ? new Date(p.updated_at) : new Date(),
           changeFrequency: 'weekly' as const,

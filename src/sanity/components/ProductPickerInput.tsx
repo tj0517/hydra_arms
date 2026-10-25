@@ -13,6 +13,10 @@ interface ProductItem {
   inStock: boolean
 }
 
+const MIN_QUERY = 2
+const MAX_RESULTS = 50
+const SEARCH_DEBOUNCE_MS = 300
+
 export function ProductPickerInput(props: ArrayOfPrimitivesInputProps) {
   const { value, onChange, readOnly } = props
 
@@ -32,22 +36,73 @@ export function ProductPickerInput(props: ArrayOfPrimitivesInputProps) {
     setSelected(new Set(initial.map(String)))
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Product list ─────────────────────────────────────────────────────────────
+  // ── Products: search results + names of selected items (HA-2.36) ──────────
+  // Never the whole catalogue: ?ids= loads the selected items once on mount,
+  // ?q= (debounced, min 2 chars, max 50 results) feeds the list below.
 
-  const [products, setProducts] = useState<ProductItem[]>([])
+  const [known, setKnown] = useState<Map<string, ProductItem>>(new Map())
+  const [results, setResults] = useState<ProductItem[]>([])
   const [search, setSearch] = useState('')
-  const [loading, setLoading] = useState(true)
+  const [loadingSelected, setLoadingSelected] = useState(false)
+  const [searching, setSearching] = useState(false)
   const [apiError, setApiError] = useState(false)
 
+  const remember = (items: ProductItem[]) =>
+    setKnown((prev) => {
+      const next = new Map(prev)
+      for (const p of items) next.set(String(p.id), p)
+      return next
+    })
+
   useEffect(() => {
-    fetch('/api/shop/products-list')
+    const ids = ((value as unknown[] | undefined) ?? []).map(String).filter((s) => /^\d+$/.test(s))
+    if (!ids.length) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot load on mount
+    setLoadingSelected(true)
+    fetch(`/api/shop/products-list?ids=${ids.join(',')}`)
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`)
         return r.json()
       })
-      .then((data: ProductItem[]) => { setProducts(data); setLoading(false) })
-      .catch(() => { setApiError(true); setLoading(false) })
-  }, [])
+      .then((data: ProductItem[]) => remember(data))
+      .catch(() => setApiError(true))
+      .finally(() => setLoadingSelected(false))
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const term = search.trim()
+
+  useEffect(() => {
+    if (term.length < MIN_QUERY) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- clear stale results
+      setResults([])
+      setSearching(false)
+      return
+    }
+    const ctrl = new AbortController()
+    setSearching(true)
+    const timer = setTimeout(() => {
+      fetch(`/api/shop/products-list?q=${encodeURIComponent(term)}`, { signal: ctrl.signal })
+        .then((r) => {
+          if (!r.ok) throw new Error(`HTTP ${r.status}`)
+          return r.json()
+        })
+        .then((data: ProductItem[]) => {
+          setResults(data)
+          remember(data)
+          setApiError(false)
+          setSearching(false)
+        })
+        .catch(() => {
+          if (ctrl.signal.aborted) return
+          setApiError(true)
+          setSearching(false)
+        })
+    }, SEARCH_DEBOUNCE_MS)
+    return () => {
+      clearTimeout(timer)
+      ctrl.abort()
+    }
+  }, [term])
 
   // ── Toggle ───────────────────────────────────────────────────────────────────
 
@@ -90,14 +145,6 @@ export function ProductPickerInput(props: ArrayOfPrimitivesInputProps) {
       maximumFractionDigits: 2,
     }).format(n)
 
-  const productMap = new Map(products.map((p) => [String(p.id), p]))
-
-  const filtered = products.filter(
-    (p) =>
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      catLabel(p.category).toLowerCase().includes(search.toLowerCase()),
-  )
-
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
@@ -107,8 +154,8 @@ export function ProductPickerInput(props: ArrayOfPrimitivesInputProps) {
       {selected.size > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
           {Array.from(selected).map((idStr) => {
-            const p = productMap.get(idStr)
-            const name = loading
+            const p = known.get(idStr)
+            const name = loadingSelected && !p
               ? `#${idStr} (ładowanie…)`
               : (p?.name ?? `#${idStr} — nie znaleziono`)
             return (
@@ -154,10 +201,10 @@ export function ProductPickerInput(props: ArrayOfPrimitivesInputProps) {
       {/* Search */}
       <input
         type="text"
-        placeholder="Szukaj po nazwie lub kategorii…"
+        placeholder="Szukaj po nazwie lub SKU (min. 2 znaki)…"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        disabled={readOnly || loading}
+        disabled={readOnly}
         style={{
           padding: '7px 10px',
           border: '1px solid #ccc',
@@ -177,9 +224,14 @@ export function ProductPickerInput(props: ArrayOfPrimitivesInputProps) {
           fontSize: 13,
         }}
       >
-        {loading && (
+        {term.length < MIN_QUERY && (
           <div style={{ padding: '12px 14px', color: '#888' }}>
-            Ładowanie produktów…
+            Wpisz co najmniej {MIN_QUERY} znaki nazwy lub SKU.
+          </div>
+        )}
+        {searching && (
+          <div style={{ padding: '12px 14px', color: '#888' }}>
+            Szukanie…
           </div>
         )}
         {apiError && (
@@ -187,14 +239,14 @@ export function ProductPickerInput(props: ArrayOfPrimitivesInputProps) {
             Nie można załadować produktów. Sprawdź połączenie z serwerem.
           </div>
         )}
-        {!loading && !apiError && filtered.length === 0 && (
+        {term.length >= MIN_QUERY && !searching && !apiError && results.length === 0 && (
           <div style={{ padding: '12px 14px', color: '#888' }}>
-            {search ? `Brak wyników dla „${search}"` : 'Brak produktów w katalogu'}
+            {`Brak wyników dla „${term}"`}
           </div>
         )}
-        {!loading &&
+        {!searching &&
           !apiError &&
-          filtered.map((p, i) => {
+          results.map((p, i) => {
             const isSelected = selected.has(String(p.id))
             return (
               <label
@@ -241,7 +293,9 @@ export function ProductPickerInput(props: ArrayOfPrimitivesInputProps) {
       </div>
 
       <div style={{ fontSize: 11, color: '#aaa' }}>
-        {selected.size} wybranych · {products.length} produktów w katalogu
+        {selected.size} wybranych
+        {term.length >= MIN_QUERY && !searching && ` · ${results.length} wyników`}
+        {results.length >= MAX_RESULTS && ' (pokazano pierwsze 50 — doprecyzuj frazę)'}
       </div>
     </div>
   )

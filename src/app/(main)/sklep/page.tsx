@@ -3,7 +3,7 @@ import { Suspense } from 'react';
 import SubpageHero from '@/components/SubpageHero';
 import SklepClient from '@/components/shop/SklepClient';
 import ShopPageSections, { type ShopSection } from '@/components/shop/ShopPageSections';
-import { getBlockProductPool, loadListing, type SearchParamsRecord } from '@/lib/shop/listing';
+import { getBlockProducts, loadListing, type SearchParamsRecord } from '@/lib/shop/listing';
 import type { ShopProduct } from '@/lib/supabase/types';
 import { sanityFetch } from '@/sanity/client';
 import { shopPageQuery } from '@/sanity/queries';
@@ -12,55 +12,6 @@ export const metadata: Metadata = {
   title: 'Sklep',
   alternates: { canonical: '/sklep' },
 };
-
-// ── Data fetching ──────────────────────────────────────────────────────────────
-
-function resolveProductsForBlock(
-  block: ShopSection,
-  products: ShopProduct[],
-): ShopProduct[] {
-  if (block._type !== 'shopProductPickerBlock') return []
-
-  // TypeScript narrowed to ProductPickerBlock after guard above
-  const b = block
-  const limit = b.limit ?? 4
-  const withImages = products.filter(
-    (p) => p.images && Object.keys(p.images).length > 0,
-  )
-
-  let pool: ShopProduct[]
-
-  switch (b.selectionMode) {
-    case 'new_arrivals':
-      pool = [...withImages].sort((a, b) => b.id - a.id)
-      break
-    case 'on_sale':
-      pool = withImages.filter(
-        (p) => p.price_compare != null && p.price != null && p.price_compare > p.price,
-      )
-      if (!pool.length) pool = [...withImages].sort((a, b) => b.id - a.id)
-      break
-    case 'manual': {
-      if (b.productIds?.length) {
-        // preserve the order the client chose in Studio
-        pool = b.productIds
-          .map((idStr: string) => products.find((p: ShopProduct) => p.id === Number(idStr)))
-          .filter((p: ShopProduct | undefined): p is ShopProduct => p != null)
-        return pool
-      }
-      pool = []
-      return pool
-    }
-    case 'best_sellers':
-    default: {
-      const featured = withImages.filter((p) => p.is_featured && p.stock > 0)
-      pool = featured.length ? featured : withImages.filter((p) => p.stock > 0)
-      break
-    }
-  }
-
-  return pool.slice(0, limit)
-}
 
 // ── SHOP_DISABLED=true in Vercel (Production) hides the shop listing until launch ──
 const SHOP_DISABLED = process.env.SHOP_DISABLED === 'true';
@@ -98,17 +49,15 @@ export default async function SklepPage({ searchParams }: { searchParams: Promis
 
   const sections: ShopSection[] = shopPage?.sections ?? []
 
-  // Resolve products for each product picker block (server-side). Temporary pool of
-  // the 48 newest products with an image until the blocks get their own queries (HA-2.36).
+  // One small cached query per product picker block (HA-2.36), never the whole catalogue.
   const resolvedProducts: Record<string, ShopProduct[]> = {}
-  if (sections.some(s => s._type === 'shopProductPickerBlock')) {
-    const pool = await getBlockProductPool()
-    for (const section of sections) {
+  await Promise.all(
+    sections.map(async (section) => {
       if (section._type === 'shopProductPickerBlock') {
-        resolvedProducts[section._key] = resolveProductsForBlock(section, pool)
+        resolvedProducts[section._key] = await getBlockProducts(section)
       }
-    }
-  }
+    }),
+  )
 
   return (
     <main>

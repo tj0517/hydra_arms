@@ -396,6 +396,19 @@ InPost map itself is only checked by hand.
 
 ---
 
+## 8. Sanity Studio product picker (HA-2.36)
+
+Needs a Sanity login, so it runs on the Vercel preview, not locally. The API behind it
+(`/api/shop/products-list?q=` / `?ids=`) is covered by `tests/shop/products-list.spec.ts`.
+
+### TC-30 Picker searches instead of loading the catalogue
+1. `/studio` → shop page document → a **Produkty** block → selection mode **Ręczny wybór**
+2. Type one letter → **Expected:** "Wpisz co najmniej 2 znaki…", no product list
+3. Type a phrase (e.g. part of a product name or a SKU) → **Expected:** after a moment, up to 50 matching products with category and price; Network shows `products-list?q=…`, never a request without `q`/`ids`
+4. Tick 2 products, publish, reload the document → **Expected:** both appear as chips with their names (loaded via `products-list?ids=…`) before you type anything
+
+---
+
 ## Supabase Quick Checks
 
 ```sql

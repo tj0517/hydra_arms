@@ -4,7 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { addOrder } from '@/lib/baselinker/client'
 import { incrementBlMockCounter, recordBlMockDelivery } from '@/lib/baselinker/mockCounter'
 import { BL_ORDER_COLUMNS, buildBlOrderParams } from '@/lib/shop/blOrderPayload'
-import { SHOP_CACHE_TAG } from '@/lib/shop/fetchProducts'
+import { SHOP_CACHE_TAG } from '@/lib/shop/shopCache'
 import { sendPaymentReceivedEmail } from '@/lib/email/orderEmails'
 import { canPushToBaseLinker } from '@/lib/shop/shopMode'
 

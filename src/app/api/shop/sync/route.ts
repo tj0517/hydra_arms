@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidateTag } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { SHOP_CACHE_TAG } from '@/lib/shop/fetchProducts';
+import { SHOP_CACHE_TAG } from '@/lib/shop/shopCache';
 import {
   INVENTORY_ID,
   getCategories,
@@ -83,7 +83,7 @@ async function runSync() {
       const details = await getProductsData(INVENTORY_ID, chunkIds);
 
       // Write raw BL stock — reservation netting happens at display time only
-      // (fetchProducts.ts subtracts paid-not-in-BL orders). Writing raw stock
+      // (shop_listing() in SQL subtracts paid-not-in-BL orders, HA-2.34). Writing raw stock
       // here prevents double-netting and keeps the DB as the canonical BL mirror.
       const rows = Object.entries(details).map(([idStr, p]) => {
         const id = parseInt(idStr, 10);
