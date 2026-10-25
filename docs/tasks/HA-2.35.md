@@ -1,7 +1,7 @@
 ---
 id: HA-2.35
 title: /sklep liczony na serwerze — URL jako stan (page, spec), SklepClient bez filtrowania, cache per kombinacja filtrów
-status: review
+status: done
 difficulty: L
 model: claude-opus-5-5
 model_approved: null
@@ -70,3 +70,4 @@ Listing `/sklep` ma dostawać z serwera tylko to, co widać: 24 karty, łączną
 - 2026-10-25 tj: listing-rpc = A — seed bulk (> 1 000 aktywnych) obcina referencyjny odczyt testu `shop_tree` w `tests/shop/listing-rpc.spec.ts` (PostgREST `max_rows = 1000`; funkcja zwraca poprawnie 4 w 4003, test widział 3). Zmienia się tylko sposób odczytu wartości oczekiwanych (odczyt stronami po 1 000 przez `.range()` — obejmuje liczniki i zakres cen), asercje bez zmian.
 - 2026-10-25 agent: red proof bez `SUPABASE_SERVICE_ROLE_KEY` działa na serwerze produkcyjnym (`next build` + `next start` w `playwright.listing-no-service-role.config.ts`) — `next dev` odpowiada 200 i wkleja błąd w overlay, więc kod 500 da się sprawdzić tylko w produkcji (zmierzone: dev 200, `next start` 500). Do decyzji tj w raporcie nic z tego nie wynika — odnotowane jako odstępstwo od wzorca shipping-env.
 - 2026-10-25 tj (wf-review): seed bulk — marki Seed Bulk A/B i cecha Rozmiar zostają (test deep linku sprawdza stronę 2 przy filtrach; tylko lokalny seed).
+- 2026-10-25 tj (wf-review): odbiór PR #58 — wszystkie kryteria udowodnione: 301 passed / 1 skipped (Sanity picker, brak treści lokalnie) / 0 retry; next build OK (/sklep dynamiczne); /sklep 147 791 B (next start); brak klucza service-role → 500 na next start (next dev daje 200 z overlayem); bramka prod: shop_listing + shop_tree + pickup_only obecne; zrzuty desktop/mobile/loading/empty obejrzane (scratch/ha-2.35-evidence); listing-rpc.spec stronicuje odczyt referencyjny (max_rows 1000), asercje bez zmian. Poza zakresem, do pilnowania: bloki Sanity z ręcznym wyborem produktów korzystają z puli 48 najnowszych do HA-2.36; rozmiar HTML na prod niezmierzony.
