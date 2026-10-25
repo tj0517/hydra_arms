@@ -3,9 +3,11 @@
  * the listing UI pieces extracted in HA-2.30: FiltersSidebar, ActiveFilterChips,
  * ListingToolbar, MobileFilterSheet. Pure types and constants — no React.
  *
- * URL contract (unchanged since HA-2.10): cat, q, stock, min, max, sort, marka, dostawa.
+ * URL contract (unchanged since HA-2.10): cat, q, stock, min, max, sort, marka, dostawa;
+ * HA-2.35 adds page and spec (repeatable, "Key:value"). The server validates and
+ * computes the listing (src/lib/shop/listing.ts); SklepClient only pushes URLs.
  */
-import type { ShopCategory } from '@/lib/supabase/types';
+import type { ShopCategory, ShopListingResult } from '@/lib/supabase/types';
 
 export type SortKey = 'name_asc' | 'name_desc' | 'price_asc' | 'price_desc' | 'newest';
 
@@ -33,10 +35,41 @@ export function isDeliveryMode(v: string | null): v is DeliveryMode {
   return v === 'wysylka' || v === 'odbior';
 }
 
+/** The category fields the listing uses (shop_tree() returns exactly these plus a count). */
+export type ListingCategory = Pick<ShopCategory, 'id' | 'name' | 'parent_id'>;
+
 /** Two-level category tree: a root and its direct children. */
 export interface CategoryTreeNode {
-  category: ShopCategory;
-  children: ShopCategory[];
+  category: ListingCategory;
+  children: ListingCategory[];
+}
+
+/** Filter state as read from the URL — the single source of truth for the listing. */
+export interface ListingParams {
+  cat: number | null;
+  q: string;
+  stock: boolean;
+  /** Raw text of the price bounds as in the URL ('' = no bound). */
+  min: string;
+  max: string;
+  sort: SortKey;
+  marka: string | null;
+  dostawa: DeliveryMode | null;
+  /** { key: values[] } — OR within a key, AND between keys; keys and values sorted. */
+  specs: Record<string, string[]>;
+  page: number;
+}
+
+/** What /sklep hands SklepClient: validated params, one page and the counters. */
+export interface ListingPageData {
+  params: ListingParams;
+  listing: ShopListingResult;
+  categories: ListingCategory[];
+  /** Active products per category, descendants included. */
+  categoryCounts: Record<number, number>;
+  /** Active products shop-wide — "Wszystkie" in the tree. */
+  totalActive: number;
+  priceRange: { min: number; max: number };
 }
 
 /** Current values of the non-category filters, as SklepClient holds them. */
@@ -62,7 +95,7 @@ export interface FilterActions {
   clearSpec: (key: string) => void;
 }
 
-/** Option lists derived from the product set. */
+/** Option lists — from the shop_listing() counters and the shop_tree() price range. */
 export interface FilterOptions {
   priceRange: { min: number; max: number };
   availableBrands: { brand: string; count: number }[];

@@ -4,14 +4,15 @@ import { useRef, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ImageOff, Check } from 'lucide-react';
-import type { ShopProduct, ShopCategory } from '@/lib/supabase/types';
+import type { ShopProduct } from '@/lib/supabase/types';
+import type { ListingCategory } from './listingFilters';
 import { useCart } from './CartProvider';
 import { categoryDisplayName } from '@/lib/shop/categoryLabel';
 import { mustPickup } from '@/lib/shop/cartAnalysis';
 
 interface ProductCardProps {
   product: ShopProduct;
-  categories: ShopCategory[];
+  categories: ListingCategory[];
 }
 
 const fmt = (n: number) =>

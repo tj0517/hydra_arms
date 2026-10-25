@@ -3,8 +3,8 @@ import { Suspense } from 'react';
 import SubpageHero from '@/components/SubpageHero';
 import SklepClient from '@/components/shop/SklepClient';
 import ShopPageSections, { type ShopSection } from '@/components/shop/ShopPageSections';
-import { fetchShopData } from '@/lib/shop/fetchProducts';
-import type { ShopProduct, ShopCategory } from '@/lib/supabase/types';
+import { getBlockProductPool, loadListing, type SearchParamsRecord } from '@/lib/shop/listing';
+import type { ShopProduct } from '@/lib/supabase/types';
 import { sanityFetch } from '@/sanity/client';
 import { shopPageQuery } from '@/sanity/queries';
 
@@ -67,7 +67,7 @@ const SHOP_DISABLED = process.env.SHOP_DISABLED === 'true';
 
 // ── Page ───────────────────────────────────────────────────────────────────────
 
-export default async function SklepPage() {
+export default async function SklepPage({ searchParams }: { searchParams: Promise<SearchParamsRecord> }) {
   if (SHOP_DISABLED) {
     return (
       <main>
@@ -89,18 +89,24 @@ export default async function SklepPage() {
     );
   }
 
-  const [{ products, categories }, shopPage] = await Promise.all([
-    fetchShopData(),
+  // HA-2.35: one page of the listing computed in Postgres, never the whole catalogue.
+  // loadListing throws on a missing service-role key or an RPC error → error page.
+  const [data, shopPage] = await Promise.all([
+    loadListing(await searchParams),
     sanityFetch<{ sections?: ShopSection[] }>({ query: shopPageQuery }),
   ])
 
   const sections: ShopSection[] = shopPage?.sections ?? []
 
-  // Resolve products for each product picker block (server-side)
+  // Resolve products for each product picker block (server-side). Temporary pool of
+  // the 48 newest products with an image until the blocks get their own queries (HA-2.36).
   const resolvedProducts: Record<string, ShopProduct[]> = {}
-  for (const section of sections) {
-    if (section._type === 'shopProductPickerBlock') {
-      resolvedProducts[section._key] = resolveProductsForBlock(section, products)
+  if (sections.some(s => s._type === 'shopProductPickerBlock')) {
+    const pool = await getBlockProductPool()
+    for (const section of sections) {
+      if (section._type === 'shopProductPickerBlock') {
+        resolvedProducts[section._key] = resolveProductsForBlock(section, pool)
+      }
     }
   }
 
@@ -111,7 +117,7 @@ export default async function SklepPage() {
       <ShopPageSections
         sections={sections}
         resolvedProducts={resolvedProducts}
-        categories={categories}
+        categories={data.categories}
       />
 
       {/* Catalog divider */}
@@ -124,7 +130,7 @@ export default async function SklepPage() {
       </div>
 
       <Suspense fallback={null}>
-        <SklepClient products={products} categories={categories} />
+        <SklepClient data={data} />
       </Suspense>
     </main>
   );

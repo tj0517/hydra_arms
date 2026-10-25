@@ -4,9 +4,16 @@
  * HA-2.30 UI: category tree + accordion filters in <aside> (desktop ≥ 1024 px),
  * active-filter chips above the grid, toolbar with "N produktów" / search / sort,
  * sticky bottom bar + bottom sheet below 1024 px. URL contract unchanged:
- * cat, q, stock, min, max, sort, marka, dostawa.
+ * cat, q, stock, min, max, sort, marka, dostawa; HA-2.35 adds page and spec.
+ *
+ * HA-2.35: the listing is computed on the server (shop_listing/shop_tree) — every
+ * filter change is a router.push to a new URL and the grid shows one page of 24.
+ * A filter change is done once the URL changed (the URL commits with the new data).
+ * The seed carries 1 100 "seed-bulk" products (category 13000, names "Żżż …" sort
+ * last) so the total is > 1 000.
  */
 import { test, expect, type Page } from '@playwright/test';
+import { createClient } from '@supabase/supabase-js';
 import { dismissCookies, hideBanner } from './fixtures';
 
 const SHOT_DIR = '.playwright-mcp';
@@ -112,6 +119,7 @@ test.describe('/sklep — listing page', () => {
 
     await page.getByPlaceholder('Szukaj produktu…').fill(searchTerm);
     await page.waitForTimeout(400);
+    await expect(page).toHaveURL(/[?&]q=/); // HA-2.35: server round trip done
 
     const count = await productLinks(page).count();
     if (count > 0) {
@@ -175,6 +183,7 @@ test.describe('/sklep — listing page', () => {
 
     await nextBtn.click();
     await page.waitForTimeout(500);
+    await expect(page).toHaveURL(/[?&]page=2(&|$)/); // HA-2.35: page 2 is a URL
 
     const ids2 = await productLinks(page).evaluateAll(
       (els) => els.map((el) => (el as HTMLAnchorElement).pathname)
@@ -214,17 +223,18 @@ test.describe('/sklep — listing page', () => {
     const initialCount = await totalCount(page);
     const aside = sidebar(page);
 
+    // HA-2.35: toolbar totals, not the grid — shippable is > 24 with the bulk seed
     await aside.getByText('Tylko odbiór osobisty', { exact: true }).click();
     await page.waitForTimeout(300);
     await expect(page).toHaveURL(/dostawa=odbior/);
-    const pickupCount = await productLinks(page).count();
+    const pickupCount = await totalCount(page);
     expect(pickupCount).toBeGreaterThan(0);
     expect(pickupCount).toBeLessThan(initialCount);
 
     await aside.getByText('Wysyłka kurierem', { exact: true }).click();
     await page.waitForTimeout(300);
     await expect(page).toHaveURL(/dostawa=wysylka/);
-    const shippableCount = await productLinks(page).count();
+    const shippableCount = await totalCount(page);
     expect(shippableCount).toBeGreaterThan(0);
     expect(shippableCount + pickupCount).toBe(initialCount);
   });
@@ -388,5 +398,231 @@ test.describe('/sklep — listing page', () => {
     expect(await productNames(page).count()).toBe(shown);
     await expect(bar.getByRole('button', { name: /^Filtry/ })).toContainText('(1)');
     await expect(chips(page).filter({ hasText: 'Tylko odbiór osobisty' })).toHaveCount(1);
+  });
+
+  // ── HA-2.35 — listing computed on the server, URL as the only state ─────
+
+  const BULK_CAT = 13000;
+  const OPTICS = 4003;
+
+  async function activeInSeed(): Promise<number> {
+    const sb = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'http://127.0.0.1:55321',
+      process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
+      { auth: { autoRefreshToken: false, persistSession: false } },
+    );
+    const { count, error } = await sb.from('shop_products').select('id', { count: 'exact', head: true }).eq('is_active', true);
+    expect(error).toBeNull();
+    return count ?? 0;
+  }
+
+  const pageNumber = (page: Page) =>
+    page.getByRole('navigation', { name: 'Paginacja' }).locator('button[aria-current="page"]');
+
+  test('bulk seed: toolbar total = active products in the seed, 24 per page, the last page holds the rest', async ({ page }) => {
+    const active = await activeInSeed();
+    console.log('[bulk] active products in seed =', active);
+    expect(active).toBeGreaterThan(1000);
+
+    await goToShop(page);
+    expect(await totalCount(page)).toBe(active);
+    await expect(productLinks(page)).toHaveCount(24);
+
+    const lastPage = Math.ceil(active / 24);
+    const expectedLast = active % 24 || 24;
+    await goToShop(page, `/sklep?page=${lastPage}`);
+    await expect(pageNumber(page)).toHaveText(String(lastPage));
+    await expect(productLinks(page)).toHaveCount(expectedLast);
+    // the bulk names sort last, so the last page under name_asc is bulk only
+    for (const name of await productNames(page).allInnerTexts()) expect(name).toMatch(/^Żżż seed-bulk \d{4}$/);
+    await expect(page.getByRole('button', { name: 'Następna →' })).toBeDisabled();
+    console.log(`[bulk] last page ${lastPage}: ${expectedLast} cards`);
+
+    // a page past the end shows the last page instead of an empty grid
+    await goToShop(page, '/sklep?page=999');
+    await expect(pageNumber(page)).toHaveText(String(lastPage));
+    await expect(productLinks(page)).toHaveCount(expectedLast);
+  });
+
+  test('deep link ?cat=&marka=&spec=&page=2 restores the sidebar, the chips, the page and the products', async ({ page }) => {
+    await goToShop(page, `/sklep?cat=${BULK_CAT}&marka=Seed+Bulk+A&spec=Rozmiar:M&page=2`);
+    const aside = sidebar(page);
+    const tree = aside.getByTestId('category-tree');
+
+    await expect(tree.getByRole('button', { name: /^seed-bulk/i })).toHaveAttribute('aria-current', 'page');
+    await expect(aside.getByRole('checkbox', { name: /^Seed Bulk A \(\d+\)$/ })).toBeChecked();
+    const specHeader = aside.getByRole('button', { name: /^Rozmiar/ });
+    await expect(specHeader).toContainText('(1)');
+    await specHeader.click();
+    await expect(aside.getByRole('checkbox', { name: /^M \(\d+\)$/ })).toBeChecked();
+    await expect(aside.getByRole('checkbox', { name: /^S \(\d+\)$/ })).not.toBeChecked();
+
+    await expect(chips(page)).toHaveCount(3);
+    await expect(chips(page).filter({ hasText: 'seed-bulk' })).toHaveCount(1);
+    await expect(chips(page).filter({ hasText: 'Marka: Seed Bulk A' })).toHaveCount(1);
+    await expect(chips(page).filter({ hasText: 'Rozmiar: M' })).toHaveCount(1);
+
+    await expect(pageNumber(page)).toHaveText('2');
+    // seed: brand A = even i, size M = i % 3 == 1 → i ≡ 4 (mod 6); page 2 of name_asc starts at the 25th match
+    await expect(productLinks(page)).toHaveCount(24);
+    await expect(productNames(page).first()).toHaveText(`Żżż seed-bulk ${String(4 + 24 * 6).padStart(4, '0')}`);
+    expect(await totalCount(page)).toBe(183);
+
+    await settleCatalog(page);
+    await page.screenshot({ path: `${SHOT_DIR}/ha-2.35-desktop.png` });
+  });
+
+  test('× on a spec chip removes its spec= parameter (and goes back to page 1)', async ({ page }) => {
+    await goToShop(page, `/sklep?cat=${BULK_CAT}&spec=Rozmiar:M&spec=Rozmiar:S&page=3`);
+    await expect(chips(page)).toHaveCount(3);
+    const before = await totalCount(page);
+
+    await page.getByRole('button', { name: 'Usuń filtr: Rozmiar: M' }).click();
+    await expect(page).not.toHaveURL(/spec=Rozmiar%3AM/);
+    await expect(page).toHaveURL(/spec=Rozmiar%3AS/);
+    await expect(page).not.toHaveURL(/[?&]page=/);
+    await expect(chips(page)).toHaveCount(2);
+    expect(await totalCount(page)).toBeLessThan(before);
+  });
+
+  test('changing the category changes the brand list', async ({ page }) => {
+    await goToShop(page);
+    const aside = sidebar(page);
+    const brandSection = aside.getByRole('button', { name: /^Marka/ }).locator('xpath=..');
+    const brandRows = brandSection.locator('label span span:first-child');
+    await brandSection.getByRole('button', { name: /^Pokaż więcej/ }).click(); // > 6 brands shop-wide
+    const shopWide = await brandRows.allInnerTexts();
+    expect(shopWide).toContain('Test');
+    expect(shopWide).toContain('Seed Bulk A');
+
+    await aside.getByRole('button', { name: /^seed-bulk/i }).click();
+    await expect(page).toHaveURL(new RegExp(`[?&]cat=${BULK_CAT}(&|$)`));
+    await expect(brandRows).toHaveText(['Seed Bulk A', 'Seed Bulk B']);
+    expect(shopWide).not.toEqual(['Seed Bulk A', 'Seed Bulk B']);
+  });
+
+  test('a filter change is a client navigation: no full page load, URL and list change, loading indicator shown', async ({ page }) => {
+    await goToShop(page);
+    await page.evaluate(() => { (window as unknown as { __hydraMarker: string }).__hydraMarker = 'ha-2.35'; });
+    const before = await productNames(page).allInnerTexts();
+
+    // Hold the RSC response for 1.5 s so the pending state is observable
+    await page.route('**/sklep?**', async route => {
+      if (route.request().headers()['rsc'] === '1') await new Promise(r => setTimeout(r, 1500));
+      await route.continue();
+    });
+
+    await sidebar(page).getByText('Tylko odbiór osobisty', { exact: true }).click();
+    const loading = page.getByTestId('listing-loading');
+    await expect(loading).toBeVisible();
+    await expect(page.getByTestId('product-area')).toHaveAttribute('aria-busy', 'true');
+    // the checkbox follows the click at once (optimistic), before the data arrives
+    await expect(sidebar(page).getByRole('checkbox', { name: 'Tylko odbiór osobisty' })).toBeChecked();
+    await page.locator('#catalog').evaluate(el => el.scrollIntoView());
+    await page.screenshot({ path: `${SHOT_DIR}/ha-2.35-loading.png` });
+
+    await expect(page).toHaveURL(/dostawa=odbior/);
+    await expect(loading).toBeHidden();
+    const after = await productNames(page).allInnerTexts();
+    expect(after).not.toEqual(before);
+    expect(await page.evaluate(() => (window as unknown as { __hydraMarker?: string }).__hydraMarker)).toBe('ha-2.35');
+  });
+
+  test('header search from a product page lands on /sklep?q= (HA-2.32 regression)', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await dismissCookies(page);
+    await page.goto('/sklep/301001', { waitUntil: 'domcontentloaded' });
+    await hideBanner(page);
+    await hideDevOverlay(page);
+
+    const input = page.getByTestId('header-search').locator('input[name="q"]');
+    await input.fill('Spodnie');
+    await input.press('Enter');
+    await expect(page).toHaveURL(/\/sklep\?q=Spodnie$/);
+    await page.getByTestId('product-area').waitFor({ timeout: 20_000 });
+    await expect(page.getByPlaceholder('Szukaj produktu…')).toHaveValue('Spodnie');
+    await expect(chips(page).filter({ hasText: 'Szukaj: „Spodnie”' })).toHaveCount(1);
+    const names = await productNames(page).allInnerTexts();
+    expect(names.length).toBeGreaterThan(0);
+    for (const n of names) expect(n.toLowerCase()).toContain('spodnie');
+  });
+
+  test('counters follow decision B: a selected brand keeps the other brands; specs only with a category', async ({ page }) => {
+    // no category → no spec section, only the hint
+    await goToShop(page);
+    const aside = sidebar(page);
+    await expect(aside.getByText('Wybierz kategorię, aby zobaczyć filtry specyfikacji.')).toBeVisible();
+    await expect(aside.getByRole('button', { name: /^Powiększenie/ })).toHaveCount(0);
+
+    await goToShop(page, `/sklep?cat=${OPTICS}`);
+    await expect(aside.getByRole('button', { name: /^Powiększenie/ })).toBeVisible();
+    await aside.getByText('Delta Optical', { exact: true }).click();
+    await expect(page).toHaveURL(/marka=Delta\+Optical/);
+    await expect(aside.getByRole('checkbox', { name: /^Delta Optical \(1\)$/ })).toBeChecked();
+    // Vortex Optics stays offered, counted without the brand filter
+    await expect(aside.getByRole('checkbox', { name: /^Vortex Optics \(3\)$/ })).not.toBeChecked();
+    expect(await totalCount(page)).toBe(1);
+  });
+
+  test('card stock subtracts reservations: 314004 (paid order …2034) is unavailable and gone with stock=1', async ({ page }) => {
+    await goToShop(page, '/sklep?q=%C4%86wiek');
+    const card = page.getByTestId('product-area').locator('.bg-bg-card').filter({ hasText: 'Ćwiek mosiężny do pasa' });
+    await expect(card).toHaveCount(1);
+    await expect(card.getByText('Niedostępny')).toBeVisible();
+
+    await sidebar(page).getByText('Tylko dostępne', { exact: true }).click();
+    await expect(page).toHaveURL(/stock=1/);
+    await expect(page.getByText('Brak wyników')).toBeVisible();
+  });
+
+  test('the cache is keyed by the filters: two URLs give two results at once, the same URL the same result', async ({ page }) => {
+    await goToShop(page, '/sklep?cat=4003');
+    const optics = await productNames(page).allInnerTexts();
+    await goToShop(page, '/sklep?cat=2003');
+    const backpacks = await productNames(page).allInnerTexts();
+    await goToShop(page, '/sklep?cat=4003');
+    const opticsAgain = await productNames(page).allInnerTexts();
+
+    console.log('[cache] cat=4003', JSON.stringify(optics), '| cat=2003', JSON.stringify(backpacks));
+    expect(optics.length).toBeGreaterThan(0);
+    expect(backpacks.length).toBeGreaterThan(0);
+    expect(optics).not.toEqual(backpacks);
+    expect(opticsAgain).toEqual(optics);
+  });
+
+  // Red proof: invalid page/sort/spec values are ignored, never a 500 and never a filter.
+  test('invalid spec, page and sort values in the URL are ignored (200, no chips, full total)', async ({ page, request }) => {
+    const baseline = await activeInSeed();
+    for (const url of [
+      '/sklep?spec=bez-dwukropka&spec=%3Ax&spec=x%3A&page=-3&sort=bogus',
+      '/sklep?page=abc&page=2&sort=name_asc%27%3B--',
+      '/sklep?spec=Powi%C4%99kszenie%3A6x', // a spec without a category is not applied
+    ]) {
+      const res = await request.get(url);
+      expect(res.status(), url).toBe(200);
+      await goToShop(page, url);
+      expect(await totalCount(page), url).toBe(baseline);
+      await expect(chips(page), url).toHaveCount(0);
+    }
+    // a spec value the category does not offer is dropped, the category stays
+    await goToShop(page, `/sklep?cat=${OPTICS}&spec=Powi%C4%99kszenie%3A999x`);
+    await expect(chips(page)).toHaveCount(1);
+    expect(await totalCount(page)).toBe(4);
+  });
+
+  test('screenshots: mobile 375 px and the empty state', async ({ page }) => {
+    await goToShop(page, '/sklep?q=xyzniema');
+    await expect(page.getByText('Brak wyników')).toBeVisible();
+    await settleCatalog(page);
+    await page.screenshot({ path: `${SHOT_DIR}/ha-2.35-empty.png` });
+
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto(`/sklep?cat=${BULK_CAT}&page=2`, { waitUntil: 'domcontentloaded' });
+    await hideBanner(page);
+    await hideDevOverlay(page);
+    await productLinks(page).first().waitFor({ timeout: 20_000 });
+    await expect(page.getByTestId('mobile-filter-bar')).toBeVisible();
+    await settleCatalog(page);
+    await page.screenshot({ path: `${SHOT_DIR}/ha-2.35-mobile.png` });
   });
 });

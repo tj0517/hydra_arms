@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import type { ShopProduct, ShopCategory } from '@/lib/supabase/types';
-import { mustPickup } from '@/lib/shop/cartAnalysis';
+import { useState, useMemo, useEffect, useRef, useOptimistic, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import type { ShopProduct } from '@/lib/supabase/types';
 import { categoryDisplayName, isWorkingCategory } from '@/lib/shop/categoryLabel';
 import ProductCard from './ProductCard';
 import CartDrawer from './CartDrawer';
@@ -13,27 +12,25 @@ import ListingToolbar from './ListingToolbar';
 import MobileFilterSheet from './MobileFilterSheet';
 import {
   DELIVERY_MODE_LABELS,
-  isDeliveryMode,
-  isSortKey,
   type ActiveChip,
   type CategoryTreeNode,
-  type DeliveryMode,
   type FilterActions,
   type FilterOptions,
   type FilterState,
-  type SortKey,
+  type ListingCategory,
+  type ListingPageData,
+  type ListingParams,
 } from './listingFilters';
 
 interface SklepClientProps {
-  products: ShopProduct[];
-  categories: ShopCategory[];
+  data: ListingPageData;
 }
 
 /**
  * Two-level public tree. The "00." working root is omitted (decision tj
  * 2026-10-19, D1 A) — its products stay listed under "Wszystkie" and in search.
  */
-function buildTree(categories: ShopCategory[]): CategoryTreeNode[] {
+function buildTree(categories: ListingCategory[]): CategoryTreeNode[] {
   // Sort by the RAW BaseLinker name (the numbered one: "01. …", "1.1 …"), never by the
   // display label — the Hydra numbering is the intended order (decision tj 2026-10-19).
   const parents = categories
@@ -48,341 +45,186 @@ function buildTree(categories: ShopCategory[]): CategoryTreeNode[] {
   }));
 }
 
-function useDebounce<T>(value: T, delay: number): T {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(timer);
-  }, [value, delay]);
-  return debounced;
+/** The URL for a filter state — the only way the listing changes (HA-2.35). */
+function listingHref(state: ListingParams): string {
+  const params = new URLSearchParams();
+  if (state.cat !== null) params.set('cat', String(state.cat));
+  if (state.q) params.set('q', state.q);
+  if (state.stock) params.set('stock', '1');
+  if (state.min) params.set('min', state.min);
+  if (state.max) params.set('max', state.max);
+  if (state.sort !== 'name_asc') params.set('sort', state.sort);
+  if (state.marka) params.set('marka', state.marka);
+  if (state.dostawa) params.set('dostawa', state.dostawa);
+  for (const [key, vals] of Object.entries(state.specs)) {
+    for (const val of vals) params.append('spec', `${key}:${val}`);
+  }
+  if (state.page > 1) params.set('page', String(state.page));
+  const qs = params.toString();
+  return qs ? `/sklep?${qs}` : '/sklep';
 }
 
-const PAGE_SIZE = 24;
+const NO_FILTERS: ListingParams = {
+  cat: null, q: '', stock: false, min: '', max: '', sort: 'name_asc',
+  marka: null, dostawa: null, specs: {}, page: 1,
+};
+
+/**
+ * A text input backed by one URL value: typing updates the field at once and
+ * commits after `delay`; a change of the URL value from elsewhere (chip ×, clear,
+ * back button) overwrites the field, our own commit does not.
+ */
+function useUrlInput(urlValue: string, delay: number, commit: (value: string) => void) {
+  const [input, setInput] = useState(urlValue);
+  const [committed, setCommitted] = useState(urlValue);
+  const [seenUrlValue, setSeenUrlValue] = useState(urlValue);
+  if (urlValue !== seenUrlValue) {
+    setSeenUrlValue(urlValue);
+    setCommitted(urlValue);
+    if (urlValue !== committed) setInput(urlValue);
+  }
+
+  // The timer calls the latest commit — it closes over the latest URL state.
+  const commitRef = useRef(commit);
+  useEffect(() => { commitRef.current = commit; });
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(timer.current), []);
+
+  function change(value: string) {
+    setInput(value);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      setCommitted(value.trim());
+      commitRef.current(value.trim());
+    }, delay);
+  }
+  return [input, change] as const;
+}
 
 const PAGER_BUTTON =
   'h-9 min-w-9 px-3 text-[13px] border transition-colors disabled:opacity-60 disabled:cursor-not-allowed';
 
-export default function SklepClient({ products, categories }: SklepClientProps) {
+export default function SklepClient({ data }: SklepClientProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const { listing, categories } = data;
+  const [isPending, startTransition] = useTransition();
 
-  // ── State — initialized from URL params on mount ────────────────────────
-  const [selectedCategory, setSelectedCategory] = useState<number | null>(() => {
-    const v = searchParams.get('cat');
-    if (!v) return null;
-    const id = parseInt(v, 10);
-    // Validated against the known set: an unknown ?cat= is dropped, not applied.
-    return categories.some(c => c.id === id) ? id : null;
-  });
-  const [searchInput, setSearchInput] = useState(() => searchParams.get('q') ?? '');
-  const [onlyInStock, setOnlyInStock] = useState(() => searchParams.get('stock') === '1');
-  const [priceMinInput, setPriceMinInput] = useState(() => searchParams.get('min') ?? '');
-  const [priceMaxInput, setPriceMaxInput] = useState(() => searchParams.get('max') ?? '');
-  const [sortBy, setSortBy] = useState<SortKey>(() => {
-    const v = searchParams.get('sort');
-    return isSortKey(v) ? v : 'name_asc';
-  });
-  // selectedSpecs: { [specKey]: string[] } — multi-select per key, OR within key, AND between keys
-  const [selectedSpecs, setSelectedSpecs] = useState<Record<string, string[]>>({});
-  // Universal filters (HA-2.10). Validated against the known set on read — an
-  // unknown ?marka=/?dostawa= value is dropped rather than applied.
-  const [selectedBrand, setSelectedBrand] = useState<string | null>(() => {
-    const v = searchParams.get('marka');
-    if (!v) return null;
-    return products.some(p => p.brand === v) ? v : null;
-  });
-  const [deliveryMode, setDeliveryMode] = useState<DeliveryMode | null>(
-    () => { const v = searchParams.get('dostawa'); return isDeliveryMode(v) ? v : null; }
-  );
-  const [page, setPage] = useState(1);
+  // ── State — the URL, as validated by the server; optimistic while a push is pending ──
+  const [current, setOptimistic] = useOptimistic(data.params);
 
-  // Debounce text and price inputs — UI updates immediately, filter/URL follow after delay
-  const search = useDebounce(searchInput, 200);
-  const priceMin = useDebounce(priceMinInput, 350);
-  const priceMax = useDebounce(priceMaxInput, 350);
+  /** Every filter change: a new URL. A filter change goes back to page 1. */
+  function navigate(patch: Partial<ListingParams>) {
+    const next: ListingParams = { ...current, page: 1, ...patch };
+    startTransition(() => {
+      setOptimistic(next);
+      router.push(listingHref(next), { scroll: false });
+    });
+  }
 
-  // Sync ALL filter state to URL in one place — built from scratch to avoid stale reads
-  useEffect(() => {
-    const params = new URLSearchParams();
-    if (selectedCategory) params.set('cat', String(selectedCategory));
-    if (search) params.set('q', search);
-    if (onlyInStock) params.set('stock', '1');
-    if (priceMin) params.set('min', priceMin);
-    if (priceMax) params.set('max', priceMax);
-    if (sortBy !== 'name_asc') params.set('sort', sortBy);
-    if (selectedBrand) params.set('marka', selectedBrand);
-    if (deliveryMode) params.set('dostawa', deliveryMode);
-    const qs = params.toString();
-    router.replace(`?${qs}`, { scroll: false });
-  }, [selectedCategory, search, onlyInStock, priceMin, priceMax, sortBy, selectedBrand, deliveryMode, router]);
+  const [searchInput, setSearchInput] = useUrlInput(current.q, 300, q => navigate({ q }));
+  const [priceMinInput, setPriceMinInput] = useUrlInput(current.min, 350, min => navigate({ min }));
+  const [priceMaxInput, setPriceMaxInput] = useUrlInput(current.max, 350, max => navigate({ max }));
 
-  // ── Derived structures ──────────────────────────────────────────────────
+  // ── Derived structures (no product filtering — the server returns one page) ──
   const tree = useMemo(() => buildTree(categories), [categories]);
+  const categoryCounts = useMemo(
+    () => new Map(Object.entries(data.categoryCounts).map(([id, n]) => [Number(id), n])),
+    [data.categoryCounts],
+  );
 
-  const allDescendants = useMemo(() => {
-    const map = new Map<number, number[]>();
-    function descendants(id: number): number[] {
-      if (map.has(id)) return map.get(id)!;
-      const result: number[] = [];
-      for (const c of categories) {
-        if (c.parent_id === id) {
-          result.push(c.id);
-          result.push(...descendants(c.id));
-        }
-      }
-      map.set(id, result);
-      return result;
-    }
-    for (const c of categories) descendants(c.id);
-    return map;
-  }, [categories]);
+  const total = listing.total;
+  const totalPages = Math.ceil(total / listing.page_size);
+  const page = current.page;
+  // ShopListingItem is ShopProduct minus private/unused columns — the card and the cart use only public ones.
+  const products = listing.items as ShopProduct[];
 
-  // Products per category, descendants included — the counts next to tree nodes.
-  const categoryCounts = useMemo(() => {
-    const direct = new Map<number, number>();
-    for (const p of products) {
-      if (p.category_id === null) continue;
-      direct.set(p.category_id, (direct.get(p.category_id) ?? 0) + 1);
-    }
-    const total = new Map<number, number>();
-    for (const c of categories) {
-      let n = direct.get(c.id) ?? 0;
-      for (const d of allDescendants.get(c.id) ?? []) n += direct.get(d) ?? 0;
-      total.set(c.id, n);
-    }
-    return total;
-  }, [products, categories, allDescendants]);
-
-  // Use reduce instead of spread — Math.min/max(...arr) throws on very large arrays
-  const priceRange = useMemo(() => {
-    const prices = products
-      .map(p => p.price)
-      .filter((p): p is number => p !== null && p > 0);
-    if (prices.length === 0) return { min: 0, max: 9999 };
-    return {
-      min: Math.floor(prices.reduce((a, b) => (b < a ? b : a), Infinity)),
-      max: Math.ceil(prices.reduce((a, b) => (b > a ? b : a), -Infinity)),
-    };
-  }, [products]);
-
-  // ── Available spec filters ──────────────────────────────────────────────
-  // Computed from products in selected category that match category/price/stock/search
-  // (but NOT the spec filter itself — so options stay stable as you refine).
-  // Only shows keys with ≥2 distinct values (single-value keys are unfilterable).
-  const availableSpecs = useMemo(() => {
-    if (selectedCategory === null) return [];
-
-    const q = search.trim().toLowerCase();
-    const pMin = priceMin !== '' ? parseFloat(priceMin) : null;
-    const pMax = priceMax !== '' ? parseFloat(priceMax) : null;
-
-    const desc = allDescendants.get(selectedCategory) ?? [];
-    const catIds = new Set([selectedCategory, ...desc]);
-
-    const base = products.filter(p => {
-      if (!catIds.has(p.category_id as number)) return false;
-      if (q && !p.name.toLowerCase().includes(q) && !(p.sku?.toLowerCase().includes(q) ?? false)) return false;
-      if (onlyInStock && p.stock <= 0) return false;
-      if (pMin !== null && (p.price === null || p.price < pMin)) return false;
-      if (pMax !== null && (p.price === null || p.price > pMax)) return false;
-      return true;
-    });
-
-    const keyValues = new Map<string, Map<string, number>>();
-    for (const p of base) {
-      if (!p.features) continue;
-      for (const [k, v] of Object.entries(p.features)) {
-        if (!keyValues.has(k)) keyValues.set(k, new Map());
-        const counts = keyValues.get(k)!;
-        counts.set(v, (counts.get(v) ?? 0) + 1);
-      }
-    }
-
-    return Array.from(keyValues.entries())
-      .filter(([, vals]) => vals.size >= 2)
-      .sort((a, b) => a[0].localeCompare(b[0], 'pl'))
-      .map(([key, valMap]) => ({
-        key,
-        values: Array.from(valMap.entries())
-          .sort((a, b) => a[0].localeCompare(b[0], 'pl'))
-          .map(([val, count]) => ({ val, count })),
-      }));
-  }, [products, selectedCategory, allDescendants, search, onlyInStock, priceMin, priceMax]);
-
-  // ── Available brands ─────────────────────────────────────────────────────
-  // Universal filter (HA-2.10) — unlike spec filters, shown shop-wide, not
-  // gated on a selected category. Narrowed by every other active filter
-  // except brand itself, so the currently selected brand never disappears.
-  const availableBrands = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    const pMin = priceMin !== '' ? parseFloat(priceMin) : null;
-    const pMax = priceMax !== '' ? parseFloat(priceMax) : null;
-    const desc = selectedCategory !== null ? (allDescendants.get(selectedCategory) ?? []) : [];
-    const catIds = selectedCategory !== null ? new Set([selectedCategory, ...desc]) : null;
-
-    const counts = new Map<string, number>();
-    for (const p of products) {
-      if (!p.brand) continue;
-      if (catIds && !catIds.has(p.category_id as number)) continue;
-      if (q && !p.name.toLowerCase().includes(q) && !(p.sku?.toLowerCase().includes(q) ?? false)) continue;
-      if (onlyInStock && p.stock <= 0) continue;
-      if (pMin !== null && (p.price === null || p.price < pMin)) continue;
-      if (pMax !== null && (p.price === null || p.price > pMax)) continue;
-      if (deliveryMode === 'wysylka' && mustPickup(p)) continue;
-      if (deliveryMode === 'odbior' && !mustPickup(p)) continue;
-      counts.set(p.brand, (counts.get(p.brand) ?? 0) + 1);
-    }
-    return Array.from(counts.entries())
-      .sort((a, b) => a[0].localeCompare(b[0], 'pl'))
-      .map(([brand, count]) => ({ brand, count }));
-  }, [products, selectedCategory, allDescendants, search, onlyInStock, priceMin, priceMax, deliveryMode]);
-
-  // ── Filter + sort in one memo ───────────────────────────────────────────
-  const filteredAndSorted = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    const pMin = priceMin !== '' ? parseFloat(priceMin) : null;
-    const pMax = priceMax !== '' ? parseFloat(priceMax) : null;
-    const activeSpecEntries = Object.entries(selectedSpecs).filter(([, vals]) => vals.length > 0);
-
-    const filtered = products.filter(p => {
-      if (selectedCategory !== null) {
-        const desc = allDescendants.get(selectedCategory) ?? [];
-        const ids = new Set([selectedCategory, ...desc]);
-        if (!ids.has(p.category_id as number)) return false;
-      }
-      if (q && !p.name.toLowerCase().includes(q) && !(p.sku?.toLowerCase().includes(q) ?? false)) {
-        return false;
-      }
-      if (onlyInStock && p.stock <= 0) return false;
-      if (pMin !== null && (p.price === null || p.price < pMin)) return false;
-      if (pMax !== null && (p.price === null || p.price > pMax)) return false;
-      if (selectedBrand && p.brand !== selectedBrand) return false;
-      if (deliveryMode === 'wysylka' && mustPickup(p)) return false;
-      if (deliveryMode === 'odbior' && !mustPickup(p)) return false;
-      // Spec filter: OR within key, AND between keys
-      for (const [key, selectedValues] of activeSpecEntries) {
-        const specVal = p.features?.[key];
-        if (specVal === undefined || !selectedValues.includes(specVal)) return false;
-      }
-      return true;
-    });
-
-    switch (sortBy) {
-      case 'name_desc':
-        return [...filtered].sort((a, b) => b.name.localeCompare(a.name, 'pl'));
-      case 'price_asc':
-        return [...filtered].sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity));
-      case 'price_desc':
-        return [...filtered].sort((a, b) => (b.price ?? -Infinity) - (a.price ?? -Infinity));
-      case 'newest':
-        return [...filtered].sort((a, b) => b.id - a.id);
-      default:
-        return filtered;
-    }
-  }, [products, selectedCategory, search, allDescendants, onlyInStock, priceMin, priceMax, sortBy, selectedSpecs, selectedBrand, deliveryMode]);
-
-  const totalPages = Math.ceil(filteredAndSorted.length / PAGE_SIZE);
-  const paginated = filteredAndSorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
-  // Scroll to the toolbar (top of the product area) on filter/page change
+  // Scroll to the toolbar (top of the product area) when a new page of results arrives
   const toolbarRef = useRef<HTMLDivElement>(null);
   const isFirstRender = useRef(true);
   useEffect(() => {
     if (isFirstRender.current) { isFirstRender.current = false; return; }
     toolbarRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, [filteredAndSorted, page]);
+  }, [listing]);
 
   // ── Actions ─────────────────────────────────────────────────────────────
   function selectCategory(id: number | null) {
-    setSelectedCategory(id);
-    setSelectedSpecs({}); // specs are category-specific — reset on category change
-    setPage(1);
+    navigate({ cat: id, specs: {} }); // specs are category-specific — reset on category change
   }
 
   function clearAllFilters() {
-    setSearchInput('');
-    setSelectedCategory(null);
-    setOnlyInStock(false);
-    setPriceMinInput('');
-    setPriceMaxInput('');
-    setSortBy('name_asc');
-    setSelectedSpecs({});
-    setSelectedBrand(null);
-    setDeliveryMode(null);
-    setPage(1);
+    navigate(NO_FILTERS);
   }
 
   // Sidebar "Wyczyść filtry" — keeps category, query and sort
   function clearNonCategoryFilters() {
-    setOnlyInStock(false);
-    setPriceMinInput('');
-    setPriceMaxInput('');
-    setSelectedSpecs({});
-    setSelectedBrand(null);
-    setDeliveryMode(null);
-    setPage(1);
+    navigate({ stock: false, min: '', max: '', specs: {}, marka: null, dostawa: null });
   }
 
   function toggleSpec(key: string, val: string) {
-    setSelectedSpecs(prev => {
-      const current = prev[key] ?? [];
-      const next = current.includes(val)
-        ? current.filter(v => v !== val)
-        : [...current, val];
-      return { ...prev, [key]: next };
-    });
-    setPage(1);
+    const selected = current.specs[key] ?? [];
+    const nextVals = selected.includes(val) ? selected.filter(v => v !== val) : [...selected, val].sort();
+    const specs = { ...current.specs, [key]: nextVals };
+    if (nextVals.length === 0) delete specs[key];
+    navigate({ specs });
   }
 
   function clearSpec(key: string) {
-    setSelectedSpecs(prev => {
-      const next = { ...prev };
-      delete next[key];
-      return next;
-    });
-    setPage(1);
+    const specs = { ...current.specs };
+    delete specs[key];
+    navigate({ specs });
   }
 
-  const filters: FilterState = { onlyInStock, deliveryMode, priceMinInput, priceMaxInput, selectedBrand, selectedSpecs };
+  const filters: FilterState = {
+    onlyInStock: current.stock,
+    deliveryMode: current.dostawa,
+    priceMinInput,
+    priceMaxInput,
+    selectedBrand: current.marka,
+    selectedSpecs: current.specs,
+  };
   const actions: FilterActions = {
-    toggleStock: () => { setOnlyInStock(v => !v); setPage(1); },
-    setDeliveryMode: mode => { setDeliveryMode(mode); setPage(1); },
-    setPriceMin: v => { setPriceMinInput(v); setPage(1); },
-    setPriceMax: v => { setPriceMaxInput(v); setPage(1); },
-    setBrand: brand => { setSelectedBrand(brand); setPage(1); },
+    toggleStock: () => navigate({ stock: !current.stock }),
+    setDeliveryMode: dostawa => navigate({ dostawa }),
+    setPriceMin: setPriceMinInput,
+    setPriceMax: setPriceMaxInput,
+    setBrand: marka => navigate({ marka }),
     toggleSpec,
     clearSpec,
   };
-  const options: FilterOptions = { priceRange, availableBrands, availableSpecs };
+  const options: FilterOptions = {
+    priceRange: data.priceRange,
+    availableBrands: listing.brands,
+    availableSpecs: listing.specs,
+  };
 
   // Badge counts
-  const activeSpecCount = Object.values(selectedSpecs).filter(vals => vals.length > 0).length;
+  const activeSpecCount = Object.values(current.specs).filter(vals => vals.length > 0).length;
   const activeFilterCount =
-    [onlyInStock, priceMinInput !== '' || priceMaxInput !== '', selectedBrand !== null, deliveryMode !== null]
+    [current.stock, current.min !== '' || current.max !== '', current.marka !== null, current.dostawa !== null]
       .filter(Boolean).length + activeSpecCount;
 
   // ── Active-filter chips — one per active filter, category and query included ──
   const chips: ActiveChip[] = [];
-  if (selectedCategory !== null) {
-    const cat = categories.find(c => c.id === selectedCategory);
+  if (current.cat !== null) {
+    const cat = categories.find(c => c.id === current.cat);
     if (cat) chips.push({ id: 'cat', label: categoryDisplayName(cat.name), onRemove: () => selectCategory(null) });
   }
-  if (searchInput.trim()) {
-    chips.push({ id: 'q', label: `Szukaj: „${searchInput.trim()}”`, onRemove: () => { setSearchInput(''); setPage(1); } });
+  if (current.q) {
+    chips.push({ id: 'q', label: `Szukaj: „${current.q}”`, onRemove: () => navigate({ q: '' }) });
   }
-  if (onlyInStock) chips.push({ id: 'stock', label: 'Tylko dostępne', onRemove: actions.toggleStock });
-  if (deliveryMode) {
-    chips.push({ id: 'dostawa', label: DELIVERY_MODE_LABELS[deliveryMode], onRemove: () => actions.setDeliveryMode(null) });
+  if (current.stock) chips.push({ id: 'stock', label: 'Tylko dostępne', onRemove: actions.toggleStock });
+  if (current.dostawa) {
+    chips.push({ id: 'dostawa', label: DELIVERY_MODE_LABELS[current.dostawa], onRemove: () => actions.setDeliveryMode(null) });
   }
-  if (priceMinInput !== '' || priceMaxInput !== '') {
+  if (current.min !== '' || current.max !== '') {
     const label =
-      priceMinInput !== '' && priceMaxInput !== '' ? `Cena: ${priceMinInput}–${priceMaxInput} zł`
-      : priceMinInput !== '' ? `Cena: od ${priceMinInput} zł`
-      : `Cena: do ${priceMaxInput} zł`;
-    chips.push({ id: 'cena', label, onRemove: () => { setPriceMinInput(''); setPriceMaxInput(''); setPage(1); } });
+      current.min !== '' && current.max !== '' ? `Cena: ${current.min}–${current.max} zł`
+      : current.min !== '' ? `Cena: od ${current.min} zł`
+      : `Cena: do ${current.max} zł`;
+    chips.push({ id: 'cena', label, onRemove: () => navigate({ min: '', max: '' }) });
   }
-  if (selectedBrand) chips.push({ id: 'marka', label: `Marka: ${selectedBrand}`, onRemove: () => actions.setBrand(null) });
-  for (const [key, vals] of Object.entries(selectedSpecs)) {
+  if (current.marka) chips.push({ id: 'marka', label: `Marka: ${current.marka}`, onRemove: () => actions.setBrand(null) });
+  for (const [key, vals] of Object.entries(current.specs)) {
     for (const val of vals) {
       chips.push({ id: `spec:${key}:${val}`, label: `${key}: ${val}`, onRemove: () => toggleSpec(key, val) });
     }
@@ -402,8 +244,8 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
               <FiltersSidebar
                 tree={tree}
                 counts={categoryCounts}
-                totalCount={products.length}
-                selectedCategory={selectedCategory}
+                totalCount={data.totalActive}
+                selectedCategory={current.cat}
                 onSelectCategory={selectCategory}
                 filters={filters}
                 actions={actions}
@@ -415,95 +257,112 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
           </aside>
 
           {/* Product area */}
-          <div className="flex-1 min-w-0" data-testid="product-area">
+          <div className="flex-1 min-w-0" data-testid="product-area" aria-busy={isPending}>
             <div ref={toolbarRef} className="scroll-mt-24 mb-6">
               <ListingToolbar
-                count={filteredAndSorted.length}
+                count={total}
                 searchInput={searchInput}
-                onSearchChange={v => { setSearchInput(v); setPage(1); }}
-                sortBy={sortBy}
-                onSortChange={v => { setSortBy(v); setPage(1); }}
+                onSearchChange={setSearchInput}
+                sortBy={current.sort}
+                onSortChange={sort => navigate({ sort })}
               />
             </div>
 
             <ActiveFilterChips chips={chips} onClearAll={clearAllFilters} />
 
-            {paginated.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-28 gap-4 text-center border border-white/10">
-                <p className="text-[18px] text-text font-medium">Brak wyników</p>
-                <p className="text-[14px] text-text-dim max-w-sm">
-                  Żaden produkt nie pasuje do wybranych filtrów. Usuń część filtrów albo zmień frazę.
-                </p>
-                {chips.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={clearAllFilters}
-                    className="mt-2 h-10 px-5 bg-accent text-bg text-[13px] font-medium hover:opacity-90 transition-opacity"
-                  >
-                    Wyczyść filtry
-                  </button>
+            <div className="relative">
+              {isPending && (
+                <div
+                  data-testid="listing-loading"
+                  role="status"
+                  className="absolute inset-x-0 top-0 z-10 flex justify-center pointer-events-none"
+                >
+                  <span className="mt-6 inline-flex items-center gap-2 border border-white/20 bg-bg-card px-3 py-1.5 text-[13px] text-text">
+                    <span aria-hidden="true" className="w-3 h-3 rounded-full border-2 border-white/30 border-t-accent animate-spin" />
+                    Ładowanie…
+                  </span>
+                </div>
+              )}
+
+              <div className={`transition-opacity duration-150 ${isPending ? 'opacity-50' : ''}`}>
+                {products.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-28 gap-4 text-center border border-white/10">
+                    <p className="text-[18px] text-text font-medium">Brak wyników</p>
+                    <p className="text-[14px] text-text-dim max-w-sm">
+                      Żaden produkt nie pasuje do wybranych filtrów. Usuń część filtrów albo zmień frazę.
+                    </p>
+                    {chips.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={clearAllFilters}
+                        className="mt-2 h-10 px-5 bg-accent text-bg text-[13px] font-medium hover:opacity-90 transition-opacity"
+                      >
+                        Wyczyść filtry
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
+                      {products.map(p => (
+                        <ProductCard key={p.id} product={p} categories={categories} />
+                      ))}
+                    </div>
+
+                    {totalPages > 1 && (
+                      <nav aria-label="Paginacja" className="flex items-center justify-center gap-2 mt-16 pt-8 border-t border-white/10">
+                        <button
+                          type="button"
+                          disabled={page <= 1}
+                          onClick={() => navigate({ page: page - 1 })}
+                          className={`${PAGER_BUTTON} border-transparent text-text-dim hover:text-text`}
+                        >
+                          <span className="hidden sm:inline">← Poprzednia</span>
+                          <span className="sm:hidden" aria-label="Poprzednia">←</span>
+                        </button>
+                        <div className="flex gap-1">
+                          {Array.from({ length: totalPages }, (_, i) => i + 1)
+                            .filter(n => n === 1 || n === totalPages || Math.abs(n - page) <= 2)
+                            .reduce<(number | '…')[]>((acc, n, i, arr) => {
+                              if (i > 0 && n - (arr[i - 1] as number) > 1) acc.push('…');
+                              acc.push(n);
+                              return acc;
+                            }, [])
+                            .map((n, i) =>
+                              n === '…' ? (
+                                <span key={`e-${i}`} className="h-9 w-9 flex items-center justify-center text-[13px] text-text-dim">…</span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  key={n}
+                                  aria-current={n === page ? 'page' : undefined}
+                                  onClick={() => navigate({ page: n as number })}
+                                  className={`${PAGER_BUTTON} tabular-nums ${
+                                    n === page
+                                      ? 'border-accent text-accent'
+                                      : 'border-white/20 text-text hover:border-white/50'
+                                  }`}
+                                >
+                                  {n}
+                                </button>
+                              )
+                            )}
+                        </div>
+                        <button
+                          type="button"
+                          disabled={page >= totalPages}
+                          onClick={() => navigate({ page: page + 1 })}
+                          className={`${PAGER_BUTTON} border-transparent text-text-dim hover:text-text`}
+                        >
+                          <span className="hidden sm:inline">Następna →</span>
+                          <span className="sm:hidden" aria-label="Następna">→</span>
+                        </button>
+                      </nav>
+                    )}
+                  </>
                 )}
               </div>
-            ) : (
-              <>
-                <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
-                  {paginated.map(p => (
-                    <ProductCard key={p.id} product={p} categories={categories} />
-                  ))}
-                </div>
-
-                {totalPages > 1 && (
-                  <nav aria-label="Paginacja" className="flex items-center justify-center gap-2 mt-16 pt-8 border-t border-white/10">
-                    <button
-                      type="button"
-                      disabled={page <= 1}
-                      onClick={() => setPage(p => p - 1)}
-                      className={`${PAGER_BUTTON} border-transparent text-text-dim hover:text-text`}
-                    >
-                      <span className="hidden sm:inline">← Poprzednia</span>
-                      <span className="sm:hidden" aria-label="Poprzednia">←</span>
-                    </button>
-                    <div className="flex gap-1">
-                      {Array.from({ length: totalPages }, (_, i) => i + 1)
-                        .filter(n => n === 1 || n === totalPages || Math.abs(n - page) <= 2)
-                        .reduce<(number | '…')[]>((acc, n, i, arr) => {
-                          if (i > 0 && n - (arr[i - 1] as number) > 1) acc.push('…');
-                          acc.push(n);
-                          return acc;
-                        }, [])
-                        .map((n, i) =>
-                          n === '…' ? (
-                            <span key={`e-${i}`} className="h-9 w-9 flex items-center justify-center text-[13px] text-text-dim">…</span>
-                          ) : (
-                            <button
-                              type="button"
-                              key={n}
-                              aria-current={n === page ? 'page' : undefined}
-                              onClick={() => setPage(n as number)}
-                              className={`${PAGER_BUTTON} tabular-nums ${
-                                n === page
-                                  ? 'border-accent text-accent'
-                                  : 'border-white/20 text-text hover:border-white/50'
-                              }`}
-                            >
-                              {n}
-                            </button>
-                          )
-                        )}
-                    </div>
-                    <button
-                      type="button"
-                      disabled={page >= totalPages}
-                      onClick={() => setPage(p => p + 1)}
-                      className={`${PAGER_BUTTON} border-transparent text-text-dim hover:text-text`}
-                    >
-                      <span className="hidden sm:inline">Następna →</span>
-                      <span className="sm:hidden" aria-label="Następna">→</span>
-                    </button>
-                  </nav>
-                )}
-              </>
-            )}
+            </div>
           </div>
         </div>
       </div>
@@ -512,16 +371,16 @@ export default function SklepClient({ products, categories }: SklepClientProps) 
       <MobileFilterSheet
         tree={tree}
         counts={categoryCounts}
-        totalCount={products.length}
-        selectedCategory={selectedCategory}
+        totalCount={data.totalActive}
+        selectedCategory={current.cat}
         onSelectCategory={selectCategory}
         filters={filters}
         actions={actions}
         options={options}
-        activeFilterCount={activeFilterCount + (selectedCategory !== null ? 1 : 0)}
-        resultCount={filteredAndSorted.length}
-        sortBy={sortBy}
-        onSortChange={v => { setSortBy(v); setPage(1); }}
+        activeFilterCount={activeFilterCount + (current.cat !== null ? 1 : 0)}
+        resultCount={total}
+        sortBy={current.sort}
+        onSortChange={sort => navigate({ sort })}
         onClearAll={clearAllFilters}
       />
     </>

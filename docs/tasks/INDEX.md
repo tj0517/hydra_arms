@@ -50,5 +50,5 @@ Etap 1: bezpieczny fundament (audyt 2026-09-22). Etap 2: płatności i uruchomie
 | HA-2.32 | Header sklepu — stały link Sklep, wyszukiwarka w headerze na /sklep, breadcrumby na PDP, naprawa CTA „Sklep” na home | done | S | HA-2.30 | feat/ha-2.32-shop-header, PR #53 | — |
 | HA-2.33 | Pusty feed = błąd importu (z ponowną próbą); harmonogram Spechurta po oknie regeneracji | done | S | HA-2.15 | feat/ha-2.33-empty-feed-retry, PR #55 | — |
 | HA-2.34 | Migracja 019 — listing w Postgresie: shop_listing, shop_tree, kolumna pickup_only, indeksy, wyszukiwarka trgm+unaccent | done | L | — | — | — |
-| HA-2.35 | /sklep liczony na serwerze — URL jako stan (page, spec), SklepClient bez filtrowania, cache per kombinacja filtrów | todo | L | HA-2.34 | — | — |
+| HA-2.35 | /sklep liczony na serwerze — URL jako stan (page, spec), SklepClient bez filtrowania, cache per kombinacja filtrów | done | L | HA-2.34 | — | — |
 | HA-2.36 | Reszta bez pełnej listy — bloki Sanity na małych zapytaniach, picker z ?q= i ?ids=, sitemap pętlą, usunięcie fetchShopData | todo | M | HA-2.35 | — | — |
