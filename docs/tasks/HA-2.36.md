@@ -1,12 +1,12 @@
 ---
 id: HA-2.36
 title: Reszta bez pełnej listy — bloki Sanity na małych zapytaniach, picker z ?q= i ?ids=, sitemap pętlą, usunięcie fetchShopData
-status: todo
+status: in_progress
 difficulty: M
-model: null
+model: claude-opus-5-5
 model_approved: null
 effort: null
-branch: null
+branch: feat/ha-2.36-no-full-catalogue
 due: null
 depends_on: [HA-2.35]
 blocked_by_questions: []
@@ -55,3 +55,4 @@ Po HA-2.35 `/sklep` nie potrzebuje pełnej listy, ale nadal potrzebują jej trzy
 
 ## Notatki z realizacji
 - 2026-10-24 tj (wf-plan): trzeci PR planu „listing w bazie” (HA-2.34 → 2.35 → 2.36).
+- 2026-10-25 tj (wf-task): D1 = A — block logic split from the cache wrapper, tested by a Playwright spec on the local DB; D2 = A — Studio picker proven by API tests, tj checks /studio on the Vercel preview; D3 = A — getBlockProductPool removed together with fetchShopData; manual mode ignores limit (schema contract).
