@@ -36,7 +36,7 @@ Etap 1: bezpieczny fundament (audyt 2026-09-22). Etap 2: płatności i uruchomie
 | HA-2.18 | Taksonomia P1 wg arkusza korekty z domyślnymi priorytetami | done | M | HA-2.04, HA-2.25 | — | — |
 | HA-2.19 | Podpisany link statusu zamówienia dla gościa | done | M | HA-2.07 | — | — |
 | HA-2.20 | Hardening P24 — notify tylko z IP P24, RLS koszyków, guard licznika BL | done | M | HA-2.03 | — | feat/ha-2.20-p24-hardening, PR #30 |
-| HA-2.21 | Domena główna z jednej zmiennej i ujednolicone e-maile | review | S | HA-2.16 | — | — |
+| HA-2.21 | Domena główna z jednej zmiennej i ujednolicone e-maile | done | S | HA-2.16 | — | — |
 | HA-2.22 | Marże sterowane arkuszem (wymienne źródło wartości) | todo | M | HA-2.05 | O-32 | — |
 | HA-2.23 | Test płatności na prawdziwym sandboxie P24 | todo | S | HA-2.08, HA-2.20 | O-09 | — |
 | HA-2.24 | Gałęzie ASG, łucznictwo i myślistwo w drzewie kategorii | todo | S | HA-2.18, HA-2.17 | O-20 | — |

@@ -1,7 +1,7 @@
 ---
 id: HA-2.21
 title: Domena główna z jednej zmiennej i ujednolicone e-maile
-status: review
+status: done
 difficulty: S
 model: claude-opus-5-5
 model_approved: null
@@ -45,3 +45,4 @@ Strona ma dziś trzy warianty domeny: canonical, og:url i sitemap na hydraarms.p
 - 2026-10-06: potwierdzone odczytem strony i kodu — canonical i og:url wskazują hydraarms.pl; fetch hydraarms.pl nie rozwiązał nazwy z jednego miejsca.
 - 2026-10-25 tj (wf-task): O-31 = hydra-arms.com. D1 = A — homepage e-mails from the same source as the footer (Sanity siteSettings, fallback @hydra-arms.com), no new client question. D2 — SHOP_BASE_URL merged into SITE_URL with two behaviours: SEO/metadata use SITE_URL with fallback https://hydra-arms.com; payments and e-mail links use SITE_URL without fallback (missing → refuse, as SHOP_BASE_URL did). D3 = A — fallback https://hydra-arms.com for SEO.
 - 2026-10-25 tj: D4 = A — stopka czytała `emailRd`/`emailB2g`, a schemat Sanity i zapytanie mają `emailRD`/`emailB2G`; wspólny `siteEmails()` czyta poprawne pola. Uwaga po decyzji (korekta agenta): stopka renderuje tylko adres biura, więc poprawka nie zmienia nic widocznego w stopce — wartości R&D/B2G ze Studio widać teraz na stronie głównej.
+- 2026-10-25 tj (wf-review): PR #60 accepted. Proven: canonical/og:url/og:image/sitemap/robots follow SITE_URL in a production build (example.test and unset → hydra-arms.com); hardcoded hydraarms.* and SHOP_BASE_URL greps = 0; test:site-url 3×4/4; fail-closed kept — p24-no-baseurl 3/3 and order-link-no-secret 1/1, red proof with a fallback in shopBaseUrl() sends checkout to production; inputs:check passes; build, lint and tsc clean. test:shop: 317 passed, 1 failure from the known is-test-mode-switch afterAll (HA-2.36 deferred), listing-rpc 11/11 after reset. Model: ran on Opus (recommended Sonnet low). Homepage e-mails now use the footer's addresses (research@/gov@/sprzedaz@/office@hydra-arms.com or the Studio values) — tj accepted under D1 = A; tj checks the Studio values. Vercel (tj): SITE_URL Production = https://hydra-arms.com; Preview = the previous SHOP_BASE_URL Preview value (empty if there was none); merge; then remove SHOP_BASE_URL. www.hydra-arms.com serves the site without a redirect today — the www/hydraarms.pl/hydra-arms.pl → apex redirect is tj's.
