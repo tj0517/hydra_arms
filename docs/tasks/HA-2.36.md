@@ -1,7 +1,7 @@
 ---
 id: HA-2.36
 title: Reszta bez pełnej listy — bloki Sanity na małych zapytaniach, picker z ?q= i ?ids=, sitemap pętlą, usunięcie fetchShopData
-status: review
+status: done
 difficulty: M
 model: claude-opus-5-5
 model_approved: null
@@ -57,3 +57,4 @@ Po HA-2.35 `/sklep` nie potrzebuje pełnej listy, ale nadal potrzebują jej trzy
 - 2026-10-24 tj (wf-plan): trzeci PR planu „listing w bazie” (HA-2.34 → 2.35 → 2.36).
 - 2026-10-25 tj (wf-task): D1 = A — block logic split from the cache wrapper, tested by a Playwright spec on the local DB; D2 = A — Studio picker proven by API tests, tj checks /studio on the Vercel preview; D3 = A — getBlockProductPool removed together with fetchShopData; manual mode ignores limit (schema contract).
 - 2026-10-25 tj: on_sale = A — one query over the 200 newest products with an image and any `price_compare`, `price_compare > price` filtered in code, fallback to new arrivals; option C (DB function / stored on-sale flag) recorded in deferred. Deleting `reservedStock.ts` approved (grep: 0 hits outside the file). `?ids=` capped at 100 (more → 400). Block spec may modify seed-bulk rows if they're restored in afterAll/finally even when a test fails; the report says whether another spec can read them meanwhile.
+- 2026-10-25 tj (wf-review): PR #59 accepted. Proven: the full-catalogue loaders are gone (grep = 0); block modes are covered by product-blocks.spec (all 4 modes, both fallbacks, public columns; manual-order red proof); products-list ?q=/?ids=/400/cap 100 has red proofs (14 failing without validation, the injected filter returned 50 extra rows); the sitemap compares id sets (> 1 000) and limit(500) is gone; revalidateTag after sync and after payment is kept; build OK on the local env. test:shop run 2 green (3 flaky, 1 skip, all in deferred); run 1 failed on the is-test-mode-switch afterAll (pre-existing, in deferred). Model: ran on Opus high (recommended Sonnet medium). The Studio picker check (TC-30 + a two-word phrase) is done by tj on prod after the merge.
