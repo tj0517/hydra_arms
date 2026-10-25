@@ -250,7 +250,15 @@ test.describe('shop_listing / shop_tree (migration 019)', () => {
     const tree = data!
 
     const { data: cats } = await sb.from('shop_categories').select('id')
-    const { data: prods } = await sb.from('shop_products').select('category_id, price').eq('is_active', true)
+    // Paged: the seed has > 1 000 active products (HA-2.35 bulk) and PostgREST caps a response at max_rows = 1000.
+    const prods: { category_id: number | null; price: number | null }[] = []
+    for (let from = 0; ; from += 1000) {
+      const { data: chunk, error: chunkErr } = await sb
+        .from('shop_products').select('category_id, price').eq('is_active', true).order('id').range(from, from + 999)
+      expect(chunkErr).toBeNull()
+      prods.push(...chunk!)
+      if (chunk!.length < 1000) break
+    }
     expect(tree.categories.map(c => c.id).sort((a, b) => a - b)).toEqual(cats!.map(c => c.id).sort((a, b) => a - b))
     for (const c of tree.categories) {
       expect(c.count, String(c.id)).toBe(prods!.filter(p => p.category_id === c.id).length)
