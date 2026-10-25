@@ -5,6 +5,12 @@
  * EXECUTE for service_role only, so /sklep must fail with the error page (500) —
  * never render 200 with an empty catalogue (deferred 2026-09-30).
  *
+ * Unlike the other mini configs this one runs a PRODUCTION server (next build +
+ * next start): `next dev` answers 200 and renders the error into the page (dev
+ * error overlay), so the status code is only meaningful in production. The build
+ * gets the local NEXT_PUBLIC_* values from the env below (they are inlined at build
+ * time) and overwrites .next/ (not .next/dev, which the dev server uses).
+ *
  * Run with: npm run test:listing:no-service-role
  */
 import { defineConfig, devices } from '@playwright/test'
@@ -33,10 +39,10 @@ export default defineConfig({
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
   ],
   webServer: {
-    command: 'npm run dev -- -p 3008',
+    command: 'npx next build && npx next start -p 3008',
     url: 'http://localhost:3008',
     reuseExistingServer: false,
-    timeout: 90_000,
+    timeout: 600_000,
     env: {
       ...TEST_SHIPPING_ENV,
       PORT: '3008',
