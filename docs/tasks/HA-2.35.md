@@ -1,12 +1,12 @@
 ---
 id: HA-2.35
 title: /sklep liczony na serwerze — URL jako stan (page, spec), SklepClient bez filtrowania, cache per kombinacja filtrów
-status: todo
+status: in_progress
 difficulty: L
-model: null
+model: claude-opus-5-5
 model_approved: null
-effort: null
-branch: null
+effort: high
+branch: feat/ha-2.35-server-listing
 due: null
 depends_on: [HA-2.34]
 blocked_by_questions: []
@@ -65,3 +65,5 @@ Listing `/sklep` ma dostawać z serwera tylko to, co widać: 24 karty, łączną
 ## Notatki z realizacji
 - 2026-10-24 tj (wf-plan): D2 = A — HA-2.09 (start sprzedaży) zależy od tego zadania.
 - 2026-10-24 tj (wf-plan): TTL cache 300 s zostaje; świeżość po płatności zapewnia istniejący `revalidateTag` w `markOrderPaid.ts`, po syncu — w `/api/shop/sync`.
+- 2026-10-25 tj (wf-task): liczniki wg decyzji B (tj 2026-10-24, HA-2.34) — każdy licznik liczony ze wszystkimi pozostałymi filtrami; specyfikacje uwzględniają markę i dostawę, marki uwzględniają specyfikacje; różnica względem HA-2.30 to świadoma zmiana, nie regres.
+- 2026-10-25 tj (wf-task): seed bulk = A — produkty masowe w jednej kategorii „seed-bulk”, nazwy sortujące się po wszystkich innych produktach seeda, bez zdjęć, zwykły typ (nie tylko odbiór); pozostałe pliki testów bez zmian.
