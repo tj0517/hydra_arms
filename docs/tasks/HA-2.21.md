@@ -1,15 +1,15 @@
 ---
 id: HA-2.21
 title: Domena główna z jednej zmiennej i ujednolicone e-maile
-status: todo
+status: in_progress
 difficulty: S
-model: null
+model: claude-opus-5-5
 model_approved: null
 effort: null
-branch: null
+branch: feat/ha-2.21-site-url
 due: null
 depends_on: [HA-2.16]
-blocked_by_questions: [O-31]
+blocked_by_questions: []
 touches_db: false
 touches_prod: false
 pr: null
@@ -43,3 +43,4 @@ Strona ma dziś trzy warianty domeny: canonical, og:url i sitemap na hydraarms.p
 
 ## Notatki z realizacji
 - 2026-10-06: potwierdzone odczytem strony i kodu — canonical i og:url wskazują hydraarms.pl; fetch hydraarms.pl nie rozwiązał nazwy z jednego miejsca.
+- 2026-10-25 tj (wf-task): O-31 = hydra-arms.com. D1 = A — homepage e-mails from the same source as the footer (Sanity siteSettings, fallback @hydra-arms.com), no new client question. D2 — SHOP_BASE_URL merged into SITE_URL with two behaviours: SEO/metadata use SITE_URL with fallback https://hydra-arms.com; payments and e-mail links use SITE_URL without fallback (missing → refuse, as SHOP_BASE_URL did). D3 = A — fallback https://hydra-arms.com for SEO.
