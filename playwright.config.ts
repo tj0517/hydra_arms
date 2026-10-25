@@ -34,6 +34,7 @@ export default defineConfig({
     '**/order-link-no-secret.spec.ts', // playwright.order-link-no-secret.config.ts (HA-2.19)
     '**/verification-server/**',  // playwright.verification*.config.ts (HA-2.08)
     '**/shipping-env/**',         // playwright.shipping-env.config.ts (HA-2.02)
+    '**/listing-no-service-role/**', // playwright.listing-no-service-role.config.ts (HA-2.35)
   ],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,

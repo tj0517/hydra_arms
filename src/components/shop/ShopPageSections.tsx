@@ -7,7 +7,8 @@ import { PortableText } from '@portabletext/react'
 import * as LucideIcons from 'lucide-react'
 import type { LucideProps } from 'lucide-react'
 import { urlFor } from '@/sanity/image'
-import type { ShopProduct, ShopCategory } from '@/lib/supabase/types'
+import type { ShopProduct } from '@/lib/supabase/types'
+import type { ListingCategory } from './listingFilters'
 import ProductCard from './ProductCard'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -136,7 +137,7 @@ export type ShopSection =
 interface Props {
   sections: ShopSection[]
   resolvedProducts: Record<string, ShopProduct[]>
-  categories: ShopCategory[]
+  categories: ListingCategory[]
 }
 
 // ── Icon resolver ──────────────────────────────────────────────────────────────
@@ -228,7 +229,7 @@ function ProductPickerSection({
 }: {
   block: ProductPickerBlock
   products: ShopProduct[]
-  categories: ShopCategory[]
+  categories: ListingCategory[]
 }) {
   if (!products.length) return null
 

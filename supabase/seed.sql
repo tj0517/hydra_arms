@@ -218,8 +218,10 @@ UPDATE shop_products
 -- ── Bulk catalogue (HA-2.35, decision tj 2026-10-25: seed bulk = A) ─────────
 -- 1 100 generated products so the server-side listing is exercised past one page
 -- of PostgREST rows (max_rows = 1000) and past many pages of 24. All in one root
--- category "seed-bulk", standard/shippable, in stock, no images, no brand, no
--- features — they add no brand or spec counters to the other categories.
+-- category "seed-bulk", standard/shippable, in stock, no images. Two brands
+-- ("Seed Bulk A"/"B", by i % 2) and one feature "Rozmiar" (S/M/L, by i % 3) so a
+-- deep link cat + marka + spec still has a page 2 (~183 products per combination);
+-- spec counters are per category, so the other categories see no new spec keys.
 -- Names start with "Żżż" so they sort after every other seed product under both
 -- COLLATE "pl-x-icu" (shop_listing: Ż is the last Polish letter) and the default DB
 -- collation (/api/shop/products orders by name; Ż = U+017B is above every other
@@ -234,11 +236,13 @@ INSERT INTO shop_products
    price, tax_rate, stock, weight,
    category_id, product_type, is_active,
    source_warehouse,
-   age_min, requires_license, delivery_allowed, brand)
+   age_min, requires_license, delivery_allowed, brand, features)
 SELECT 200000 + i, 35743, 'BULK-' || lpad(i::text, 4, '0'), NULL,
        'Żżż seed-bulk ' || lpad(i::text, 4, '0'),
        (10 + i % 100)::numeric(10, 2), 23, 1 + i % 20, 0.10,
-       13000, 'standard', TRUE, 'own', 0, FALSE, TRUE, NULL
+       13000, 'standard', TRUE, 'own', 0, FALSE, TRUE,
+       CASE i % 2 WHEN 0 THEN 'Seed Bulk A' ELSE 'Seed Bulk B' END,
+       jsonb_build_object('Rozmiar', (ARRAY['S', 'M', 'L'])[1 + i % 3])
   FROM generate_series(1, 1100) AS g(i);
 
 -- Paid order not yet in BaseLinker → reserves the only unit of 314004.
