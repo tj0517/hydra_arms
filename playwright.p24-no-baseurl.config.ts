@@ -9,7 +9,7 @@ assertNotProd('npx playwright test --config playwright.p24-no-baseurl.config.ts'
 if (!process.env.P24_CRC_KEY) {
   throw new Error('P24_CRC_KEY must be set in .env.development.local to run this test suite')
 }
-// Fake key (HA-2.19): the secret IS set here, so "no link" below is down to the empty SHOP_BASE_URL alone.
+// Fake key (HA-2.19): the secret IS set here, so "no link" below is down to the empty SITE_URL alone.
 process.env.ORDER_LINK_SECRET = 'fake-order-link-secret-for-playwright-only'
 
 export default defineConfig({
@@ -40,11 +40,11 @@ export default defineConfig({
       SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
       BASELINKER_MOCK: 'true',
       BASELINKER_STATUS_PAID: process.env.BASELINKER_STATUS_PAID ?? '',
-      SHOP_BASE_URL: '',  // intentionally empty: tests fail-closed behaviour
+      SITE_URL: '',  // intentionally empty: tests fail-closed behaviour
       ORDER_LINK_SECRET: process.env.ORDER_LINK_SECRET,
       RESEND_MOCK: 'true',
       P24_MODE: 'mock',
-      P24_NOTIFY_ALLOWED_IPS: '',   // filter off: this config tests the SHOP_BASE_URL guard (HA-2.20)
+      P24_NOTIFY_ALLOWED_IPS: '',   // filter off: this config tests the SITE_URL guard (HA-2.20)
       P24_CRC_KEY: process.env.P24_CRC_KEY,
       P24_MERCHANT_ID: process.env.P24_MERCHANT_ID ?? '',
       P24_POS_ID: process.env.P24_POS_ID ?? '',

@@ -61,7 +61,7 @@ export default defineConfig({
       BASELINKER_MOCK: 'true',
       BASELINKER_STATUS_PAID: process.env.BASELINKER_STATUS_PAID ?? '',
       RESEND_MOCK: 'true',
-      SHOP_BASE_URL: 'http://localhost:3004',
+      SITE_URL: 'http://localhost:3004',
       P24_MODE: 'mock',
       P24_CRC_KEY: process.env.P24_CRC_KEY,
       P24_MERCHANT_ID: process.env.P24_MERCHANT_ID ?? '',

@@ -53,7 +53,7 @@ test('no secret: e-mail is sent without a status link; page and API refuse any t
   expect(res.status()).toBe(200)
   const { order_id: orderId } = await res.json()
 
-  // Mail was sent (checkout did not break) but carries no status link; SHOP_BASE_URL is set.
+  // Mail was sent (checkout did not break) but carries no status link; SITE_URL is set.
   const file = join(process.cwd(), 'test-results', 'mock-emails', `${orderId}-order_received.html`)
   expect(existsSync(file)).toBe(true)
   const html = readFileSync(file, 'utf8')

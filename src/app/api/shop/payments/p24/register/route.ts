@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { registerPayment } from '@/lib/shop/registerPayment'
+import { shopBaseUrl } from '@/lib/siteUrl'
 
 // Register a new payment attempt for a pending_payment order (used for retry)
 export async function POST(req: NextRequest) {
@@ -17,7 +18,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const { paymentUrl } = await registerPayment(orderId, {
-      baseUrl: process.env.SHOP_BASE_URL,
+      baseUrl: shopBaseUrl(),
       email,
     })
     return NextResponse.json({ payment_url: paymentUrl })

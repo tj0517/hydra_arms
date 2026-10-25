@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getP24Mode, signNotification } from '@/lib/p24'
+import { shopBaseUrl } from '@/lib/siteUrl'
 
 // Only available when P24_MODE=mock
 export async function POST(req: NextRequest) {
@@ -8,10 +9,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
-  // Fail-closed: SHOP_BASE_URL must be set before we do anything else
-  const baseUrl = process.env.SHOP_BASE_URL
+  // Fail-closed: SITE_URL must be set before we do anything else
+  const baseUrl = shopBaseUrl()
   if (!baseUrl) {
-    return NextResponse.json({ error: 'SHOP_BASE_URL not configured' }, { status: 500 })
+    return NextResponse.json({ error: 'SITE_URL not configured' }, { status: 500 })
   }
 
   let body: { orderId?: string; p24SessionId?: string }

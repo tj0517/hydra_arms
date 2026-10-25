@@ -3,13 +3,14 @@ import { breadcrumbJsonLd, type Crumb } from '@/lib/shop/breadcrumbs';
 
 /**
  * Breadcrumb trail + schema.org BreadcrumbList (HA-2.32).
- * `currentPath` is the page's own path, used as the last item's URL in JSON-LD.
+ * `currentPath` is the page's own path, used as the last item's URL in JSON-LD;
+ * `baseUrl` (siteUrl() from the server page) makes the URLs absolute.
  * Labels come from the database; React escapes them in the markup and
  * JSON.stringify serialises them in the script — never string-concatenated.
  * "<" is escaped so a label can never close the script element.
  */
-export default function Breadcrumbs({ items, currentPath }: { items: Crumb[]; currentPath: string }) {
-  const jsonLd = JSON.stringify(breadcrumbJsonLd(items, currentPath)).replace(/</g, '\\u003c');
+export default function Breadcrumbs({ items, currentPath, baseUrl }: { items: Crumb[]; currentPath: string; baseUrl: string }) {
+  const jsonLd = JSON.stringify(breadcrumbJsonLd(items, currentPath, baseUrl)).replace(/</g, '\\u003c');
   return (
     <nav aria-label="Breadcrumb" data-testid="breadcrumbs">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />

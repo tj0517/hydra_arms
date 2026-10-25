@@ -18,7 +18,7 @@ process.env.ORDER_LINK_SECRET = 'fake-order-link-secret-for-playwright-only'
 
 // Port of the dev server under test. Default 3001 (CI, docs). HYDRA_TEST_PORT is a local
 // override for machines where 3001 is taken (e.g. a DCS dev server on WSL); one value drives
-// webServer, baseURL and SHOP_BASE_URL so they cannot disagree. Re-exported to workers via env.
+// webServer, baseURL and SITE_URL so they cannot disagree. Re-exported to workers via env.
 const PORT = process.env.HYDRA_TEST_PORT || '3001';
 if (!/^\d{2,5}$/.test(PORT)) throw new Error(`HYDRA_TEST_PORT must be a port number, got "${PORT}"`);
 process.env.HYDRA_TEST_PORT = PORT;
@@ -35,6 +35,7 @@ export default defineConfig({
     '**/verification-server/**',  // playwright.verification*.config.ts (HA-2.08)
     '**/shipping-env/**',         // playwright.shipping-env.config.ts (HA-2.02)
     '**/listing-no-service-role/**', // playwright.listing-no-service-role.config.ts (HA-2.35)
+    '**/site-url/**',             // playwright.site-url.config.ts (HA-2.21)
   ],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
@@ -64,7 +65,7 @@ export default defineConfig({
       BASELINKER_MOCK: process.env.BASELINKER_MOCK ?? 'true',
       BASELINKER_STATUS_PAID: process.env.BASELINKER_STATUS_PAID ?? '',
       RESEND_MOCK: 'true',
-      SHOP_BASE_URL: `http://localhost:${PORT}`,
+      SITE_URL: `http://localhost:${PORT}`,
       ORDER_LINK_SECRET: process.env.ORDER_LINK_SECRET,
       P24_MODE: process.env.P24_MODE ?? 'mock',
       // Empty (not absent) for the same reason as P24_NOTIFY_ALLOWED_IPS: a SHOP_MODE exported in

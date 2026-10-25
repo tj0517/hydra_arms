@@ -1,5 +1,6 @@
 import 'server-only'
 import { createHmac, timingSafeEqual } from 'node:crypto'
+import { shopBaseUrl } from '@/lib/siteUrl'
 
 /**
  * Signed, expiring guest order-status link (HA-2.19).
@@ -62,12 +63,12 @@ export function verifyOrderLinkToken(
 
 /**
  * Absolute status URL for the order e-mails, or null when it can't be built
- * safely: no ORDER_LINK_SECRET, or SHOP_BASE_URL empty / not absolute http(s)
+ * safely: no ORDER_LINK_SECRET, or SITE_URL empty / not absolute http(s)
  * (never a relative link).
  */
 export function buildOrderStatusUrl(orderId: string, nowMs: number = Date.now()): string | null {
-  const base = (process.env.SHOP_BASE_URL ?? '').trim().replace(/\/+$/, '')
-  if (!/^https?:\/\/[^/]/.test(base)) return null
+  const base = shopBaseUrl()
+  if (!base) return null
   const token = createOrderLinkToken(orderId, nowMs)
   if (!token) return null
   return `${base}/sklep/status/${orderId.toLowerCase()}?t=${token}`

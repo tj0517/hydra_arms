@@ -16,8 +16,6 @@ export interface Crumb {
   href?: string;
 }
 
-/** Same literal as BASE_URL in src/app/layout.tsx (metadataBase) — JSON-LD wants absolute URLs. */
-export const SITE_URL = 'https://hydraarms.pl';
 
 const MAX_DEPTH = 6;
 
@@ -48,8 +46,11 @@ export function productBreadcrumbs(
   ];
 }
 
-/** schema.org BreadcrumbList — serialised with JSON.stringify by the caller, never concatenated. */
-export function breadcrumbJsonLd(crumbs: Crumb[], currentPath: string) {
+/**
+ * schema.org BreadcrumbList — serialised with JSON.stringify by the caller, never concatenated.
+ * `baseUrl` is siteUrl() read on the server: this also renders in the browser, where SITE_URL is unset.
+ */
+export function breadcrumbJsonLd(crumbs: Crumb[], currentPath: string, baseUrl: string) {
   return {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -57,7 +58,7 @@ export function breadcrumbJsonLd(crumbs: Crumb[], currentPath: string) {
       '@type': 'ListItem',
       position: i + 1,
       name: c.label,
-      item: `${SITE_URL}${c.href ?? currentPath}`,
+      item: `${baseUrl}${c.href ?? currentPath}`,
     })),
   };
 }

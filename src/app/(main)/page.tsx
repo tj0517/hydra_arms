@@ -1,6 +1,7 @@
 import HomePageClient from '@/components/HomePageClient'
 import { sanityFetch } from '@/sanity/client'
-import { homePageQuery, servicesQuery, distributionChannelsQuery, latestNewsQuery, latestBlogQuery } from '@/sanity/queries'
+import { homePageQuery, servicesQuery, distributionChannelsQuery, latestNewsQuery, latestBlogQuery, siteSettingsQuery } from '@/sanity/queries'
+import { siteEmails } from '@/lib/siteDefaults'
 import { urlFor } from '@/sanity/image'
 import type { PostCardData } from '@/components/PostCard'
 
@@ -45,14 +46,16 @@ export default async function HomePage() {
   let services, filary: ({ tag: string; title: string; desc: string; image?: SanityImage } | null)[] | null, heroData
   let rawNews: RawPost[] | null = null
   let rawBlog: RawPost[] | null = null
+  let settings: { emailRD?: string; emailB2G?: string; emailHandel?: string; emailBiuro?: string } | null = null
 
   try {
-    ;[services, filary, heroData, rawNews, rawBlog] = await Promise.all([
+    ;[services, filary, heroData, rawNews, rawBlog, settings] = await Promise.all([
       sanityFetch<{ id: string; label: string; title: string; desc: string; tags: string[]; image?: SanityImage; imagePath?: string }[]>({ query: servicesQuery }),
       sanityFetch<{ tag: string; title: string; desc: string; image?: SanityImage }[]>({ query: distributionChannelsQuery }),
       sanityFetch<{ heroTagline1?: string; heroTagline2?: string; hudLabel?: string; aboutText?: string; heroVideo?: string; aktualosciHeading?: string; potencjalTitle?: string; potencjalBody?: string; blogHeading?: string }>({ query: homePageQuery }),
       sanityFetch<RawPost[]>({ query: latestNewsQuery }),
       sanityFetch<RawPost[]>({ query: latestBlogQuery }),
+      sanityFetch<{ emailRD?: string; emailB2G?: string; emailHandel?: string; emailBiuro?: string }>({ query: siteSettingsQuery }),
     ])
   } catch {
     services = null
@@ -92,6 +95,7 @@ export default async function HomePage() {
       blogHeading={heroData?.blogHeading || undefined}
       recentNews={mapPosts(rawNews, 'aktualnosci')}
       recentBlog={mapPosts(rawBlog, 'blog')}
+      emails={siteEmails(settings)}
     />
   )
 }

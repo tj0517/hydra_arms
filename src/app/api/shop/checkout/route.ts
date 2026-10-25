@@ -10,6 +10,7 @@ import { sendOrderReceivedEmail } from '@/lib/email/orderEmails'
 import { getCheckoutGate } from '@/lib/shop/shopMode'
 import { isShippingMethod, normalizeLockerCode } from '@/lib/shop/shipping'
 import { getShippingPriceList } from '@/lib/shop/shippingPrices'
+import { shopBaseUrl } from '@/lib/siteUrl'
 
 interface CheckoutItem {
   product_id: number
@@ -373,7 +374,7 @@ export async function POST(req: NextRequest) {
 
     // Register a P24 payment attempt and get the redirect URL
     const shipping = body.shipping
-    const baseUrl = process.env.SHOP_BASE_URL
+    const baseUrl = shopBaseUrl()
 
     let paymentUrl = `/sklep/zamowienie/${orderId}`
     try {

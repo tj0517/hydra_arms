@@ -1,6 +1,7 @@
 import 'server-only'
 import type { CompanyInfo } from './company'
 import { isShippingMethod, SHIPPING_METHOD_LABELS } from '@/lib/shop/shipping'
+import { shopBaseUrl } from '@/lib/siteUrl'
 
 export interface OrderEmailItem {
   name: string
@@ -88,11 +89,11 @@ function statusLinkBlock(statusUrl: string | null): string {
   </p>`
 }
 
-// Without SHOP_BASE_URL there is no absolute address, so the sentence stays
+// Without SITE_URL there is no absolute address, so the sentence stays
 // but carries no link (a relative href is useless in a mail client).
 function accountNudge(): string {
-  const baseUrl = (process.env.SHOP_BASE_URL ?? '').trim().replace(/\/+$/, '')
-  const href = /^https?:\/\/[^/]/.test(baseUrl) ? `${baseUrl}/konto/zamowienia` : null
+  const baseUrl = shopBaseUrl()
+  const href = baseUrl ? `${baseUrl}/konto/zamowienia` : null
   const link = href
     ? ` — <a href="${escapeHtml(href)}" style="color:${green};text-decoration:none;">${escapeHtml(href)}</a>`
     : ''

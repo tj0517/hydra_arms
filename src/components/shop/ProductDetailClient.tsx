@@ -17,6 +17,8 @@ interface Props {
   product: ShopProduct;
   categories: ShopCategory[];
   related: ShopProduct[];
+  /** siteUrl() from the server page — for the breadcrumb JSON-LD. */
+  baseUrl: string;
 }
 
 const fmt = (n: number) =>
@@ -50,7 +52,7 @@ function sanitizeHtml(html: string): string {
 }
 
 
-export default function ProductDetailClient({ product, categories, related }: Props) {
+export default function ProductDetailClient({ product, categories, related, baseUrl }: Props) {
   const { addItem, openCart, items } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [activeImg, setActiveImg] = useState(0);
@@ -124,7 +126,7 @@ export default function ProductDetailClient({ product, categories, related }: Pr
 
         {/* Breadcrumbs + back button (HA-2.32) */}
         <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <Breadcrumbs items={productBreadcrumbs(product, categories)} currentPath={`/sklep/${product.id}`} />
+          <Breadcrumbs items={productBreadcrumbs(product, categories)} currentPath={`/sklep/${product.id}`} baseUrl={baseUrl} />
           <Link
             href="/sklep"
             className="font-[var(--font-mono)] text-[11px] text-text-dim hover:text-accent transition-colors tracking-[0.2em] uppercase border border-white/10 hover:border-accent/30 px-4 py-2 inline-flex items-center"

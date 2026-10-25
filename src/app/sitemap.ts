@@ -2,8 +2,9 @@ import type { MetadataRoute } from 'next'
 import { sanityFetch } from '@/sanity/client'
 import { groq } from 'next-sanity'
 import { createPublicClient } from '@/lib/supabase/public'
+import { siteUrl } from '@/lib/siteUrl'
 
-const BASE_URL = 'https://hydraarms.pl'
+const BASE_URL = siteUrl()
 
 const staticRoutes: MetadataRoute.Sitemap = [
   { url: `${BASE_URL}/`, lastModified: new Date(), changeFrequency: 'weekly', priority: 1.0 },

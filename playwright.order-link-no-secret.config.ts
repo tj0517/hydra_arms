@@ -11,7 +11,7 @@ if (!process.env.P24_CRC_KEY) {
 }
 
 // HA-2.19: dev server WITHOUT ORDER_LINK_SECRET (fails closed: mails without the link,
-// status page/API refuse every token). SHOP_BASE_URL is set, so "no link" is down to the
+// status page/API refuse every token). SITE_URL is set, so "no link" is down to the
 // missing secret alone. Must stay unset on the runner too: the spec checks it.
 delete process.env.ORDER_LINK_SECRET
 
@@ -44,7 +44,7 @@ export default defineConfig({
       BASELINKER_MOCK: 'true',
       BASELINKER_STATUS_PAID: process.env.BASELINKER_STATUS_PAID ?? '',
       RESEND_MOCK: 'true',
-      SHOP_BASE_URL: 'http://localhost:3006',
+      SITE_URL: 'http://localhost:3006',
       ORDER_LINK_SECRET: '',   // intentionally empty: tests fail-closed behaviour
       P24_MODE: 'mock',
       P24_NOTIFY_ALLOWED_IPS: '',

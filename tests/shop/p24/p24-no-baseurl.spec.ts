@@ -1,13 +1,13 @@
 /**
- * SHOP_BASE_URL fail-closed tests (HA-2.03 Review Round 2, §4)
+ * SITE_URL fail-closed tests (HA-2.03 Review Round 2, §4)
  *
- * Red proof: before fix, SHOP_BASE_URL='' → attempt row IS created (with broken URLs)
- * Green proof: after fix, SHOP_BASE_URL='' → registerPayment throws → no attempt row;
+ * Red proof: before fix, SITE_URL='' → attempt row IS created (with broken URLs)
+ * Green proof: after fix, SITE_URL='' → registerPayment throws → no attempt row;
  *              checkout still returns 200 (order created, fallback payment_url);
  *              mock-pay returns 500 before even looking up the attempt.
  *
  * Requires: local Supabase stack running, separate Next.js server on port 3003
- *           with SHOP_BASE_URL='' (playwright.p24-no-baseurl.config.ts)
+ *           with SITE_URL='' (playwright.p24-no-baseurl.config.ts)
  * Run: npm run test:p24:no-baseurl
  */
 import { test, expect } from '@playwright/test'
@@ -49,8 +49,8 @@ test.beforeAll(async ({ request }) => {
   throw new Error('Stack not ready after 30 s')
 })
 
-test.describe('SHOP_BASE_URL unset — fail-closed', () => {
-  test('checkout: order created, no attempt row, fallback payment_url when SHOP_BASE_URL empty', async ({ request }) => {
+test.describe('SITE_URL unset — fail-closed', () => {
+  test('checkout: order created, no attempt row, fallback payment_url when SITE_URL empty', async ({ request }) => {
     const productsRes = await request.get('/api/shop/products?in_stock=true')
     const { products } = await productsRes.json()
     const product = (products as Array<{ id: number; product_type: string }>)
@@ -86,7 +86,7 @@ test.describe('SHOP_BASE_URL unset — fail-closed', () => {
     expect(attempts.length).toBe(0)
   })
 
-  test('mock-pay: 500 when SHOP_BASE_URL is empty (check before DB lookup)', async ({ request }) => {
+  test('mock-pay: 500 when SITE_URL is empty (check before DB lookup)', async ({ request }) => {
     // RED: old code had baseUrl check after DB lookup → fake IDs return 404 (attempt not found)
     // GREEN: baseUrl check moved to top of handler → returns 500 before any DB access
     const res = await request.post('/api/shop/payments/p24/mock-pay', {
@@ -94,12 +94,12 @@ test.describe('SHOP_BASE_URL unset — fail-closed', () => {
     })
     expect(res.status()).toBe(500)
     const json = await res.json()
-    expect(json.error).toBe('SHOP_BASE_URL not configured')
+    expect(json.error).toBe('SITE_URL not configured')
   })
 
-  // HA-2.19: resolves the 2026-09-30 deferred entry (`SHOP_BASE_URL ?? ''` → relative link).
-  // ORDER_LINK_SECRET is set in this config, so "no link" is down to the empty SHOP_BASE_URL alone.
-  test('order e-mail: no status link and no relative href when SHOP_BASE_URL is empty', async ({ request }) => {
+  // HA-2.19: resolves the 2026-09-30 deferred entry (empty base URL → relative link).
+  // ORDER_LINK_SECRET is set in this config, so "no link" is down to the empty SITE_URL alone.
+  test('order e-mail: no status link and no relative href when SITE_URL is empty', async ({ request }) => {
     const { products } = await (await request.get('/api/shop/products?in_stock=true')).json()
     const product = (products as Array<{ id: number; product_type: string }>).find(p => p.product_type === 'standard')
     if (!product) throw new Error('No standard product in seed')

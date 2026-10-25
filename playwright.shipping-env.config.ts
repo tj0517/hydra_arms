@@ -49,7 +49,7 @@ export default defineConfig({
       BASELINKER_MOCK: 'true',
       BASELINKER_STATUS_PAID: '',
       RESEND_MOCK: 'true',
-      SHOP_BASE_URL: 'http://localhost:3007',
+      SITE_URL: 'http://localhost:3007',
       SHOP_MODE: '',
       P24_MODE: 'mock',
       P24_CRC_KEY: process.env.P24_CRC_KEY ?? 'mock-crc-key-dev',

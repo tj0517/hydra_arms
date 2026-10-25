@@ -1,8 +1,0 @@
-User-agent: *
-Allow: /
-
-Disallow: /studio/
-Disallow: /api/
-Disallow: /konto/
-
-Sitemap: https://hydraarms.pl/sitemap.xml
