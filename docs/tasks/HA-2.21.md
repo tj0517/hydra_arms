@@ -1,7 +1,7 @@
 ---
 id: HA-2.21
 title: Domena główna z jednej zmiennej i ujednolicone e-maile
-status: in_progress
+status: review
 difficulty: S
 model: claude-opus-5-5
 model_approved: null
@@ -12,7 +12,7 @@ depends_on: [HA-2.16]
 blocked_by_questions: []
 touches_db: false
 touches_prod: false
-pr: null
+pr: 60
 ---
 
 ## Cel
