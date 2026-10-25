@@ -1,7 +1,7 @@
 ---
 id: HA-2.36
 title: Reszta bez pełnej listy — bloki Sanity na małych zapytaniach, picker z ?q= i ?ids=, sitemap pętlą, usunięcie fetchShopData
-status: in_progress
+status: review
 difficulty: M
 model: claude-opus-5-5
 model_approved: null
