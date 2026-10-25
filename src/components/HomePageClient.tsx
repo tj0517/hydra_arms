@@ -15,6 +15,7 @@ import ClientSegmentsGrid from "@/components/sections/ClientSegmentsGrid";
 import PostCard, { type PostCardData } from "@/components/PostCard";
 import TagBullets from "@/components/sections/TagBullets";
 import TitleLeadSection from "@/components/sections/TitleLeadSection";
+import { siteEmails, type SiteEmails } from "@/lib/siteDefaults";
 
 /* ──────────── DATA ──────────── */
 
@@ -104,6 +105,8 @@ interface HomePageClientProps {
   blogHeading?: string
   recentNews?: PostCardData[]
   recentBlog?: PostCardData[]
+  /** siteSettings addresses via siteEmails() — same source and fallbacks as the footer. */
+  emails?: SiteEmails
 }
 
 /* ──────────── PAGE ──────────── */
@@ -122,6 +125,7 @@ export default function HomePageClient({
   blogHeading = DEFAULT_BLOG_HEADING,
   recentNews = [],
   recentBlog = [],
+  emails = siteEmails(null),
 }: HomePageClientProps = {}) {
   const { lowGraphicsMode } = useGraphicsCapability();
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -773,19 +777,19 @@ export default function HomePageClient({
                   <div className="font-[var(--font-mono)] text-[13px] leading-[2.2] space-y-0">
                     <p className="text-text-dim">
                       <span className="text-accent/50">R&D</span>{" "}
-                      <span className="text-accent">rd@hydraarms.com</span>
+                      <span className="text-accent">{emails.rd}</span>
                     </p>
                     <p className="text-text-dim">
                       <span className="text-accent/50">B2G</span>{" "}
-                      <span className="text-accent">b2g@hydraarms.com</span>
+                      <span className="text-accent">{emails.b2g}</span>
                     </p>
                     <p className="text-text-dim">
                       <span className="text-accent/50">HANDEL</span>{" "}
-                      <span className="text-accent">handel@hydraarms.com</span>
+                      <span className="text-accent">{emails.handel}</span>
                     </p>
                     <p className="text-text-dim">
                       <span className="text-accent/50">BIURO</span>{" "}
-                      <span className="text-accent">biuro@hydraarms.com</span>
+                      <span className="text-accent">{emails.biuro}</span>
                     </p>
                   </div>
 

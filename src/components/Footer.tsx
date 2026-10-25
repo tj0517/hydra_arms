@@ -3,7 +3,7 @@
 import { useRef, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { DEFAULT_TELEFON } from "@/lib/siteDefaults";
+import { DEFAULT_TELEFON, siteEmails } from "@/lib/siteDefaults";
 import type { PaymentMarks } from "@/lib/shop/paymentMarks";
 
 const DEFAULT_NAV_LINKS = [
@@ -32,8 +32,8 @@ type SiteSettings = {
   instagramUrl?: string;
   linkedinUrl?: string;
   emailBiuro?: string;
-  emailRd?: string;
-  emailB2g?: string;
+  emailRD?: string;
+  emailB2G?: string;
   emailHandel?: string;
   logo?: string;
   telefon?: string;
@@ -60,10 +60,7 @@ export default function Footer({
   const uei = siteSettings?.uei ?? "YUXMMDP8MNP4";
   const adresSiedziby = siteSettings?.adresSiedziby ?? "ul. Cechowa 44B\n30-614 Kraków";
   const adresSklep = siteSettings?.adresSklep ?? "ul. Gdańska 22\n31-411 Kraków";
-  const emailBiuro = siteSettings?.emailBiuro ?? "office@hydra-arms.com";
-  const emailRd = siteSettings?.emailRd ?? "research@hydra-arms.com";
-  const emailB2g = siteSettings?.emailB2g ?? "gov@hydra-arms.com";
-  const emailHandel = siteSettings?.emailHandel ?? "sprzedaz@hydra-arms.com";
+  const emails = siteEmails(siteSettings);
   const logoUrl = siteSettings?.logo ?? "/logo-footer.png";
   const telefon = siteSettings?.telefon || DEFAULT_TELEFON;
   const footerRef = useRef<HTMLElement>(null);
@@ -205,7 +202,7 @@ export default function Footer({
               </p>
               <div className="flex gap-3">
                 <a
-                  href={`mailto:${emailBiuro}`}
+                  href={`mailto:${emails.biuro}`}
                   aria-label="Email"
                   className="relative w-10 h-10 flex items-center justify-center text-accent hover:bg-accent hover:text-bg transition-colors duration-300 group"
                 >

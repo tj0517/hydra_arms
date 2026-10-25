@@ -131,16 +131,17 @@ test.describe('/sklep/[id] — breadcrumbs (HA-2.32)', () => {
     await page.screenshot({ path: `${SHOT_DIR}/ha-2.32-pdp-312002-desktop.png` });
   });
 
-  test('breadcrumb JSON-LD is a BreadcrumbList that mirrors the trail', async ({ page }) => {
+  // Absolute URLs follow SITE_URL (HA-2.21); playwright.config.ts sets it to the server's own address.
+  test('breadcrumb JSON-LD is a BreadcrumbList that mirrors the trail', async ({ page, baseURL }) => {
     await openPdp(page, 312001, 1280);
     const raw = await page.getByTestId('breadcrumbs').locator('script[type="application/ld+json"]').textContent();
     const ld = JSON.parse(raw ?? '{}');
     expect(ld['@type']).toBe('BreadcrumbList');
     expect(ld.itemListElement.map((i: { name: string; item: string; position: number }) => [i.position, i.name, i.item])).toEqual([
-      [1, 'Sklep', 'https://hydraarms.pl/sklep'],
-      [2, 'Broń palna', 'https://hydraarms.pl/sklep?cat=12001'],
-      [3, 'Broń krótka', 'https://hydraarms.pl/sklep?cat=12002'],
-      [4, 'Produkt testowy sekcji 01 (bez flag)', 'https://hydraarms.pl/sklep/312001'],
+      [1, 'Sklep', `${baseURL}/sklep`],
+      [2, 'Broń palna', `${baseURL}/sklep?cat=12001`],
+      [3, 'Broń krótka', `${baseURL}/sklep?cat=12002`],
+      [4, 'Produkt testowy sekcji 01 (bez flag)', `${baseURL}/sklep/312001`],
     ]);
   });
 

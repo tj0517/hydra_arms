@@ -46,7 +46,7 @@ export default defineConfig({
       BASELINKER_MOCK: 'true',
       BASELINKER_STATUS_PAID: process.env.BASELINKER_STATUS_PAID || '12345',
       RESEND_MOCK: 'true',
-      SHOP_BASE_URL: `http://localhost:${PORT}`,
+      SITE_URL: `http://localhost:${PORT}`,
       ORDER_LINK_SECRET: 'fake-order-link-secret-for-playwright-only',
       SHOP_MODE: 'verification',
       P24_MODE: 'production',

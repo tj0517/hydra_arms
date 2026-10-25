@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Outfit, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import CookiesBanner from "@/components/CookiesBanner";
+import { siteUrl } from "@/lib/siteUrl";
+import { DEFAULT_EMAILS } from "@/lib/siteDefaults";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -15,7 +17,8 @@ const jetbrainsMono = JetBrains_Mono({
   weight: ["400", "700"],
 });
 
-const BASE_URL = "https://hydraarms.pl";
+// SITE_URL is read when the page renders — for prerendered pages that is `next build`.
+const BASE_URL = siteUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
@@ -57,7 +60,7 @@ const organizationSchema = {
   contactPoint: {
     "@type": "ContactPoint",
     contactType: "customer service",
-    email: "biuro@hydraarms.pl",
+    email: DEFAULT_EMAILS.biuro,
     availableLanguage: ["Polish"],
   },
 };

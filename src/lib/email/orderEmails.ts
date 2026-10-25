@@ -92,7 +92,7 @@ async function loadOrderEmailData(orderId: string): Promise<OrderEmailData | nul
       unitPrice: item.unit_price,
     })),
     company,
-    // null when ORDER_LINK_SECRET or SHOP_BASE_URL is missing → mail goes out without the link.
+    // null when ORDER_LINK_SECRET or SITE_URL is missing → mail goes out without the link.
     statusUrl: buildOrderStatusUrl(order.id),
   }
 }

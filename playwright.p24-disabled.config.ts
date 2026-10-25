@@ -42,7 +42,7 @@ export default defineConfig({
       SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
       BASELINKER_MOCK: process.env.BASELINKER_MOCK ?? 'true',
       BASELINKER_STATUS_PAID: process.env.BASELINKER_STATUS_PAID ?? '',
-      SHOP_BASE_URL: 'http://localhost:3002',
+      SITE_URL: 'http://localhost:3002',
       // P24_MODE set to '' (not absent) — Playwright webServer env is additive over the
       // test-runner's process.env (which has P24_MODE=mock from dotenv). An explicit
       // empty string overrides it so getP24Mode() returns 'disabled'.

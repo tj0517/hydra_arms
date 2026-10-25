@@ -18,6 +18,7 @@
     "test:bl-mock-off": "playwright test --config playwright.bl-mock-off.config.ts",
     "test:shipping-env": "playwright test --config playwright.shipping-env.config.ts",
     "test:listing:no-service-role": "playwright test --config playwright.listing-no-service-role.config.ts",
+    "test:site-url": "SITE_URL_CASE=a playwright test --config playwright.site-url.config.ts && SITE_URL_CASE=b playwright test --config playwright.site-url.config.ts && SITE_URL_CASE=unset playwright test --config playwright.site-url.config.ts",
     "test:verification": "playwright test --config playwright.verification.config.ts",
     "test:verification:p24-prod": "playwright test --config playwright.verification-p24-prod.config.ts",
     "test:verification:live-mock": "playwright test --config playwright.verification-live-mock.config.ts",

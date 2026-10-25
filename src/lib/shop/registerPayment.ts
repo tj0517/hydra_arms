@@ -12,7 +12,7 @@ import { getCheckoutGate } from '@/lib/shop/shopMode'
  */
 export async function registerPayment(
   orderId: string,
-  opts: { baseUrl: string | undefined; email: string; description?: string },
+  opts: { baseUrl: string | null; email: string; description?: string },
 ): Promise<{ paymentUrl: string; p24SessionId: string }> {
   // HA-2.08 defence in depth: the checkout route refuses first, but this function is also
   // reached from the retry route. Throws before any DB row or outbound P24 call.
@@ -20,7 +20,7 @@ export async function registerPayment(
   if (!gate.allowed) throw new Error(`Payment registration refused by shop-mode gate: ${gate.reason}`)
 
   const baseUrl = opts.baseUrl
-  if (!baseUrl) throw new Error('SHOP_BASE_URL is not configured')
+  if (!baseUrl) throw new Error('SITE_URL is not configured')
 
   const supabase = createAdminClient()
 

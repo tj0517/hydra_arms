@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import ProductDetailClient from '@/components/shop/ProductDetailClient';
 import { createPublicClient } from '@/lib/supabase/public';
 import { PUBLIC_PRODUCT_COLUMNS } from '@/lib/shop/shopCache';
+import { siteUrl } from '@/lib/siteUrl';
 import type { ShopProduct, ShopCategory } from '@/lib/supabase/types';
 
 async function fetchProduct(id: number): Promise<{ product: ShopProduct; categories: ShopCategory[]; related: ShopProduct[] } | null> {
@@ -85,7 +86,7 @@ export default async function ProductPage({
 
   return (
     <main>
-      <ProductDetailClient product={data.product} categories={data.categories} related={data.related} />
+      <ProductDetailClient product={data.product} categories={data.categories} related={data.related} baseUrl={siteUrl()} />
     </main>
   );
 }
