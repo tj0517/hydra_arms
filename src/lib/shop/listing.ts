@@ -2,7 +2,8 @@ import 'server-only'
 import { unstable_cache } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createPublicClient } from '@/lib/supabase/public'
-import { PUBLIC_PRODUCT_COLUMNS, SHOP_CACHE_TAG } from './fetchProducts'
+import { SHOP_CACHE_TAG } from './shopCache'
+import { resolveBlockProducts, type ProductBlockInput } from './productBlocks'
 import {
   isDeliveryMode,
   isSortKey,
@@ -156,27 +157,21 @@ export const getShopTree = unstable_cache(
 )
 
 /**
- * Temporary product pool for the Sanity picker blocks on /sklep (until HA-2.36):
- * the 48 newest active products with an image, public columns only.
+ * Products for one Sanity product picker block on /sklep (HA-2.36), cached per block
+ * settings. The query logic lives in productBlocks.ts (pure, tested directly).
  */
-export const getBlockProductPool = unstable_cache(
-  async (): Promise<ShopProduct[]> => {
-    const sb = createPublicClient()
-    if (!sb) throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY')
-    const { data, error } = await sb
-      .from('shop_products')
-      .select(PUBLIC_PRODUCT_COLUMNS)
-      .eq('is_active', true)
-      .not('images', 'is', null)
-      .filter('images', 'neq', '{}')
-      .order('id', { ascending: false })
-      .limit(48)
-    if (error) throw new Error(`block product pool failed: ${error.message}`)
-    return (data ?? []) as unknown as ShopProduct[]
-  },
-  ['shop-block-pool'],
-  { revalidate: REVALIDATE_SECONDS, tags: [SHOP_CACHE_TAG] },
-)
+export function getBlockProducts(block: ProductBlockInput): Promise<ShopProduct[]> {
+  const key = [block.selectionMode ?? 'best_sellers', String(block.limit ?? ''), (block.productIds ?? []).join(',')]
+  return unstable_cache(
+    async () => {
+      const sb = createPublicClient()
+      if (!sb) throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY')
+      return resolveBlockProducts(sb, block)
+    },
+    ['shop-block', ...key],
+    { revalidate: REVALIDATE_SECONDS, tags: [SHOP_CACHE_TAG] },
+  )()
+}
 
 // ── Category tree helpers ───────────────────────────────────────────────────
 
