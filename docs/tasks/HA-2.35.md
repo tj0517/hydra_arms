@@ -1,7 +1,7 @@
 ---
 id: HA-2.35
 title: /sklep liczony na serwerze — URL jako stan (page, spec), SklepClient bez filtrowania, cache per kombinacja filtrów
-status: in_progress
+status: review
 difficulty: L
 model: claude-opus-5-5
 model_approved: null
@@ -68,3 +68,4 @@ Listing `/sklep` ma dostawać z serwera tylko to, co widać: 24 karty, łączną
 - 2026-10-25 tj (wf-task): liczniki wg decyzji B (tj 2026-10-24, HA-2.34) — każdy licznik liczony ze wszystkimi pozostałymi filtrami; specyfikacje uwzględniają markę i dostawę, marki uwzględniają specyfikacje; różnica względem HA-2.30 to świadoma zmiana, nie regres.
 - 2026-10-25 tj (wf-task): seed bulk = A — produkty masowe w jednej kategorii „seed-bulk”, nazwy sortujące się po wszystkich innych produktach seeda, bez zdjęć, zwykły typ (nie tylko odbiór); pozostałe pliki testów bez zmian.
 - 2026-10-25 tj: listing-rpc = A — seed bulk (> 1 000 aktywnych) obcina referencyjny odczyt testu `shop_tree` w `tests/shop/listing-rpc.spec.ts` (PostgREST `max_rows = 1000`; funkcja zwraca poprawnie 4 w 4003, test widział 3). Zmienia się tylko sposób odczytu wartości oczekiwanych (odczyt stronami po 1 000 przez `.range()` — obejmuje liczniki i zakres cen), asercje bez zmian.
+- 2026-10-25 agent: red proof bez `SUPABASE_SERVICE_ROLE_KEY` działa na serwerze produkcyjnym (`next build` + `next start` w `playwright.listing-no-service-role.config.ts`) — `next dev` odpowiada 200 i wkleja błąd w overlay, więc kod 500 da się sprawdzić tylko w produkcji (zmierzone: dev 200, `next start` 500). Do decyzji tj w raporcie nic z tego nie wynika — odnotowane jako odstępstwo od wzorca shipping-env.
