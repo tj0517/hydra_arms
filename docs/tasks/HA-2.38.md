@@ -1,12 +1,12 @@
 ---
 id: HA-2.38
 title: Poprawki importu po audycie — rozjazdy cen, normalizacja EAN, zerowanie wycofanych, waga
-status: todo
+status: in_progress
 difficulty: M
 model: claude-opus-5-5
-model_approved: null
+model_approved: tj
 effort: high
-branch: null
+branch: feat/ha-2.38-poprawki-importu
 due: null
 depends_on: [HA-2.37]
 blocked_by_questions: []
@@ -89,5 +89,7 @@ Sukces: ceny w BL zgadzają się z feedem albo każdy rozjazd ma nazwaną przycz
 - `docs/tasks/HA-2.37.md` — definicje osieroconych i rozjazdów
 
 ## Notatki z realizacji
+- 2026-10-26 tj (start): model claude-opus-5-5 / high zatwierdzony. Kolejność: najpierw diagnoza cen bez poprawek — STOP z tabelą przyczyna → liczba i proponowaną poprawką; EAN, wycofane i waga równolegle. Diagnoza na danych z serwera: `scripts/diag-prices.ts` (tylko odczyt, BL przez `readonly.ts`) jako pierwszy, osobny PR; tj uruchamia na serwerze i wkleja wynik. Fixture do red proofa SHARG 5652 z fragmentu feedu z diagnozy. Dodatkowa bramka STOP: przed pierwszym przebiegiem z nową normalizacją EAN na serwerze dry-run — ile rekordów zmieniłoby EAN w BL i ile dopasowań się zmieni. Ponowny audyt HA-2.37 dopiero po pierwszej nocy z nowym kodem.
+- 2026-10-26 agent (odczyt kodu, przed diagnozą): `planSync` (bl-write.ts) zapisuje `priceUpdates[id]` dla każdej pozycji feedu po kolei, więc gdy kilka pozycji feedu trafia w jeden rekord (ten sam EAN albo SKU), w BL zostaje cena **ostatniej**; audyt porównuje każdą pozycję osobno i liczy pozostałe jako rozjazd. Ten sam kształt co SHARG 5652 (BL 231,75 / 301,28 = spójna para z innej ceny). Hipoteza do potwierdzenia skryptem — nic jeszcze nie poprawione.
 - 2026-10-26 tj: poprawka planu — hipoteza „rekord wspólny nadpisany przez Spechurt” nie tłumaczy SHARG 5652 (`rekord_wspolny = nie`, sprzedaż 301,28 = 231,75 × 1,3); dotyczy tylko rekordów wspólnych. Dla rekordów jednej hurtowni diagnoza szuka przyczyny po stronie syncu. Format EAN zatwierdzony: zapis GTIN-13 (gdy się da), porównanie po GTIN-14.
 - 2026-10-26 tj (plan po audycie HA-2.37): liczby w Celu z raportu audytu na serwerze z 2026-10-26. Mapowanie marek Kolby, `permit_review` (70) i kandydaci duplikatów bez EAN (2 + 18) — po stronie klienta albo odłożone, poza tym zadaniem.
