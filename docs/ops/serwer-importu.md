@@ -881,6 +881,65 @@ Pliki podglądów, partii próbnej i diagnostyki na koncie `hydra-import` (`~/lo
 `proba-*.log`, `diag-feedy.log`) nie są objęte retencją wrappera; `grep` = 0 był wklejony. Zostają
 do zamknięcia zadania.
 
+## Audyt importu (HA-2.37) — tylko odczyt
+
+`scripts/audit-import.ts` porównuje dzisiejsze feedy z katalogiem BaseLinkera i z dziennikiem
+importu, a wynik zapisuje do katalogu: `raport.md` + pliki CSV z przykładami (do 50 wierszy na
+problem). BaseLinkera czyta wyłącznie przez `src/lib/baselinker/readonly.ts`, niczego nie zapisuje,
+nie potrzebuje odblokowania prod i nie idzie przez wrapper. Pobiera te same feedy co import (Sharg
+~250 MB), więc startuje pod tą samą blokadą `flock`, w dzień: między 07:01 a ok. 19:30 UTC — trwa
+kilkanaście minut, a blokada trzymana o 20:20 UTC kazałaby nocnemu importowi Kolby wypisać `SKIP`.
+
+Każda komenda niżej to jedna linia. Na serwer: `ssh hydra-srv` (konto `ubuntu`), na konto importu:
+`sudo -iu hydra-import`, z powrotem: `exit`.
+
+1. `hydra-import` — aktualizacja klonu (po merge PR-a HA-2.37; jak „Aktualizacja kodu” w kroku 2):
+
+```bash
+cd /home/hydra-import/hydra && flock -n /home/hydra-import/.hydra-run-bl.lock bash -c 'git fetch origin && git switch main && git pull --ff-only && npm ci'; echo "exit=$?"; git log -1 --format='%h %ci %s'; test -f scripts/audit-import.ts && echo "audyt: jest"; scripts/server/run-bl.sh --check sharg sync; echo "check=$?"
+```
+
+Oczekiwane: `exit=0`, commit z merge'em HA-2.37, `audyt: jest`, `CHECK ok …`, `check=0`. `exit=1` od
+razu, bez wypisu = trwa import albo sync; spróbuj później.
+
+2. `hydra-import` — audyt do `/home/hydra-import/audit-2026-10-26`:
+
+```bash
+cd /home/hydra-import/hydra && flock -n /home/hydra-import/.hydra-run-bl.lock npx tsx scripts/audit-import.ts --out /home/hydra-import/audit-2026-10-26 > /home/hydra-import/logs/audit-2026-10-26.log 2>&1; echo "exit=$?"; grep -cE 'key=|token=|client=' /home/hydra-import/logs/audit-2026-10-26.log; tail -n 3 /home/hydra-import/logs/audit-2026-10-26.log; ls /home/hydra-import/audit-2026-10-26
+```
+
+Oczekiwane: `exit=0`, `0` (żadnej linii z danymi dostępowymi w logu), trzy ostatnie linie:
+`Written N files …`, `BL methods called: getInventories ×1, …` (same metody odczytu),
+`credential/URL patterns in output: 0`, a w katalogu `raport.md` i pliki `*.csv`. `exit=1` od razu
+i pusty log = blokada zajęta. Inny `exit` — ostatnie linie logu zaczynają się od `[error]` albo
+`[fatal]`. Przy `JavaScript heap out of memory` uruchom dwa razy z `--suppliers=kolba,spechurt` i
+`--suppliers=sharg`, każdy do osobnego `--out`.
+
+3. Skopiowanie wyniku na Maca — konto `ubuntu` nie widzi `/home/hydra-import`, więc najpierw
+`ubuntu` pakuje katalog przez `sudo`:
+
+`ubuntu`:
+
+```bash
+sudo tar -C /home/hydra-import -czf /home/ubuntu/audit-2026-10-26.tgz audit-2026-10-26 && sudo chown ubuntu:ubuntu /home/ubuntu/audit-2026-10-26.tgz && ls -l /home/ubuntu/audit-2026-10-26.tgz
+```
+
+`Mac`:
+
+```bash
+mkdir -p ~/Desktop/hydra_arms && scp hydra-srv:audit-2026-10-26.tgz ~/Desktop/hydra_arms/ && tar -xzf ~/Desktop/hydra_arms/audit-2026-10-26.tgz -C ~/Desktop/hydra_arms && rm ~/Desktop/hydra_arms/audit-2026-10-26.tgz && ls ~/Desktop/hydra_arms/audit-2026-10-26
+```
+
+`ubuntu` — po udanym kopiowaniu:
+
+```bash
+rm /home/ubuntu/audit-2026-10-26.tgz
+```
+
+Raport otwierasz na Macu: `~/Desktop/hydra_arms/audit-2026-10-26/raport.md`. Katalog na serwerze
+(`/home/hydra-import/audit-2026-10-26`) i log audytu w `~/logs` nie podlegają retencji wrappera —
+usuń je, gdy raport nie będzie już potrzebny.
+
 ## Obsługa
 
 Czy coś teraz trwa — `hydra-import`:
