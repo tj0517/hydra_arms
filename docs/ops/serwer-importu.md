@@ -1076,8 +1076,10 @@ Na końcu: lista rekordów (`BL id`, SKU, kod hurtowni, stan, `approved`), liczn
 syncu i werdykt (`would zero N (approved: M)`, `feed looks incomplete` albo `no previous count`).
 
 **Raport normalizacji EAN** — tylko odczyt; przed pierwszym przebiegiem z HA-2.38 (bramka STOP):
-pary rekordów z tym samym GTIN-14 (kandydaci do scalenia — scalanie to osobna decyzja tj), EAN,
-który zapisze następny import, i zmiana dopasowań feedów. `hydra-import`:
+pary rekordów z tym samym GTIN-14 (kandydaci do scalenia — scalanie to osobna decyzja tj), EAN
+w BL ze złą cyfrą kontrolną, EAN, który zapisze następny import, zmiana dopasowań feedów i kolizje
+GTIN-14 w obrębie jednego feedu (pozycje, z których cenę w rekordzie zapisuje ostatnia).
+`hydra-import`:
 
 ```bash
 cd /home/hydra-import/hydra && flock -n /home/hydra-import/.hydra-run-bl.lock npx tsx scripts/ean-report.ts --out /home/hydra-import/ean-raport-$(date -u +%F) > /home/hydra-import/logs/ean-raport.log 2>&1; echo "exit=$?"; grep -cE 'key=|token=|client=' /home/hydra-import/logs/ean-raport.log; tail -n 3 /home/hydra-import/logs/ean-raport.log; ls /home/hydra-import/ean-raport-$(date -u +%F)
