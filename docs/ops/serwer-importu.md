@@ -304,6 +304,10 @@ Jak czytać dziennik:
   (sync nie znalazł w katalogu żadnego produktu z feedu) oraz `Nothing to import.` /
   `Nothing to sync.` (feed dał 0 produktów). `result="none"` znaczy, że w logu nie ma żadnej
   z tych linii — import został przerwany przed podsumowaniem.
+- `Sync done: N products refreshed, zeroed: Z (approved: A)` (od HA-2.38) — sync ustawił stan 0
+  w magazynie tej hurtowni na `Z` rekordach z jej kodem, których nie ma w dzisiejszym feedzie
+  (`A` z nich ma tag `approved`, czyli znikają ze sklepu). Przy pierwszym przebiegu hurtowni po
+  wdrożeniu `zeroed: 0` — sync dopiero zapisuje licznik produktów (sekcja „Wycofane produkty”).
 - `skipped: S` (od HA-2.28) to produkty dopasowane do katalogu, dla których BaseLinker nie
   oddał danych (tagów, SKU, parametrów) — import ich nie nadpisał, tylko pominął; każdy
   taki produkt jest już wliczony w `K errors`, więc `[1-9][0-9]* errors` z grepa wyżej je łapie.
@@ -1043,6 +1047,46 @@ Oczekiwane: `exit=0`, `margin field read: N/N products, C calls, T s` i `manual 
 Czas `T` dolicza się do dotychczasowych 61–89 s synca (limit 600 s). Gdyby rósł w stronę limitu
 albo synce zrobiły się częste (HA-2.09), wariant C z HA-2.22: jeden odczyt pola na dobę i cache.
 
+## Wycofane produkty i normalizacja EAN (HA-2.38)
+
+**Zerowanie.** Każdy sync po zapisie stanów i cen ustawia stan 0 w magazynie swojej hurtowni na
+rekordach, które mają jej kod (prefiks SKU albo parametr `SKU <Hurtownia>`), a których kodu nie ma
+w dzisiejszym feedzie. Nic nie jest usuwane ani odpinane; inne magazyny tego rekordu się nie
+zmieniają. Przy `--limit` zerowania nie ma.
+
+**Bezpiecznik.** Feed z liczbą produktów poniżej 90% poprzedniego udanego syncu tej hurtowni →
+żadnego stanu 0, w logu `[error] feed looks incomplete: N products, previous successful run M`,
+`exit=1`, licznik się nie zmienia. Licznik trzyma plik `/home/hydra-import/.hydra-feed-counts.json`
+(inna ścieżka: `HYDRA_FEED_COUNTS_FILE` w crontabie), zapisywany po każdym udanym syncu. Bez pliku
+albo bez wpisu hurtowni (pierwszy przebieg) sync niczego nie zeruje, tylko zapisuje licznik.
+Podgląd licznika — `hydra-import`:
+
+```bash
+cat /home/hydra-import/.hydra-feed-counts.json
+```
+
+**Podgląd zerowania** — tylko odczyt, bez odblokowania prod, nie zapisuje nawet pliku licznika;
+pod blokadą, w dzień. `hydra-import`, `H` = `kolba`, `sharg` albo `spechurt`:
+
+```bash
+H=sharg; cd /home/hydra-import/hydra && flock -n /home/hydra-import/.hydra-run-bl.lock npx tsx scripts/xml-to-baselinker.ts "$H" sync --zero-preview > /home/hydra-import/logs/zero-preview-$H.log 2>&1; echo "exit=$?"; grep -cE 'key=|token=' /home/hydra-import/logs/zero-preview-$H.log; sed -n '/^Candidates/,$p' /home/hydra-import/logs/zero-preview-$H.log
+```
+
+Na końcu: lista rekordów (`BL id`, SKU, kod hurtowni, stan, `approved`), licznik z poprzedniego
+syncu i werdykt (`would zero N (approved: M)`, `feed looks incomplete` albo `no previous count`).
+
+**Raport normalizacji EAN** — tylko odczyt; przed pierwszym przebiegiem z HA-2.38 (bramka STOP):
+pary rekordów z tym samym GTIN-14 (kandydaci do scalenia — scalanie to osobna decyzja tj), EAN,
+który zapisze następny import, i zmiana dopasowań feedów. `hydra-import`:
+
+```bash
+cd /home/hydra-import/hydra && flock -n /home/hydra-import/.hydra-run-bl.lock npx tsx scripts/ean-report.ts --out /home/hydra-import/ean-raport-$(date -u +%F) > /home/hydra-import/logs/ean-raport.log 2>&1; echo "exit=$?"; grep -cE 'key=|token=|client=' /home/hydra-import/logs/ean-raport.log; tail -n 3 /home/hydra-import/logs/ean-raport.log; ls /home/hydra-import/ean-raport-$(date -u +%F)
+```
+
+EAN od HA-2.38: porównanie po kluczu GTIN-14 (zera wiodące bez znaczenia), zapis do BL jako
+GTIN-13; EAN o złej cyfrze kontrolnej albo długości import traktuje jak brak (w logu
+`[warn] N products with an invalid EAN …`) i nie kasuje EAN, który rekord już ma.
+
 ## Obsługa
 
 Czy coś teraz trwa — `hydra-import`:
@@ -1081,6 +1125,7 @@ Aktualizacja kodu: krok 2, „Aktualizacja kodu”.
 | `ERROR … BASELINKER_INVENTORY_ID` / `BASELINKER_MOCK` / `production unlock` / `not readable` | błąd w `.env.local` | popraw plik, potem `--check` |
 | `ERROR … must be whole seconds` / `whole number of days` | zła wartość `HYDRA_MAX_SECONDS` albo `HYDRA_LOG_KEEP_DAYS` w crontabie (np. `90m` albo komentarz w tej samej linii) | podaj samą liczbę całkowitą |
 | `END exit=1 … result="[fatal] empty feed after N attempts"` (w logu `Received 0.0 MB` / `Parsed 0 products` i linie `[warn] empty feed … attempt k/N`) oraz linia `run-bl: <hurtownia> <tryb>: run ended with exit 1` w `cron-stderr.log` | hurtownia oddała pustą odpowiedź albo stronę bez produktów (HTTP 200) N razy z rzędu, co `FEED_RETRY_DELAY_S`; nic nie zostało zapisane ani odświeżone (HA-2.33) | Spechurt: feed regeneruje się do ~05:40 UTC (sekcja 7) — jeśli to noc w noc, przesuń start; inna hurtownia: sprawdź feed podglądem (sekcja 6); po naprawie ręczny import tej hurtowni poza oknem crona |
+| `END exit=1 … result="Sync done: …, [error] feed looks incomplete: N products, previous successful run M"` | feed tej hurtowni ma mniej niż 90% produktów z poprzedniego udanego syncu; stany i ceny z feedu zapisane, ale **żaden** stan 0 — wycofane rekordy zostały, jak były (HA-2.38) | sprawdź feed podglądem (sekcja 6) albo `--zero-preview`; feed naprawdę mniejszy (hurtownia wycofała część oferty) → po decyzji tj usuń wpis tej hurtowni z `.hydra-feed-counts.json`, następny sync zapisze nowy licznik i zacznie zerować dobę później |
 | `END exit=1` (inny `result=`) | import przerwany błędem; ostatnie linie logu zaczynają się od `[fatal]` albo `[error]` | przeczytaj log; nie wklejaj go bez `grep -c` |
 | `END exit=124 … stopped-by=limit-…` | zadziałał limit czasu `HYDRA_MAX_SECONDS` | sprawdź, co trwało tak długo |
 | `END … killed-by-signal=9` | proces zabity z zewnątrz, zwykle przez system z braku pamięci | jako `ubuntu`: `sudo journalctl -k --since today`, szukaj `Out of memory` |
