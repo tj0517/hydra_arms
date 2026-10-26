@@ -5,7 +5,8 @@
  *   toBLProduct    — addInventoryProduct payload of one product (import)
  *   readMarginRaws — „Marża %” field of matched products, read-only (sync, dry-run)
  *   planSync       — stock + price updates of one sync run
- *   runSyncCore    — the whole sync: index → margins → plan → bulk writes, BL calls injected
+ *   runSyncCore    — the whole sync: index → margins → plan → bulk writes → zeroing, BL calls injected
+ *   feedGuard / planZeroing — stock 0 for withdrawn products (HA-2.38), also the read-only preview
  *
  * The margin field is never part of any payload here: `text_fields` is built from the feed
  * (name, description, features) and nothing else (HA-2.22, the field belongs to the client).
@@ -14,6 +15,7 @@
 import type { NormalizedProduct } from './types';
 import { addToMatchIndex, eanForUpsert, emptyMatchIndex, findBLMatch, type BLMatchIndex, type Supplier } from './bl-match-key';
 import { chooseMargin, computeSellingPrice, readMarginRaw, type MarginChoice, type MarginTally } from './margin';
+import { recordSuppliers } from './import-audit';
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
@@ -81,8 +83,8 @@ export function toBLProduct(
 
 // ── BL reads ──────────────────────────────────────────────────────────────────
 
-export type GetProductsList = (inventoryId: number, page?: number) => Promise<Record<string, { ean: string; sku: string }>>;
-export type GetProductsData = (inventoryId: number, ids: string[]) => Promise<Record<string, { text_fields?: unknown; prices?: unknown }>>;
+export type GetProductsList = (inventoryId: number, page?: number) => Promise<Record<string, { ean: string; sku: string; stock?: Record<string, number> }>>;
+export type GetProductsData = (inventoryId: number, ids: string[]) => Promise<Record<string, { text_fields?: unknown; prices?: unknown; sku?: unknown; tags?: unknown }>>;
 
 /** EAN → id, prefixed SKU → id over the whole catalogue (pages of 1 000). */
 export async function loadExistingProducts(
@@ -100,6 +102,22 @@ export async function loadExistingProducts(
     await sleep(rateLimitMs);
   }
   return index;
+}
+
+/** The match index plus each listed product's per-warehouse stock — one read of the list (sync, zero preview). */
+export async function loadIndexWithStock(
+  getProductsList: GetProductsList,
+  inventoryId: number,
+  sleep: (ms: number) => Promise<unknown>,
+  rateLimitMs: number,
+): Promise<{ index: BLMatchIndex; listed: ListedProduct[] }> {
+  const listed: ListedProduct[] = [];
+  const index = await loadExistingProducts(async (inv, page) => {
+    const res = await getProductsList(inv, page);
+    for (const [id, p] of Object.entries(res)) listed.push({ id: Number(id), sku: String(p.sku ?? ''), stock: p.stock && typeof p.stock === 'object' ? p.stock : {} });
+    return res;
+  }, inventoryId, sleep, rateLimitMs);
+  return { index, listed };
 }
 
 /** ids per getInventoryProductsData call when only the margin field is needed (as audit-import.ts) */
@@ -141,6 +159,89 @@ export async function readMarginRaws(
     }
   }
   return { raw, salePrice, calls, ms: Date.now() - started };
+}
+
+// ── Withdrawn products: stock 0 in the supplier's warehouse (HA-2.38) ──────────
+
+/** Below this share of the previous successful run's product count the feed is taken as incomplete. */
+export const FEED_MIN_RATIO = 0.9;
+
+export type FeedGuard =
+  | { kind: 'first' }
+  | { kind: 'ok'; previous: number }
+  | { kind: 'incomplete'; previous: number };
+
+/** Products in today's feed vs the previous successful run of this supplier. */
+export function feedGuard(current: number, previous: number | null): FeedGuard {
+  if (previous === null || previous <= 0) return { kind: 'first' };
+  return current < previous * FEED_MIN_RATIO ? { kind: 'incomplete', previous } : { kind: 'ok', previous };
+}
+
+/** Product count of the last successful sync per supplier — a JSON file on the import account. */
+export interface FeedCountStore {
+  read(supplier: Supplier): number | null;
+  write(supplier: Supplier, count: number): void;
+}
+
+export interface ListedProduct {
+  id: number;
+  sku: string;
+  stock: Record<string, number>;
+}
+
+export interface ZeroRow {
+  id: number;
+  sku: string;
+  /** this supplier's bare code on the record (prefix SKU or `SKU <Hurtownia>` parameter) */
+  code: string;
+  stock: number;
+  approved: boolean;
+  name: string;
+}
+
+/**
+ * Records to set to stock 0 in `env.warehouse`: they carry this supplier's code, the code is not in
+ * today's feed and no feed product matches them (the audit's „osierocone”, HA-2.37). Only records
+ * with stock > 0 there are candidates; their data is read to confirm the code — a record BaseLinker
+ * returns no data for is left alone.
+ */
+export async function planZeroing(
+  products: readonly NormalizedProduct[],
+  supplier: Supplier,
+  env: WriteEnv,
+  index: BLMatchIndex,
+  listed: readonly ListedProduct[],
+  getProductsData: GetProductsData,
+  sleep: (ms: number) => Promise<unknown>,
+  rateLimitMs: number,
+): Promise<{ rows: ZeroRow[]; candidates: number; calls: number }> {
+  const matched = new Set(products.map((p) => findBLMatch(index, supplier, p.ean, p.connector_sku)?.id).filter((id): id is number => id !== undefined));
+  const feedSkus = new Set(products.map((p) => (p.connector_sku ?? '').trim()).filter(Boolean));
+  const candidates = listed.filter((l) => (l.stock[env.warehouse] ?? 0) > 0 && !matched.has(l.id));
+  const rows: ZeroRow[] = [];
+  let calls = 0;
+  for (let i = 0; i < candidates.length; i += MARGIN_READ_CHUNK) {
+    if (calls > 0) await sleep(rateLimitMs);
+    const chunk = candidates.slice(i, i + MARGIN_READ_CHUNK);
+    const data = await getProductsData(env.inventoryId, chunk.map((c) => String(c.id)));
+    calls++;
+    for (const c of chunk) {
+      const d = data[String(c.id)];
+      if (!d) continue;
+      const tf = d.text_fields && typeof d.text_fields === 'object' ? (d.text_fields as Record<string, unknown>) : {};
+      const f = tf.features && typeof tf.features === 'object' && !Array.isArray(tf.features) ? (tf.features as Record<string, unknown>) : {};
+      const sku = String(d.sku ?? c.sku);
+      const sup = recordSuppliers(sku, Object.fromEntries(Object.entries(f).map(([k, v]) => [k, String(v ?? '')])));
+      const code = sup.codes[supplier];
+      if (code === undefined || feedSkus.has(code)) continue;
+      rows.push({
+        id: c.id, sku, code, stock: c.stock[env.warehouse] ?? 0,
+        approved: Array.isArray(d.tags) && (d.tags as unknown[]).map(String).includes('approved'),
+        name: String(tf.name ?? ''),
+      });
+    }
+  }
+  return { rows, candidates: candidates.length, calls };
 }
 
 // ── Sync ──────────────────────────────────────────────────────────────────────
@@ -218,18 +319,24 @@ export interface SyncDeps {
   log: (line: string) => void;
   warn: (line: string) => void;
   tally: MarginTally;
+  /** HA-2.38: previous feed counts; null/omitted = no zeroing (e.g. --limit, a partial feed) */
+  feedCounts?: FeedCountStore | null;
 }
 
-/** One sync run. Returns false when the run must end with a non-zero exit (margin read failed). */
+/**
+ * One sync run. Returns false when the run must end with a non-zero exit (margin read failed, or the
+ * feed looks incomplete and nothing was zeroed).
+ */
 export async function runSyncCore(
   products: readonly NormalizedProduct[],
   supplier: Supplier,
   env: WriteEnv,
   deps: SyncDeps,
-): Promise<{ ok: boolean; plan: SyncPlan }> {
+): Promise<{ ok: boolean; plan: SyncPlan; zeroed?: ZeroRow[] }> {
   const { log, warn } = deps;
   log('\nLoading existing BL products (match index)…');
-  const index = await loadExistingProducts(deps.getProductsList, env.inventoryId, deps.sleep, deps.rateLimitMs);
+  // The list also carries per-warehouse stock — the zeroing candidates come from it, no extra read
+  const { index, listed } = await loadIndexWithStock(deps.getProductsList, env.inventoryId, deps.sleep, deps.rateLimitMs);
   log(`  ${index.total} products in BL`);
 
   let margins: SyncMargins = { kind: 'off' };
@@ -276,7 +383,33 @@ export async function runSyncCore(
     await deps.sleep(deps.rateLimitMs);
   }
 
+  // Withdrawn products (HA-2.38): stock 0 in this supplier's warehouse, behind the feed-size guard
+  let zeroed: ZeroRow[] | undefined;
+  let zeroLine: string | null = null;
+  if (deps.feedCounts) {
+    const guard = feedGuard(products.length, deps.feedCounts.read(supplier));
+    if (guard.kind === 'incomplete') {
+      ok = false;
+      warn(`[error] feed looks incomplete: ${products.length} products, previous successful run ${guard.previous} (< ${FEED_MIN_RATIO * 100}%) — no stock zeroed, count not stored`);
+    } else if (guard.kind === 'first') {
+      zeroLine = `zeroed: 0 (approved: 0) — no previous feed count for ${supplier}, nothing zeroed this run; count ${products.length} stored`;
+      deps.feedCounts.write(supplier, products.length);
+    } else {
+      const z = await planZeroing(products, supplier, env, index, listed, deps.getProductsData, deps.sleep, deps.rateLimitMs);
+      for (let i = 0; i < z.rows.length; i += 1000) {
+        await deps.sleep(deps.rateLimitMs);
+        const chunk = z.rows.slice(i, i + 1000);
+        const res = await deps.updateStock(env.inventoryId, Object.fromEntries(chunk.map((r) => [String(r.id), { [env.warehouse]: 0 }])));
+        log(`  zero   ${i + chunk.length}/${z.rows.length}: ${res.counter} updated` + (Object.keys(res.warnings).length ? `, ${Object.keys(res.warnings).length} warnings` : ''));
+      }
+      zeroed = z.rows;
+      zeroLine = `zeroed: ${z.rows.length} (approved: ${z.rows.filter((r) => r.approved).length}) — withdrawn by ${supplier}, stock 0 in ${env.warehouse} only`;
+      deps.feedCounts.write(supplier, products.length);
+    }
+  }
+
   log(`\n✓ Sync done: ${plan.matched} products refreshed`);
+  if (zeroLine) log(`  ${zeroLine}`);
   if (deps.marginKey !== null) log(`  ${deps.tally.summary()}`);
   if (plan.priceSkipped > 0) {
     warn(`⚠ ${plan.priceSkipped} products: selling price NOT written (${margins.kind === 'failed' ? 'margin field read failed' : 'BL returned no data for them'}) — previous price kept`);
@@ -287,5 +420,5 @@ export async function runSyncCore(
   if (plan.priceZeros > 0) {
     warn(`⚠ ${plan.priceZeros} products synced with price 0 — the feed has no price data for these`);
   }
-  return { ok, plan };
+  return { ok, plan, zeroed };
 }
