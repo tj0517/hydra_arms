@@ -69,6 +69,7 @@
  */
 
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
 import { assertExternalProd } from './lib/prodGuard';
@@ -111,10 +112,15 @@ import {
   readMarginRaw,
 } from '../xml-integration/margin';
 import {
+  FEED_MIN_RATIO,
+  feedGuard,
   loadExistingProducts as loadExistingProductsCore,
+  loadIndexWithStock,
+  planZeroing,
   readMarginRaws,
   runSyncCore,
   toBLProduct,
+  type FeedCountStore,
   type GetProductsList,
   type WriteEnv,
 } from '../xml-integration/bl-write';
@@ -648,8 +654,64 @@ async function runSync(connectorName: ConnectorName, env: Env, limit: number | n
     log: (line) => console.log(line),
     warn: (line) => console.warn(line),
     tally: new MarginTally((line) => console.warn(line)),
+    // HA-2.38: withdrawn products get stock 0 — never on a --limit run (the feed is cut on purpose)
+    feedCounts: limit === null ? feedCountStore() : null,
   });
+  if (limit !== null) console.log('  zeroing skipped (--limit: partial feed)');
   if (!ok) process.exitCode = 1;
+}
+
+// ── Withdrawn products: feed-count state file and the read-only preview (HA-2.38) ──
+
+const FEED_COUNTS_ENV = 'HYDRA_FEED_COUNTS_FILE';
+
+/** `{ "<supplier>": { "products": N, "at": ISO } }` — product count of the last successful sync. */
+function feedCountStore(): FeedCountStore & { file: string } {
+  const file = process.env[FEED_COUNTS_ENV]?.trim() || path.join(os.homedir(), '.hydra-feed-counts.json');
+  const load = (): Record<string, { products?: unknown }> => {
+    if (!fs.existsSync(file)) return {};
+    try {
+      const v = JSON.parse(fs.readFileSync(file, 'utf8'));
+      return v && typeof v === 'object' && !Array.isArray(v) ? v : {};
+    } catch {
+      console.warn(`[warn] ${file} is not valid JSON — treated as no history (nothing zeroed this run)`);
+      return {};
+    }
+  };
+  return {
+    file,
+    read: (s) => { const n = load()[s]?.products; return typeof n === 'number' && n > 0 ? n : null; },
+    write: (s, count) => {
+      const all = { ...load(), [s]: { products: count, at: new Date().toISOString() } };
+      const tmp = `${file}.tmp-${process.pid}`;
+      fs.writeFileSync(tmp, JSON.stringify(all, null, 2) + '\n', { mode: 0o600 });
+      fs.renameSync(tmp, file); // atomic: a crash leaves the old file, never half of one
+    },
+  };
+}
+
+/** `<supplier> sync --zero-preview`: which records the next sync would set to 0 — reads only, writes nothing (not even the state file). */
+async function runZeroPreview(connectorName: ConnectorName, env: Env): Promise<void> {
+  const readonly = await import('../src/lib/baselinker/readonly');
+  const products = await fetchAndParse(connectorName);
+  const store = feedCountStore();
+  const previous = store.read(connectorName);
+  const guard = feedGuard(products.length, previous);
+  console.log('\nLoading existing BL products (read-only)…');
+  const { index, listed } = await loadIndexWithStock(readonly.getInventoryProductsList, env.inventoryId, sleep, RATE_LIMIT_MS);
+  console.log(`  ${index.total} products in BL`);
+  await sleep(RATE_LIMIT_MS);
+  const z = await planZeroing(products, connectorName, env, index, listed, readonly.getInventoryProductsData, sleep, RATE_LIMIT_MS);
+  console.log(`\nCandidates (stock > 0 in ${env.warehouse}, not matched by today's feed): ${z.candidates}; with a ${connectorName} code missing from the feed: ${z.rows.length}`);
+  if (z.rows.length > 0) {
+    console.log(`  ${'BL id'.padEnd(10)} ${'sku'.padEnd(22)} ${'code'.padEnd(14)} ${'stock'.padStart(5)} ${'approved'.padEnd(8)} name`);
+    for (const r of z.rows) console.log(`  ${String(r.id).padEnd(10)} ${r.sku.slice(0, 22).padEnd(22)} ${r.code.slice(0, 14).padEnd(14)} ${String(r.stock).padStart(5)} ${(r.approved ? 'yes' : 'no').padEnd(8)} ${r.name.slice(0, 60)}`);
+  }
+  console.log(`\nfeed: ${products.length} products; previous successful sync: ${previous ?? 'none'} (${store.file})`);
+  if (guard.kind === 'incomplete') console.log(`[error] feed looks incomplete: ${products.length} < ${FEED_MIN_RATIO * 100}% of ${guard.previous} — the sync would zero nothing and exit 1`);
+  else if (guard.kind === 'first') console.log('verdict: no previous count — the next sync zeroes nothing and stores the count');
+  else console.log(`verdict: the next sync would zero ${z.rows.length} (approved: ${z.rows.filter((r) => r.approved).length}) in ${env.warehouse} only`);
+  console.log('Preview only — nothing written to BaseLinker or to the state file.');
 }
 
 // ── Mode: dry-run — filter preview, no BL writes ──────────────────────────────
@@ -956,6 +1018,13 @@ async function main() {
   const limitFlag = flags.find((f) => f.startsWith('--limit='));
   const limit = limitFlag ? parseInt(limitFlag.split('=')[1], 10) : null;
 
+  // --zero-preview (HA-2.38): <supplier> sync --zero-preview — the records the next sync would set to 0
+  const zeroPreview = flags.includes('--zero-preview');
+  if (zeroPreview && (isDryRun || limitFlag || positional[1] !== 'sync')) {
+    console.error('[error] --zero-preview works only as: <kolba|sharg|spechurt> sync --zero-preview (no --dry-run, no --limit)');
+    process.exit(1);
+  }
+
   // --only-bl-id=<id> (HA-2.22): one BL product — import of one supplier, or its dry-run
   const onlyFlag = flags.find((f) => f.startsWith('--only-bl-id='));
   let onlyBlId: number | null = null;
@@ -1042,6 +1111,7 @@ async function main() {
     console.error('  npx tsx scripts/xml-to-baselinker.ts <kolba|sharg|spechurt> [import|sync] [--limit=N]');
     console.error('  npx tsx scripts/xml-to-baselinker.ts <connector> import --only-bl-id=<id>   (one BL product; also with --dry-run)');
     console.error('  npx tsx scripts/xml-to-baselinker.ts [<connector>] --dry-run [--limit=N] [--from-file=<connector>:<path>] [--sections=1,2]');
+    console.error('  npx tsx scripts/xml-to-baselinker.ts <connector> sync --zero-preview   (records the next sync sets to stock 0; read-only)');
     console.error('');
     console.error('  import   (default) — full upsert into BL catalogue (slow, run rarely)');
     console.error('  sync               — stock + price refresh only (batched, run often)');
@@ -1069,6 +1139,7 @@ async function main() {
   if (limit !== null) console.log(`  limit     : ${limit} in-stock products`);
   if (onlyBlId !== null) console.log(`  only BL id: ${onlyBlId}`);
 
+  if (zeroPreview) { await runZeroPreview(connectorName, env); return; } // read-only, no HA_ALLOW_PROD
   if (mode === 'import') await runImport(connectorName, env, limit, onlyBlId);
   else await runSync(connectorName, env, limit);
 }
