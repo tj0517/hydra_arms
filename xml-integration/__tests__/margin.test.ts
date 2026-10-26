@@ -348,6 +348,9 @@ test('audit: a record with field 45 at purchase × 1.45 is no price mismatch; en
 test('audit script compares BL against expectedSalePrice with the record\'s field', () => {
   const src = fs.readFileSync(path.resolve(__dirname, '../../scripts/audit-import.ts'), 'utf8');
   assert.match(src, /expectedSalePrice\(\{ price_purchase: i\.pricePurchase, price_gross: i\.priceGross \}, markup, r\.marginRaw\)/);
-  assert.match(src, /const saleDiff = salePriceDiffers\(sale, exp\.price\)/);
+  assert.match(src, /saleDiff = salePriceDiffers\(sale, exp\.price\)/);
+  // HA-2.39: a shared record (own purchase groups) against the pricing rule, same margin field
+  assert.match(src, /priceSharedRecord\(\{ prices: r\.prices, stock: r\.stock \}, pricing, r\.marginRaw\)/);
+  assert.match(src, /saleDiff = salePriceDiffers\(sale, rule\.sale\)/);
   assert.match(src, /marginRaw: cfg\.marginKey !== null \? readMarginRaw\(tf, cfg\.marginKey\) : undefined/);
 });
