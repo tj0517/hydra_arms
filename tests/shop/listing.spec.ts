@@ -46,6 +46,10 @@ const productNames = (page: Page) => page.getByTestId('product-area').locator('a
 const totalCount = async (page: Page) => Number((await page.getByTestId('product-count').innerText()).match(/\d+/)?.[0]);
 const sidebar = (page: Page) => page.locator('aside').first();
 const chips = (page: Page) => page.getByTestId('active-filters').locator('button[data-chip]');
+/** The sidebar "Kategorie" section starts collapsed — open it before using the tree. */
+async function openCategories(page: Page) {
+  await sidebar(page).getByRole('button', { name: /^Kategorie/ }).click();
+}
 
 test.describe('/sklep — listing page', () => {
   test('page loads and shows products', async ({ page }) => {
@@ -73,6 +77,8 @@ test.describe('/sklep — listing page', () => {
     await expect(aside).toBeVisible();
 
     const tree = aside.getByTestId('category-tree');
+    await expect(tree).toBeHidden(); // collapsed by default
+    await openCategories(page);
     await expect(tree).toBeVisible();
     await expect(tree.getByRole('button', { name: /^Wszystkie/ })).toBeVisible();
 
@@ -279,6 +285,7 @@ test.describe('/sklep — listing page', () => {
     const allCount = await productLinks(page).count();
 
     // First root category in the tree (not "Wszystkie", not an expand chevron)
+    await openCategories(page);
     const tree = sidebar(page).getByTestId('category-tree');
     const firstRoot = tree.locator('li > div > button:not([aria-label])').first();
     const label = (await firstRoot.innerText()).trim();
@@ -329,6 +336,9 @@ test.describe('/sklep — listing page', () => {
     const aside = sidebar(page);
     const tree = aside.getByTestId('category-tree');
 
+    // collapsed header still names the active category
+    await expect(aside.getByRole('button', { name: /^Kategorie/ })).toContainText('Broń palna');
+    await openCategories(page);
     await expect(tree.getByRole('button', { name: /^Broń palna/ })).toHaveAttribute('aria-current', 'page');
     await expect(tree.getByRole('button', { name: /^Broń krótka/ })).toBeVisible(); // auto-expanded active path
     await expect(aside.getByRole('checkbox', { name: /^Test \(\d+\)$/ })).toBeChecked();
@@ -449,6 +459,7 @@ test.describe('/sklep — listing page', () => {
     const aside = sidebar(page);
     const tree = aside.getByTestId('category-tree');
 
+    await openCategories(page);
     await expect(tree.getByRole('button', { name: /^seed-bulk/i })).toHaveAttribute('aria-current', 'page');
     await expect(aside.getByRole('checkbox', { name: /^Seed Bulk A \(\d+\)$/ })).toBeChecked();
     const specHeader = aside.getByRole('button', { name: /^Rozmiar/ });
