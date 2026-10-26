@@ -28,13 +28,23 @@ export interface WriteEnv {
 
 // ── Import payload ────────────────────────────────────────────────────────────
 
+/**
+ * BL weight in kg from the feed's grams, to the gram (HA-2.38: round2 zeroed everything < 5 g) and
+ * never 0 for a positive weight. No weight in the feed → the record's current weight, so a supplier
+ * without weight data does not wipe what another one wrote; 0 only for a new record.
+ */
+export function weightKg(weightG: number | null | undefined, existingKg?: number | null): number {
+  if (weightG && weightG > 0) return Math.max(Math.round(weightG) / 1000, 0.001);
+  return existingKg && existingKg > 0 ? existingKg : 0;
+}
+
 export function toBLProduct(
   p: NormalizedProduct,
   env: WriteEnv,
   categoryId: number,
   tags: string[],
-  /** `ean`: eanForUpsert with the record's current EAN (import); omitted → the feed's EAN alone */
-  identity: { sku: string; features: Record<string, string>; ean?: string },
+  /** `ean`: eanForUpsert with the record's current EAN, `weight`: the record's current weight (import) */
+  identity: { sku: string; features: Record<string, string>; ean?: string; weight?: number },
   margin: MarginChoice,
 ): { product: Record<string, unknown>; price: number; priceFromFallback: boolean; priceZero: boolean } {
   const { price, fromFallback, priceZero } = computeSellingPrice(p, margin.pct);
@@ -57,7 +67,7 @@ export function toBLProduct(
     sku: identity.sku,
     ean: identity.ean ?? eanForUpsert(p.ean),
     tax_rate: p.tax_rate ?? 23,
-    weight: p.weight_g ? round2(p.weight_g / 1000) : 0, // BL stores kg
+    weight: weightKg(p.weight_g, identity.weight), // BL stores kg
     category_id: categoryId,
     tags: [...new Set(tags)],
     text_fields: textFields,
