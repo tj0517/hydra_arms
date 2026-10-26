@@ -60,6 +60,7 @@ import {
   mergeImportTags,
 } from '../xml-integration/import-tags';
 import { classifyFeed } from '../xml-integration/feed-guard';
+import { MARGIN_FIELD_ENV, expectedSalePrice, marginFieldKey, readMarginRaw, salePriceDiffers } from '../xml-integration/margin';
 import {
   SUPPLIERS,
   SUPPLIER_LABEL,
@@ -142,6 +143,8 @@ interface Config {
   priceGroup: number | null;
   priceGroupPurchase: number | null;
   markup: Record<Supplier, number | null>;
+  /** `text_fields` key of the client's „Marża %” field (HA-2.22), null when unset */
+  marginKey: string | null;
   /** BASELINKER_WAREHOUSE_HYDRA — own stock for the assortment filter, as in the import */
   hydraWarehouse: string | null;
 }
@@ -166,6 +169,12 @@ function loadConfig(): Config {
     const m = parseFloat(process.env[MARKUP_ENV[s]] ?? '');
     markup[s] = isNaN(m) ? null : m;
   }
+  let marginKey: string | null = null;
+  try {
+    marginKey = marginFieldKey(process.env[MARGIN_FIELD_ENV]);
+  } catch (err) {
+    fail(err instanceof Error ? err.message : String(err));
+  }
   return {
     mock,
     inventoryId,
@@ -173,6 +182,7 @@ function loadConfig(): Config {
     priceGroup: intEnv('BASELINKER_PRICE_GROUP'),
     priceGroupPurchase: intEnv('BASELINKER_PRICE_GROUP_PURCHASE'),
     markup,
+    marginKey,
     hydraWarehouse: process.env.BASELINKER_WAREHOUSE_HYDRA?.trim() || null,
   };
 }
@@ -256,6 +266,8 @@ interface BLRec {
   hasDescription: boolean;
   variants: number;
   sup: RecordSuppliers;
+  /** raw „Marża %” field value (HA-2.22); undefined = not set or field not configured */
+  marginRaw?: unknown;
 }
 
 interface BLState {
@@ -347,6 +359,7 @@ async function loadBL(cfg: Config): Promise<BLState> {
         hasDescription: String(tf.description ?? '').replace(/<[^>]*>/g, '').trim().length > 0,
         variants: variantCount,
         sup: recordSuppliers(sku, features),
+        marginRaw: cfg.marginKey !== null ? readMarginRaw(tf, cfg.marginKey) : undefined,
       });
     }
     log(`  product data ${Math.min(i + DATA_CHUNK, ids.length)}/${ids.length}`);
@@ -667,7 +680,8 @@ function sectionA(ctx: Ctx): Section {
   const orphanAll: Array<{ s: Supplier; r: BLRec; stock: number }> = [];
   const outOfFilterAll: FeedItem[] = [];
   const stockDiffAll: Array<{ i: FeedItem; r: BLRec; bl: number }> = [];
-  const priceDiffAll: Array<{ i: FeedItem; r: BLRec; sale: number | null; purchase: number | null; shared: boolean; kind: string }> = [];
+  const priceDiffAll: Array<{ i: FeedItem; r: BLRec; sale: number | null; purchase: number | null; shared: boolean; kind: string; expected: number; margin: string }> = [];
+  let manualMargin = 0, manualMarginRejected = 0;
   const stockRows: Array<Array<string | number>> = [];
   const priceRows: Array<Array<string | number>> = [];
   let missingTotal = 0, admittedTotal = 0, orphanTotal = 0, orphanStale = 0, orphanStaleApproved = 0, ownPriceDiff = 0, sharedPriceDiff = 0;
@@ -746,13 +760,21 @@ function sectionA(ctx: Ctx): Section {
         const sale = r.prices[String(cfg.priceGroup)] ?? null;
         const purchase = cfg.priceGroupPurchase !== null ? (r.prices[String(cfg.priceGroupPurchase)] ?? null) : null;
         if (i.priceFromFallback) fallback++;
-        const saleDiff = sale === null || Math.abs(sale - (i.expectedPrice ?? 0)) > 0.01;
+        // Expected price with the record's „Marża %” when valid, else env (HA-2.22) — as import and sync
+        const exp = expectedSalePrice({ price_purchase: i.pricePurchase, price_gross: i.priceGross }, markup, r.marginRaw);
+        if (!exp.fromFallback && exp.margin.source === 'field') manualMargin++;
+        if (!exp.fromFallback && exp.margin.rejected !== undefined) manualMarginRejected++;
+        const saleDiff = salePriceDiffers(sale, exp.price);
         const purDiff = cfg.priceGroupPurchase !== null && i.pricePurchase !== null && i.pricePurchase > 0
           && (purchase === null || Math.abs(purchase - round2(i.pricePurchase)) > 0.01);
         if (isShared) { shared++; if (saleDiff) sharedDiff++; } else { own++; if (saleDiff) ownDiff++; }
         if (purDiff) purchaseDiff++;
         if (saleDiff || purDiff) {
-          priceDiffAll.push({ i, r, sale, purchase, shared: isShared, kind: [saleDiff ? 'sprzedaż' : '', purDiff ? 'zakup' : ''].filter(Boolean).join('+') });
+          priceDiffAll.push({
+            i, r, sale, purchase, shared: isShared, kind: [saleDiff ? 'sprzedaż' : '', purDiff ? 'zakup' : ''].filter(Boolean).join('+'),
+            expected: exp.price,
+            margin: exp.fromFallback ? '—' : `${exp.margin.pct}% ${exp.margin.source === 'field' ? 'pole' : exp.margin.rejected !== undefined ? 'env (pole odrzucone)' : 'env'}`,
+          });
         }
       }
       ownPriceDiff += ownDiff;
@@ -792,9 +814,12 @@ function sectionA(ctx: Ctx): Section {
 
   md.push('### Cena: BL vs cena zakupu z feedu × (1 + narzut)', '');
   md.push(...table(['Hurtownia', 'Rekordy własne / wspólne', 'Cena sprzedaży różna — własne', 'Cena sprzedaży różna — wspólne', 'Cena zakupu różna', 'Bez ceny zakupu (fallback na cenę brutto z feedu)', 'Werdykt'], priceRows), '');
-  const cPrice = csvOf('A_cena_rozbiezna.csv', ['hurtownia', 'bl_id', 'sku_feed', 'nazwa', 'co', 'rekord_wspolny', 'cena_zakupu_feed', 'cena_sprzedazy_wg_importu', 'cena_sprzedazy_BL', 'cena_zakupu_BL', 'fallback'],
+  md.push(cfg.marginKey === null
+    ? `Narzut: zawsze z env — pole „Marża %” nieskonfigurowane (\`${MARGIN_FIELD_ENV}\` puste, HA-2.22).`
+    : `Narzut: z pola „Marża %” (\`${cfg.marginKey}\`), gdy ma liczbę 0–200, inaczej z env (HA-2.22) — dopasowania z ręczną marżą: ${fmt(manualMargin)}, z odrzuconą wartością pola (liczone z env): ${fmt(manualMarginRejected)}.`, '');
+  const cPrice = csvOf('A_cena_rozbiezna.csv', ['hurtownia', 'bl_id', 'sku_feed', 'nazwa', 'co', 'rekord_wspolny', 'cena_zakupu_feed', 'marza', 'cena_sprzedazy_wg_importu', 'cena_sprzedazy_BL', 'cena_zakupu_BL', 'fallback'],
     [...priceDiffAll].sort((a, b) => Number(a.shared) - Number(b.shared)),
-    (d) => [d.i.supplier, d.r.id, d.i.sku, d.i.name, d.kind, d.shared ? 'tak' : 'nie', d.i.pricePurchase ?? '', d.i.expectedPrice ?? '', d.sale ?? '', d.purchase ?? '', d.i.priceFromFallback ? 'tak' : 'nie'],
+    (d) => [d.i.supplier, d.r.id, d.i.sku, d.i.name, d.kind, d.shared ? 'tak' : 'nie', d.i.pricePurchase ?? '', d.margin, d.expected, d.sale ?? '', d.purchase ?? '', d.i.priceFromFallback ? 'tak' : 'nie'],
     (d) => `${d.i.supplier}/${d.shared}`);
   if (cPrice.total) md.push(`Przykłady: ${csvRef(cPrice)}. Rekord wspólny dostaje cenę hurtowni, która ostatnia robiła sync — rozjazd na nim jest oczekiwany, dopóki nie zapadnie O-32.`, '');
 
@@ -1287,7 +1312,7 @@ const EXPECTATIONS = [
   '- **O4 Tagi (HA-2.17).** Tagi importu `auto`/`review`/`flag`/`permit`/`permit_review`/`age_18` są odświeżane; tagi admina `approved`, `permit_off`, `permit_ok` i inne zostają; `permit_off`/`permit_ok` gaszą `permit_review`. Grupy z `permit-rules.ts`: A → `permit`, B/D → `age_18`, C → `permit` + `permit_review`. Bez `approved` produkt nie trafia do sklepu.',
   '- **O5 Warianty.** Import nie tworzy wariantów BL: każdy produkt feedu = jeden rekord (`parent_id: 0`). Sharg: EAN pierwszego rozmiaru, stan = suma rozmiarów; Spechurt: EAN produktu, stan = `stan_magazynowy`; Kolba: feed podaje tylko liczbę wariantów.',
   '- **O6 Stany per magazyn.** Kolba → H1 (`BASELINKER_WAREHOUSE_H1`), Sharg → H2, Spechurt → H3. Import i sync wpisują stan z feedu do magazynu swojej hurtowni. Produkt, który zniknął z feedu, zostaje w BL z ostatnim stanem — nikt go nie zeruje (deferred 2026-10-13).',
-  '- **O7 Ceny i narzut.** Cena sprzedaży = cena zakupu z feedu × (1 + `BASELINKER_MARKUP_<HURTOWNIA>`/100), wstępnie 30% (O-07) → grupa `BASELINKER_PRICE_GROUP`; cena zakupu → `BASELINKER_PRICE_GROUP_PURCHASE`, gdy > 0. Bez ceny zakupu — cena brutto z feedu (fallback). Cena detaliczna z feedu nie jest używana. Rekord wspólny: cena hurtowni, która ostatnia robiła sync (O-32). „Cena domyślna” katalogu i pole „Producent” nie są wypełniane (deferred 2026-10-14).',
+  '- **O7 Ceny i narzut.** Cena sprzedaży = cena zakupu z feedu × (1 + marża/100); marża = pole „Marża %” produktu w BL (`BASELINKER_EXTRA_FIELD_MARGIN`, liczba 0–200, HA-2.22), a gdy puste albo nieprawidłowe — `BASELINKER_MARKUP_<HURTOWNIA>`, wstępnie 30% (O-07) → grupa `BASELINKER_PRICE_GROUP`; cena zakupu → `BASELINKER_PRICE_GROUP_PURCHASE`, gdy > 0. Bez ceny zakupu — cena brutto z feedu (fallback). Cena detaliczna z feedu nie jest używana. Rekord wspólny: cena hurtowni, która ostatnia robiła sync (O-32). „Cena domyślna” katalogu i pole „Producent” nie są wypełniane (deferred 2026-10-14).',
   '- **O8 Treść.** Nazwa, opis HTML, parametry (Kolba: atrybuty; Sharg: feed parametrów — dziś scalany dla 0 produktów, deferred 2026-10-15; Spechurt: brak), do 16 zdjęć, VAT (Kolba zawsze 23 — feed nie ma VAT; Sharg i Spechurt z feedu), waga w kg.',
   '- **O9 Harmonogram i zdrowie.** Cron (UTC): Kolba import 20:20 / sync 22:55, Sharg 23:15 / 00:50, Spechurt 04:35 / 06:50, przez `run-bl.sh` pod jedną blokadą `flock`. Pusty feed = błąd: 3 próby co 600 s, potem `[fatal] empty feed`, `END exit=1` (HA-2.33). `exit=0` nie wystarcza — liczy się `result=` w dzienniku.',
   '',

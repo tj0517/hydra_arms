@@ -31,9 +31,14 @@
  *     `SKU Spechurt`) plus `Źródło opisu`; parameters are merged, never replaced
  *   - Stock goes to a per-supplier warehouse: kolba → BASELINKER_WAREHOUSE_H1,
  *     sharg → _H2, spechurt → _H3
- *   - Selling price = price_purchase * (1 + markup%), markup from env per supplier
- *     (BASELINKER_MARKUP_KOLBA / _SHARG / _SPECHURT); purchase price is written
- *     to the BASELINKER_PRICE_GROUP_PURCHASE price group
+ *   - Selling price = price_purchase * (1 + markup%). Markup: the product's own „Marża %”
+ *     extra field in BL when it holds a number 0–200 (HA-2.22, field ID in
+ *     BASELINKER_EXTRA_FIELD_MARGIN), otherwise env per supplier (BASELINKER_MARKUP_KOLBA /
+ *     _SHARG / _SPECHURT). The field is the client's: read, never written
+ *     (xml-integration/margin.ts). Purchase price is written to the
+ *     BASELINKER_PRICE_GROUP_PURCHASE price group
+ *   --only-bl-id=<id> — import of one supplier (or its --dry-run): only the feed product(s)
+ *                       matched to that BL product are processed (HA-2.22 single-product test)
  *   - Sharg: the connector itself filters to defence categories (SHARG_DEFENCE_PATTERNS)
  *   - Rate limit: BL free plan ~100 req/min — 700 ms sleep between calls;
  *     on ERROR_BLOCKED_TOKEN blCall waits out the block and retries
@@ -89,13 +94,28 @@ import { fetchFeedWithRetry, retryPolicyFromEnv, type FeedAttempt } from '../xml
 import {
   SUPPLIERS,
   addToMatchIndex,
-  emptyMatchIndex,
   findBLMatch,
   planUpsert,
   recordIdentity,
   type BLMatchIndex,
   type Supplier,
 } from '../xml-integration/bl-match-key';
+import {
+  MARGIN_FIELD_ENV,
+  MarginTally,
+  chooseMargin,
+  computeSellingPrice,
+  marginFieldKey,
+  readMarginRaw,
+} from '../xml-integration/margin';
+import {
+  loadExistingProducts as loadExistingProductsCore,
+  readMarginRaws,
+  runSyncCore,
+  toBLProduct,
+  type GetProductsList,
+  type WriteEnv,
+} from '../xml-integration/bl-write';
 
 const CONNECTOR_NAMES = SUPPLIERS;
 type ConnectorName = Supplier;
@@ -117,14 +137,16 @@ const MARKUP_ENV: Record<ConnectorName, string> = {
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const RATE_LIMIT_MS = 700;
 
-const round2 = (n: number) => Math.round(n * 100) / 100;
+type Env = WriteEnv;
 
-interface Env {
-  inventoryId: number;
-  priceGroup: number;
-  priceGroupPurchase: number | null;
-  warehouse: string;
-  markupPct: number;
+/** `text_fields` key of „Marża %” (HA-2.22), or null when unset. A malformed ID stops the run. */
+function loadMarginKey(): string | null {
+  try {
+    return marginFieldKey(process.env[MARGIN_FIELD_ENV]);
+  } catch (err) {
+    console.error(`[error] ${err instanceof Error ? err.message : err}`);
+    process.exit(1);
+  }
 }
 
 /** Full env validation — required for import and sync (write paths only). */
@@ -188,37 +210,14 @@ function loadDryRunEnv(): { inventoryId: number; hydraWarehouseId: string | null
 }
 
 // ── Pricing ───────────────────────────────────────────────────────────────────
-// Selling price = purchase price + markup. Feed retail price is ignored.
-// If the feed has no purchase price, fall back to feed gross price and warn.
-
-function computeSellingPrice(p: NormalizedProduct, markupPct: number): { price: number; fromFallback: boolean; priceZero: boolean } {
-  if (p.price_purchase && p.price_purchase > 0) {
-    const price = round2(p.price_purchase * (1 + markupPct / 100));
-    return { price, fromFallback: false, priceZero: price === 0 };
-  }
-  return { price: p.price_gross, fromFallback: true, priceZero: p.price_gross === 0 };
-}
+// computeSellingPrice and the manual margin field: xml-integration/margin.ts (HA-2.22).
 
 // ── Existing BL products: EAN → id, prefixed SKU → id (upsert key, no duplicates) ──
 // The key itself (findBLMatch) lives in xml-integration/bl-match-key.ts and is shared by
 // import, sync, dry-run and scripts/xml-feed-diagnostics.ts.
 
-async function loadExistingProducts(
-  getProductsList: (inventoryId: number, page?: number) => Promise<Record<string, { ean: string; sku: string }>>,
-  inventoryId: number,
-): Promise<BLMatchIndex> {
-  const index = emptyMatchIndex();
-
-  for (let page = 1; ; page++) {
-    const products = await getProductsList(inventoryId, page);
-    const entries = Object.entries(products);
-    for (const [id, p] of entries) addToMatchIndex(index, Number(id), p.ean, p.sku);
-    if (entries.length < 1000) break;
-    await sleep(RATE_LIMIT_MS);
-  }
-
-  return index;
-}
+const loadExistingProducts = (getProductsList: GetProductsList, inventoryId: number): Promise<BLMatchIndex> =>
+  loadExistingProductsCore(getProductsList, inventoryId, sleep, RATE_LIMIT_MS);
 
 /** Existing `text_fields.features` of a BL product as a plain map (defensive: an empty one may come back as `[]`). */
 function featuresOf(d: { text_fields?: { features?: unknown } }): Record<string, string> {
@@ -294,45 +293,7 @@ function formatPermitCounts(counts: Record<string, number>): string {
 }
 
 // ── Payload: NormalizedProduct → BL addInventoryProduct product object ────────
-
-function toBLProduct(
-  p: NormalizedProduct,
-  env: Env,
-  categoryId: number,
-  tags: string[],
-  identity: { sku: string; features: Record<string, string> },
-): { product: Record<string, unknown>; priceFromFallback: boolean; priceZero: boolean } {
-  const { price, fromFallback, priceZero } = computeSellingPrice(p, env.markupPct);
-
-  const prices: Record<string, number> = { [env.priceGroup]: price };
-  if (env.priceGroupPurchase && p.price_purchase && p.price_purchase > 0) {
-    prices[env.priceGroupPurchase] = round2(p.price_purchase);
-  }
-
-  const textFields: Record<string, unknown> = { name: p.name };
-  if (p.description_html) textFields.description = p.description_html;
-  // Merged with the record's existing parameters (recordIdentity) — BL replaces features wholesale
-  textFields.features = identity.features;
-
-  // BL expects image entries prefixed "url:" (or "data:" for base64), max 16
-  const images = p.images.slice(0, 16).map((img) => `url:${img.url}`);
-
-  const product: Record<string, unknown> = {
-    parent_id: 0,
-    sku: identity.sku,
-    ean: p.ean ?? '',
-    tax_rate: p.tax_rate ?? 23,
-    weight: p.weight_g ? round2(p.weight_g / 1000) : 0, // BL stores kg
-    category_id: categoryId,
-    tags: [...new Set(tags)],
-    text_fields: textFields,
-    prices,
-    stock: { [env.warehouse]: p.stock ?? 0 },
-    ...(images.length ? { images } : {}),
-  };
-
-  return { product, priceFromFallback: fromFallback, priceZero };
-}
+// toBLProduct: xml-integration/bl-write.ts (HA-2.22) — it never sends the margin field.
 
 // ── Fetch + parse feed via connector ──────────────────────────────────────────
 
@@ -439,9 +400,13 @@ async function mergeShargParameters(
 
 // ── Mode: import — full upsert via addInventoryProduct ────────────────────────
 
-async function runImport(connectorName: ConnectorName, env: Env, limit: number | null): Promise<void> {
+async function runImport(connectorName: ConnectorName, env: Env, limit: number | null, onlyBlId: number | null): Promise<void> {
   assertExternalProd('BaseLinker');
   const bl = await import('../src/lib/baselinker/client');
+  const marginKey = loadMarginKey();
+  if (marginKey === null) {
+    console.warn(`[warn] ${MARGIN_FIELD_ENV} not set — manual margins are NOT read, env markup for every product`);
+  }
 
   const tree = new HydraTree(loadJson<Record<string, number>>(
     HYDRA_CATEGORIES_PATH,
@@ -465,6 +430,16 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
   console.log('\nLoading existing BL products (dedup index)…');
   const index = await loadExistingProducts(bl.getProductsList, env.inventoryId);
   console.log(`  ${index.total} products in BL (${index.byEan.size} with EAN)`);
+
+  if (onlyBlId !== null) {
+    products = products.filter((p) => findBLMatch(index, connectorName, p.ean, p.connector_sku)?.id === onlyBlId);
+    console.log(`--only-bl-id=${onlyBlId}: ${products.length} feed product(s) of ${connectorName} matched to that BL product`);
+    if (products.length === 0) {
+      console.error(`[error] no ${connectorName} feed product matches BL product ${onlyBlId} (EAN, or SKU ${connectorName.toUpperCase()}-…) — nothing written`);
+      process.exitCode = 1;
+      return;
+    }
+  }
 
   // Resolve categories + status tags from the dictionary (no BL categories created here)
   const unknownNums = new Set<string>();
@@ -508,6 +483,8 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
     const r = resolved.get(p)!;
     const existingId = findBLMatch(index, connectorName, p.ean, p.connector_sku)?.id;
     const hydraOwnStock = existingId !== undefined ? (hydraStockById.get(existingId) ?? 0) : 0;
+    // Filter price on the env markup: the margin field is read below, for admitted products
+    // only. Matters only while ASSORTMENT_RULES.minPricePln > 0 (0 today).
     const { price } = computeSellingPrice(p, env.markupPct);
     const fr = filterProduct(p, r.hydraNum, p.stock ?? 0, hydraOwnStock, price, ASSORTMENT_RULES);
     filterCounts[fr.reason] = (filterCounts[fr.reason] ?? 0) + 1;
@@ -522,6 +499,11 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
     }
   }
   products = filteredProducts;
+  if (onlyBlId !== null && products.length === 0) {
+    console.error(`[error] BL product ${onlyBlId}: its feed product was dropped by the assortment filter (${Object.keys(filterCounts).filter((r) => r !== 'ok').join(', ')}) — nothing written; pick a product that is in stock`);
+    process.exitCode = 1;
+    return;
+  }
   if (unknownNums.size > 0) {
     console.warn(`  ⚠ category-map.json points at numbers missing from hydra-categories.json: ${[...unknownNums].join(', ')}`);
   }
@@ -534,9 +516,10 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
   const matchedIds = [...new Set(
     products.map((p) => findBLMatch(index, connectorName, p.ean, p.connector_sku)?.id).filter((id): id is number => id !== undefined),
   )];
-  const existingData = new Map<number, { tags: string[]; sku: string; features: Record<string, string> }>();
+  // The same read carries the client's „Marża %” field (HA-2.22) — read here, never written back.
+  const existingData = new Map<number, { tags: string[]; sku: string; features: Record<string, string>; marginRaw?: unknown }>();
   if (matchedIds.length > 0) {
-    console.log(`\nFetching tags and parameters of ${matchedIds.length} existing products (to preserve admin tags and other suppliers' parameters)…`);
+    console.log(`\nFetching tags, parameters and margin field of ${matchedIds.length} existing products (to preserve admin tags and other suppliers' parameters)…`);
     for (let i = 0; i < matchedIds.length; i += 100) {
       const chunk = matchedIds.slice(i, i + 100).map(String);
       const details = await bl.getProductsData(env.inventoryId, chunk);
@@ -545,6 +528,7 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
           tags: d.tags ?? [],
           sku: String(d.sku ?? ''),
           features: featuresOf(d),
+          marginRaw: marginKey !== null ? readMarginRaw(d.text_fields, marginKey) : undefined,
         });
       }
       await sleep(RATE_LIMIT_MS);
@@ -553,6 +537,7 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
 
   let created = 0, updated = 0, errors = 0, skippedNoData = 0, priceFallbacks = 0, priceZeros = 0;
   const permitCounts: Record<string, number> = {};
+  const marginTally = new MarginTally((line) => console.warn(`\n${line}`));
 
   console.log(`\nUpserting ${products.length} products (~${Math.ceil(products.length * RATE_LIMIT_MS / 60000)} min)…`);
   for (const p of products) {
@@ -576,9 +561,15 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
     // SKU: `<SUPPLIER>-<feed sku>`, or the creating supplier's SKU on a shared record;
     // parameters merged with the record's existing ones
     const identity = recordIdentity(connectorName, p.connector_sku, p.features, existing);
-    const { product, priceFromFallback, priceZero } = toBLProduct(p, env, r.categoryId, tags, identity);
+    // Margin: the record's „Marża %” when valid, else env; a new product has no field yet
+    const margin = chooseMargin(existing?.marginRaw, env.markupPct);
+    const { product, price, priceFromFallback, priceZero } = toBLProduct(p, env, r.categoryId, tags, identity, margin);
     if (priceFromFallback) priceFallbacks++;
+    else marginTally.note(existingId, margin);
     if (priceZero) priceZeros++;
+    if (onlyBlId !== null) {
+      console.log(`\n  BL ${onlyBlId} ${p.connector_sku}: purchase ${p.price_purchase ?? '—'}, margin ${priceFromFallback ? '— (no purchase price, feed gross)' : `${margin.pct}% (${margin.source === 'field' ? 'field' : margin.rejected !== undefined ? `env — field "${margin.rejected}" rejected` : 'env'})`} → selling price ${price}; text_fields sent: ${Object.keys(product.text_fields as object).join(', ')}`);
+    }
 
     try {
       const productId = await bl.addInventoryProduct(env.inventoryId, product, existingId);
@@ -590,7 +581,7 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
         addToMatchIndex(index, productId, p.ean, identity.sku);
       }
       // A later repeat inside the feed merges with what was just written
-      existingData.set(productId, { tags, sku: identity.sku, features: identity.features });
+      existingData.set(productId, { tags, sku: identity.sku, features: identity.features, marginRaw: existing?.marginRaw });
       process.stdout.write(existingId !== undefined ? '.' : '+');
     } catch (err) {
       errors++;
@@ -603,6 +594,7 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
   console.log(`  skipped: ${skippedNoData} (no BL data — counted in errors, nothing overwritten)`);
   console.log(`  tags: ${statusCounts.auto} auto / ${statusCounts.review} review / ${statusCounts.flag} flag`);
   console.log(`  permit tags: ${formatPermitCounts(permitCounts)} (permit-rules.ts; permit_off/permit_ok in BL are kept)`);
+  if (marginKey !== null) console.log(`  ${marginTally.summary()}`);
   if (priceFallbacks > 0) {
     console.warn(`⚠ ${priceFallbacks} products had no purchase price in the feed — feed gross price used instead of markup pricing`);
   }
@@ -628,59 +620,21 @@ async function runSync(connectorName: ConnectorName, env: Env, limit: number | n
   // The feed itself was non-empty (fetchAndParse guarantees it) — only --limit can leave nothing
   if (products.length === 0) { console.log(`No in-stock products left after --limit=${limit} — nothing refreshed.`); return; }
 
-  console.log('\nLoading existing BL products (match index)…');
-  const index = await loadExistingProducts(bl.getProductsList, env.inventoryId);
-  console.log(`  ${index.total} products in BL`);
-
-  const stockUpdates: Record<string, Record<string, number>> = {};
-  const priceUpdates: Record<string, Record<string, number>> = {};
-  let matched = 0, unmatched = 0, priceFallbacks = 0, priceZeros = 0;
-
-  for (const p of products) {
-    // Same key as the import: EAN across suppliers, else this supplier's prefixed SKU only
-    const id = findBLMatch(index, connectorName, p.ean, p.connector_sku)?.id;
-    if (id === undefined) { unmatched++; continue; }
-    matched++;
-
-    stockUpdates[id] = { [env.warehouse]: p.stock ?? 0 };
-
-    const { price, fromFallback, priceZero } = computeSellingPrice(p, env.markupPct);
-    if (fromFallback) priceFallbacks++;
-    if (priceZero) priceZeros++;
-    priceUpdates[id] = { [env.priceGroup]: price };
-    if (env.priceGroupPurchase && p.price_purchase && p.price_purchase > 0) {
-      priceUpdates[id][env.priceGroupPurchase] = round2(p.price_purchase);
-    }
-  }
-
-  console.log(`\nMatched ${matched} products, ${unmatched} not in BL yet (run 'import' mode to add them)`);
-  if (matched === 0) return;
-
-  // BL bulk endpoints take max 1000 products per call
-  const ids = Object.keys(stockUpdates);
-  for (let i = 0; i < ids.length; i += 1000) {
-    const chunk = ids.slice(i, i + 1000);
-
-    const stockChunk = Object.fromEntries(chunk.map((id) => [id, stockUpdates[id]]));
-    const stockRes = await bl.updateInventoryProductsStock(env.inventoryId, stockChunk);
-    console.log(`  stock  ${i + chunk.length}/${ids.length}: ${stockRes.counter} updated` +
-      (Object.keys(stockRes.warnings).length ? `, ${Object.keys(stockRes.warnings).length} warnings` : ''));
-    await sleep(RATE_LIMIT_MS);
-
-    const priceChunk = Object.fromEntries(chunk.map((id) => [id, priceUpdates[id]]));
-    const priceRes = await bl.updateInventoryProductsPrices(env.inventoryId, priceChunk);
-    console.log(`  prices ${i + chunk.length}/${ids.length}: ${priceRes.counter} updated` +
-      (Object.keys(priceRes.warnings).length ? `, ${Object.keys(priceRes.warnings).length} warnings` : ''));
-    await sleep(RATE_LIMIT_MS);
-  }
-
-  console.log(`\n✓ Sync done: ${matched} products refreshed`);
-  if (priceFallbacks > 0) {
-    console.warn(`⚠ ${priceFallbacks} products had no purchase price in the feed — feed gross price used instead of markup pricing`);
-  }
-  if (priceZeros > 0) {
-    console.warn(`⚠ ${priceZeros} products synced with price 0 — the feed has no price data for these`);
-  }
+  // Index → margin field (read-only client) → stock + price writes: xml-integration/bl-write.ts
+  const readonly = await import('../src/lib/baselinker/readonly');
+  const { ok } = await runSyncCore(products, connectorName, env, {
+    getProductsList: bl.getProductsList,
+    getProductsData: readonly.getInventoryProductsData,
+    updateStock: bl.updateInventoryProductsStock,
+    updatePrices: bl.updateInventoryProductsPrices,
+    sleep,
+    rateLimitMs: RATE_LIMIT_MS,
+    marginKey: loadMarginKey(),
+    log: (line) => console.log(line),
+    warn: (line) => console.warn(line),
+    tally: new MarginTally((line) => console.warn(line)),
+  });
+  if (!ok) process.exitCode = 1;
 }
 
 // ── Mode: dry-run — filter preview, no BL writes ──────────────────────────────
@@ -699,8 +653,22 @@ async function runDryRun(
   limit: number | null,
   fromFile: { connector: ConnectorName; path: string } | null,
   sections: ReadonlySet<string> | null = null,
+  onlyBlId: number | null = null,
 ): Promise<void> {
   const { inventoryId, hydraWarehouseId } = loadDryRunEnv();
+  // HA-2.22: margin preview (field read, price before/after) needs the field ID and BL access;
+  // --only-bl-id needs the BL index. All of it read-only.
+  const marginKey = loadMarginKey();
+  const hasToken = Boolean(process.env.BASELINKER_TOKEN);
+  if (onlyBlId !== null && !hasToken) {
+    console.error('[error] --only-bl-id needs BASELINKER_TOKEN (the BL index is read to find the product)');
+    process.exit(1);
+  }
+  if (marginKey === null) console.warn(`[dry-run] ${MARGIN_FIELD_ENV} not set — margin preview skipped`);
+  else if (!hasToken) console.warn('[dry-run] BASELINKER_TOKEN not set — margin preview skipped (it reads the field from BL)');
+  const marginPreview = marginKey !== null && hasToken;
+  const salePriceGroupRaw = parseInt(process.env.BASELINKER_PRICE_GROUP ?? '', 10);
+  const salePriceGroup = isNaN(salePriceGroupRaw) ? null : salePriceGroupRaw;
 
   if (!hydraWarehouseId) {
     console.warn('[dry-run] BASELINKER_WAREHOUSE_HYDRA not set — Hydra own stock treated as 0 for all products');
@@ -722,10 +690,10 @@ async function runDryRun(
   // Load BL index once (needed for own-stock lookup, re-used across connectors)
   let blIndex: BLMatchIndex | null = null;
   let blReadCalls = 0;
-  if (hydraWarehouseId) {
-    const bl = await import('../src/lib/baselinker/client');
-    console.log('\nLoading BL product index for own-stock lookup…');
-    blIndex = await loadExistingProducts(bl.getProductsList, inventoryId);
+  if (hydraWarehouseId || marginPreview || onlyBlId !== null) {
+    const readonly = await import('../src/lib/baselinker/readonly');
+    console.log('\nLoading BL product index (own stock / margin preview / --only-bl-id)…');
+    blIndex = await loadExistingProducts(readonly.getInventoryProductsList, inventoryId);
     blReadCalls += Math.ceil(blIndex.total / 1000) || 1;
     console.log(`  ${blIndex.total} products in BL`);
   }
@@ -739,14 +707,30 @@ async function runDryRun(
   for (const connectorName of connectors) {
     console.log(`\n─── ${connectorName.toUpperCase()} ───`);
     const filePath = fromFile && fromFile.connector === connectorName ? fromFile.path : undefined;
-    const products = limit !== null
+    let products = limit !== null
       ? (await fetchAndParse(connectorName, filePath)).slice(0, limit)
       : await fetchAndParse(connectorName, filePath);
+    if (onlyBlId !== null && blIndex) {
+      products = products.filter((p) => findBLMatch(blIndex!, connectorName, p.ean, p.connector_sku)?.id === onlyBlId);
+      console.log(`  --only-bl-id=${onlyBlId}: ${products.length} feed product(s) matched to that BL product`);
+      const readonly = await import('../src/lib/baselinker/readonly');
+      await sleep(RATE_LIMIT_MS);
+      const d = (await readonly.getInventoryProductsData(inventoryId, [String(onlyBlId)]))[String(onlyBlId)];
+      blReadCalls++;
+      if (!d) {
+        console.log(`  BL product ${onlyBlId}: not returned by getInventoryProductsData (wrong ID or other catalogue)`);
+      } else {
+        const tf = (d.text_fields ?? {}) as Record<string, unknown>;
+        const extra = Object.entries(tf).filter(([k]) => k.startsWith('extra_field_'));
+        console.log(`  BL product ${onlyBlId} extra fields: ${extra.length ? extra.map(([k, v]) => `${k}="${String(v).slice(0, 40)}"`).join(', ') : 'none set'}`);
+        if (salePriceGroup !== null) console.log(`  BL product ${onlyBlId} selling price (group ${salePriceGroup}): ${(d.prices as Record<string, number> | undefined)?.[salePriceGroup] ?? '—'}`);
+      }
+    }
 
     // Fetch Hydra own-stock for matched products in this feed
     const hydraStockById = new Map<number, number>();
     if (hydraWarehouseId && blIndex) {
-      const bl = await import('../src/lib/baselinker/client');
+      const bl = await import('../src/lib/baselinker/readonly');
       const matchedIds = [...new Set(
         products.map((p) => findBLMatch(blIndex!, connectorName, p.ean, p.connector_sku)?.id).filter((id): id is number => id !== undefined),
       )];
@@ -768,6 +752,58 @@ async function runDryRun(
     const markupPct = markupRaw ? parseFloat(markupRaw) : NaN;
     if (isNaN(markupPct) && ASSORTMENT_RULES.minPricePln > 0) {
       console.warn(`[dry-run] ${MARKUP_ENV[connectorName]} not set — price filter skipped for ${connectorName} (minPricePln=${ASSORTMENT_RULES.minPricePln})`);
+    }
+
+    // Margin preview (HA-2.22): the same read the sync makes — every matched product, field +
+    // current selling price — and the price the next sync would write. Read-only.
+    if (marginPreview && blIndex && products.length > 0) {
+      if (isNaN(markupPct)) {
+        console.warn(`  [dry-run] ${MARKUP_ENV[connectorName]} not set — margin preview skipped for ${connectorName}`);
+      } else {
+        const readonly = await import('../src/lib/baselinker/readonly');
+        const ids = [...new Set(
+          products.map((p) => findBLMatch(blIndex!, connectorName, p.ean, p.connector_sku)?.id).filter((id): id is number => id !== undefined),
+        )];
+        await sleep(RATE_LIMIT_MS);
+        const read = await readMarginRaws(ids, readonly.getInventoryProductsData, inventoryId, marginKey!, salePriceGroup, sleep, RATE_LIMIT_MS);
+        blReadCalls += read.calls;
+        console.log(`  margin field read (${marginKey}): ${read.raw.size}/${ids.length} matched products, ${read.calls} calls, ${(read.ms / 1000).toFixed(1)} s — the sync makes the same read`);
+
+        const tally = new MarginTally((line) => console.warn(`  ${line}`));
+        type Row = { id: number; sku: string; purchase: number; pct: number; source: string; before: number | null; after: number; rank: number };
+        const rows: Row[] = [];
+        const seen = new Set<number>();
+        for (const p of products) {
+          const id = findBLMatch(blIndex, connectorName, p.ean, p.connector_sku)?.id;
+          if (id === undefined || seen.has(id) || !read.raw.has(id)) continue;
+          seen.add(id);
+          const choice = chooseMargin(read.raw.get(id), markupPct);
+          const { price, fromFallback } = computeSellingPrice(p, choice.pct);
+          if (fromFallback) continue; // no purchase price — the margin does not apply (HA-2.05)
+          tally.note(id, choice);
+          rows.push({
+            id,
+            sku: p.connector_sku ?? p.connector_product_id,
+            purchase: p.price_purchase!,
+            pct: choice.pct,
+            source: choice.source === 'field' ? 'pole' : choice.rejected !== undefined ? `env (pole „${choice.rejected.slice(0, 12)}” odrzucone)` : 'env',
+            before: read.salePrice.get(id) ?? null,
+            after: price,
+            rank: choice.source === 'field' ? 0 : choice.rejected !== undefined ? 1 : 2,
+          });
+        }
+        console.log(`  ${tally.summary()}`);
+        const DRY_RUN_MARGIN_ROWS = 15;
+        // Field and rejected rows first, then env rows — at least 5 rows whenever there are 5
+        const shown = [...rows].sort((a, b) => a.rank - b.rank).slice(0, Math.max(DRY_RUN_MARGIN_ROWS, rows.filter((r) => r.rank < 2).length));
+        if (shown.length > 0) {
+          console.log(`  ${'BL id'.padEnd(10)} ${'sku'.padEnd(16)} ${'zakup'.padStart(9)} ${'marża'.padStart(6)} ${'źródło'.padEnd(32)} ${'cena przed'.padStart(10)} ${'cena po'.padStart(9)}`);
+          for (const r of shown) {
+            console.log(`  ${String(r.id).padEnd(10)} ${r.sku.slice(0, 16).padEnd(16)} ${r.purchase.toFixed(2).padStart(9)} ${`${r.pct}%`.padStart(6)} ${r.source.padEnd(32)} ${(r.before === null ? '—' : r.before.toFixed(2)).padStart(10)} ${r.after.toFixed(2).padStart(9)}`);
+          }
+          if (rows.length > shown.length) console.log(`  … ${rows.length - shown.length} more on env markup`);
+        }
+      }
     }
 
     const unknownNums = new Set<string>();
@@ -905,6 +941,28 @@ async function main() {
   const limitFlag = flags.find((f) => f.startsWith('--limit='));
   const limit = limitFlag ? parseInt(limitFlag.split('=')[1], 10) : null;
 
+  // --only-bl-id=<id> (HA-2.22): one BL product — import of one supplier, or its dry-run
+  const onlyFlag = flags.find((f) => f.startsWith('--only-bl-id='));
+  let onlyBlId: number | null = null;
+  if (onlyFlag) {
+    const raw = onlyFlag.slice('--only-bl-id='.length);
+    if (!/^\d+$/.test(raw)) {
+      console.error('[error] --only-bl-id=<BL product ID> — a number, e.g. --only-bl-id=123456789');
+      process.exit(1);
+    }
+    if (limitFlag) {
+      console.error('[error] --only-bl-id cannot be combined with --limit');
+      process.exit(1);
+    }
+    const supplierArg = positional[0];
+    const modeArg = positional[1] ?? 'import';
+    if (!supplierArg || !CONNECTOR_NAMES.includes(supplierArg as ConnectorName) || (!isDryRun && modeArg !== 'import')) {
+      console.error('[error] --only-bl-id works only with the import of one supplier: <kolba|sharg|spechurt> import --only-bl-id=<id> (or the same with --dry-run)');
+      process.exit(1);
+    }
+    onlyBlId = Number(raw);
+  }
+
   const fromFileFlag = flags.find((f) => f.startsWith('--from-file='));
   if (fromFileFlag && !isDryRun) {
     console.error('[error] --from-file is only valid together with --dry-run');
@@ -956,7 +1014,8 @@ async function main() {
     if (limit !== null) console.log(`  limit     : ${limit} products per supplier`);
     if (fromFile) console.log(`  from-file : ${fromFile.connector} ← ${fromFile.path}`);
     if (sections) console.log(`  sections  : ${[...sections].join(',')} (every permit-table row, no cap)`);
-    await runDryRun(connectors, limit, fromFile, sections);
+    if (onlyBlId !== null) console.log(`  only BL id: ${onlyBlId}`);
+    await runDryRun(connectors, limit, fromFile, sections, onlyBlId);
     return;
   }
 
@@ -966,6 +1025,7 @@ async function main() {
   if (!connectorName || !CONNECTOR_NAMES.includes(connectorName) || !['import', 'sync'].includes(mode)) {
     console.error('Usage:');
     console.error('  npx tsx scripts/xml-to-baselinker.ts <kolba|sharg|spechurt> [import|sync] [--limit=N]');
+    console.error('  npx tsx scripts/xml-to-baselinker.ts <connector> import --only-bl-id=<id>   (one BL product; also with --dry-run)');
     console.error('  npx tsx scripts/xml-to-baselinker.ts [<connector>] --dry-run [--limit=N] [--from-file=<connector>:<path>] [--sections=1,2]');
     console.error('');
     console.error('  import   (default) — full upsert into BL catalogue (slow, run rarely)');
@@ -989,10 +1049,12 @@ async function main() {
   console.log(`  inventory : ${env.inventoryId}`);
   console.log(`  warehouse : ${env.warehouse} (${WAREHOUSE_ENV[connectorName]})`);
   console.log(`  price grp : ${env.priceGroup} (sale) / ${env.priceGroupPurchase ?? '—'} (purchase)`);
-  console.log(`  markup    : +${env.markupPct}% on purchase price`);
+  console.log(`  markup    : +${env.markupPct}% on purchase price (env; the product's „Marża %” field wins when set)`);
+  console.log(`  margin fld: ${loadMarginKey() ?? '— (not set)'}`);
   if (limit !== null) console.log(`  limit     : ${limit} in-stock products`);
+  if (onlyBlId !== null) console.log(`  only BL id: ${onlyBlId}`);
 
-  if (mode === 'import') await runImport(connectorName, env, limit);
+  if (mode === 'import') await runImport(connectorName, env, limit, onlyBlId);
   else await runSync(connectorName, env, limit);
 }
 

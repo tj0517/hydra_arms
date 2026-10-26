@@ -138,7 +138,7 @@ export const INPUTS: readonly InputEntry[] = [
     usedIn: ['scripts/xml-to-baselinker.ts'],
     question: 'O-07',
     task: 'HA-2.05',
-    note: 'Percent on purchase price (25 = +25%). Client gave no rates on 2026-10-06; 30% is the working assumption in HA-2.05. See also O-32 (markup sheet, HA-2.22).',
+    note: 'Percent on purchase price (25 = +25%). Client gave no rates on 2026-10-06; 30% is the working assumption in HA-2.05. A product\'s own „Marża %” field in BL overrides it (BASELINKER_EXTRA_FIELD_MARGIN, HA-2.22).',
   },
   {
     name: 'BASELINKER_MARKUP_SHARG',
@@ -163,6 +163,18 @@ export const INPUTS: readonly InputEntry[] = [
     question: 'O-07',
     task: 'HA-2.05',
     note: 'See BASELINKER_MARKUP_KOLBA.',
+  },
+  {
+    name: 'BASELINKER_EXTRA_FIELD_MARGIN',
+    source: 'env',
+    status: 'placeholder',
+    owner: 'tj',
+    provisional: false,
+    secret: false,
+    usedIn: ['scripts/xml-to-baselinker.ts', 'scripts/audit-import.ts', 'xml-integration/margin.ts'],
+    question: 'O-32',
+    task: 'HA-2.22',
+    note: 'ID of the BL extra field „Marża %” in catalogue 119068 (bare number, e.g. 75, or extra_field_75). tj creates the field in the BL panel and reads the ID with the import dry-run --only-bl-id. Unset = manual margins off, env markup for every product. Import server .env.local only, not Vercel.',
   },
 
   // ─── Shipping — prices and free-shipping threshold (O-10, client) ───────────

@@ -134,6 +134,7 @@ Zmienne, których potrzebuje import — **same nazwy**:
 | `BASELINKER_MARKUP_KOLBA` | marża w procentach od ceny zakupu, sama liczba: `30` to cena zakupu + 30 % (nie `0.3`; ułamek z kropką) |
 | `BASELINKER_MARKUP_SHARG` | jw. |
 | `BASELINKER_MARKUP_SPECHURT` | jw. |
+| `BASELINKER_EXTRA_FIELD_MARGIN` | ID pola dodatkowego „Marża %” (HA-2.22), sama liczba. Pusta albo brak = marża zawsze z env. Dopisujesz dopiero po bramce z sekcji „Marża ręczna (HA-2.22)” |
 | `SPECHURT_KEY` | klucz feedu Spechurtu |
 | `SHARG_CLIENT` | identyfikator klienta w adresie feedu Sharga |
 | `SHARG_TOKEN_FULL` | token pełnego feedu Sharga |
@@ -939,6 +940,108 @@ rm /home/ubuntu/audit-2026-10-26.tgz
 Raport otwierasz na Macu: `~/Desktop/hydra_arms/audit-2026-10-26/raport.md`. Katalog na serwerze
 (`/home/hydra-import/audit-2026-10-26`) i log audytu w `~/logs` nie podlegają retencji wrappera —
 usuń je, gdy raport nie będzie już potrzebny.
+
+## Marża ręczna (HA-2.22)
+
+Produkt w katalogu 119068 może mieć w polu dodatkowym „Marża %” własną marżę. Import i sync
+liczą wtedy cenę = zakup × (1 + marża z pola), a pole puste = marża hurtowni z env. Import i sync
+tylko czytają to pole (`getInventoryProductsData`) — nie zapisują go. Instrukcja dla klienta:
+`docs/ops/marza-reczna-klient.md`.
+
+Bez `BASELINKER_EXTRA_FIELD_MARGIN` nowy kod liczy ceny tak jak dotąd (marża z env), więc samo
+wgranie kodu niczego nie zmienia. Zmienną podajesz w komendach testowych niżej jako
+`env BASELINKER_EXTRA_FIELD_MARGIN=…`. Do `.env.local` trafia dopiero po ostatniej bramce:
+skrypt czyta `.env.local` z `override: true`, ale zmiennej, której w pliku nie ma, nie zeruje.
+
+**Dlaczego test na jednym produkcie przed pełnym importem.** Dokumentacja `addInventoryProduct`
+nie mówi, czy aktualizacja produktu zostawia klucze `text_fields`, których nie wysłano. Import
+wysyła tylko `name`, `description` i `features`. Gdyby BL czyścił pozostałe, każdy import
+(także dzisiejszy, bez HA-2.22) skasowałby pola dodatkowe produktów, które aktualizuje.
+
+Kolejność: bramki STOP z HA-2.22. Kroki 1–4 robisz w dzień, między 07:01 a ok. 19:30 UTC, tak
+jak audyt. Kroki 1–4 biegną z osobnej kopii (`/home/hydra-import/hydra-ha222`, worktree gałęzi
+zadania), więc nocny cron do merge'a dalej chodzi na `main`. `exit=1` od razu, bez wypisu = trwa
+import albo sync; spróbuj później. W komendach podmień `<hurtownia>` (`kolba` / `sharg` /
+`spechurt` — ta, z której pochodzi produkt testowy), `<ID_PRODUKTU>` (ID produktu w BL)
+i `<ID_POLA>` (liczba z kroku 2).
+
+0. **Panel BL (tj) — STOP.** W katalogu 119068 załóż pole dodatkowe „Marża %” (pole tekstowe).
+   Na jednym produkcie testowym wpisz `45` i zapisz. Produkt testowy: na stanie u hurtowni (inaczej
+   filtr asortymentu go odrzuci i import nic nie zapisze), z ceną zakupu, najlepiej tylko jednej
+   hurtowni. Zapisz jego ID i cenę sprzedaży z panelu.
+
+1. `hydra-import` — kopia testowa gałęzi zadania:
+
+```bash
+cd /home/hydra-import/hydra && flock -n /home/hydra-import/.hydra-run-bl.lock bash -c 'git fetch origin && git worktree add --detach /home/hydra-import/hydra-ha222 origin/feat/ha-2.22-marza-reczna && cd /home/hydra-import/hydra-ha222 && npm ci && install -m 600 /home/hydra-import/hydra/.env.local .env.local'; echo "exit=$?"; git -C /home/hydra-import/hydra-ha222 log -1 --format='%h %ci %s'; git -C /home/hydra-import/hydra status -sb | head -n 1
+```
+
+Oczekiwane: `exit=0`, ostatni commit gałęzi `feat/ha-2.22-marza-reczna`, a główny klon dalej
+`## main...origin/main`.
+
+2. `hydra-import` — ID pola z produktu testowego (tylko odczyt):
+
+```bash
+cd /home/hydra-import/hydra-ha222 && flock -n /home/hydra-import/.hydra-run-bl.lock npx tsx scripts/xml-to-baselinker.ts <hurtownia> --dry-run --only-bl-id=<ID_PRODUKTU> > /home/hydra-import/logs/ha222-pole.log 2>&1; echo "exit=$?"; grep -cE 'key=|token=' /home/hydra-import/logs/ha222-pole.log; grep -E 'only-bl-id|extra fields|selling price' /home/hydra-import/logs/ha222-pole.log
+```
+
+Oczekiwane: `exit=0`, `0`, `1 feed product(s) matched`, `extra fields: extra_field_<ID_POLA>="45"`.
+`0 feed product(s)` = produkt nie pochodzi z tej hurtowni.
+
+3. `hydra-import` — podgląd trzech hurtowni z marżą z pola: tabela produktów (ID, zakup, marża,
+   źródło, cena przed, cena po) i czas odczytu pola, czyli tyle, ile sync będzie czytał dłużej
+   (tylko odczyt):
+
+```bash
+cd /home/hydra-import/hydra-ha222 && flock -n /home/hydra-import/.hydra-run-bl.lock env BASELINKER_EXTRA_FIELD_MARGIN=<ID_POLA> npx tsx scripts/xml-to-baselinker.ts --dry-run > /home/hydra-import/logs/ha222-dryrun.log 2>&1; echo "exit=$?"; grep -cE 'key=|token=' /home/hydra-import/logs/ha222-dryrun.log; sed -n -e '/^─── /p' -e '/margin field read/,/  feed: /p' /home/hydra-import/logs/ha222-dryrun.log
+```
+
+Oczekiwane: `exit=0`, `0`, a dla każdej hurtowni linia `margin field read (extra_field_…): N/N
+matched products, C calls, T s`, `manual margin: 1 products priced from the field …` i tabela, na
+górze produkt testowy z `pole` i ceną po = zakup × 1,45. **STOP — wklej wynik.**
+
+4. `hydra-import` — **zapis jednego produktu (STOP: po akceptacji kroku 3).** Import ograniczony
+   do produktu testowego, przez `--check` i pod blokadą, jak partia próbna:
+
+```bash
+cd /home/hydra-import/hydra-ha222 && scripts/server/run-bl.sh --check <hurtownia> import && flock -n /home/hydra-import/.hydra-run-bl.lock env TZ=Europe/Warsaw HA_ALLOW_PROD=1 BASELINKER_EXTRA_FIELD_MARGIN=<ID_POLA> npx tsx scripts/xml-to-baselinker.ts <hurtownia> import --only-bl-id=<ID_PRODUKTU> > /home/hydra-import/logs/ha222-jeden.log 2>&1; echo "exit=$?"; grep -cE 'key=|token=' /home/hydra-import/logs/ha222-jeden.log; grep -E 'inventory :|margin fld|only-bl-id|selling price|Import done|manual margin|error|warn' /home/hydra-import/logs/ha222-jeden.log
+```
+
+Oczekiwane: `CHECK ok`, `exit=0`, `0`, linia `BL <ID_PRODUKTU> …: purchase X, margin 45% (field)
+→ selling price Y; text_fields sent: name, description, features`, `Import done: 0 created,
+1 updated, 0 errors`. Potem **w panelu**: pole „Marża %” nadal `45`, cena sprzedaży = Y =
+X × 1,45. **STOP — wklej wynik i to, co widać w panelu.** Jeśli pole jest puste, BL czyści
+nie wysłane pola: nie idziemy dalej, wracamy z opcjami.
+
+5. Po akceptacji i merge'u PR-a — `hydra-import`: główny klon na `main` (jak „Aktualizacja kodu”
+   w kroku 2), zmienna do `.env.local`, usunięcie kopii testowej:
+
+```bash
+cd /home/hydra-import/hydra && flock -n /home/hydra-import/.hydra-run-bl.lock bash -c 'git fetch origin && git switch main && git pull --ff-only && npm ci'; echo "exit=$?"; git log -1 --format='%h %ci %s'; scripts/server/run-bl.sh --check sharg sync; echo "check=$?"
+```
+
+```bash
+grep -q '^BASELINKER_EXTRA_FIELD_MARGIN=' /home/hydra-import/hydra/.env.local && echo "już jest — nic nie dopisuję" || printf 'BASELINKER_EXTRA_FIELD_MARGIN=%s\n' '<ID_POLA>' >> /home/hydra-import/hydra/.env.local; grep -E '^BASELINKER_EXTRA_FIELD_MARGIN=' /home/hydra-import/hydra/.env.local; stat -c '%a %U' /home/hydra-import/hydra/.env.local
+```
+
+```bash
+git -C /home/hydra-import/hydra worktree remove --force /home/hydra-import/hydra-ha222 && git -C /home/hydra-import/hydra worktree prune && git -C /home/hydra-import/hydra worktree list
+```
+
+Oczekiwane: commit z merge'em HA-2.22, `check=0`, jedna linia
+`BASELINKER_EXTRA_FIELD_MARGIN=<ID_POLA>`, `600 hydra-import`, na liście worktree tylko
+`/home/hydra-import/hydra`. Od tej chwili nocny import i sync czytają pole.
+
+6. Pierwszy sync z nową logiką — **STOP, tj.** Ręcznie przez wrapper, w dzień (albo zostaw
+   nocnemu cronowi i przeczytaj jego log rano):
+
+```bash
+cd /home/hydra-import/hydra && HYDRA_MAX_SECONDS=600 scripts/server/run-bl.sh kolba sync; echo "exit=$?"; L="$(ls -t /home/hydra-import/logs/kolba-sync-*.log | head -n 1)"; echo "$L"; grep -E 'margin field read|Matched|stock |prices |Sync done|manual margin|margin field: BL product|NOT written' "$L"
+```
+
+Oczekiwane: `exit=0`, `margin field read: N/N products, C calls, T s` i `manual margin: …`.
+Czas `T` dolicza się do dotychczasowych 61–89 s synca (limit 600 s). Gdyby rósł w stronę limitu
+albo synce zrobiły się częste (HA-2.09), wariant C z HA-2.22: jeden odczyt pola na dobę i cache.
 
 ## Obsługa
 
