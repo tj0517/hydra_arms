@@ -238,8 +238,9 @@ export default function SklepClient({ data }: SklepClientProps) {
       <div className="max-w-[1400px] mx-auto px-[clamp(16px,5vw,64px)] py-10 lg:py-12 pb-24 lg:pb-12">
         <div className="flex gap-10 xl:gap-14 items-start">
 
-          {/* Sidebar — category tree + filters (desktop ≥ 1024 px) */}
-          <aside className="hidden lg:block w-64 flex-shrink-0" aria-label="Kategorie i filtry">
+          {/* Sidebar — category tree + filters (desktop ≥ 1024 px). self-stretch: the aside spans
+              the whole row so the sticky panel inside has room to follow the product grid. */}
+          <aside className="hidden lg:block self-stretch w-64 flex-shrink-0" aria-label="Kategorie i filtry">
             <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto pr-3 -mr-3 pb-6">
               <FiltersSidebar
                 tree={tree}
