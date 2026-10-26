@@ -7,6 +7,9 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { spawnSync } from 'child_process';
+import * as fs from 'fs';
+import * as path from 'path';
 import { FEED_MIN_RATIO, feedGuard, runSyncCore, type FeedCountStore, type SyncDeps, type WriteEnv } from '../bl-write';
 import type { Supplier } from '../bl-match-key';
 import { MarginTally } from '../margin';
@@ -147,4 +150,30 @@ test('a candidate BaseLinker returns no data for is left alone', async () => {
   deps.getProductsData = async (inv, ids) => { const d = await getData(inv, ids); delete d['11']; return d; };
   const { zeroed } = await runSyncCore(feedOf(10), 'sharg', env, deps);
   assert.deepEqual(zeroed!.map((r) => r.id), [12]);
+});
+
+// ── exit code of the process (the import script's runSync → runSyncProcess) ───
+
+const driver = path.resolve(__dirname, 'fixtures/sync-exit-driver.ts');
+const runDriver = (arg: string) => spawnSync(process.execPath, ['--import', 'tsx', driver, arg], { encoding: 'utf8', cwd: path.resolve(__dirname, '../..') });
+
+test('guard RED PROOF, process level: an incomplete feed ends the process with exit 1 and the [error] line on stderr; no stock-0 write', () => {
+  const r = runDriver('incomplete');
+  assert.equal(r.status, 1, `exit code (stderr: ${r.stderr})`);
+  assert.match(r.stderr, /^\[error\] feed looks incomplete: 89 products, previous successful run 100/m);
+  assert.doesNotMatch(r.stdout, /"11":\{"bl_2":0\}/, 'the withdrawn record is not zeroed');
+  assert.match(r.stdout, /Sync done: 1 products refreshed/, 'the feed\'s own stock and prices still go');
+});
+
+test('process level: a complete feed zeroes the withdrawn record and exits 0', () => {
+  const r = runDriver('ok');
+  assert.equal(r.status, 0, `exit code (stderr: ${r.stderr})`);
+  assert.match(r.stdout, /stock write \{"11":\{"bl_2":0\}\}/);
+  assert.match(r.stdout, /zeroed: 1 \(approved: 0\)/);
+});
+
+test('the import script runs the sync through runSyncProcess (so its exit code is the one tested above)', () => {
+  const src = fs.readFileSync(path.resolve(__dirname, '../../scripts/xml-to-baselinker.ts'), 'utf8');
+  assert.match(src, /await runSyncProcess\(products, connectorName, env, \{/);
+  assert.doesNotMatch(src, /runSyncCore\(/, 'calling runSyncCore directly would bypass the exit code');
 });

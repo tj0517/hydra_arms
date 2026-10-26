@@ -124,7 +124,7 @@ import {
   loadIndexWithStock,
   planZeroing,
   readMarginRaws,
-  runSyncCore,
+  runSyncProcess,
   toBLProduct,
   type FeedCountStore,
   type GetProductsList,
@@ -647,9 +647,10 @@ async function runSync(connectorName: ConnectorName, env: Env, limit: number | n
   // The feed itself was non-empty (fetchAndParse guarantees it) — only --limit can leave nothing
   if (products.length === 0) { console.log(`No in-stock products left after --limit=${limit} — nothing refreshed.`); return; }
 
-  // Index → margin field (read-only client) → stock + price writes: xml-integration/bl-write.ts
+  // Index → margin field (read-only client) → stock + price writes → zeroing: xml-integration/bl-write.ts.
+  // runSyncProcess sets exit code 1 when the run is not ok (margin read failed, feed looks incomplete).
   const readonly = await import('../src/lib/baselinker/readonly');
-  const { ok } = await runSyncCore(products, connectorName, env, {
+  await runSyncProcess(products, connectorName, env, {
     getProductsList: bl.getProductsList,
     getProductsData: readonly.getInventoryProductsData,
     updateStock: bl.updateInventoryProductsStock,
@@ -664,7 +665,6 @@ async function runSync(connectorName: ConnectorName, env: Env, limit: number | n
     feedCounts: limit === null ? feedCountStore() : null,
   });
   if (limit !== null) console.log('  zeroing skipped (--limit: partial feed)');
-  if (!ok) process.exitCode = 1;
 }
 
 // ── Withdrawn products: feed-count state file and the read-only preview (HA-2.38) ──
