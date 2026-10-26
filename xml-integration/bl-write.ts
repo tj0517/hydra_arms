@@ -422,3 +422,19 @@ export async function runSyncCore(
   }
   return { ok, plan, zeroed };
 }
+
+/**
+ * The sync as the import script runs it: runSyncCore, then the process exit code — 1 when the run
+ * is not ok (margin read failed, feed looks incomplete). Kept here so a test can run it in a child
+ * process and see the real exit code.
+ */
+export async function runSyncProcess(
+  products: readonly NormalizedProduct[],
+  supplier: Supplier,
+  env: WriteEnv,
+  deps: SyncDeps,
+): Promise<{ ok: boolean; plan: SyncPlan; zeroed?: ZeroRow[] }> {
+  const res = await runSyncCore(products, supplier, env, deps);
+  if (!res.ok) process.exitCode = 1;
+  return res;
+}
