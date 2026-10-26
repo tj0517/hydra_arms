@@ -353,6 +353,13 @@ case "$result" in
     skipped="$(grep -aoE '^  skipped: [0-9]+' "$run_log" 2>/dev/null | tail -n 1 | sed 's/^ *//')"
     [ -n "$skipped" ] && result="$result, $skipped"
     ;;
+  'Sync done:'*)
+    # HA-2.38: stock 0 for withdrawn products, or the feed-size guard that stopped it
+    zeroed="$(grep -aoE '^  zeroed: [0-9]+ \(approved: [0-9]+\)' "$run_log" 2>/dev/null | tail -n 1 | sed 's/^ *//')"
+    [ -n "$zeroed" ] && result="$result, $zeroed"
+    incomplete="$(grep -aoE '\[error\] feed looks incomplete: [0-9]+ products, previous successful run [0-9]+' "$run_log" 2>/dev/null | tail -n 1)"
+    [ -n "$incomplete" ] && result="$result, $incomplete"
+    ;;
 esac
 # Feed URLs carry credentials as query parameters. The import strips them from its own
 # messages, but an error text from a library can still quote a URL — count such lines.
