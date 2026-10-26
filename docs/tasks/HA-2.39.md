@@ -1,0 +1,75 @@
+---
+id: HA-2.39
+title: Wycena produktów wspólnych dla kilku hurtowni — cena zakupu per hurtownia, krok „wycena” po nocnych syncach
+status: todo
+difficulty: M
+model: claude-opus-5-5
+model_approved: null
+effort: high
+branch: null
+due: null
+depends_on: [HA-2.38, HA-2.22]
+blocked_by_questions: []
+touches_db: false
+touches_prod: true
+pr: null
+---
+
+## Cel
+Rekord wspólny (jeden EAN, kilka hurtowni) ma dziś cenę hurtowni, której sync przeszedł ostatni w nocy (O-32): zwykle Spechurtu, także gdy Spechurt nie ma towaru albo jest najdroższy. Każdy sync nadpisuje też wspólną grupę „Cena zakupu”, więc cena zakupu drugiej hurtowni w ogóle nie zostaje w BL.
+
+Sukces:
+- każda hurtownia zapisuje cenę zakupu do własnej grupy cenowej;
+- po ostatnim syncu nocy osobny krok „wycena” ustala cenę rekordów wspólnych z danych w BL: najtańsza cena zakupu wśród hurtowni z towarem, plus marża;
+- sync pojedynczej hurtowni nie rusza ceny sprzedaży rekordu wspólnego.
+
+## Zakres
+- [ ] odczyt stanu: `runSync` (zapis cen dla każdego dopasowanego produktu, także rekordów innej hurtowni), `toBLProduct`, `recordIdentity` / parametry `SKU <Hurtownia>` (`bl-match-key.ts`), marża z pola „Marża %” po HA-2.22, `scripts/server/run-bl.sh` (argumenty `<hurtownia> <tryb>`), crontab w `docs/ops/serwer-importu.md` § 10; liczba rekordów wspólnych po HA-2.38 (normalizacja EAN zmienia ten zbiór)
+- [ ] grupy cenowe „Zakup Kolba”, „Zakup Sharg”, „Zakup Spechurt” w katalogu 119068 — zakłada tj w panelu (STOP). ID jako inputy w rejestrze HA-2.16 (`config/inputs.ts`): `BASELINKER_PRICE_GROUP_PURCHASE_KOLBA` / `_SHARG` / `_SPECHURT`
+- [ ] import i sync każdej hurtowni zapisują cenę zakupu do jej grupy (każdy rekord, który ta hurtownia dopasuje, również wspólny). Na rekordzie jednej hurtowni dalej jak dziś: cena sprzedaży i wspólna „Cena zakupu”. Na rekordzie wspólnym: tylko własna grupa zakupu i stan we własnym magazynie — cenę sprzedaży i wspólną „Cenę zakupu” zostawiają wycenie
+- [ ] „wspólny” = rekord z kodami ≥ 2 hurtowni (prefiks SKU + parametry `SKU …`, `recordSuppliers` z `xml-integration/import-audit.ts` albo ta sama logika w `bl-match-key.ts` — jedna funkcja dla importu, syncu, wyceny i audytu)
+- [ ] krok „wycena” — tryb skryptu (np. `price-shared`) uruchamiany przez `run-bl.sh` pod tą samą blokadą `flock`; wrapper i `test-run-bl.sh` rozszerzone o ten tryb. Dane wyłącznie z BL (`getInventoryProductsList` + `getInventoryProductsData`), bez pobierania feedów
+- [ ] reguła wyboru dla każdego rekordu wspólnego:
+  - kandydaci = hurtownie z ceną > 0 we własnej grupie zakupu;
+  - spośród nich te ze stanem > 0 we własnym magazynie (H1/H2/H3); najtańsza wygrywa;
+  - żadna nie ma stanu → najtańsza w ogóle;
+  - remis → stała kolejność Kolba, Sharg, Spechurt;
+  - < 1 kandydata → rekord pominięty i liczony w podsumowaniu.
+  
+  Zapis: cena sprzedaży = wybrana × (1 + marża z pola „Marża %” produktu, inaczej env wybranej hurtowni), wspólna „Cena zakupu” = wybrana. Zapis wsadowy `updateInventoryProductsPrices`, tylko rekordy, których cena się zmienia
+- [ ] `--dry-run` wyceny: tabela ≥ 10 rekordów wspólnych (ID, EAN, ceny zakupu per hurtownia, stany per magazyn, wybrana hurtownia i powód, marża i jej źródło, cena sprzedaży przed / po) oraz podsumowanie (ile zmian, ile pominiętych, rozkład wybranych hurtowni)
+- [ ] crontab: nowa linia po syncu Spechurta (06:50 UTC + limit 600 s + 60 s → najwcześniej 07:01 UTC), z własnym `HYDRA_MAX_SECONDS`. Uwaga w instrukcji: sklep kopiuje BL o 02:00 UTC, więc wycena trafia do sklepu następnej nocy (przesunięcie crona Vercela — deferred, HA-2.09)
+- [ ] audyt HA-2.37 (`scripts/audit-import.ts`, sekcja A): rekord wspólny porównywany z regułą wyceny, nie z ceną pojedynczej hurtowni; cena zakupu porównywana z grupą danej hurtowni
+- [ ] pytanie do klienta O-36 (reguła „najtańsza dostępna” kontra stały priorytet hurtowni; alokacja zamówień w BL do tej samej hurtowni) — budujemy na „najtańsza dostępna”, odpowiedź nie blokuje
+- [ ] `docs/ops/serwer-importu.md`: grupy cenowe, tryb wyceny, linia crontaba, czytanie podsumowania
+
+## Gotowe, gdy
+- reguła wyboru: testy jednostkowe dla — dwie hurtownie ze stanem (wygrywa tańsza); tańsza bez stanu, droższa ze stanem (wygrywa droższa); żadna bez stanu (wygrywa najtańsza); remis (kolejność stała); marża z pola kontra env wybranej hurtowni — **jak sprawdzić:** nazwy testów w `npm run test:unit`
+- red proof: rekord wspólny Kolba 100 (stan 5) / Spechurt 80 (stan 0), sync Spechurta po zmianie nie zmienia ceny sprzedaży, a wycena daje 100 × (1 + marża) — przed zmianą test pokazuje cenę ze Spechurta — **jak sprawdzić:** test na atrapie BL
+- red proof: sync zapisuje cenę zakupu tylko do grupy swojej hurtowni na rekordzie wspólnym (payload bez grupy sprzedaży i wspólnej zakupu) — **jak sprawdzić:** test na payloadzie
+- wycena nie pobiera feedów i nie woła metod spoza zapisu cen — **jak sprawdzić:** test / grep listy wywołań w trybie mock
+- dry-run na katalogu 119068 (uruchamia tj, odczyt): tabela ≥ 10 rekordów wspólnych + podsumowanie — **jak sprawdzić:** wklejony wynik, `grep -cE 'key=|token='` = 0
+- wrapper: `test-run-bl.sh` zielony z nowym trybem; `crontab -l` z nową linią (po STOP) — **jak sprawdzić:** wklejone wyniki z serwera
+- pierwsza noc: wpis `END exit=0` dla wyceny, ponowny audyt HA-2.37 bez rozjazdów cen rekordów wspólnych poza zmianami feedu — **jak sprawdzić:** wklejone linie dziennika i tabela A
+
+## Poza zakresem
+- alokacja zamówień do hurtowni w BL (automatyzacje BL, O-14) — tylko pytanie O-36
+- priorytet hurtowni zamiast „najtańszej” — po odpowiedzi klienta, zmiana reguły w danych
+- przesunięcie crona Vercela `/api/shop/sync` po wycenie → HA-2.09 / deferred
+- scalanie rekordów o tym samym EAN → HA-2.38 (raport) i decyzja tj
+
+## Bramki STOP
+- założenie trzech grup cenowych w panelu BL i ID na serwerze — tj
+- treść linii crontaba — pokaż i czekaj; instaluje tj z pliku
+- pierwsza wycena na żywo — tj, po akceptacji dry-runu
+- każde uruchomienie skryptu importu/wyceny — tj na serwerze (hook)
+
+## Kontekst
+- `scripts/xml-to-baselinker.ts`, `xml-integration/bl-match-key.ts`, `xml-integration/import-audit.ts`, `scripts/audit-import.ts`
+- `scripts/server/run-bl.sh`, `scripts/server/test-run-bl.sh`, `docs/ops/serwer-importu.md` § 7, § 10
+- `config/inputs.ts` (HA-2.16), `docs/tasks/HA-2.22.md` (pole „Marża %”)
+- `docs/04-open-questions.md` — O-07, O-14, O-32, O-36
+
+## Notatki z realizacji
+- 2026-10-26 tj: sync BL → Supabase (cron Vercela, 02:00 UTC) biegnie przed syncami Sharga i Spechurta i przed wyceną, więc sklep pokazuje ceny z opóźnieniem ok. 1 doby. Do rozważenia przesunięcie go na po 07:01 UTC — osobna decyzja tj, nie blokuje tego zadania.
+- 2026-10-26 tj (plan po audycie HA-2.37): reguła domyślna „najtańsza dostępna”; pytanie do klienta O-36 nie blokuje. Zależy od HA-2.38 (normalizacja EAN zmienia zbiór rekordów wspólnych, zerowanie wycofanych zmienia „stan > 0”) i HA-2.22 (pole „Marża %”).
