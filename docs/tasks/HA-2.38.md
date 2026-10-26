@@ -1,7 +1,7 @@
 ---
 id: HA-2.38
 title: Poprawki importu po audycie — rozjazdy cen, normalizacja EAN, zerowanie wycofanych, waga
-status: in_progress
+status: review
 difficulty: M
 model: claude-opus-5-5
 model_approved: tj
