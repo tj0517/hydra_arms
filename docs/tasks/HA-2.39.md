@@ -1,7 +1,7 @@
 ---
 id: HA-2.39
 title: Wycena produktów wspólnych dla kilku hurtowni — cena zakupu per hurtownia, krok „wycena” po nocnych syncach
-status: in_progress
+status: review
 difficulty: M
 model: claude-opus-5-5
 model_approved: null
@@ -12,7 +12,7 @@ depends_on: [HA-2.38, HA-2.22]
 blocked_by_questions: []
 touches_db: false
 touches_prod: true
-pr: null
+pr: 69
 ---
 
 ## Cel
