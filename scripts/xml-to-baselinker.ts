@@ -29,8 +29,14 @@
  *     (e.g. SHARG-139). A shared record keeps the SKU of the supplier that created it and
  *     carries every supplier's code as a parameter (`SKU Kolba` / `SKU Sharg` /
  *     `SKU Spechurt`) plus `Źródło opisu`; parameters are merged, never replaced
+ *   - EAN (HA-2.38): compared as a GTIN-14 key (leading zeros do not matter), written as GTIN-13;
+ *     a wrong check digit or length counts as no EAN and never blanks the record's EAN
  *   - Stock goes to a per-supplier warehouse: kolba → BASELINKER_WAREHOUSE_H1,
  *     sharg → _H2, spechurt → _H3
+ *   - sync sets stock 0 in that warehouse on records carrying the supplier's code that today's
+ *     feed lacks, unless the feed has < 90% of the previous successful sync's products
+ *     (HA-2.38, count in ~/.hydra-feed-counts.json); `<supplier> sync --zero-preview` lists them
+ *     read-only. Weight goes to BL in kg to the gram; a feed without weight keeps the record's
  *   - Selling price = price_purchase * (1 + markup%). Markup: the product's own „Marża %”
  *     extra field in BL when it holds a number 0–200 (HA-2.22, field ID in
  *     BASELINKER_EXTRA_FIELD_MARGIN), otherwise env per supplier (BASELINKER_MARKUP_KOLBA /
