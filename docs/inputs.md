@@ -9,7 +9,7 @@ Start sprzedaży (HA-2.09) z `SHOP_MODE=live` nie przejdzie, dopóki jakikolwiek
 `placeholder`. `⟨nazwa wstępna⟩` = nazwa jeszcze nie istnieje w kodzie; zadanie właściciela
 może ją zmienić.
 
-## Do dostarczenia (18)
+## Do dostarczenia (21)
 
 | nazwa | właściciel | pytanie | zadanie | gdzie użyte | sekret |
 |---|---|---|---|---|---|
@@ -22,6 +22,9 @@ może ją zmienić.
 | `BASELINKER_MARKUP_SHARG` | client | O-07 | HA-2.05 | `scripts/xml-to-baselinker.ts` | nie |
 | `BASELINKER_MARKUP_SPECHURT` | client | O-07 | HA-2.05 | `scripts/xml-to-baselinker.ts` | nie |
 | `BASELINKER_EXTRA_FIELD_MARGIN` | tj | O-32 | HA-2.22 | `scripts/xml-to-baselinker.ts`<br>`scripts/audit-import.ts`<br>`xml-integration/margin.ts` | nie |
+| `BASELINKER_PRICE_GROUP_PURCHASE_KOLBA` | tj | — | HA-2.39 | `scripts/xml-to-baselinker.ts`<br>`scripts/audit-import.ts`<br>`xml-integration/shared-pricing.ts` | nie |
+| `BASELINKER_PRICE_GROUP_PURCHASE_SHARG` | tj | — | HA-2.39 | `scripts/xml-to-baselinker.ts`<br>`scripts/audit-import.ts`<br>`xml-integration/shared-pricing.ts` | nie |
+| `BASELINKER_PRICE_GROUP_PURCHASE_SPECHURT` | tj | — | HA-2.39 | `scripts/xml-to-baselinker.ts`<br>`scripts/audit-import.ts`<br>`xml-integration/shared-pricing.ts` | nie |
 | `SHIPPING_PRICE_DHL` | client | O-10 | HA-2.02 | `src/lib/shop/shippingPrices.ts`<br>`src/app/api/shop/checkout/route.ts`<br>`src/app/(main)/sklep/zamowienie/page.tsx` | nie |
 | `SHIPPING_PRICE_DPD` | client | O-10 | HA-2.02 | `src/lib/shop/shippingPrices.ts`<br>`src/app/api/shop/checkout/route.ts`<br>`src/app/(main)/sklep/zamowienie/page.tsx` | nie |
 | `SHIPPING_PRICE_INPOST` | client | O-10 | HA-2.02 | `src/lib/shop/shippingPrices.ts`<br>`src/app/api/shop/checkout/route.ts`<br>`src/app/(main)/sklep/zamowienie/page.tsx` | nie |
@@ -51,6 +54,9 @@ może ją zmienić.
 - `BASELINKER_MARKUP_SHARG` — See BASELINKER_MARKUP_KOLBA.
 - `BASELINKER_MARKUP_SPECHURT` — See BASELINKER_MARKUP_KOLBA.
 - `BASELINKER_EXTRA_FIELD_MARGIN` — ID of the BL extra field „Marża %” in catalogue 119068 (bare number, e.g. 75, or extra_field_75). tj creates the field in the BL panel and reads the ID with the import dry-run --only-bl-id. Unset = manual margins off, env markup for every product. Import server .env.local only, not Vercel.
+- `BASELINKER_PRICE_GROUP_PURCHASE_KOLBA` — ID of the BL price group „Zakup Kolba” (Kolba's own purchase price, catalogue 119068). tj creates it in the BL panel (PLN, gross/net as „Cena zakupu”, assigned to the catalogue); npx tsx scripts/bl-account-ids.ts prints the line. All three _KOLBA/_SHARG/_SPECHURT or none: none = own groups and price-shared off (import and sync as before HA-2.39), some = import, sync and price-shared refuse to run. Import server .env.local only, not Vercel.
+- `BASELINKER_PRICE_GROUP_PURCHASE_SHARG` — ID of the BL price group „Zakup Sharg”. See BASELINKER_PRICE_GROUP_PURCHASE_KOLBA.
+- `BASELINKER_PRICE_GROUP_PURCHASE_SPECHURT` — ID of the BL price group „Zakup Spechurt”. See BASELINKER_PRICE_GROUP_PURCHASE_KOLBA.
 - `SHIPPING_PRICE_DHL` — Gross PLN, dot decimal (e.g. 19.99). Carriers confirmed by the client 2026-10-06 (DHL, DPD, InPost); prices not given — preliminary values only. Missing/invalid → checkout refuses parcel orders (fail closed).
 - `SHIPPING_PRICE_DPD` — See SHIPPING_PRICE_DHL.
 - `SHIPPING_PRICE_INPOST` — InPost courier. See SHIPPING_PRICE_DHL.

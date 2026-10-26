@@ -25,6 +25,9 @@ const FULL = {
   priceGroup: priceGroupEntries([
     { price_group_id: 104, name: 'Cena sprzedaży', currency: 'PLN', is_default: true },
     { price_group_id: 105, name: 'Cena zakupu', currency: 'PLN', is_default: false },
+    { price_group_id: 106, name: 'Zakup Kolba', currency: 'PLN', is_default: false },
+    { price_group_id: 107, name: 'Zakup Sharg', currency: 'PLN', is_default: false },
+    { price_group_id: 108, name: 'Zakup Spechurt', currency: 'PLN', is_default: false },
   ]),
   orderSource: orderSourceEntries({
     personal: { '0': 'Osobiście / telefonicznie', '1621': 'Sklep internetowy' },
@@ -49,6 +52,9 @@ test('resolveEnvLines: every variable resolved when all names exist on the accou
   assert.deepEqual(lines.map(formatEnvLine), [
     'BASELINKER_PRICE_GROUP=104  # "Cena sprzedaży"',
     'BASELINKER_PRICE_GROUP_PURCHASE=105  # "Cena zakupu"',
+    'BASELINKER_PRICE_GROUP_PURCHASE_KOLBA=106  # "Zakup Kolba"',
+    'BASELINKER_PRICE_GROUP_PURCHASE_SHARG=107  # "Zakup Sharg"',
+    'BASELINKER_PRICE_GROUP_PURCHASE_SPECHURT=108  # "Zakup Spechurt"',
     'BASELINKER_ORDER_SOURCE_ID=1621  # "Sklep internetowy"',
     'BASELINKER_STATUS_PAID=1  # "Opłacone"',
     'BASELINKER_STATUS_PROCESSING=2  # "W realizacji"',
@@ -74,12 +80,12 @@ test('resolveEnvLines: name match ignores case and surrounding/double spaces, no
   );
 });
 
-test('resolveEnvLines: empty account → all nine variables missing, each line commented out', () => {
+test('resolveEnvLines: empty account → all twelve variables missing, each line commented out', () => {
   const lines = resolveEnvLines({ priceGroup: [], orderSource: [], status: [] });
-  assert.equal(unresolvedCount(lines), 9);
+  assert.equal(unresolvedCount(lines), 12);
   for (const l of lines.map(formatEnvLine)) assert.match(l, /^# BASELINKER_[A-Z_]+=  ← MISSING: no /);
   assert.equal(
-    formatEnvLine(lines[2]),
+    formatEnvLine(lines.find((l) => l.variable === 'BASELINKER_ORDER_SOURCE_ID')!),
     '# BASELINKER_ORDER_SOURCE_ID=  ← MISSING: no order source named "Sklep internetowy"',
   );
 });
@@ -91,7 +97,7 @@ test('resolveEnvLines: two entries with the same name → ambiguous, no id chose
   });
   assert.equal(unresolvedCount(lines), 1);
   assert.equal(
-    formatEnvLine(lines[2]),
+    formatEnvLine(lines.find((l) => l.variable === 'BASELINKER_ORDER_SOURCE_ID')!),
     '# BASELINKER_ORDER_SOURCE_ID=  ← AMBIGUOUS: 2 order source entries named "Sklep internetowy" (ids 7, 9)',
   );
 });

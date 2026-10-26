@@ -323,6 +323,38 @@ expect "HYDRA_LOG_KEEP_DAYS=0 deletes nothing" yes "$([ -e "$LOGS/sharg-sync-200
 HYDRA_LOG_KEEP_DAYS=08 run marker-missing good --cmd 'true' kolba sync
 expect "HYDRA_LOG_KEEP_DAYS=08 is read as 8, not as a bad octal number" "0 no" "$RC $([ -e "$LOGS/sharg-sync-20000101-000003.log" ] && echo yes || echo no)"
 
+echo "# pricing of shared records: all price-shared (HA-2.39)"
+run marker-missing good --cmd 'true' all sync;            expect "all with a supplier mode → 64" 64 "$RC"
+run marker-missing good --cmd 'true' kolba price-shared;  expect "a supplier with price-shared → 64" 64 "$RC"
+run marker-missing good --cmd 'true' all import;          expect "all import → 64" 64 "$RC"
+run marker-ok good --check all price-shared
+if [ "$RC" = "0" ] && grep -qE 'all price-shared pid=[0-9]+ CHECK ok .*node_modules/\.bin/tsx scripts/xml-to-baselinker\.ts price-shared \(catalogue 119068' "$T/out"; then
+  ok "--check all price-shared → the pricing command, no supplier argument"
+else
+  bad "--check all price-shared" "exit=$RC out=$(shown < "$T/out")"
+fi
+CHECKS=1
+AGENT=1
+run marker-ok good --cmd "touch '$T/sentinel-pricing'" all price-shared
+AGENT=0
+CHECKS=0
+expect "price-shared from an agent session → refused like a supplier run" "78 absent" "$RC $([ -e "$T/sentinel-pricing" ] && echo present || echo absent)"
+HYDRA_MAX_SECONDS=300 run marker-missing good --cmd 'printf "\n✓ Pricing done: 412 shared, 37 changed, 375 unchanged, 2 skipped\n"' all price-shared
+has "the pricing summary is the result of the END line, with its own time limit" "$LAST" 'all price-shared pid=[0-9]+ END exit=0 .*result="Pricing done: 412 shared, 37 changed, 375 unchanged, 2 skipped"'
+has "its START names its own limit" "$(journal_all | grep 'all price-shared .* START ' | tail -n 1)" 'limit=300s log=.*/all-price-shared-[0-9]{8}-[0-9]{6}(-[0-9]+)?\.log'
+run marker-missing good --cmd 'printf "Pricing dry-run: 5 shared, 1 changed, 4 unchanged, 0 skipped\n"; echo "[error] product data read failed: x — nothing written" >&2; exit 1' all price-shared
+has "a failed pricing run → exit 1, no summary claimed" "$LAST" 'all price-shared .*END exit=1 .*result="none"'
+run marker-missing good --cmd 'sleep 3' spechurt sync &
+holder=$!
+sleep 1
+run marker-missing good --cmd 'echo priced' all price-shared
+has "price-shared waits for nobody: skipped while a sync holds the lock" "$LAST" 'all price-shared .*SKIP lock held by another run — skipping \(holder: spechurt sync'
+wait "$holder"
+touch -d "$drop_at" "$LOGS/all-price-shared-20000101-000004.log"
+touch -d "$old_at" "$LOGS/all-price-shared-preview.log"
+run marker-missing good --cmd 'true' kolba sync
+expect "an old pricing log is deleted, a foreign file with a similar name is kept" "no yes" "$([ -e "$LOGS/all-price-shared-20000101-000004.log" ] && echo yes || echo no) $([ -e "$LOGS/all-price-shared-preview.log" ] && echo yes || echo no)"
+
 echo "# the placeholder standing in for tsx was never executed"
 expect "no trace of an import start anywhere" 0 "$(tsx_traces)"
 

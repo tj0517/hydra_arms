@@ -60,6 +60,7 @@ import {
   mergeImportTags,
 } from '../xml-integration/import-tags';
 import { classifyFeed } from '../xml-integration/feed-guard';
+import { isSharedByPurchase, loadPurchaseGroups, ownPurchasePrices, priceSharedRecord, type PricingConfig, type PurchaseGroups } from '../xml-integration/shared-pricing';
 import { MARGIN_FIELD_ENV, expectedSalePrice, marginFieldKey, readMarginRaw, salePriceDiffers } from '../xml-integration/margin';
 import {
   SUPPLIERS,
@@ -153,6 +154,8 @@ interface Config {
   markup: Record<Supplier, number | null>;
   /** `text_fields` key of the client's „Marża %” field (HA-2.22), null when unset */
   marginKey: string | null;
+  /** HA-2.39: own purchase group per supplier, null when not configured */
+  purchaseGroups: PurchaseGroups | null;
   /** BASELINKER_WAREHOUSE_HYDRA — own stock for the assortment filter, as in the import */
   hydraWarehouse: string | null;
 }
@@ -183,14 +186,19 @@ function loadConfig(): Config {
   } catch (err) {
     fail(err instanceof Error ? err.message : String(err));
   }
+  const priceGroup = intEnv('BASELINKER_PRICE_GROUP');
+  const priceGroupPurchase = intEnv('BASELINKER_PRICE_GROUP_PURCHASE');
+  const groups = loadPurchaseGroups(process.env, [priceGroup, priceGroupPurchase]);
+  if (groups.kind === 'invalid') fail(groups.message);
   return {
     mock,
     inventoryId,
     warehouse,
-    priceGroup: intEnv('BASELINKER_PRICE_GROUP'),
-    priceGroupPurchase: intEnv('BASELINKER_PRICE_GROUP_PURCHASE'),
+    priceGroup,
+    priceGroupPurchase,
     markup,
     marginKey,
+    purchaseGroups: groups.kind === 'ok' ? groups.groups : null,
     hydraWarehouse: process.env.BASELINKER_WAREHOUSE_HYDRA?.trim() || null,
   };
 }
@@ -683,6 +691,19 @@ function sharedOf(ctx: Ctx, r: BLRec): boolean {
   return isSharedRecord(r.sup.members, matchedBy(ctx, r.id));
 }
 
+/** HA-2.39: what the pricing step needs to price a shared record; null when a setting is missing. */
+function pricingConfig(cfg: Config): PricingConfig | null {
+  if (!cfg.purchaseGroups || cfg.priceGroup === null || cfg.priceGroupPurchase === null) return null;
+  if (SUPPLIERS.some((s) => cfg.warehouse[s] === null || cfg.markup[s] === null)) return null;
+  return {
+    groups: cfg.purchaseGroups,
+    warehouses: Object.fromEntries(SUPPLIERS.map((s) => [s, cfg.warehouse[s]!])) as Record<Supplier, string>,
+    saleGroup: cfg.priceGroup,
+    purchaseGroup: cfg.priceGroupPurchase,
+    markup: Object.fromEntries(SUPPLIERS.map((s) => [s, cfg.markup[s]!])) as Record<Supplier, number>,
+  };
+}
+
 function brandFor(ctx: Ctx, r: BLRec): string {
   const items = itemsFor(ctx, r.id);
   const own = r.sup.creator ? items.find((i) => i.supplier === r.sup.creator) : undefined;
@@ -704,7 +725,10 @@ function sectionA(ctx: Ctx): Section {
   const orphanAll: Array<{ s: Supplier; r: BLRec; stock: number }> = [];
   const outOfFilterAll: FeedItem[] = [];
   const stockDiffAll: Array<{ i: FeedItem; r: BLRec; bl: number }> = [];
-  const priceDiffAll: Array<{ i: FeedItem; r: BLRec; sale: number | null; purchase: number | null; shared: boolean; kind: string; expected: number; margin: string }> = [];
+  const priceDiffAll: Array<{ i: FeedItem; r: BLRec; sale: number | null; purchase: number | null; own: number | null; shared: boolean; kind: string; expected: number | null; margin: string; chosen: string }> = [];
+  const groups = cfg.purchaseGroups;
+  const pricing = pricingConfig(cfg);
+  let sharedNoRule = 0;
   let manualMargin = 0, manualMarginRejected = 0;
   const stockRows: Array<Array<string | number>> = [];
   const priceRows: Array<Array<string | number>> = [];
@@ -780,24 +804,43 @@ function sectionA(ctx: Ctx): Section {
       for (const i of matched) {
         const r = bl.records.get(i.blId!);
         if (!r) continue;
-        const isShared = sharedOf(ctx, r);
+        // HA-2.39 with own purchase groups: shared = ≥ 2 own groups > 0 (the pricing step's definition)
+        const isShared = groups ? isSharedByPurchase(r.prices, groups) : sharedOf(ctx, r);
         const sale = r.prices[String(cfg.priceGroup)] ?? null;
         const purchase = cfg.priceGroupPurchase !== null ? (r.prices[String(cfg.priceGroupPurchase)] ?? null) : null;
+        const ownBuy = groups ? (ownPurchasePrices(r.prices, groups)[s] ?? null) : null;
+        const feedPurchase = i.pricePurchase !== null && i.pricePurchase > 0 ? round2(i.pricePurchase) : null;
         if (i.priceFromFallback) fallback++;
-        // Expected price with the record's „Marża %” when valid, else env (HA-2.22) — as import and sync
-        const exp = expectedSalePrice({ price_purchase: i.pricePurchase, price_gross: i.priceGross }, markup, r.marginRaw);
-        if (!exp.fromFallback && exp.margin.source === 'field') manualMargin++;
-        if (!exp.fromFallback && exp.margin.rejected !== undefined) manualMarginRejected++;
-        const saleDiff = salePriceDiffers(sale, exp.price);
-        const purDiff = cfg.priceGroupPurchase !== null && i.pricePurchase !== null && i.pricePurchase > 0
-          && (purchase === null || Math.abs(purchase - round2(i.pricePurchase)) > 0.01);
+        // This supplier's own purchase group vs its feed — on every matched record (decision 2)
+        const ownGroupDiff = groups !== null && feedPurchase !== null && (ownBuy === null || Math.abs(ownBuy - feedPurchase) > 0.01);
+        let saleDiff = false, purDiff = false, expected: number | null = null, margin = '—', chosen = '';
+        if (groups && isShared) {
+          // Shared record: selling and shared purchase price against the pricing rule over BL data
+          const rule = pricing ? priceSharedRecord({ prices: r.prices, stock: r.stock }, pricing, r.marginRaw) : null;
+          if (!rule) sharedNoRule++;
+          else {
+            expected = rule.sale;
+            chosen = `${SUPPLIER_LABEL[rule.choice.supplier]} (${rule.choice.reason === 'in_stock' ? 'ze stanem' : 'brak stanu'})`;
+            margin = `${rule.margin.pct}% ${rule.margin.source === 'field' ? 'pole' : rule.margin.rejected !== undefined ? 'env (pole odrzucone)' : 'env'}`;
+            saleDiff = salePriceDiffers(sale, rule.sale);
+            purDiff = purchase === null || Math.abs(purchase - rule.purchase) > 0.01;
+          }
+        } else if (!groups || r.sup.members.includes(s)) {
+          // Expected price with the record's „Marża %” when valid, else env (HA-2.22) — as import and sync
+          const exp = expectedSalePrice({ price_purchase: i.pricePurchase, price_gross: i.priceGross }, markup, r.marginRaw);
+          if (!exp.fromFallback && exp.margin.source === 'field') manualMargin++;
+          if (!exp.fromFallback && exp.margin.rejected !== undefined) manualMarginRejected++;
+          expected = exp.price;
+          margin = exp.fromFallback ? '—' : `${exp.margin.pct}% ${exp.margin.source === 'field' ? 'pole' : exp.margin.rejected !== undefined ? 'env (pole odrzucone)' : 'env'}`;
+          saleDiff = salePriceDiffers(sale, exp.price);
+          purDiff = cfg.priceGroupPurchase !== null && feedPurchase !== null && (purchase === null || Math.abs(purchase - feedPurchase) > 0.01);
+        } // else (HA-2.39): another supplier's record reached through the EAN only — only the own group is this supplier's
         if (isShared) { shared++; if (saleDiff) sharedDiff++; } else { own++; if (saleDiff) ownDiff++; }
-        if (purDiff) { if (isShared) sharedPurchaseDiff++; else ownPurchaseDiff++; }
-        if (saleDiff || purDiff) {
+        if (purDiff || ownGroupDiff) { if (isShared) sharedPurchaseDiff++; else ownPurchaseDiff++; }
+        if (saleDiff || purDiff || ownGroupDiff) {
           priceDiffAll.push({
-            i, r, sale, purchase, shared: isShared, kind: [saleDiff ? 'sprzedaż' : '', purDiff ? 'zakup' : ''].filter(Boolean).join('+'),
-            expected: exp.price,
-            margin: exp.fromFallback ? '—' : `${exp.margin.pct}% ${exp.margin.source === 'field' ? 'pole' : exp.margin.rejected !== undefined ? 'env (pole odrzucone)' : 'env'}`,
+            i, r, sale, purchase, own: ownBuy, shared: isShared, expected, margin, chosen,
+            kind: [saleDiff ? 'sprzedaż' : '', purDiff ? (groups && isShared ? 'zakup wspólny' : 'zakup') : '', ownGroupDiff ? 'zakup własny' : ''].filter(Boolean).join('+'),
           });
         }
       }
@@ -806,7 +849,9 @@ function sectionA(ctx: Ctx): Section {
       ownPurchaseDiffTotal += ownPurchaseDiff;
       priceRows.push([
         `${SUPPLIER_LABEL[s]} (narzut ${markup}%)`, `${fmt(own)} / ${fmt(shared)}`, `${fmt(ownDiff)} (${pct(ownDiff, own)})`, `${fmt(sharedDiff)} (${pct(sharedDiff, shared)})`, ownPurchaseDiff, sharedPurchaseDiff, fallback,
-        ownDiff + ownPurchaseDiff === 0 ? (sharedDiff > 0 ? 'OK; wspólne → decyzja klienta (O-32)' : 'OK') : 'OK, jeśli cena w feedzie zmieniła się od nocnego synca — inaczej błąd importera',
+        ownDiff + ownPurchaseDiff === 0
+          ? (sharedDiff + sharedPurchaseDiff > 0 ? (groups ? 'wspólne: OK, jeśli ceny/stany zmieniły się od wyceny — inaczej błąd wyceny (HA-2.39)' : 'OK; wspólne → decyzja klienta (O-32)') : 'OK')
+          : 'OK, jeśli cena w feedzie zmieniła się od nocnego synca — inaczej błąd importera',
       ]);
     }
   }
@@ -842,11 +887,17 @@ function sectionA(ctx: Ctx): Section {
   md.push(cfg.marginKey === null
     ? `Narzut: zawsze z env — pole „Marża %” nieskonfigurowane (\`${MARGIN_FIELD_ENV}\` puste, HA-2.22).`
     : `Narzut: z pola „Marża %” (\`${cfg.marginKey}\`), gdy ma liczbę 0–200, inaczej z env (HA-2.22) — dopasowania z ręczną marżą: ${fmt(manualMargin)}, z odrzuconą wartością pola (liczone z env): ${fmt(manualMarginRejected)}.`, '');
-  const cPrice = csvOf('A_cena_rozbiezna.csv', ['hurtownia', 'bl_id', 'sku_feed', 'nazwa', 'co', 'rekord_wspolny', 'cena_zakupu_feed', 'marza', 'cena_sprzedazy_wg_importu', 'cena_sprzedazy_BL', 'cena_zakupu_BL', 'fallback'],
+  const cPrice = csvOf('A_cena_rozbiezna.csv', ['hurtownia', 'bl_id', 'sku_feed', 'nazwa', 'co', 'rekord_wspolny', 'cena_zakupu_feed', 'marza', 'cena_sprzedazy_wg_importu', 'cena_sprzedazy_BL', 'cena_zakupu_BL', 'zakup_wlasny_BL', 'wybrana_wg_wyceny', 'fallback'],
     [...priceDiffAll].sort((a, b) => Number(a.shared) - Number(b.shared)),
-    (d) => [d.i.supplier, d.r.id, d.i.sku, d.i.name, d.kind, d.shared ? 'tak' : 'nie', d.i.pricePurchase ?? '', d.margin, d.expected, d.sale ?? '', d.purchase ?? '', d.i.priceFromFallback ? 'tak' : 'nie'],
+    (d) => [d.i.supplier, d.r.id, d.i.sku, d.i.name, d.kind, d.shared ? 'tak' : 'nie', d.i.pricePurchase ?? '', d.margin, d.expected ?? '', d.sale ?? '', d.purchase ?? '', d.own ?? '', d.chosen, d.i.priceFromFallback ? 'tak' : 'nie'],
     (d) => `${d.i.supplier}/${d.shared}`);
-  if (cPrice.total) md.push(`Przykłady: ${csvRef(cPrice)}. Rekord wspólny (≥ 2 hurtownie jako członkowie albo przez dzisiejsze feedy) dostaje cenę hurtowni, która ostatnia robiła sync — rozjazd na nim jest oczekiwany, dopóki nie zapadnie O-32 / HA-2.39.`, '');
+  if (groups) {
+    md.push('Własne grupy zakupu (HA-2.39) skonfigurowane: rekord wspólny = ≥ 2 własne grupy zakupu > 0. Na nim cena sprzedaży i wspólna „Cena zakupu” porównywane z regułą wyceny (najtańsza ze stanem, inaczej najtańsza w ogóle; marża z pola albo env wybranej hurtowni) na danych z BL; „zakup własny” = grupa hurtowni vs jej feed, na każdym dopasowanym rekordzie. Rekord innej hurtowni trafiony tylko przez EAN: tylko „zakup własny”.' +
+      (sharedNoRule ? ` Bez porównania z regułą (brak magazynu, narzutu albo grupy w env): ${fmt(sharedNoRule)}.` : ''), '');
+  }
+  if (cPrice.total) md.push(`Przykłady: ${csvRef(cPrice)}.` + (groups
+    ? ' Rozjazd na rekordzie wspólnym po nocnej wycenie oznacza zmianę stanu lub ceny od wyceny albo błąd wyceny.'
+    : ' Rekord wspólny (≥ 2 hurtownie jako członkowie albo przez dzisiejsze feedy) dostaje cenę hurtowni, która ostatnia robiła sync — rozjazd na nim jest oczekiwany, dopóki nie zapadnie O-32 / HA-2.39.'), '');
 
   ctx.facts.admitted = admittedTotal;
   ctx.facts.missing = missingTotal;
@@ -1348,7 +1399,7 @@ const EXPECTATIONS = [
   '- **O4 Tagi (HA-2.17).** Tagi importu `auto`/`review`/`flag`/`permit`/`permit_review`/`age_18` są odświeżane; tagi admina `approved`, `permit_off`, `permit_ok` i inne zostają; `permit_off`/`permit_ok` gaszą `permit_review`. Grupy z `permit-rules.ts`: A → `permit`, B/D → `age_18`, C → `permit` + `permit_review`. Bez `approved` produkt nie trafia do sklepu.',
   '- **O5 Warianty.** Import nie tworzy wariantów BL: każdy produkt feedu = jeden rekord (`parent_id: 0`). Sharg: EAN pierwszego rozmiaru, stan = suma rozmiarów; Spechurt: EAN produktu, stan = `stan_magazynowy`; Kolba: feed podaje tylko liczbę wariantów.',
   '- **O6 Stany per magazyn.** Kolba → H1 (`BASELINKER_WAREHOUSE_H1`), Sharg → H2, Spechurt → H3. Import i sync wpisują stan z feedu do magazynu swojej hurtowni. Produkt, który zniknął z feedu, zostaje w BL z ostatnim stanem — nikt go nie zeruje (deferred 2026-10-13).',
-  '- **O7 Ceny i narzut.** Cena sprzedaży = cena zakupu z feedu × (1 + marża/100); marża = pole „Marża %” produktu w BL (`BASELINKER_EXTRA_FIELD_MARGIN`, liczba 0–200, HA-2.22), a gdy puste albo nieprawidłowe — `BASELINKER_MARKUP_<HURTOWNIA>`, wstępnie 30% (O-07) → grupa `BASELINKER_PRICE_GROUP`; cena zakupu → `BASELINKER_PRICE_GROUP_PURCHASE`, gdy > 0. Bez ceny zakupu — cena brutto z feedu (fallback). Cena detaliczna z feedu nie jest używana. Rekord wspólny: cena hurtowni, która ostatnia robiła sync (O-32). „Cena domyślna” katalogu i pole „Producent” nie są wypełniane (deferred 2026-10-14).',
+  '- **O7 Ceny i narzut.** Cena sprzedaży = cena zakupu z feedu × (1 + marża/100); marża = pole „Marża %” produktu w BL (`BASELINKER_EXTRA_FIELD_MARGIN`, liczba 0–200, HA-2.22), a gdy puste albo nieprawidłowe — `BASELINKER_MARKUP_<HURTOWNIA>`, wstępnie 30% (O-07) → grupa `BASELINKER_PRICE_GROUP`; cena zakupu → `BASELINKER_PRICE_GROUP_PURCHASE`, gdy > 0. Bez ceny zakupu — cena brutto z feedu (fallback). Cena detaliczna z feedu nie jest używana. Rekord wspólny: bez własnych grup zakupu (`BASELINKER_PRICE_GROUP_PURCHASE_<HURTOWNIA>`) cena hurtowni, która ostatnia robiła sync (O-32); z nimi (HA-2.39) każda hurtownia pisze cenę zakupu do swojej grupy, a rekord z ≥ 2 takimi cenami > 0 wycenia krok `price-shared` po ostatnim syncu nocy — najtańsza cena zakupu wśród hurtowni ze stanem, inaczej najtańsza w ogóle. „Cena domyślna” katalogu i pole „Producent” nie są wypełniane (deferred 2026-10-14).',
   '- **O8 Treść.** Nazwa, opis HTML, parametry (Kolba: atrybuty; Sharg: feed parametrów — dziś scalany dla 0 produktów, deferred 2026-10-15; Spechurt: brak), do 16 zdjęć, VAT (Kolba zawsze 23 — feed nie ma VAT; Sharg i Spechurt z feedu), waga w kg.',
   '- **O9 Harmonogram i zdrowie.** Cron (UTC): Kolba import 20:20 / sync 22:55, Sharg 23:15 / 00:50, Spechurt 04:35 / 06:50, przez `run-bl.sh` pod jedną blokadą `flock`. Pusty feed = błąd: 3 próby co 600 s, potem `[fatal] empty feed`, `END exit=1` (HA-2.33). `exit=0` nie wystarcza — liczy się `result=` w dzienniku.',
   '',
