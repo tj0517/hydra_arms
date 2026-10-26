@@ -8,6 +8,8 @@
  *   B. EAN the next import would write — per supplier, matched records whose BL `ean` differs from
  *      eanForUpsert(feed EAN, BL EAN): zero added, EAN changed, EAN filled, invalid feed EAN.
  *      Upper bound: the import writes only products admitted by the assortment filter.
+ *   D. intra-feed collisions — items of ONE supplier sharing a GTIN-14 key (they land on one record;
+ *      the last one in feed order writes price and stock). Also: BL EANs failing the check digit.
  *   C. matches — every feed product, key before HA-2.38 (EAN text as is; Sharg's EAN without its
  *      leading zeros, as the old parser read it) vs now: unchanged, new hit (and whether another
  *      supplier created that record), lost, moved to another record.
@@ -61,7 +63,7 @@ const log = (m: string) => console.log(redactSecrets(m));
 const isSupplier = (s: string): s is Supplier => (SUPPLIERS as readonly string[]).includes(s);
 
 interface Listed { id: number; ean: string; sku: string; name: string; pos: number }
-interface Slim { sku: string; ean: string; oldEan: string; name: string }
+interface Slim { id: string; sku: string; ean: string; oldEan: string; name: string; purchase: number | null }
 
 /** The key as it was before HA-2.38 (bl-match-key.ts at HA-2.28): EAN text as is, first wins. */
 function oldIndex(listed: readonly Listed[]) {
@@ -145,6 +147,15 @@ async function main(): Promise<void> {
   md.push(`- z nich różniące się tylko zerami wiodącymi (dotąd osobne klucze — nowe przez HA-2.38): **${fmt(zerosOnly.length)}** grup; ten sam tekst EAN (już dziś zdublowane): ${fmt(multi.length - zerosOnly.length)}`);
   md.push(`- w każdej grupie pierwszy rekord w kolejności listy BL zostaje w indeksie i dostaje dopasowania po EAN; pozostałe dostają tylko dopasowania po SKU swojej hurtowni`);
   md.push(`- EAN w BL: ${Object.entries(blShapes).map(([k, v]) => `${k} ${fmt(v)}`).join(', ')}`, '');
+  // D1 (tj 2026-10-26): records whose current EAN fails the check digit — not indexed by EAN any more
+  const badCheck = listed.filter((l) => { const c = normalizeEan(l.ean); return c.kind === 'invalid' && c.reason === 'check digit'; });
+  md.push(`### EAN w BL ze złą cyfrą kontrolną: **${fmt(badCheck.length)}**`, '');
+  md.push('Od HA-2.38 taki EAN nie łączy hurtowni (rekord dostaje dopasowania tylko po SKU), a import go nie nadpisze, dopóki feed nie ma poprawnego EAN.', '');
+  if (badCheck.length) {
+    md.push('| bl_id | hurtownia (prefiks SKU) | sku | ean |', '| --- | --- | --- | --- |');
+    for (const l of badCheck.slice(0, 10)) md.push(`| ${l.id} | ${creatorOf(l.sku) ? SUPPLIER_LABEL[creatorOf(l.sku)!] : 'inne'} | ${l.sku} | ${l.ean} |`);
+    md.push('');
+  }
   csv.push({
     file: 'A_ten_sam_GTIN14_w_BL.csv',
     headers: ['grupa', 'gtin14', 'bl_id', 'sku', 'ean_BL', 'nazwa', 'zostaje_w_indeksie', 'roznica_tylko_zera'],
@@ -154,6 +165,8 @@ async function main(): Promise<void> {
 
   // ── B + C per supplier ──
   const bRows: Array<Array<string | number>> = [];
+  const dRows: Array<Array<string | number>> = [];
+  const dCsv: unknown[][] = [];
   const cRows: Array<Array<string | number>> = [];
   const bCsv: unknown[][] = [];
   const cCsv: unknown[][] = [];
@@ -176,7 +189,7 @@ async function main(): Promise<void> {
         const ean = (p.ean ?? '').trim();
         // Sharg before HA-2.38: code_producer parsed as a number — the leading zeros were gone
         const oldEan = s === 'sharg' && /^\d+$/.test(ean) ? ean.replace(/^0+(?=\d)/, '') : ean;
-        return { sku: (p.connector_sku ?? '').trim(), ean, oldEan, name: p.name };
+        return { id: p.connector_product_id, sku: (p.connector_sku ?? '').trim(), ean, oldEan, name: p.name, purchase: p.price_purchase };
       });
     } finally {
       console.log = origLog;
@@ -213,6 +226,18 @@ async function main(): Promise<void> {
       bCsv.push([s, target.id, target.sku, target.ean, write, kindB === 'zeros' ? 'dopisane zera' : kindB === 'filled' ? 'z pustego' : kindB === 'changed' ? 'inny EAN' : 'EAN feedu niepoprawny — BL bez zmian', p.sku]);
     }
     bRows.push([SUPPLIER_LABEL[s], slim.length, b.zeros, b.changed, b.filled, b.same, invalid]);
+
+    // D. Same GTIN-14 twice or more inside one feed: these items land on one BL record and the
+    // last one in feed order writes its price and stock there
+    const byKey = new Map<string, Array<{ pos: number; p: Slim }>>();
+    slim.forEach((p, pos) => { const k = eanKey(p.ean); if (k) byKey.set(k, [...(byKey.get(k) ?? []), { pos, p }]); });
+    const coll = [...byKey.entries()].filter(([, v]) => v.length > 1);
+    const zerosOnly = coll.filter(([, v]) => new Set(v.map((x) => x.p.ean)).size > 1).length;
+    const priceDiff = coll.filter(([, v]) => new Set(v.map((x) => x.p.purchase)).size > 1).length;
+    dRows.push([SUPPLIER_LABEL[s], coll.length, coll.reduce((a, [, v]) => a + v.length, 0), zerosOnly, priceDiff]);
+    for (const [k, v] of coll) {
+      v.forEach((x, j) => dCsv.push([s, k, x.p.id, x.p.sku, x.p.ean, x.p.purchase ?? '', x.pos, j === v.length - 1 ? 'tak' : 'nie', new Set(v.map((y) => y.p.purchase)).size > 1 ? 'tak' : 'nie', x.p.name]));
+    }
     cRows.push([SUPPLIER_LABEL[s], c.same, c.newHit, c.newHitForeign, c.lost, c.moved, c.none]);
   }
 
@@ -224,6 +249,11 @@ async function main(): Promise<void> {
   md.push('Nowe trafienie w rekord innej hurtowni = ten sam towar, który dotąd tworzył osobny rekord (zera wiodące); od teraz import zaktualizuje rekord wspólny. Utracone / przeniesione = EAN niepoprawny (teraz brak EAN) albo grupa z sekcji A.', '');
   csv.push({ file: 'B_zmiana_EAN_w_BL.csv', headers: ['hurtownia', 'bl_id', 'sku_BL', 'ean_BL', 'ean_po_imporcie', 'rodzaj', 'sku_feed'], rows: pickRows(bCsv, MAX_CSV_ROWS, (r) => `${r[0]}/${r[5]}`) });
   csv.push({ file: 'C_zmiana_dopasowania.csv', headers: ['hurtownia', 'sku_feed', 'ean_feed', 'ean_przed', 'bl_id_przed', 'bl_id_po', 'przez', 'sku_BL_po', 'rekord_innej_hurtowni', 'rodzaj', 'nazwa'], rows: pickRows(cCsv, MAX_CSV_ROWS, (r) => `${r[0]}/${r[9]}`) });
+
+  md.push('## D. Ten sam GTIN-14 kilka razy w jednym feedzie (kolizje w obrębie hurtowni)', '');
+  md.push(...table(['Hurtownia', 'Klucze z ≥ 2 pozycjami', 'Pozycji w nich', 'w tym różniące się tylko zerami (nowe przez HA-2.38)', 'z różną ceną zakupu'], dRows), '');
+  md.push('Te pozycje trafiają w jeden rekord BL — cenę i stan zapisuje ostatnia w kolejności feedu (kolumna `ostatnia` w CSV). Dotyczy punktu 1 (ceny) — tu tylko liczba.', '');
+  csv.push({ file: 'D_kolizje_GTIN14_w_feedzie.csv', headers: ['hurtownia', 'gtin14', 'id_feed', 'sku_feed', 'ean_feed', 'cena_zakupu', 'pozycja_w_feedzie', 'ostatnia', 'rozne_ceny_w_grupie', 'nazwa'], rows: pickRows(dCsv, MAX_CSV_ROWS, (r) => String(r[0])) });
 
   fs.mkdirSync(out, { recursive: true, mode: 0o700 });
   const written: string[] = [];
