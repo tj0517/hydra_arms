@@ -308,6 +308,11 @@ Jak czytać dziennik:
   w magazynie tej hurtowni na `Z` rekordach z jej kodem, których nie ma w dzisiejszym feedzie
   (`A` z nich ma tag `approved`, czyli znikają ze sklepu). Przy pierwszym przebiegu hurtowni po
   wdrożeniu `zeroed: 0` — sync dopiero zapisuje licznik produktów (sekcja „Wycofane produkty”).
+- `prices skipped (not a member): N` (od HA-2.38) — linia pod `Sync done`: rekordy innej hurtowni, które sync
+  trafił przez EAN, a których ta hurtownia nie jest członkiem (prefiks SKU albo parametr `SKU <Hurtownia>`).
+  Dostały tylko stan w magazynie tej hurtowni, bez ceny — cenę pisze właściciel rekordu. Ostrzeżenia BL
+  z zapisu stanów i cen trafiają do logu z treścią: `[warn] BL prices warning, product <id>: …` (do 50 na
+  przebieg).
 - `skipped: S` (od HA-2.28) to produkty dopasowane do katalogu, dla których BaseLinker nie
   oddał danych (tagów, SKU, parametrów) — import ich nie nadpisał, tylko pominął; każdy
   taki produkt jest już wliczony w `K errors`, więc `[1-9][0-9]* errors` z grepa wyżej je łapie.

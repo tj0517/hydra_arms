@@ -61,7 +61,7 @@ Sukces: ceny w BL zgadzają się z feedem albo każdy rozjazd ma nazwaną przycz
 
 ## Gotowe, gdy
 - diagnoza cen: tabela przyczyna → liczba dla rekordów jednej hurtowni (Sharg 20, Kolba 520) i osobno dla rekordów wspólnych Sharga; każda przyczyna z ≥ 1 przykładem prześledzonym od feedu do BL — **jak sprawdzić:** „Notatki z realizacji” + odczyt BL tych rekordów (tj, readonly)
-- red proof ceny: SHARG 5652 — test na danych tego produktu pokazuje nieaktualną cenę zakupu (231,75) przed poprawką i cenę z feedu (328) po niej — **jak sprawdzić:** nazwa testu w `npm run test:unit`; po cofnięciu poprawki test pada
+- red proof nadpisywania: sync Spechurtu, który przez EAN trafia rekord SHARG-5652 (bez członkostwa Spechurtu), przed poprawką zapisuje na nim cenę, a po poprawce nie — **jak sprawdzić:** nazwa testu w `npm run test:unit`; po cofnięciu poprawki test pada
 - normalizacja EAN: `192687280759` i `0192687280759` to ten sam klucz; 11-cyfrowy EAN Sharga z zerem z feedu zachowuje zero — **jak sprawdzić:** testy `bl-match-key` + konektora Sharga; red proof: bez normalizacji test „Kolba + Spechurt, ten sam towar” daje dwa rekordy
 - raport par do scalenia (liczba + CSV) — **jak sprawdzić:** wklejone podsumowanie z odczytu katalogu 119068 (uruchamia tj)
 - zerowanie: rekord z kodem hurtowni, którego nie ma w feedzie → stan 0 tylko w magazynie tej hurtowni, inne magazyny bez zmian — **jak sprawdzić:** test na atrapie BL
@@ -89,6 +89,7 @@ Sukces: ceny w BL zgadzają się z feedem albo każdy rozjazd ma nazwaną przycz
 - `docs/tasks/HA-2.37.md` — definicje osieroconych i rozjazdów
 
 ## Notatki z realizacji
+- 2026-10-26 tj: red proof ceny zamieniony na test nadpisywania przez sync innej hurtowni; pytanie o cenę Sharga (price = SRP?) wydzielone do O-37
 - 2026-10-26 agent — **diagnoza cen (punkt 1), wynik z serwera** (`diag-prices.ts`, commit 9929bf9, 14:27–14:29 UTC; pliki u tj: `diag-{sharg,kolba}.{md,json}`, `rozjazdy-*.csv`). Bez poprawek — STOP dla tj.
 
   **Mechanizm (dowód z kodu):** `planSync` (`xml-integration/bl-write.ts`) pisze cenę na każdy rekord, który trafi klucz (EAN między hurtowniami), bez filtra asortymentu. Parametr `SKU <Hurtownia>`, po którym audyt i diagnoza rozpoznają „rekord wspólny” (`recordSuppliers`), pisze tylko **import** — a import przyjmuje tylko produkty przechodzące filtr. Rekord trafiany przez EAN syncu innej hurtowni, której import ten produkt odfiltrował, nie ma jej parametru: liczy się jako „własny”, a jego cenę pisze sync, który biegł **ostatni** (noc: Kolba 22:55 → Sharg 00:50 → Spechurt 06:50 UTC; 26.10 dodatkowo dzienny sync Kolby 13:25 UTC, `kolba-sync-20261026-142504.log`, czas w nazwie polski).

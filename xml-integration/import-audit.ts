@@ -349,6 +349,16 @@ export const GAP_SOURCE_LABEL: Record<GapSource, string> = {
   orphan: 'brak w feedzie',
 };
 
+/**
+ * A record is shared when ≥ 2 suppliers have it: as recorded members (SKU prefix, `SKU <Hurtownia>`
+ * parameters) or because their feeds match it today. A sync writes onto every record its key matches,
+ * so parameters alone (written by the import only) miss records another supplier's sync also writes
+ * (HA-2.38 price diagnosis).
+ */
+export function isSharedRecord(members: readonly Supplier[], matchedBy: readonly Supplier[]): boolean {
+  return new Set([...members, ...matchedBy]).size > 1;
+}
+
 // ── run-bl.sh journal and run logs ───────────────────────────────────────────
 
 export type JournalEvent = 'START' | 'END' | 'SKIP' | 'STOP' | 'ERROR' | 'WARN' | 'CHECK';
