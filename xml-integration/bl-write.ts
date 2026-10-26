@@ -6,16 +6,24 @@
  *   readMarginRaws — „Marża %” field and supplier membership of matched products, read-only (sync, dry-run)
  *   planSync       — stock + price updates of one sync run; prices only on records the supplier is a member of
  *   runSyncCore    — the whole sync: index → margins → plan → bulk writes → zeroing, BL calls injected
- *   feedGuard / planZeroing — stock 0 for withdrawn products (HA-2.38), also the read-only preview
+ *   feedGuard / planZeroing — stock 0 for withdrawn products (HA-2.38), also the read-only preview;
+ *                    with own purchase groups (HA-2.39) also the supplier's own purchase price
+ *   runSharedPricing — the `price-shared` step: selling + shared purchase price of shared records
+ *
+ * Own purchase groups (HA-2.39, xml-integration/shared-pricing.ts): with `env.purchaseGroups` set,
+ * every matched record gets the supplier's purchase price in its own group, and a shared record
+ * (≥ 2 own groups > 0) gets nothing else from a single supplier — its selling price and shared
+ * „Cena zakupu” belong to runSharedPricing. Without it everything works as before HA-2.39.
  *
  * The margin field is never part of any payload here: `text_fields` is built from the feed
  * (name, description, features) and nothing else (HA-2.22, the field belongs to the client).
  */
 
 import type { NormalizedProduct } from './types';
-import { addToMatchIndex, eanForUpsert, emptyMatchIndex, findBLMatch, type BLMatchIndex, type Supplier } from './bl-match-key';
+import { SUPPLIERS, SUPPLIER_LABEL, addToMatchIndex, eanForUpsert, emptyMatchIndex, findBLMatch, type BLMatchIndex, type Supplier } from './bl-match-key';
 import { chooseMargin, computeSellingPrice, readMarginRaw, type MarginChoice, type MarginTally } from './margin';
-import { recordSuppliers } from './import-audit';
+import { recordSuppliers, redactSecrets } from './import-audit';
+import { isSharedByPurchase, ownPurchasePrices, priceSharedRecord, type ChoiceReason, type PricingConfig, type PurchaseGroups, type SharedPrice } from './shared-pricing';
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
@@ -26,6 +34,8 @@ export interface WriteEnv {
   warehouse: string;
   /** the wholesaler's env markup (BASELINKER_MARKUP_*) */
   markupPct: number;
+  /** HA-2.39: every supplier's own purchase group; null/omitted = off (behaviour before HA-2.39) */
+  purchaseGroups?: PurchaseGroups | null;
 }
 
 // ── Import payload ────────────────────────────────────────────────────────────
@@ -48,12 +58,30 @@ export function toBLProduct(
   /** `ean`: eanForUpsert with the record's current EAN, `weight`: the record's current weight (import) */
   identity: { sku: string; features: Record<string, string>; ean?: string; weight?: number },
   margin: MarginChoice,
-): { product: Record<string, unknown>; price: number; priceFromFallback: boolean; priceZero: boolean } {
+  /**
+   * HA-2.39, with `env.purchaseGroups`: the supplier and the record's current prices ({} for a new
+   * record). The payload carries the current prices too — addInventoryProduct gets the whole price
+   * list, so nothing another supplier or the pricing step wrote can be lost.
+   */
+  own: { supplier: Supplier; currentPrices: Readonly<Record<string, number>> } | null = null,
+): { product: Record<string, unknown>; price: number; priceFromFallback: boolean; priceZero: boolean; shared: boolean } {
   const { price, fromFallback, priceZero } = computeSellingPrice(p, margin.pct);
+  const purchase = p.price_purchase && p.price_purchase > 0 ? round2(p.price_purchase) : null;
 
-  const prices: Record<string, number> = { [env.priceGroup]: price };
-  if (env.priceGroupPurchase && p.price_purchase && p.price_purchase > 0) {
-    prices[env.priceGroupPurchase] = round2(p.price_purchase);
+  let prices: Record<string, number>;
+  let shared = false;
+  if (env.purchaseGroups && own) {
+    prices = { ...own.currentPrices };
+    if (purchase !== null) prices[env.purchaseGroups[own.supplier]] = purchase;
+    // A shared record: own purchase group only — selling and shared purchase price are the pricing step's
+    shared = isSharedByPurchase(own.currentPrices, env.purchaseGroups, { supplier: own.supplier, price: purchase });
+    if (!shared) {
+      prices[env.priceGroup] = price;
+      if (env.priceGroupPurchase && purchase !== null) prices[env.priceGroupPurchase] = purchase;
+    }
+  } else {
+    prices = { [env.priceGroup]: price };
+    if (env.priceGroupPurchase && purchase !== null) prices[env.priceGroupPurchase] = purchase;
   }
 
   const textFields: Record<string, unknown> = { name: p.name };
@@ -78,12 +106,12 @@ export function toBLProduct(
     ...(images.length ? { images } : {}),
   };
 
-  return { product, price, priceFromFallback: fromFallback, priceZero };
+  return { product, price, priceFromFallback: fromFallback, priceZero, shared };
 }
 
 // ── BL reads ──────────────────────────────────────────────────────────────────
 
-export type GetProductsList = (inventoryId: number, page?: number) => Promise<Record<string, { ean: string; sku: string; stock?: Record<string, number> }>>;
+export type GetProductsList = (inventoryId: number, page?: number) => Promise<Record<string, { ean: string; sku: string; stock?: Record<string, number>; prices?: Record<string, number> }>>;
 export type GetProductsData = (inventoryId: number, ids: string[]) => Promise<Record<string, { text_fields?: unknown; prices?: unknown; sku?: unknown; tags?: unknown }>>;
 
 /** EAN → id, prefixed SKU → id over the whole catalogue (pages of 1 000). */
@@ -104,7 +132,18 @@ export async function loadExistingProducts(
   return index;
 }
 
-/** The match index plus each listed product's per-warehouse stock — one read of the list (sync, zero preview). */
+/** A BL map (stock, prices) as numbers; anything else → {} (an empty one may come back as `[]`). */
+export function numMap(v: unknown): Record<string, number> {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return {};
+  const out: Record<string, number> = {};
+  for (const [k, x] of Object.entries(v as Record<string, unknown>)) {
+    const n = Number(x);
+    if (Number.isFinite(n)) out[k] = n;
+  }
+  return out;
+}
+
+/** The match index plus each listed product's per-warehouse stock and prices — one read of the list (sync, zero preview). */
 export async function loadIndexWithStock(
   getProductsList: GetProductsList,
   inventoryId: number,
@@ -114,7 +153,7 @@ export async function loadIndexWithStock(
   const listed: ListedProduct[] = [];
   const index = await loadExistingProducts(async (inv, page) => {
     const res = await getProductsList(inv, page);
-    for (const [id, p] of Object.entries(res)) listed.push({ id: Number(id), sku: String(p.sku ?? ''), stock: p.stock && typeof p.stock === 'object' ? p.stock : {} });
+    for (const [id, p] of Object.entries(res)) listed.push({ id: Number(id), sku: String(p.sku ?? ''), stock: numMap(p.stock), prices: numMap(p.prices) });
     return res;
   }, inventoryId, sleep, rateLimitMs);
   return { index, listed };
@@ -130,6 +169,8 @@ export interface MarginRead {
   salePrice: Map<number, number>;
   /** suppliers each returned product belongs to — SKU prefix + `SKU <Hurtownia>` parameters (HA-2.38) */
   members: Map<number, Supplier[]>;
+  /** every price group of each returned product (HA-2.39: own purchase groups → shared or not) */
+  prices: Map<number, Record<string, number>>;
   calls: number;
   ms: number;
 }
@@ -161,6 +202,7 @@ export async function readMarginRaws(
   const raw = new Map<number, unknown>();
   const salePrice = new Map<number, number>();
   const members = new Map<number, Supplier[]>();
+  const pricesById = new Map<number, Record<string, number>>();
   let calls = 0;
   for (let i = 0; i < ids.length; i += MARGIN_READ_CHUNK) {
     if (i > 0) await sleep(rateLimitMs);
@@ -170,12 +212,13 @@ export async function readMarginRaws(
     for (const [id, d] of Object.entries(data)) {
       if (fieldKey !== null) raw.set(Number(id), readMarginRaw(d.text_fields, fieldKey));
       members.set(Number(id), recordSuppliers(String(d.sku ?? skuOf(Number(id)) ?? ''), featuresOf(d.text_fields)).members);
-      const prices = d.prices && typeof d.prices === 'object' ? (d.prices as Record<string, unknown>) : {};
+      const prices = numMap(d.prices);
+      pricesById.set(Number(id), prices);
       const sale = priceGroup !== null ? Number(prices[String(priceGroup)]) : NaN;
       if (Number.isFinite(sale)) salePrice.set(Number(id), sale);
     }
   }
-  return { raw, salePrice, members, calls, ms: Date.now() - started };
+  return { raw, salePrice, members, prices: pricesById, calls, ms: Date.now() - started };
 }
 
 // ── Withdrawn products: stock 0 in the supplier's warehouse (HA-2.38) ──────────
@@ -204,18 +247,27 @@ export interface ListedProduct {
   id: number;
   sku: string;
   stock: Record<string, number>;
+  /** from the list; {} when the list leaves them out */
+  prices?: Record<string, number>;
 }
 
 export interface ZeroRow {
   id: number;
   sku: string;
-  /** this supplier's bare code on the record (prefix SKU or `SKU <Hurtownia>` parameter) */
+  /** this supplier's bare code on the record (prefix SKU or `SKU <Hurtownia>` parameter); '' without one */
   code: string;
+  /** stock in this supplier's warehouse — set to 0 when > 0 */
   stock: number;
+  /** HA-2.39: this supplier's own purchase price on the record — cleared (0) when > 0, else 0 */
+  ownPurchase: number;
   approved: boolean;
   name: string;
-  /** code missing from today's feed, or the code's feed item now matches another record (D-D) */
-  reason: 'code_missing' | 'matched_elsewhere';
+  /**
+   * code missing from today's feed; the code's feed item now matches another record (D-D); or
+   * (HA-2.39, own purchase groups on) no item of today's feed matches the record any more — no code
+   * on it (reached through the EAN only before), or the code's item matches nothing
+   */
+  reason: 'code_missing' | 'matched_elsewhere' | 'not_matched';
   /** matched_elsewhere: the record that feed item matches now */
   movedTo?: number;
 }
@@ -227,6 +279,11 @@ export interface ZeroRow {
  * tj 2026-10-26). Only records with stock > 0 there are candidates; their data is read to confirm
  * the code — a record BaseLinker returns no data for is left alone. Merging such records is a
  * separate decision; this only stops the stock of this warehouse showing on two records.
+ *
+ * With own purchase groups (HA-2.39, decision A tj 2026-10-26) the rule is broader: every record
+ * today's feed does not match that has stock > 0 in this warehouse or a price > 0 in this supplier's
+ * own purchase group — code or no code — gets both cleared, so the pricing step never picks a
+ * supplier that no longer carries the product.
  */
 export async function planZeroing(
   products: readonly NormalizedProduct[],
@@ -250,7 +307,9 @@ export async function planZeroing(
     matched.add(id);
     if (sku) matchedBySku.set(sku, [...(matchedBySku.get(sku) ?? []), id]);
   }
-  const candidates = listed.filter((l) => (l.stock[env.warehouse] ?? 0) > 0 && !matched.has(l.id));
+  const groups = env.purchaseGroups ?? null;
+  const ownOf = (prices: unknown) => (groups ? ownPurchasePrices(prices, groups)[supplier] ?? 0 : 0);
+  const candidates = listed.filter((l) => !matched.has(l.id) && ((l.stock[env.warehouse] ?? 0) > 0 || ownOf(l.prices) > 0));
   const rows: ZeroRow[] = [];
   let calls = 0;
   for (let i = 0; i < candidates.length; i += MARGIN_READ_CHUNK) {
@@ -266,19 +325,27 @@ export async function planZeroing(
       const sku = String(d.sku ?? c.sku);
       const sup = recordSuppliers(sku, Object.fromEntries(Object.entries(f).map(([k, v]) => [k, String(v ?? '')])));
       const code = sup.codes[supplier];
-      if (code === undefined) continue;
       let reason: ZeroRow['reason'];
       let movedTo: number | undefined;
-      if (!feedSkus.has(code)) reason = 'code_missing';
+      if (code === undefined) {
+        if (!groups) continue; // HA-2.38: only records with this supplier's code
+        reason = 'not_matched';
+      } else if (!feedSkus.has(code)) reason = 'code_missing';
       else {
         // c is unmatched, so any record the code's items match is a different one
         const elsewhere = matchedBySku.get(code) ?? [];
-        if (elsewhere.length === 0) continue; // the item matches nothing — not moved, left alone
-        reason = 'matched_elsewhere';
-        movedTo = elsewhere[0];
+        if (elsewhere.length === 0) {
+          if (!groups) continue; // HA-2.38: the item matches nothing — not moved, left alone
+          reason = 'not_matched';
+        } else {
+          reason = 'matched_elsewhere';
+          movedTo = elsewhere[0];
+        }
       }
+      // The data's prices are the current ones; the list's only when the data leaves them out
+      const ownPurchase = d.prices && typeof d.prices === 'object' ? ownOf(d.prices) : ownOf(c.prices);
       rows.push({
-        id: c.id, sku, code, stock: c.stock[env.warehouse] ?? 0,
+        id: c.id, sku, code: code ?? '', stock: c.stock[env.warehouse] ?? 0, ownPurchase,
         approved: Array.isArray(d.tags) && (d.tags as unknown[]).map(String).includes('approved'),
         name: String(tf.name ?? ''),
         reason, ...(movedTo !== undefined ? { movedTo } : {}),
@@ -325,8 +392,10 @@ export interface SyncPlan {
   priceZeros: number;
   /** matched, but no price written: the product data read failed, or BL returned no data for the record */
   priceSkipped: number;
-  /** matched through the EAN, but this supplier is not a member of the record — stock only (HA-2.38) */
+  /** matched through the EAN, but this supplier is not a member of the record — stock only (HA-2.38), plus the own purchase group (HA-2.39) */
   priceSkippedNotMember: number;
+  /** HA-2.39: shared record (≥ 2 own purchase groups) — own purchase group only, the rest is the pricing step's */
+  priceLeftToPricing: number;
 }
 
 /**
@@ -334,7 +403,12 @@ export interface SyncPlan {
  * to records this supplier is a member of (HA-2.38): another supplier's record found through the EAN
  * gets stock in this supplier's warehouse and nothing else — otherwise the sync that runs last sets
  * the price of every record its EANs touch. A record without data (unknown membership) gets no price.
- * Shared records (several members) keep "last sync wins" until HA-2.39.
+ *
+ * With `env.purchaseGroups` (HA-2.39) every matched record with known membership also gets the
+ * purchase price in this supplier's own group — member or not (decision tj 2026-10-26) — and a
+ * shared record (`currentPrices`: ≥ 2 own groups > 0 after this write) gets nothing else: its
+ * selling and shared purchase price are set by the pricing step. Without it, shared records keep
+ * "last sync wins" as before HA-2.39.
  */
 export function planSync(
   products: readonly NormalizedProduct[],
@@ -344,8 +418,11 @@ export function planSync(
   margins: SyncMargins,
   tally: MarginTally,
   membership: ReadonlyMap<number, readonly Supplier[]> | null,
+  /** HA-2.39: every price group of each record, from the same read as `membership` */
+  currentPrices: ReadonlyMap<number, Readonly<Record<string, number>>> | null = null,
 ): SyncPlan {
-  const plan: SyncPlan = { stockUpdates: {}, priceUpdates: {}, matched: 0, unmatched: 0, priceFallbacks: 0, priceZeros: 0, priceSkipped: 0, priceSkippedNotMember: 0 };
+  const plan: SyncPlan = { stockUpdates: {}, priceUpdates: {}, matched: 0, unmatched: 0, priceFallbacks: 0, priceZeros: 0, priceSkipped: 0, priceSkippedNotMember: 0, priceLeftToPricing: 0 };
+  const groups = env.purchaseGroups ?? null;
 
   for (const p of products) {
     // Same key as the import: EAN across suppliers, else this supplier's prefixed SKU only
@@ -357,12 +434,18 @@ export function planSync(
 
     const members = membership?.get(id);
     if (members === undefined) { plan.priceSkipped++; continue; }
-    if (!members.includes(supplier)) { plan.priceSkippedNotMember++; continue; }
 
+    const purchase = p.price_purchase && p.price_purchase > 0 ? round2(p.price_purchase) : null;
     const prices: Record<string, number> = {};
-    if (env.priceGroupPurchase && p.price_purchase && p.price_purchase > 0) {
-      prices[env.priceGroupPurchase] = round2(p.price_purchase);
-    }
+    if (groups && purchase !== null) prices[groups[supplier]] = purchase;
+    const ownOnly = (counter: 'priceSkippedNotMember' | 'priceLeftToPricing') => {
+      plan[counter]++;
+      if (Object.keys(prices).length) plan.priceUpdates[id] = prices;
+    };
+    if (!members.includes(supplier)) { ownOnly('priceSkippedNotMember'); continue; }
+    if (groups && isSharedByPurchase(currentPrices?.get(id) ?? {}, groups, { supplier, price: purchase })) { ownOnly('priceLeftToPricing'); continue; }
+
+    if (env.priceGroupPurchase && purchase !== null) prices[env.priceGroupPurchase] = purchase;
 
     let margin: MarginChoice | null;
     if (margins.kind === 'off') margin = chooseMargin(undefined, env.markupPct);
@@ -419,6 +502,7 @@ export async function runSyncCore(
 
   let margins: SyncMargins = { kind: 'off' };
   let membership: Map<number, Supplier[]> | null = null;
+  let currentPrices: Map<number, Record<string, number>> | null = null;
   let ok = true;
   if (deps.marginKey === null) {
     warn('[warn] BASELINKER_EXTRA_FIELD_MARGIN not set — manual margins are NOT read, env markup for every product');
@@ -433,6 +517,7 @@ export async function runSyncCore(
     await deps.sleep(deps.rateLimitMs);
     const read = await readMarginRaws(ids, deps.getProductsData, env.inventoryId, deps.marginKey, null, deps.sleep, deps.rateLimitMs, (id) => index.skuById.get(id));
     membership = read.members;
+    currentPrices = read.prices;
     if (deps.marginKey !== null) {
       margins = { kind: 'read', raw: read.raw };
       log(`  margin field read: ${read.raw.size}/${ids.length} products, ${read.calls} calls, ${(read.ms / 1000).toFixed(1)} s`);
@@ -445,7 +530,7 @@ export async function runSyncCore(
     warn(`[error] ${deps.marginKey !== null ? 'margin field' : 'product data'} read failed: ${err instanceof Error ? err.message : err} — stock is synced, prices are NOT (env prices would wipe manual margins; membership unknown)`);
   }
 
-  const plan = planSync(products, supplier, index, env, margins, deps.tally, membership);
+  const plan = planSync(products, supplier, index, env, margins, deps.tally, membership, currentPrices);
   log(`\nMatched ${plan.matched} products, ${plan.unmatched} not in BL yet (run 'import' mode to add them)`);
   if (plan.matched === 0) return { ok, plan };
 
@@ -474,6 +559,7 @@ export async function runSyncCore(
   // Withdrawn products (HA-2.38): stock 0 in this supplier's warehouse, behind the feed-size guard
   let zeroed: ZeroRow[] | undefined;
   let zeroLine: string | null = null;
+  let clearLine: string | null = null;
   if (deps.feedCounts) {
     const guard = feedGuard(products.length, deps.feedCounts.read(supplier));
     if (guard.kind === 'incomplete') {
@@ -484,22 +570,36 @@ export async function runSyncCore(
       deps.feedCounts.write(supplier, products.length);
     } else {
       const z = await planZeroing(products, supplier, env, index, listed, deps.getProductsData, deps.sleep, deps.rateLimitMs);
-      for (let i = 0; i < z.rows.length; i += 1000) {
+      const stockRows = z.rows.filter((r) => r.stock > 0);
+      for (let i = 0; i < stockRows.length; i += 1000) {
         await deps.sleep(deps.rateLimitMs);
-        const chunk = z.rows.slice(i, i + 1000);
+        const chunk = stockRows.slice(i, i + 1000);
         const res = await deps.updateStock(env.inventoryId, Object.fromEntries(chunk.map((r) => [String(r.id), { [env.warehouse]: 0 }])));
-        log(`  zero   ${i + chunk.length}/${z.rows.length}: ${res.counter} updated` + (Object.keys(res.warnings).length ? `, ${Object.keys(res.warnings).length} warnings` : ''));
+        log(`  zero   ${i + chunk.length}/${stockRows.length}: ${res.counter} updated` + (Object.keys(res.warnings).length ? `, ${Object.keys(res.warnings).length} warnings` : ''));
         blWarnings.log('zero', res.warnings);
       }
+      // HA-2.39: the own purchase price goes too, so the pricing step no longer counts this supplier
+      const ownGroup = env.purchaseGroups?.[supplier];
+      const priceRows = ownGroup ? z.rows.filter((r) => r.ownPurchase > 0) : [];
+      for (let i = 0; i < priceRows.length; i += 1000) {
+        await deps.sleep(deps.rateLimitMs);
+        const chunk = priceRows.slice(i, i + 1000);
+        const res = await deps.updatePrices(env.inventoryId, Object.fromEntries(chunk.map((r) => [String(r.id), { [String(ownGroup)]: 0 }])));
+        log(`  clear  ${i + chunk.length}/${priceRows.length}: ${res.counter} updated` + (Object.keys(res.warnings).length ? `, ${Object.keys(res.warnings).length} warnings` : ''));
+        blWarnings.log('clear', res.warnings);
+      }
       zeroed = z.rows;
-      zeroLine = `zeroed: ${z.rows.length} (approved: ${z.rows.filter((r) => r.approved).length}) — withdrawn by ${supplier}, stock 0 in ${env.warehouse} only`;
+      zeroLine = `zeroed: ${stockRows.length} (approved: ${stockRows.filter((r) => r.approved).length}) — withdrawn by ${supplier}, stock 0 in ${env.warehouse} only`;
+      if (ownGroup) clearLine = `own purchase cleared: ${priceRows.length} — ${supplier}'s purchase group ${ownGroup} set to 0 on records its feed no longer matches`;
       deps.feedCounts.write(supplier, products.length);
     }
   }
 
   log(`\n✓ Sync done: ${plan.matched} products refreshed`);
   if (zeroLine) log(`  ${zeroLine}`);
-  log(`  prices skipped (not a member): ${plan.priceSkippedNotMember} — records of another supplier found through the EAN, stock only`);
+  if (clearLine) log(`  ${clearLine}`);
+  log(`  prices skipped (not a member): ${plan.priceSkippedNotMember} — records of another supplier found through the EAN, stock${env.purchaseGroups ? ' and own purchase group' : ''} only`);
+  if (env.purchaseGroups) log(`  prices left to pricing (shared): ${plan.priceLeftToPricing} — ≥ 2 own purchase groups, own purchase group only (selling price: price-shared)`);
   if (deps.marginKey !== null) log(`  ${deps.tally.summary()}`);
   if (plan.priceSkipped > 0) {
     warn(`⚠ ${plan.priceSkipped} products: prices NOT written (${margins.kind === 'failed' ? 'product data read failed' : 'BL returned no data for them'}) — previous prices kept`);
@@ -528,4 +628,167 @@ export async function runSyncProcess(
   const res = await runSyncCore(products, supplier, env, deps);
   if (!res.ok) process.exitCode = 1;
   return res;
+}
+
+// ── Pricing of shared records (HA-2.39) ──────────────────────────────────────
+
+export interface PricingRow extends SharedPrice {
+  id: number;
+  sku: string;
+  ean: string;
+  saleBefore: number | null;
+  purchaseBefore: number | null;
+  changed: boolean;
+}
+
+export interface PricingDeps {
+  /** read-only getInventoryProductsList — prices and per-warehouse stock of the whole catalogue */
+  getProductsList: GetProductsList;
+  /** read-only getInventoryProductsData — current prices and the margin field of shared records */
+  getProductsData: GetProductsData;
+  /** updateInventoryProductsPrices; null = dry-run, nothing is written */
+  updatePrices: SyncDeps['updatePrices'] | null;
+  sleep: (ms: number) => Promise<unknown>;
+  rateLimitMs: number;
+  /** text_fields key of „Marża %”, or null (env markup of the chosen supplier for every record) */
+  marginKey: string | null;
+  log: (line: string) => void;
+  warn: (line: string) => void;
+  tally: MarginTally;
+}
+
+export interface PricingResult {
+  /** false: the product data read failed — nothing was written */
+  ok: boolean;
+  rows: PricingRow[];
+  listed: number;
+  /** shared by the list (≥ 2 own purchase groups > 0) */
+  shared: number;
+  changed: number;
+  /** BL returned no data for the record, or its current prices no longer make it shared */
+  skipped: number;
+  written: number;
+}
+
+const differs = (before: number | null, after: number) => before === null || Math.abs(before - after) >= 0.005;
+
+/**
+ * The `price-shared` step, after the last nightly sync. BaseLinker data only — the list (prices,
+ * stock) and the product data of shared records (current prices, „Marża %”); never a feed. Writes
+ * the selling price and the shared „Cena zakupu” of every shared record whose price changes, in
+ * batches of updateInventoryProductsPrices. Calls no other BL method.
+ */
+export async function runSharedPricing(cfg: PricingConfig & { inventoryId: number }, deps: PricingDeps): Promise<PricingResult> {
+  const { log, warn } = deps;
+  log('\nLoading BL products (prices and stock)…');
+  const listed: Array<{ id: number; sku: string; ean: string; stock: Record<string, number>; prices: Record<string, number> }> = [];
+  for (let page = 1; ; page++) {
+    if (page > 1) await deps.sleep(deps.rateLimitMs);
+    const res = await deps.getProductsList(cfg.inventoryId, page);
+    const entries = Object.entries(res);
+    for (const [id, p] of entries) listed.push({ id: Number(id), sku: String(p.sku ?? ''), ean: String(p.ean ?? ''), stock: numMap(p.stock), prices: numMap(p.prices) });
+    if (entries.length < 1000) break;
+  }
+  const candidates = listed.filter((l) => isSharedByPurchase(l.prices, cfg.groups));
+  log(`  ${listed.length} products in BL, ${candidates.length} shared (≥ 2 own purchase groups > 0)`);
+  const result: PricingResult = { ok: true, rows: [], listed: listed.length, shared: candidates.length, changed: 0, skipped: 0, written: 0 };
+  if (candidates.length === 0) {
+    log(`\n${deps.updatePrices ? '✓ Pricing done' : 'Pricing dry-run'}: 0 shared, 0 changed, 0 unchanged, 0 skipped`);
+    return result;
+  }
+
+  log(`\nReading current prices${deps.marginKey !== null ? ` and the margin field (${deps.marginKey})` : ''} of ${candidates.length} shared products…`);
+  let read: MarginRead;
+  try {
+    await deps.sleep(deps.rateLimitMs);
+    read = await readMarginRaws(candidates.map((c) => c.id), deps.getProductsData, cfg.inventoryId, deps.marginKey, cfg.saleGroup, deps.sleep, deps.rateLimitMs);
+    log(`  product data read: ${read.prices.size}/${candidates.length} products, ${read.calls} calls, ${(read.ms / 1000).toFixed(1)} s`);
+  } catch (err) {
+    warn(`[error] product data read failed: ${err instanceof Error ? err.message : err} — nothing written (the margin field and current prices are unknown)`);
+    return { ...result, ok: false };
+  }
+  if (deps.marginKey === null) warn('[warn] BASELINKER_EXTRA_FIELD_MARGIN not set — manual margins are NOT read, env markup of the chosen supplier for every product');
+
+  const updates: Record<string, Record<string, number>> = {};
+  for (const c of candidates) {
+    const prices = read.prices.get(c.id);
+    const priced = prices ? priceSharedRecord({ prices, stock: c.stock }, cfg, read.raw.get(c.id)) : null;
+    if (!prices || !priced) { result.skipped++; continue; }
+    const saleBefore = Number.isFinite(prices[String(cfg.saleGroup)]) ? prices[String(cfg.saleGroup)] : null;
+    const purchaseBefore = Number.isFinite(prices[String(cfg.purchaseGroup)]) ? prices[String(cfg.purchaseGroup)] : null;
+    const changed = differs(saleBefore, priced.sale) || differs(purchaseBefore, priced.purchase);
+    deps.tally.note(c.id, priced.margin);
+    result.rows.push({ id: c.id, sku: c.sku, ean: c.ean, saleBefore, purchaseBefore, changed, ...priced });
+    if (changed) {
+      result.changed++;
+      updates[String(c.id)] = { [String(cfg.saleGroup)]: priced.sale, [String(cfg.purchaseGroup)]: priced.purchase };
+    }
+  }
+
+  const blWarnings = new BLWarningLog(warn);
+  const ids = Object.keys(updates);
+  if (deps.updatePrices) {
+    for (let i = 0; i < ids.length; i += 1000) {
+      await deps.sleep(deps.rateLimitMs);
+      const chunk = ids.slice(i, i + 1000);
+      const res = await deps.updatePrices(cfg.inventoryId, Object.fromEntries(chunk.map((id) => [id, updates[id]])));
+      result.written += res.counter;
+      log(`  prices ${i + chunk.length}/${ids.length}: ${res.counter} updated` + (Object.keys(res.warnings).length ? `, ${Object.keys(res.warnings).length} warnings` : ''));
+      blWarnings.log('prices', res.warnings);
+    }
+  }
+
+  for (const line of pricingTable(result.rows)) log(line);
+  const unchanged = result.rows.length - result.changed;
+  log(`\n${deps.updatePrices ? '✓ Pricing done' : 'Pricing dry-run'}: ${result.shared} shared, ${result.changed} changed, ${unchanged} unchanged, ${result.skipped} skipped`);
+  for (const line of pricingSummary(result.rows)) log(`  ${line}`);
+  if (deps.marginKey !== null) log(`  ${deps.tally.summary()}`);
+  if (result.skipped > 0) warn(`⚠ ${result.skipped} shared products skipped — BL returned no data for them, or their current prices no longer make them shared; previous prices kept`);
+  if (blWarnings.hidden > 0) warn(`⚠ ${blWarnings.hidden} more BL warnings not listed (first ${BLWarningLog.MAX} above)`);
+  if (!deps.updatePrices) log('Dry-run — nothing written to BaseLinker.');
+  return result;
+}
+
+const REASON_LABEL: Record<ChoiceReason, string> = { in_stock: 'najtańsza ze stanem', none_in_stock: 'brak stanu — najtańsza' };
+
+/** Distribution of chosen suppliers and reasons. */
+export function pricingSummary(rows: readonly PricingRow[]): string[] {
+  const by = (s: Supplier, r?: ChoiceReason) => rows.filter((x) => x.choice.supplier === s && (r === undefined || x.choice.reason === r)).length;
+  return [
+    `chosen: ${SUPPLIERS.map((s) => `${SUPPLIER_LABEL[s]} ${by(s)} (in stock ${by(s, 'in_stock')}, none in stock ${by(s, 'none_in_stock')})`).join('; ')}`,
+    `changed by chosen supplier: ${SUPPLIERS.map((s) => `${SUPPLIER_LABEL[s]} ${rows.filter((x) => x.changed && x.choice.supplier === s).length}`).join(', ')}`,
+  ];
+}
+
+const money = (n: number | null | undefined) => (n === null || n === undefined ? '—' : n.toFixed(2));
+
+/**
+ * The dry-run table: changed records first, then the rest, at most `max` rows (≥ 10 whenever there
+ * are 10). Numbers, SKU and EAN only — no names, no URLs; every line also goes through redactSecrets.
+ */
+export function pricingTable(rows: readonly PricingRow[], max = 25): string[] {
+  if (rows.length === 0) return [];
+  const shown = [...rows].sort((a, b) => Number(b.changed) - Number(a.changed) || a.id - b.id).slice(0, max);
+  const triple = (f: (s: Supplier) => string) => SUPPLIERS.map(f).join(' / ');
+  const out = [
+    `\n  ${'BL id'.padEnd(10)} ${'sku'.padEnd(18)} ${'EAN'.padEnd(14)} ${'zakup Kolba / Sharg / Spechurt'.padEnd(31)} ${'stan H1 / H2 / H3'.padEnd(18)} ${'wybrana (powód)'.padEnd(34)} ${'marża (źródło)'.padEnd(16)} ${'sprzedaż przed → po'.padEnd(21)} zakup wsp. przed → po`,
+  ];
+  for (const r of shown) {
+    const margin = `${r.margin.pct}% ${r.margin.source === 'field' ? 'pole' : r.margin.rejected !== undefined ? 'env (pole odrz.)' : 'env'}`;
+    out.push(`  ${String(r.id).padEnd(10)} ${r.sku.slice(0, 18).padEnd(18)} ${r.ean.slice(0, 14).padEnd(14)} ${triple((s) => money(r.own[s])).padEnd(31)} ${triple((s) => String(r.stock[s] ?? 0)).padEnd(18)} ${`${SUPPLIER_LABEL[r.choice.supplier]} (${REASON_LABEL[r.choice.reason]})`.padEnd(34)} ${margin.padEnd(16)} ${`${money(r.saleBefore)} → ${money(r.sale)}`.padEnd(21)} ${money(r.purchaseBefore)} → ${money(r.purchase)}${r.changed ? '' : '  (bez zmian)'}`);
+  }
+  if (rows.length > shown.length) out.push(`  … ${rows.length - shown.length} more (all rows: --out=<dir>)`);
+  return out.map(redactSecrets);
+}
+
+/** Every priced shared record, for `price-shared --dry-run --out=<dir>` (cells pass redactSecrets in toCsv). */
+export function pricingCsvRows(rows: readonly PricingRow[]): { headers: string[]; rows: Array<Array<string | number>> } {
+  return {
+    headers: ['bl_id', 'sku', 'ean', ...SUPPLIERS.map((s) => `zakup_${s}`), ...SUPPLIERS.map((s) => `stan_${s}`), 'wybrana', 'powod', 'marza_pct', 'marza_zrodlo', 'sprzedaz_przed', 'sprzedaz_po', 'zakup_wspolny_przed', 'zakup_wspolny_po', 'zmiana'],
+    rows: rows.map((r) => [
+      r.id, r.sku, r.ean, ...SUPPLIERS.map((s) => r.own[s] ?? ''), ...SUPPLIERS.map((s) => r.stock[s] ?? 0), r.choice.supplier, r.choice.reason,
+      r.margin.pct, r.margin.source === 'field' ? 'pole' : r.margin.rejected !== undefined ? 'env (pole odrzucone)' : 'env',
+      r.saleBefore ?? '', r.sale, r.purchaseBefore ?? '', r.purchase, r.changed ? 'tak' : 'nie',
+    ]),
+  };
 }

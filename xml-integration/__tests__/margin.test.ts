@@ -325,7 +325,7 @@ test('the import script builds its payload with the shared toBLProduct and reads
   const src = fs.readFileSync(path.resolve(__dirname, '../../scripts/xml-to-baselinker.ts'), 'utf8');
   assert.doesNotMatch(src, /function toBLProduct\b/, 'local copy of toBLProduct would bypass the payload test');
   assert.doesNotMatch(src, /function computeSellingPrice\b/);
-  assert.match(src, /toBLProduct\(p, env, r\.categoryId, tags, identity, margin\)/);
+  assert.match(src, /toBLProduct\(p, env, r\.categoryId, tags, identity, margin[,)]/);
   assert.match(src, /runSyncProcess\(/, "the sync runs through runSyncProcess (runSyncCore + exit code)");
   assert.match(src, /getProductsData: readonly\.getInventoryProductsData/);
 });

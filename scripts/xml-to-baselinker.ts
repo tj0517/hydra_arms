@@ -10,6 +10,12 @@
  * Usage:
  *   npx tsx scripts/xml-to-baselinker.ts <kolba|sharg|spechurt> [import|sync] [--dry-run]
  *   npx tsx scripts/xml-to-baselinker.ts --dry-run           # all three suppliers
+ *   npx tsx scripts/xml-to-baselinker.ts price-shared [--dry-run [--out=<dir>]]
+ *
+ *   price-shared      — HA-2.39: selling price + shared purchase price of records ≥ 2 suppliers
+ *                       carry (own purchase groups > 0), from BL data only — no feed is fetched;
+ *                       run after the last nightly sync (run-bl.sh all price-shared). --dry-run
+ *                       reads only and prints the table; --out=<dir> also writes every row as CSV
  *
  *   import  (default) — full upsert: creates missing products, updates existing
  *                       (addInventoryProduct, 1 call/product — run rarely, e.g. weekly cron)
@@ -43,6 +49,10 @@
  *     _SHARG / _SPECHURT). The field is the client's: read, never written
  *     (xml-integration/margin.ts). Purchase price is written to the
  *     BASELINKER_PRICE_GROUP_PURCHASE price group
+ *   - Own purchase groups (HA-2.39, BASELINKER_PRICE_GROUP_PURCHASE_KOLBA / _SHARG / _SPECHURT, all
+ *     three or none): every matched record gets the supplier's purchase price in its own group; a
+ *     shared record (≥ 2 own groups > 0) gets only that from import and sync — its selling and shared
+ *     purchase price come from `price-shared` (xml-integration/shared-pricing.ts). None set = as before
  *   --only-bl-id=<id> — import of one supplier (or its --dry-run): only the feed product(s)
  *                       matched to that BL product are processed (HA-2.22 single-product test)
  *   - Sharg: the connector itself filters to defence categories (SHARG_DEFENCE_PATTERNS)
@@ -125,13 +135,18 @@ import {
   loadExistingProducts as loadExistingProductsCore,
   loadIndexWithStock,
   planZeroing,
+  numMap,
+  pricingCsvRows,
   readMarginRaws,
+  runSharedPricing,
   runSyncProcess,
   toBLProduct,
   type FeedCountStore,
   type GetProductsList,
   type WriteEnv,
 } from '../xml-integration/bl-write';
+import { PURCHASE_GROUP_ENV, loadPurchaseGroups, type PurchaseGroups } from '../xml-integration/shared-pricing';
+import { toCsv } from '../xml-integration/import-audit';
 
 const CONNECTOR_NAMES = SUPPLIERS;
 type ConnectorName = Supplier;
@@ -210,7 +225,20 @@ function loadWriteEnv(connectorName: ConnectorName): Env {
     process.exit(1);
   }
 
-  return { inventoryId, priceGroup, priceGroupPurchase, warehouse, markupPct };
+  return { inventoryId, priceGroup, priceGroupPurchase, warehouse, markupPct, purchaseGroups: loadOwnPurchaseGroups(priceGroup, priceGroupPurchase) };
+}
+
+/**
+ * HA-2.39 own purchase groups: all three IDs, or null when none is set (import and sync work as
+ * before). Some set, a malformed or a reused ID → the run stops — a wrong ID must not be guessed.
+ */
+function loadOwnPurchaseGroups(priceGroup: number, priceGroupPurchase: number | null): PurchaseGroups | null {
+  const r = loadPurchaseGroups(process.env, [priceGroup, priceGroupPurchase]);
+  if (r.kind === 'invalid') {
+    console.error(`[error] ${r.message}`);
+    process.exit(1);
+  }
+  return r.kind === 'ok' ? r.groups : null;
 }
 
 /** Minimal env for dry-run: just the BL inventory ID. */
@@ -548,7 +576,8 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
     products.map((p) => findBLMatch(index, connectorName, p.ean, p.connector_sku)?.id).filter((id): id is number => id !== undefined),
   )];
   // The same read carries the client's „Marża %” field (HA-2.22) — read here, never written back.
-  const existingData = new Map<number, { tags: string[]; sku: string; ean: string; weight: number; features: Record<string, string>; marginRaw?: unknown }>();
+  // …and the record's current prices: own purchase groups decide whether it is shared (HA-2.39)
+  const existingData = new Map<number, { tags: string[]; sku: string; ean: string; weight: number; features: Record<string, string>; prices: Record<string, number>; marginRaw?: unknown }>();
   if (matchedIds.length > 0) {
     console.log(`\nFetching tags, parameters and margin field of ${matchedIds.length} existing products (to preserve admin tags and other suppliers' parameters)…`);
     for (let i = 0; i < matchedIds.length; i += 100) {
@@ -561,6 +590,7 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
           ean: String(d.ean ?? ''),
           weight: Number(d.weight ?? 0) || 0,
           features: featuresOf(d),
+          prices: numMap(d.prices),
           marginRaw: marginKey !== null ? readMarginRaw(d.text_fields, marginKey) : undefined,
         });
       }
@@ -568,7 +598,10 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
     }
   }
 
-  let created = 0, updated = 0, errors = 0, skippedNoData = 0, priceFallbacks = 0, priceZeros = 0;
+  let created = 0, updated = 0, errors = 0, skippedNoData = 0, priceFallbacks = 0, priceZeros = 0, leftToPricing = 0;
+  if (!env.purchaseGroups) {
+    console.warn(`[warn] own purchase groups not configured (${Object.values(PURCHASE_GROUP_ENV).join(', ')}) — shared records: the last import sets the price, as before HA-2.39`);
+  }
   const permitCounts: Record<string, number> = {};
   const marginTally = new MarginTally((line) => console.warn(`\n${line}`));
 
@@ -597,12 +630,13 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
     const identity = { ...recordIdentity(connectorName, p.connector_sku, p.features, existing), ean: eanForUpsert(p.ean, existing?.ean), weight: existing?.weight };
     // Margin: the record's „Marża %” when valid, else env; a new product has no field yet
     const margin = chooseMargin(existing?.marginRaw, env.markupPct);
-    const { product, price, priceFromFallback, priceZero } = toBLProduct(p, env, r.categoryId, tags, identity, margin);
+    const { product, price, priceFromFallback, priceZero, shared } = toBLProduct(p, env, r.categoryId, tags, identity, margin, { supplier: connectorName, currentPrices: existing?.prices ?? {} });
+    if (shared) leftToPricing++;
     if (priceFromFallback) priceFallbacks++;
     else marginTally.note(existingId, margin);
     if (priceZero) priceZeros++;
     if (onlyBlId !== null) {
-      console.log(`\n  BL ${onlyBlId} ${p.connector_sku}: purchase ${p.price_purchase ?? '—'}, margin ${priceFromFallback ? '— (no purchase price, feed gross)' : `${margin.pct}% (${margin.source === 'field' ? 'field' : margin.rejected !== undefined ? `env — field "${margin.rejected}" rejected` : 'env'})`} → selling price ${price}; text_fields sent: ${Object.keys(product.text_fields as object).join(', ')}`);
+      console.log(`\n  BL ${onlyBlId} ${p.connector_sku}: purchase ${p.price_purchase ?? '—'}, margin ${priceFromFallback ? '— (no purchase price, feed gross)' : `${margin.pct}% (${margin.source === 'field' ? 'field' : margin.rejected !== undefined ? `env — field "${margin.rejected}" rejected` : 'env'})`} → selling price ${shared ? `— (shared record: own purchase group only, the selling price is set by price-shared; ${price} if it were not)` : price}; text_fields sent:${Object.keys(product.text_fields as object).join(', ')}`);
     }
 
     try {
@@ -615,7 +649,7 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
         addToMatchIndex(index, productId, p.ean, identity.sku);
       }
       // A later repeat inside the feed merges with what was just written
-      existingData.set(productId, { tags, sku: identity.sku, ean: identity.ean, weight: product.weight as number, features: identity.features, marginRaw: existing?.marginRaw });
+      existingData.set(productId, { tags, sku: identity.sku, ean: identity.ean, weight: product.weight as number, features: identity.features, prices: { ...existing?.prices, ...(product.prices as Record<string, number>) }, marginRaw: existing?.marginRaw });
       process.stdout.write(existingId !== undefined ? '.' : '+');
     } catch (err) {
       errors++;
@@ -629,6 +663,7 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
   console.log(`  tags: ${statusCounts.auto} auto / ${statusCounts.review} review / ${statusCounts.flag} flag`);
   console.log(`  permit tags: ${formatPermitCounts(permitCounts)} (permit-rules.ts; permit_off/permit_ok in BL are kept)`);
   if (marginKey !== null) console.log(`  ${marginTally.summary()}`);
+  if (env.purchaseGroups) console.log(`  prices left to pricing (shared): ${leftToPricing} — ≥ 2 own purchase groups, own purchase group only (selling price: price-shared)`);
   if (priceFallbacks > 0) {
     console.warn(`⚠ ${priceFallbacks} products had no purchase price in the feed — feed gross price used instead of markup pricing`);
   }
@@ -654,6 +689,9 @@ async function runSync(connectorName: ConnectorName, env: Env, limit: number | n
   // The feed itself was non-empty (fetchAndParse guarantees it) — only --limit can leave nothing
   if (products.length === 0) { console.log(`No in-stock products left after --limit=${limit} — nothing refreshed.`); return; }
 
+  if (!env.purchaseGroups) {
+    console.warn(`[warn] own purchase groups not configured (${Object.values(PURCHASE_GROUP_ENV).join(', ')}) — shared records: the last sync sets the price, as before HA-2.39`);
+  }
   // Index → margin field (read-only client) → stock + price writes → zeroing: xml-integration/bl-write.ts.
   // runSyncProcess sets exit code 1 when the run is not ok (margin read failed, feed looks incomplete).
   const readonly = await import('../src/lib/baselinker/readonly');
@@ -715,20 +753,97 @@ async function runZeroPreview(connectorName: ConnectorName, env: Env): Promise<v
   console.log(`  ${index.total} products in BL`);
   await sleep(RATE_LIMIT_MS);
   const z = await planZeroing(products, connectorName, env, index, listed, readonly.getInventoryProductsData, sleep, RATE_LIMIT_MS);
-  const missing = z.rows.filter((r) => r.reason === 'code_missing').length;
-  console.log(`\nCandidates (stock > 0 in ${env.warehouse}, not matched by today's feed): ${z.candidates}; to zero: ${z.rows.length} (${connectorName} code missing from the feed: ${missing}, item matched elsewhere: ${z.rows.length - missing})`);
+  const count = (reason: string) => z.rows.filter((r) => r.reason === reason).length;
+  const stockRows = z.rows.filter((r) => r.stock > 0);
+  const own = env.purchaseGroups ? ` or own purchase price > 0 (group ${env.purchaseGroups[connectorName]})` : '';
+  console.log(`\nCandidates (stock > 0 in ${env.warehouse}${own}, not matched by today's feed): ${z.candidates}; to zero: ${z.rows.length} (${connectorName} code missing from the feed: ${count('code_missing')}, item matched elsewhere: ${count('matched_elsewhere')}${env.purchaseGroups ? `, not matched any more: ${count('not_matched')}` : ''})`);
+  if (env.purchaseGroups) console.log(`  stock to 0: ${stockRows.length}; own purchase price to 0: ${z.rows.filter((r) => r.ownPurchase > 0).length}`);
   if (z.rows.length > 0) {
-    console.log(`  ${'BL id'.padEnd(10)} ${'sku'.padEnd(22)} ${'code'.padEnd(14)} ${'stock'.padStart(5)} ${'approved'.padEnd(8)} ${'reason'.padEnd(34)} name`);
+    console.log(`  ${'BL id'.padEnd(10)} ${'sku'.padEnd(22)} ${'code'.padEnd(14)} ${'stock'.padStart(5)} ${'own buy'.padStart(9)} ${'approved'.padEnd(8)} ${'reason'.padEnd(34)} name`);
     for (const r of z.rows) {
-      const reason = r.reason === 'code_missing' ? 'code missing' : `item matched elsewhere → ${r.movedTo}`;
-      console.log(`  ${String(r.id).padEnd(10)} ${r.sku.slice(0, 22).padEnd(22)} ${r.code.slice(0, 14).padEnd(14)} ${String(r.stock).padStart(5)} ${(r.approved ? 'yes' : 'no').padEnd(8)} ${reason.padEnd(34)} ${r.name.slice(0, 60)}`);
+      const reason = r.reason === 'code_missing' ? 'code missing' : r.reason === 'not_matched' ? 'not matched by the feed any more' : `item matched elsewhere → ${r.movedTo}`;
+      console.log(`  ${String(r.id).padEnd(10)} ${r.sku.slice(0, 22).padEnd(22)} ${(r.code || '—').slice(0, 14).padEnd(14)} ${String(r.stock).padStart(5)} ${(r.ownPurchase > 0 ? r.ownPurchase.toFixed(2) : '—').padStart(9)} ${(r.approved ? 'yes' : 'no').padEnd(8)} ${reason.padEnd(34)} ${r.name.slice(0, 60)}`);
     }
   }
   console.log(`\nfeed: ${products.length} products; previous successful sync: ${previous ?? 'none'} (${store.file})`);
   if (guard.kind === 'incomplete') console.log(`[error] feed looks incomplete: ${products.length} < ${FEED_MIN_RATIO * 100}% of ${guard.previous} — the sync would zero nothing and exit 1`);
   else if (guard.kind === 'first') console.log('verdict: no previous count — the next sync zeroes nothing and stores the count');
-  else console.log(`verdict: the next sync would zero ${z.rows.length} (approved: ${z.rows.filter((r) => r.approved).length}) in ${env.warehouse} only`);
+  else console.log(`verdict: the next sync would zero ${stockRows.length} (approved: ${stockRows.filter((r) => r.approved).length}) in ${env.warehouse} only` +
+    (env.purchaseGroups ? `; own purchase cleared: ${z.rows.filter((r) => r.ownPurchase > 0).length}` : ''));
   console.log('Preview only — nothing written to BaseLinker or to the state file.');
+}
+
+// ── Mode: price-shared — selling price of shared records (HA-2.39) ─────────────
+
+/**
+ * `price-shared [--dry-run [--out=<dir>]]`: BL data only (list + product data), no feed. Refuses to
+ * run without the catalogue, the selling and shared purchase group, all three own purchase groups,
+ * warehouses and markups — every one is needed to pick the supplier and price the record.
+ */
+async function runPriceShared(dryRun: boolean, outDir: string | null): Promise<void> {
+  const refuse = (msg: string): never => {
+    console.error(`[error] ${msg} — price-shared did not run`);
+    process.exit(1);
+  };
+  if (!process.env.BASELINKER_TOKEN) refuse('BASELINKER_TOKEN must be set');
+  const int = (name: string) => parseInt(process.env[name] ?? '', 10);
+  const inventoryId = int('BASELINKER_INVENTORY_ID');
+  if (isNaN(inventoryId)) refuse('BASELINKER_INVENTORY_ID must be set (no default catalogue for pricing)');
+  const saleGroup = int('BASELINKER_PRICE_GROUP');
+  const purchaseGroup = int('BASELINKER_PRICE_GROUP_PURCHASE');
+  if (isNaN(saleGroup) || isNaN(purchaseGroup)) refuse('BASELINKER_PRICE_GROUP and BASELINKER_PRICE_GROUP_PURCHASE must be set');
+  const groups = loadPurchaseGroups(process.env, [saleGroup, purchaseGroup]);
+  if (groups.kind === 'unset') refuse(`own purchase groups not configured (${Object.values(PURCHASE_GROUP_ENV).join(', ')})`);
+  if (groups.kind === 'invalid') refuse(groups.message);
+  const warehouses = {} as Record<ConnectorName, string>;
+  const markup = {} as Record<ConnectorName, number>;
+  for (const s of CONNECTOR_NAMES) {
+    const wh = process.env[WAREHOUSE_ENV[s]] ?? '';
+    if (!/^bl_\d+$/.test(wh)) refuse(`${WAREHOUSE_ENV[s]} must be a regular BL warehouse (bl_<id>) — stock per supplier decides the price`);
+    warehouses[s] = wh;
+    const m = parseFloat(process.env[MARKUP_ENV[s]] ?? '');
+    if (isNaN(m)) refuse(`${MARKUP_ENV[s]} must be set — the chosen supplier's markup applies when the margin field is empty`);
+    markup[s] = m;
+  }
+  const own = (groups as { kind: 'ok'; groups: PurchaseGroups }).groups;
+  const marginKey = loadMarginKey();
+
+  console.log(`\nShared records → selling price (price-shared${dryRun ? ', dry-run' : ''})`);
+  console.log(`  inventory : ${inventoryId}`);
+  console.log(`  price grp : ${saleGroup} (sale) / ${purchaseGroup} (shared purchase) / own purchase: ${CONNECTOR_NAMES.map((s) => `${s} ${own[s]}`).join(', ')}`);
+  console.log(`  warehouses: ${CONNECTOR_NAMES.map((s) => `${s} ${warehouses[s]}`).join(', ')}`);
+  console.log(`  markup    : ${CONNECTOR_NAMES.map((s) => `${s} +${markup[s]}%`).join(', ')} (env of the chosen supplier; the product's „Marża %” field wins when set)`);
+  console.log(`  margin fld: ${marginKey ?? '— (not set)'}`);
+  console.log('  rule      : cheapest own purchase price among suppliers with stock in their warehouse; none in stock → cheapest overall; tie → kolba, sharg, spechurt');
+
+  const readonly = await import('../src/lib/baselinker/readonly');
+  let updatePrices: Parameters<typeof runSharedPricing>[1]['updatePrices'] = null;
+  if (!dryRun) {
+    assertExternalProd('BaseLinker');
+    updatePrices = (await import('../src/lib/baselinker/client')).updateInventoryProductsPrices;
+  }
+  const res = await runSharedPricing(
+    { inventoryId, groups: own, warehouses, saleGroup, purchaseGroup, markup },
+    {
+      getProductsList: readonly.getInventoryProductsList,
+      getProductsData: readonly.getInventoryProductsData,
+      updatePrices,
+      sleep,
+      rateLimitMs: RATE_LIMIT_MS,
+      marginKey,
+      log: (line) => console.log(line),
+      warn: (line) => console.warn(line),
+      tally: new MarginTally((line) => console.warn(line)),
+    },
+  );
+  if (outDir) {
+    fs.mkdirSync(outDir, { recursive: true });
+    const file = path.join(outDir, 'wycena-wspolne.csv');
+    const csv = pricingCsvRows(res.rows);
+    fs.writeFileSync(file, toCsv(csv.headers, csv.rows), { mode: 0o600 });
+    console.log(`\nAll ${res.rows.length} rows: ${file}`);
+  }
+  if (!res.ok) process.exitCode = 1;
 }
 
 // ── Mode: dry-run — filter preview, no BL writes ──────────────────────────────
@@ -1031,6 +1146,18 @@ async function main() {
   const positional = process.argv.slice(2).filter((a) => !a.startsWith('--'));
   const flags = process.argv.slice(2).filter((a) => a.startsWith('--'));
 
+  // HA-2.39: price-shared [--dry-run [--out=<dir>]] — no supplier, no feed
+  if (positional[0] === 'price-shared') {
+    const outFlag = flags.find((f) => f.startsWith('--out='));
+    const dry = flags.includes('--dry-run');
+    if (positional.length > 1 || flags.some((f) => f !== '--dry-run' && !f.startsWith('--out=')) || (outFlag && (!dry || outFlag === '--out='))) {
+      console.error('[error] usage: npx tsx scripts/xml-to-baselinker.ts price-shared [--dry-run [--out=<dir>]]');
+      process.exit(1);
+    }
+    await runPriceShared(dry, outFlag ? outFlag.slice('--out='.length) : null);
+    return;
+  }
+
   const isDryRun = flags.includes('--dry-run');
   const limitFlag = flags.find((f) => f.startsWith('--limit='));
   const limit = limitFlag ? parseInt(limitFlag.split('=')[1], 10) : null;
@@ -1129,6 +1256,7 @@ async function main() {
     console.error('  npx tsx scripts/xml-to-baselinker.ts <connector> import --only-bl-id=<id>   (one BL product; also with --dry-run)');
     console.error('  npx tsx scripts/xml-to-baselinker.ts [<connector>] --dry-run [--limit=N] [--from-file=<connector>:<path>] [--sections=1,2]');
     console.error('  npx tsx scripts/xml-to-baselinker.ts <connector> sync --zero-preview   (records the next sync sets to stock 0; read-only)');
+    console.error('  npx tsx scripts/xml-to-baselinker.ts price-shared [--dry-run [--out=<dir>]]   (selling price of shared records, BL data only)');
     console.error('');
     console.error('  import   (default) — full upsert into BL catalogue (slow, run rarely)');
     console.error('  sync               — stock + price refresh only (batched, run often)');
