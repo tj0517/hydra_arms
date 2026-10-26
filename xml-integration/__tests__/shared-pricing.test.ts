@@ -9,7 +9,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as fs from 'fs';
 import * as path from 'path';
-import { planSync, pricingTable, runSharedPricing, runSyncCore, toBLProduct, type FeedCountStore, type PricingDeps, type SyncDeps, type WriteEnv } from '../bl-write';
+import { planSync, pricingTable, runSharedPricing, runSyncCore, toBLProduct, zeroGate, type FeedCounts, type FeedCountStore, type PricingDeps, type SyncDeps, type WriteEnv } from '../bl-write';
 import { addToMatchIndex, emptyMatchIndex, type Supplier } from '../bl-match-key';
 import { chooseMargin, MarginTally } from '../margin';
 import { redactSecrets } from '../import-audit';
@@ -314,7 +314,7 @@ test('dry-run table: ≥ 10 shared records with prices per supplier, stock per w
 
 // ── Zeroing, decision A (tj 2026-10-26) ─────────────────────────────────────
 
-const counts = (previous: number): FeedCountStore => ({ read: () => previous, write: () => undefined });
+const counts = (previous: number): FeedCountStore => ({ read: () => ({ products: previous, matched: 1 }), write: () => undefined });
 
 test('zeroing A: a record reached through the EAN only, no longer matched → stock 0 and own purchase cleared in this supplier\'s groups only', async () => {
   const bl = new FakeBL(new Map<number, Rec>([
@@ -354,6 +354,76 @@ test('zeroing without own purchase groups is HA-2.38: a record without this supp
   const { zeroed } = await runSyncCore([item('spechurt', '1', 10, 1, '5900000000017')], 'spechurt', env('spechurt', false), bl.syncDeps([], counts(1)));
   assert.equal(bl.records.get(710960249)!.stock[WH.spechurt], 8);
   assert.deepEqual(zeroed, []);
+});
+
+// ── Second valve: matched records (review PR #69) ───────────────────────────
+
+/**
+ * 100 Spechurt records SPECHURT-m0…m99 (code only, no EAN; stock 1 in H3, own purchase 10) plus BL
+ * 900, a Sharg record Spechurt reached through the EAN before (stock 8 in H3, own purchase 20). The
+ * previous successful run: 100 products, 100 matched. Today's feed keeps 100 products, but only
+ * `matching` of them still match (the rest stand for items whose key broke) — the product valve
+ * cannot see that.
+ */
+function matchCatalogue(): FakeBL {
+  const recs = new Map<number, Rec>();
+  for (let i = 0; i < 100; i++) recs.set(1000 + i, { sku: `SPECHURT-m${i}`, ean: '', features: { 'SKU Spechurt': `m${i}` }, prices: { [OWN.spechurt]: 10 }, stock: { [WH.spechurt]: 1 } });
+  recs.set(900, { sku: 'SHARG-900', ean: '5900000009007', features: { 'SKU Sharg': '900' }, prices: { [SALE]: 50, [PURCHASE]: 30, [OWN.sharg]: 30, [OWN.spechurt]: 20 }, stock: { [WH.sharg]: 2, [WH.spechurt]: 8 } });
+  return new FakeBL(recs);
+}
+const matchFeed = (matching: number) => Array.from({ length: 100 }, (_, i) => (i < matching ? item('spechurt', `m${i}`, 12, 3, null) : item('spechurt', `broken${i}`, 12, 3, null)));
+function countsStore(previous: FeedCounts | null): FeedCountStore & { data: FeedCounts | null } {
+  const st = { data: previous } as FeedCountStore & { data: FeedCounts | null };
+  st.read = () => st.data;
+  st.write = (_s, c) => { st.data = { ...c }; };
+  return st;
+}
+
+test('match valve RED PROOF: 89% of the previous matched records → no stock-0 and no own-purchase clearing, [error] matches look incomplete, not ok (exit ≠ 0); matched records still synced', async () => {
+  const bl = matchCatalogue();
+  const store = countsStore({ products: 100, matched: 100 });
+  const lines: string[] = [];
+  const { ok, zeroed } = await runSyncCore(matchFeed(89), 'spechurt', env('spechurt'), bl.syncDeps(lines, store));
+  assert.deepEqual([bl.records.get(1095)!.stock[WH.spechurt], bl.records.get(1095)!.prices[OWN.spechurt]], [1, 10], 'unmatched record: stock and own purchase kept');
+  assert.deepEqual([bl.records.get(900)!.stock[WH.spechurt], bl.records.get(900)!.prices[OWN.spechurt]], [8, 20], 'EAN-only record: kept');
+  assert.equal(ok, false);
+  assert.equal(zeroed, undefined);
+  assert.ok(lines.some((l) => l.startsWith('[error] matches look incomplete: 89 matched, previous successful run 100 (< 90%)')), lines.join('\n'));
+  assert.ok(bl.priceWrites.every((w) => Object.values(w).every((p) => !Object.values(p).includes(0))), 'no price write of 0');
+  assert.deepEqual([bl.records.get(1000)!.stock[WH.spechurt], bl.records.get(1000)!.prices[OWN.spechurt]], [3, 12], 'matched records: stock and own purchase written as today');
+  assert.deepEqual(store.data, { products: 100, matched: 100 }, 'an incomplete run does not become the new baseline');
+});
+
+test('match valve: exactly 90% of the previous matched records → zeroing and clearing proceed, counts stored', async () => {
+  const bl = matchCatalogue();
+  const store = countsStore({ products: 100, matched: 100 });
+  const lines: string[] = [];
+  const { ok, zeroed } = await runSyncCore(matchFeed(90), 'spechurt', env('spechurt'), bl.syncDeps(lines, store));
+  assert.equal(ok, true);
+  assert.equal(zeroed!.length, 11, '1090…1099 and 900');
+  assert.deepEqual([bl.records.get(1095)!.stock[WH.spechurt], bl.records.get(1095)!.prices[OWN.spechurt]], [0, 0]);
+  assert.deepEqual([bl.records.get(900)!.stock[WH.spechurt], bl.records.get(900)!.prices[OWN.spechurt], bl.records.get(900)!.stock[WH.sharg]], [0, 0, 2]);
+  assert.deepEqual(store.data, { products: 100, matched: 90 });
+});
+
+test('match valve: a state-file entry from before the valve (no matched count) → store only, nothing zeroed or cleared', async () => {
+  const bl = matchCatalogue();
+  const store = countsStore({ products: 100, matched: null });
+  const lines: string[] = [];
+  const { ok, zeroed } = await runSyncCore(matchFeed(90), 'spechurt', env('spechurt'), bl.syncDeps(lines, store));
+  assert.equal(ok, true);
+  assert.equal(zeroed, undefined);
+  assert.equal(bl.records.get(1095)!.stock[WH.spechurt], 1);
+  assert.ok(lines.some((l) => l.includes('no previous match count for spechurt, nothing zeroed this run; counts stored (100 products, 90 matched)')), lines.join('\n'));
+  assert.deepEqual(store.data, { products: 100, matched: 90 });
+});
+
+test('zeroGate: the feed valve first, then the match valve; both at 90%', () => {
+  assert.deepEqual(zeroGate(89, 100, { products: 100, matched: 100 }), { kind: 'feed_incomplete', previous: 100 });
+  assert.deepEqual(zeroGate(100, 89, { products: 100, matched: 100 }), { kind: 'matches_incomplete', previous: 100 });
+  assert.deepEqual(zeroGate(90, 90, { products: 100, matched: 100 }), { kind: 'go' });
+  assert.deepEqual(zeroGate(100, 5, { products: 100, matched: null }), { kind: 'first', what: 'matches' });
+  assert.deepEqual(zeroGate(100, 5, null), { kind: 'first', what: 'feed' });
 });
 
 // ── The import script (read as text — the hook blocks running it) ───────────

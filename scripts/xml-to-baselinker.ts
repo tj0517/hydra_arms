@@ -131,9 +131,10 @@ import {
 } from '../xml-integration/margin';
 import {
   FEED_MIN_RATIO,
-  feedGuard,
   loadExistingProducts as loadExistingProductsCore,
   loadIndexWithStock,
+  matchedIds,
+  zeroGate,
   planZeroing,
   numMap,
   pricingCsvRows,
@@ -716,10 +717,14 @@ async function runSync(connectorName: ConnectorName, env: Env, limit: number | n
 
 const FEED_COUNTS_ENV = 'HYDRA_FEED_COUNTS_FILE';
 
-/** `{ "<supplier>": { "products": N, "at": ISO } }` — product count of the last successful sync. */
+/**
+ * `{ "<supplier>": { "products": N, "matched": M, "at": ISO } }` — counts of the last successful sync.
+ * An entry without `matched` (written before the match valve) is read with matched = null: the next
+ * sync zeroes nothing and stores both counts.
+ */
 function feedCountStore(): FeedCountStore & { file: string } {
   const file = process.env[FEED_COUNTS_ENV]?.trim() || path.join(os.homedir(), '.hydra-feed-counts.json');
-  const load = (): Record<string, { products?: unknown }> => {
+  const load = (): Record<string, { products?: unknown; matched?: unknown }> => {
     if (!fs.existsSync(file)) return {};
     try {
       const v = JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -731,9 +736,15 @@ function feedCountStore(): FeedCountStore & { file: string } {
   };
   return {
     file,
-    read: (s) => { const n = load()[s]?.products; return typeof n === 'number' && n > 0 ? n : null; },
-    write: (s, count) => {
-      const all = { ...load(), [s]: { products: count, at: new Date().toISOString() } };
+    read: (s) => {
+      const e = load()[s];
+      const n = e?.products;
+      if (typeof n !== 'number' || n <= 0) return null;
+      const m = e?.matched;
+      return { products: n, matched: typeof m === 'number' && m >= 0 ? m : null };
+    },
+    write: (s, counts) => {
+      const all = { ...load(), [s]: { products: counts.products, matched: counts.matched, at: new Date().toISOString() } };
       const tmp = `${file}.tmp-${process.pid}`;
       fs.writeFileSync(tmp, JSON.stringify(all, null, 2) + '\n', { mode: 0o600 });
       fs.renameSync(tmp, file); // atomic: a crash leaves the old file, never half of one
@@ -747,10 +758,12 @@ async function runZeroPreview(connectorName: ConnectorName, env: Env): Promise<v
   const products = await fetchAndParse(connectorName);
   const store = feedCountStore();
   const previous = store.read(connectorName);
-  const guard = feedGuard(products.length, previous);
   console.log('\nLoading existing BL products (read-only)…');
   const { index, listed } = await loadIndexWithStock(readonly.getInventoryProductsList, env.inventoryId, sleep, RATE_LIMIT_MS);
   console.log(`  ${index.total} products in BL`);
+  // The same two valves the sync applies: feed size and matched records vs the last successful sync
+  const matched = matchedIds(products, connectorName, index).length;
+  const gate = zeroGate(products.length, matched, previous);
   await sleep(RATE_LIMIT_MS);
   const z = await planZeroing(products, connectorName, env, index, listed, readonly.getInventoryProductsData, sleep, RATE_LIMIT_MS);
   const count = (reason: string) => z.rows.filter((r) => r.reason === reason).length;
@@ -765,9 +778,13 @@ async function runZeroPreview(connectorName: ConnectorName, env: Env): Promise<v
       console.log(`  ${String(r.id).padEnd(10)} ${r.sku.slice(0, 22).padEnd(22)} ${(r.code || '—').slice(0, 14).padEnd(14)} ${String(r.stock).padStart(5)} ${(r.ownPurchase > 0 ? r.ownPurchase.toFixed(2) : '—').padStart(9)} ${(r.approved ? 'yes' : 'no').padEnd(8)} ${reason.padEnd(34)} ${r.name.slice(0, 60)}`);
     }
   }
-  console.log(`\nfeed: ${products.length} products; previous successful sync: ${previous ?? 'none'} (${store.file})`);
-  if (guard.kind === 'incomplete') console.log(`[error] feed looks incomplete: ${products.length} < ${FEED_MIN_RATIO * 100}% of ${guard.previous} — the sync would zero nothing and exit 1`);
-  else if (guard.kind === 'first') console.log('verdict: no previous count — the next sync zeroes nothing and stores the count');
+  const valve = (now: number, before: number | null | undefined) =>
+    before === null || before === undefined ? 'no previous count' : now < before * FEED_MIN_RATIO ? `INCOMPLETE (< ${FEED_MIN_RATIO * 100}%)` : 'ok';
+  console.log(`\nfeed: ${products.length} products; previous successful sync: ${previous?.products ?? 'none'} — ${valve(products.length, previous?.products)} (${store.file})`);
+  console.log(`matched: ${matched} BL records; previous successful sync: ${previous?.matched ?? 'none'} — ${valve(matched, previous?.matched)}`);
+  if (gate.kind === 'feed_incomplete') console.log(`[error] feed looks incomplete: ${products.length} < ${FEED_MIN_RATIO * 100}% of ${gate.previous} — the sync would zero and clear nothing and exit 1`);
+  else if (gate.kind === 'matches_incomplete') console.log(`[error] matches look incomplete: ${matched} < ${FEED_MIN_RATIO * 100}% of ${gate.previous} — the sync would zero and clear nothing and exit 1`);
+  else if (gate.kind === 'first') console.log(`verdict: no previous ${gate.what === 'feed' ? 'feed' : 'match'} count — the next sync zeroes nothing and stores both counts`);
   else console.log(`verdict: the next sync would zero ${stockRows.length} (approved: ${stockRows.filter((r) => r.approved).length}) in ${env.warehouse} only` +
     (env.purchaseGroups ? `; own purchase cleared: ${z.rows.filter((r) => r.ownPurchase > 0).length}` : ''));
   console.log('Preview only — nothing written to BaseLinker or to the state file.');

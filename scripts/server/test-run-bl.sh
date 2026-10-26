@@ -280,6 +280,8 @@ run marker-missing good --cmd 'printf "\n✓ Sync done: 5 products refreshed\n  
 has "the zeroed count of the sync is carried into the END line (HA-2.38)" "$LAST" 'result="Sync done: 5 products refreshed, zeroed: 3 \(approved: 1\)"'
 run marker-missing good --cmd 'printf "[error] feed looks incomplete: 89 products, previous successful run 100 (< 90%%) — no stock zeroed\n✓ Sync done: 5 products refreshed\n"; exit 1' sharg sync
 has "an incomplete feed shows in the END line with exit 1 (HA-2.38)" "$LAST" 'END exit=1 .*result="Sync done: 5 products refreshed, \[error\] feed looks incomplete: 89 products, previous successful run 100"'
+run marker-missing good --cmd 'printf "[error] matches look incomplete: 89 matched, previous successful run 100 (< 90%%) — no stock zeroed, no own purchase cleared, counts not stored\n✓ Sync done: 100 products refreshed\n"; exit 1' spechurt sync
+has "too few matched records show in the END line with exit 1 (HA-2.39 review)" "$LAST" 'spechurt sync .*END exit=1 .*result="Sync done: 100 products refreshed, \[error\] matches look incomplete: 89 matched, previous successful run 100"'
 run marker-missing good --cmd 'echo "Matched 0 products, 2280 not in BL yet (run import)"' sharg sync
 has "a sync that matched nothing shows in the END line" "$LAST" 'result="Matched 0 products, 2280 not in BL yet"'
 run marker-missing good --cmd 'true' sharg sync

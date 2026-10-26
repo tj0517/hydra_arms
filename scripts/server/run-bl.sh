@@ -367,6 +367,9 @@ case "$result" in
     [ -n "$zeroed" ] && result="$result, $zeroed"
     incomplete="$(grep -aoE '\[error\] feed looks incomplete: [0-9]+ products, previous successful run [0-9]+' "$run_log" 2>/dev/null | tail -n 1)"
     [ -n "$incomplete" ] && result="$result, $incomplete"
+    # HA-2.39 review: the second valve — BL records matched by the feed, not feed products
+    unmatched="$(grep -aoE '\[error\] matches look incomplete: [0-9]+ matched, previous successful run [0-9]+' "$run_log" 2>/dev/null | tail -n 1)"
+    [ -n "$unmatched" ] && result="$result, $unmatched"
     ;;
 esac
 # Feed URLs carry credentials as query parameters. The import strips them from its own

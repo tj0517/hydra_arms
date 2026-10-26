@@ -10,7 +10,7 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
-import { FEED_MIN_RATIO, feedGuard, runSyncCore, type FeedCountStore, type SyncDeps, type WriteEnv } from '../bl-write';
+import { FEED_MIN_RATIO, feedGuard, runSyncCore, type FeedCounts, type FeedCountStore, type SyncDeps, type WriteEnv } from '../bl-write';
 import { dropAmbiguousEans, type Supplier } from '../bl-match-key';
 import { MarginTally } from '../margin';
 import type { NormalizedProduct } from '../types';
@@ -61,9 +61,12 @@ class FakeBL {
   }
 }
 
-function memoryStore(initial: Partial<Record<Supplier, number>> = {}): FeedCountStore & { data: Partial<Record<Supplier, number>> } {
-  const data = { ...initial };
-  return { data, read: (s) => data[s] ?? null, write: (s, n) => { data[s] = n; } };
+/** Counts of the previous successful run; `matched` defaults to 1 — catalogue()'s feeds match record 10 only. */
+function memoryStore(initial: Partial<Record<Supplier, number | FeedCounts>> = {}): FeedCountStore & { data: Partial<Record<Supplier, FeedCounts>> } {
+  const data: Partial<Record<Supplier, FeedCounts>> = Object.fromEntries(
+    Object.entries(initial).map(([k, v]) => [k, typeof v === 'number' ? { products: v, matched: 1 } : v]),
+  );
+  return { data, read: (s) => data[s] ?? null, write: (s, c) => { data[s] = { ...c }; } };
 }
 
 /**
@@ -103,7 +106,7 @@ test('zeroing: a record with Sharg\'s code missing from the feed → stock 0 in 
   assert.equal(bl.records.get(13)!.stock[H2], 1, 'no Sharg code → not Sharg\'s to zero');
   assert.equal(bl.records.get(10)!.stock[H2], 3, 'in the feed → normal sync stock');
   assert.ok(lines.some((l) => /zeroed: 2 \(approved: 1\)/.test(l)), lines.join('\n'));
-  assert.equal(store.data.sharg, 10, 'count stored after a successful run');
+  assert.deepEqual(store.data.sharg, { products: 10, matched: 1 }, 'counts stored after a successful run');
 });
 
 test('guard RED PROOF: feed at 89% of the previous run → no stock-0 write, [error] feed looks incomplete, not ok (exit ≠ 0)', async () => {
@@ -116,7 +119,7 @@ test('guard RED PROOF: feed at 89% of the previous run → no stock-0 write, [er
   assert.equal(bl.records.get(11)!.stock[H2], 4);
   assert.equal(bl.records.get(12)!.stock[H2], 3);
   assert.ok(lines.some((l) => l.startsWith('[error] feed looks incomplete: 89 products, previous successful run 100')), lines.join('\n'));
-  assert.equal(store.data.sharg, 100, 'an incomplete run does not become the new baseline');
+  assert.deepEqual(store.data.sharg, { products: 100, matched: 1 }, 'an incomplete run does not become the new baseline');
 });
 
 test('guard: feed at exactly 90% → zeroing proceeds', async () => {
@@ -137,7 +140,7 @@ test('first run (no history) → nothing zeroed, count stored; no store (--limit
   assert.equal(first.ok, true);
   assert.equal(first.zeroed, undefined);
   assert.equal(bl.records.get(11)!.stock[H2], 4);
-  assert.equal(store.data.sharg, 10);
+  assert.deepEqual(store.data.sharg, { products: 10, matched: 1 });
   assert.ok(first.lines.some((l) => /no previous feed count for sharg/.test(l)));
   const limited = await run(catalogue(), feedOf(10), null);
   assert.equal(limited.zeroed, undefined);
@@ -161,6 +164,14 @@ test('guard RED PROOF, process level: an incomplete feed ends the process with e
   const r = runDriver('incomplete');
   assert.equal(r.status, 1, `exit code (stderr: ${r.stderr})`);
   assert.match(r.stderr, /^\[error\] feed looks incomplete: 89 products, previous successful run 100/m);
+  assert.doesNotMatch(r.stdout, /"11":\{"bl_2":0\}/, 'the withdrawn record is not zeroed');
+  assert.match(r.stdout, /Sync done: 1 products refreshed/, 'the feed\'s own stock and prices still go');
+});
+
+test('match valve RED PROOF, process level: matched records below 90% of the previous run → exit 1, [error] on stderr, no stock-0 write', () => {
+  const r = runDriver('matches-incomplete');
+  assert.equal(r.status, 1, `exit code (stderr: ${r.stderr})`);
+  assert.match(r.stderr, /^\[error\] matches look incomplete: 1 matched, previous successful run 2/m);
   assert.doesNotMatch(r.stdout, /"11":\{"bl_2":0\}/, 'the withdrawn record is not zeroed');
   assert.match(r.stdout, /Sync done: 1 products refreshed/, 'the feed\'s own stock and prices still go');
 });

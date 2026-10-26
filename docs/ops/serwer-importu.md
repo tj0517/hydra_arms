@@ -1069,11 +1069,22 @@ w dzisiejszym feedzie — albo kod jest, ale jego pozycja feedu trafia teraz inn
 kluczem EAN, D-D). Nic nie jest usuwane ani odpinane; inne magazyny tego rekordu się nie
 zmieniają. Przy `--limit` zerowania nie ma.
 
-**Bezpiecznik.** Feed z liczbą produktów poniżej 90% poprzedniego udanego syncu tej hurtowni →
-żadnego stanu 0, w logu `[error] feed looks incomplete: N products, previous successful run M`,
-`exit=1`, licznik się nie zmienia. Licznik trzyma plik `/home/hydra-import/.hydra-feed-counts.json`
-(inna ścieżka: `HYDRA_FEED_COUNTS_FILE` w crontabie), zapisywany po każdym udanym syncu. Bez pliku
-albo bez wpisu hurtowni (pierwszy przebieg) sync niczego nie zeruje, tylko zapisuje licznik.
+**Bezpieczniki.** Dwa, oba względem poprzedniego udanego syncu tej hurtowni; którykolwiek poniżej
+90% → żadnego stanu 0 i (HA-2.39) żadnego czyszczenia własnej ceny zakupu, `exit=1`, liczniki się
+nie zmieniają; stany i ceny rekordów, które feed trafia, zapisują się jak zwykle:
+
+- **produkty w feedzie** (HA-2.38) — `[error] feed looks incomplete: N products, previous successful run M`;
+- **rekordy BL trafione przez feed** (HA-2.39, po review PR #69) — `[error] matches look incomplete: N
+  matched, previous successful run M`. Łapie feed, który ma tyle samo produktów, ale przestał trafiać
+  rekordy (np. zepsute albo inaczej zapisane EAN-y) — bez niego szersze zerowanie wyzerowałoby je
+  wszystkie.
+
+Liczniki trzyma plik `/home/hydra-import/.hydra-feed-counts.json` (inna ścieżka:
+`HYDRA_FEED_COUNTS_FILE` w crontabie), zapisywany po każdym udanym syncu, wpis na hurtownię:
+`{ "products": N, "matched": M, "at": "<czas UTC>" }`. Bez pliku albo bez wpisu hurtowni (pierwszy
+przebieg) sync niczego nie zeruje, tylko zapisuje liczniki. Wpis sprzed HA-2.39 (bez `matched`) jest
+czytany dalej: pierwszy sync po wdrożeniu niczego nie zeruje ani nie czyści i dopisuje `matched`
+(w logu `no previous match count for <hurtownia>`), zerowanie rusza dobę później.
 Podgląd licznika — `hydra-import`:
 
 ```bash
@@ -1088,7 +1099,10 @@ H=sharg; cd /home/hydra-import/hydra && flock -n /home/hydra-import/.hydra-run-b
 ```
 
 Na końcu: lista rekordów (`BL id`, SKU, kod hurtowni, stan, `approved`, powód: `code missing` albo
-`item matched elsewhere → <BL id>`), licznik z poprzedniego syncu i werdykt (`would zero N (approved: M)`, `feed looks incomplete` albo `no previous count`).
+`item matched elsewhere → <BL id>`), oba bezpieczniki — `feed: N products; previous successful sync:
+P — ok | INCOMPLETE | no previous count` i `matched: M BL records; previous successful sync: Q — …`
+— oraz werdykt (`would zero N (approved: M)`, `feed looks incomplete`, `matches look incomplete`
+albo `no previous … count`).
 
 **Raport normalizacji EAN** — tylko odczyt; przed pierwszym przebiegiem z HA-2.38 (bramka STOP):
 pary rekordów z tym samym GTIN-14 (kandydaci do scalenia — scalanie to osobna decyzja tj), EAN
@@ -1177,8 +1191,11 @@ grep -hE 'prices left to pricing|own purchase cleared|zeroed:|BL (prices|clear) 
 ```
 
    Oczekiwane: dla każdej hurtowni `prices left to pricing (shared): N` (u Kolby, która chodzi
-   pierwsza, ok. 0), `zeroed: …`, `own purchase cleared: …`. Linie `BL clear warning` = BL nie
-   przyjął ceny 0 w grupie zakupu — wtedy STOP, wklej je.
+   pierwsza, ok. 0) i `zeroed: 0 (approved: 0) — no previous match count for <hurtownia> …` —
+   pierwszy sync z nowym kodem tylko dopisuje licznik dopasowań (drugi bezpiecznik, „Wycofane
+   produkty”), więc w tę noc nic nie jest zerowane ani czyszczone. Od następnej nocy `zeroed: …`
+   i `own purchase cleared: …`. Linie `BL clear warning` = BL nie przyjął ceny 0 w grupie zakupu —
+   wtedy STOP, wklej je.
 
 4. `hydra-import` — **podgląd wyceny** (tylko odczyt, bez odblokowania prod, pod blokadą, w dzień po
    07:15 UTC):
@@ -1274,6 +1291,7 @@ Aktualizacja kodu: krok 2, „Aktualizacja kodu”.
 | `ERROR … must be whole seconds` / `whole number of days` | zła wartość `HYDRA_MAX_SECONDS` albo `HYDRA_LOG_KEEP_DAYS` w crontabie (np. `90m` albo komentarz w tej samej linii) | podaj samą liczbę całkowitą |
 | `END exit=1 … result="[fatal] empty feed after N attempts"` (w logu `Received 0.0 MB` / `Parsed 0 products` i linie `[warn] empty feed … attempt k/N`) oraz linia `run-bl: <hurtownia> <tryb>: run ended with exit 1` w `cron-stderr.log` | hurtownia oddała pustą odpowiedź albo stronę bez produktów (HTTP 200) N razy z rzędu, co `FEED_RETRY_DELAY_S`; nic nie zostało zapisane ani odświeżone (HA-2.33) | Spechurt: feed regeneruje się do ~05:40 UTC (sekcja 7) — jeśli to noc w noc, przesuń start; inna hurtownia: sprawdź feed podglądem (sekcja 6); po naprawie ręczny import tej hurtowni poza oknem crona |
 | `END exit=1 … result="Sync done: …, [error] feed looks incomplete: N products, previous successful run M"` | feed tej hurtowni ma mniej niż 90% produktów z poprzedniego udanego syncu; stany i ceny z feedu zapisane, ale **żaden** stan 0 — wycofane rekordy zostały, jak były (HA-2.38) | sprawdź feed podglądem (sekcja 6) albo `--zero-preview`; feed naprawdę mniejszy (hurtownia wycofała część oferty) → po decyzji tj usuń wpis tej hurtowni z `.hydra-feed-counts.json`, następny sync zapisze nowy licznik i zacznie zerować dobę później |
+| `END exit=1 … result="Sync done: …, [error] matches look incomplete: N matched, previous successful run M"` | feed trafił mniej niż 90% rekordów BL z poprzedniego udanego syncu, choć liczba produktów jest w normie (np. zmieniony format EAN albo SKU); stany i ceny trafionych rekordów zapisane, **żaden** stan 0 i żadne czyszczenie własnej ceny zakupu (HA-2.39) | `--zero-preview` tej hurtowni (linia `matched: …`) i porównanie kilku pozycji feedu z BL; błąd feedu → zgłoś hurtowni, licznik zostaje; trwała zmiana (np. hurtownia zmieniła EAN-y i rekordy dopasuje dopiero import) → po decyzji tj usuń wpis tej hurtowni z `.hydra-feed-counts.json` |
 | `END exit=1` (inny `result=`) | import przerwany błędem; ostatnie linie logu zaczynają się od `[fatal]` albo `[error]` | przeczytaj log; nie wklejaj go bez `grep -c` |
 | `END exit=124 … stopped-by=limit-…` | zadziałał limit czasu `HYDRA_MAX_SECONDS` | sprawdź, co trwało tak długo |
 | `END … killed-by-signal=9` | proces zabity z zewnątrz, zwykle przez system z braku pamięci | jako `ubuntu`: `sudo journalctl -k --since today`, szukaj `Out of memory` |

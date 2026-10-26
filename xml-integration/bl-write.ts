@@ -6,7 +6,8 @@
  *   readMarginRaws — „Marża %” field and supplier membership of matched products, read-only (sync, dry-run)
  *   planSync       — stock + price updates of one sync run; prices only on records the supplier is a member of
  *   runSyncCore    — the whole sync: index → margins → plan → bulk writes → zeroing, BL calls injected
- *   feedGuard / planZeroing — stock 0 for withdrawn products (HA-2.38), also the read-only preview;
+ *   feedGuard / zeroGate / planZeroing — stock 0 for withdrawn products (HA-2.38), also the read-only
+ *                    preview; zeroGate: feed-size AND match-count valves (HA-2.39 follow-up);
  *                    with own purchase groups (HA-2.39) also the supplier's own purchase price
  *   runSharedPricing — the `price-shared` step: selling + shared purchase price of shared records
  *
@@ -237,10 +238,55 @@ export function feedGuard(current: number, previous: number | null): FeedGuard {
   return current < previous * FEED_MIN_RATIO ? { kind: 'incomplete', previous } : { kind: 'ok', previous };
 }
 
-/** Product count of the last successful sync per supplier — a JSON file on the import account. */
+/** Counts of the last successful sync of one supplier. `matched` is null in entries written before it existed. */
+export interface FeedCounts {
+  /** products in the feed */
+  products: number;
+  /** distinct BL records the feed matched */
+  matched: number | null;
+}
+
+/** Counts of the last successful sync per supplier — a JSON file on the import account. */
 export interface FeedCountStore {
-  read(supplier: Supplier): number | null;
-  write(supplier: Supplier, count: number): void;
+  read(supplier: Supplier): FeedCounts | null;
+  write(supplier: Supplier, counts: { products: number; matched: number }): void;
+}
+
+export type ZeroGate =
+  /** feed products < 90% of the previous run (HA-2.38) */
+  | { kind: 'feed_incomplete'; previous: number }
+  /** matched BL records < 90% of the previous run — e.g. reformatted EANs keep the product count, but stop matching */
+  | { kind: 'matches_incomplete'; previous: number }
+  /** no previous products, or (HA-2.39 follow-up) a previous entry without the match count: store only */
+  | { kind: 'first'; what: 'feed' | 'matches' }
+  | { kind: 'go' };
+
+/**
+ * Whether this sync may zero stock and clear own purchase prices. Two valves, both against the last
+ * successful run: the feed's product count and the number of BL records the feed matched. Either
+ * below 90% → nothing zeroed or cleared, the run ends with exit ≠ 0, the counts are not stored.
+ */
+export function zeroGate(products: number, matched: number, previous: FeedCounts | null): ZeroGate {
+  const feed = feedGuard(products, previous?.products ?? null);
+  if (feed.kind === 'incomplete') return { kind: 'feed_incomplete', previous: feed.previous };
+  if (feed.kind === 'first') return { kind: 'first', what: 'feed' };
+  const m = feedGuard(matched, previous?.matched ?? null);
+  if (m.kind === 'incomplete') return { kind: 'matches_incomplete', previous: m.previous };
+  if (m.kind === 'first') return { kind: 'first', what: 'matches' };
+  return { kind: 'go' };
+}
+
+/** Distinct BL records today's feed matches — the sync key; its count is the match valve's number. */
+export function matchedIds(products: readonly NormalizedProduct[], supplier: Supplier, index: BLMatchIndex): number[] {
+  return [...new Set(products.map((p) => findBLMatch(index, supplier, p.ean, p.connector_sku)?.id).filter((id): id is number => id !== undefined))];
+}
+
+/** The `[error]` line of a valve that stopped the zeroing (sync log, run-bl.sh END line), else null. */
+export function zeroGateError(gate: ZeroGate, products: number, matched: number): string | null {
+  const pct = `< ${FEED_MIN_RATIO * 100}%`;
+  if (gate.kind === 'feed_incomplete') return `[error] feed looks incomplete: ${products} products, previous successful run ${gate.previous} (${pct}) — no stock zeroed, no own purchase cleared, counts not stored`;
+  if (gate.kind === 'matches_incomplete') return `[error] matches look incomplete: ${matched} matched, previous successful run ${gate.previous} (${pct}) — no stock zeroed, no own purchase cleared, counts not stored`;
+  return null;
 }
 
 export interface ListedProduct {
@@ -509,9 +555,7 @@ export async function runSyncCore(
   }
   // One read of the matched records: the margin field (when configured) and which suppliers each
   // record belongs to — prices go only to records of this supplier (HA-2.38)
-  const ids = [...new Set(
-    products.map((p) => findBLMatch(index, supplier, p.ean, p.connector_sku)?.id).filter((id): id is number => id !== undefined),
-  )];
+  const ids = matchedIds(products, supplier, index);
   log(`\nReading ${deps.marginKey !== null ? `the margin field (${deps.marginKey}) and ` : ''}supplier membership of ${ids.length} matched products…`);
   try {
     await deps.sleep(deps.rateLimitMs);
@@ -532,7 +576,13 @@ export async function runSyncCore(
 
   const plan = planSync(products, supplier, index, env, margins, deps.tally, membership, currentPrices);
   log(`\nMatched ${plan.matched} products, ${plan.unmatched} not in BL yet (run 'import' mode to add them)`);
-  if (plan.matched === 0) return { ok, plan };
+  // Zeroing valves (HA-2.38 feed size, HA-2.39 match count) — decided before any write
+  const gate = deps.feedCounts ? zeroGate(products.length, ids.length, deps.feedCounts.read(supplier)) : null;
+  const gateError = gate ? zeroGateError(gate, products.length, ids.length) : null;
+  if (plan.matched === 0) {
+    if (gateError) { ok = false; warn(gateError); }
+    return { ok, plan };
+  }
 
   // BL bulk endpoints take max 1000 products per call
   const blWarnings = new BLWarningLog(warn);
@@ -560,14 +610,16 @@ export async function runSyncCore(
   let zeroed: ZeroRow[] | undefined;
   let zeroLine: string | null = null;
   let clearLine: string | null = null;
-  if (deps.feedCounts) {
-    const guard = feedGuard(products.length, deps.feedCounts.read(supplier));
-    if (guard.kind === 'incomplete') {
+  const counts = { products: products.length, matched: ids.length };
+  if (deps.feedCounts && gate) {
+    if (gateError) {
       ok = false;
-      warn(`[error] feed looks incomplete: ${products.length} products, previous successful run ${guard.previous} (< ${FEED_MIN_RATIO * 100}%) — no stock zeroed, count not stored`);
-    } else if (guard.kind === 'first') {
-      zeroLine = `zeroed: 0 (approved: 0) — no previous feed count for ${supplier}, nothing zeroed this run; count ${products.length} stored`;
-      deps.feedCounts.write(supplier, products.length);
+      warn(gateError);
+    } else if (gate.kind === 'first') {
+      zeroLine = gate.what === 'feed'
+        ? `zeroed: 0 (approved: 0) — no previous feed count for ${supplier}, nothing zeroed this run; counts stored (${counts.products} products, ${counts.matched} matched)`
+        : `zeroed: 0 (approved: 0) — no previous match count for ${supplier}, nothing zeroed this run; counts stored (${counts.products} products, ${counts.matched} matched)`;
+      deps.feedCounts.write(supplier, counts);
     } else {
       const z = await planZeroing(products, supplier, env, index, listed, deps.getProductsData, deps.sleep, deps.rateLimitMs);
       const stockRows = z.rows.filter((r) => r.stock > 0);
@@ -591,7 +643,7 @@ export async function runSyncCore(
       zeroed = z.rows;
       zeroLine = `zeroed: ${stockRows.length} (approved: ${stockRows.filter((r) => r.approved).length}) — withdrawn by ${supplier}, stock 0 in ${env.warehouse} only`;
       if (ownGroup) clearLine = `own purchase cleared: ${priceRows.length} — ${supplier}'s purchase group ${ownGroup} set to 0 on records its feed no longer matches`;
-      deps.feedCounts.write(supplier, products.length);
+      deps.feedCounts.write(supplier, counts);
     }
   }
 
