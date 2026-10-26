@@ -258,13 +258,15 @@ test('sync: shared product (same EAN) — the field wins over every wholesaler\'
   const kolba = catalogue('45');
   await sync(kolba, FIELD, 'kolba', env({ markupPct: 30 }));
   assert.equal(kolba.records.get(1)!.prices[SALE], 145);
-  // Sharg has the same EAN with its own SKU and a 25% env markup; same purchase price
-  const sharg = catalogue('45');
+  // Sharg has the same EAN with its own SKU and a 25% env markup; same purchase price. The record is
+  // a recorded shared one (`SKU Sharg`) — a sync prices only records its supplier is a member of (HA-2.38)
+  const shared = (bl: FakeBL) => { bl.records.get(1)!.text_fields.features = { 'SKU Kolba': '100-200', 'SKU Sharg': '139' }; return bl; };
+  const sharg = shared(catalogue('45'));
   const shargFeed = [product({ connector: 'sharg', connector_product_id: 'S9', connector_sku: '139', ean: '5901234567893', price_purchase: 100 })];
   await sync(sharg, FIELD, 'sharg', env({ markupPct: 25, warehouse: 'bl_157484' }), shargFeed);
   assert.equal(sharg.records.get(1)!.prices[SALE], 145);
   // Without a field the shared record follows whoever synced last (O-32, unchanged)
-  const plain = catalogue(null);
+  const plain = shared(catalogue(null));
   await sync(plain, FIELD, 'sharg', env({ markupPct: 25, warehouse: 'bl_157484' }), shargFeed);
   assert.equal(plain.records.get(1)!.prices[SALE], 125);
 });

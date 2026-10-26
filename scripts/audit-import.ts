@@ -76,6 +76,7 @@ import {
   GAP_SOURCE_LABEL,
   duplicateCandidates,
   gapSource,
+  isSharedRecord,
   nameIssues,
   nightKey,
   parseJournalLine,
@@ -664,6 +665,17 @@ function itemsFor(ctx: Ctx, id: number): FeedItem[] {
   return by ? SUPPLIERS.flatMap((s) => by[s] ?? []) : [];
 }
 
+/** Suppliers whose feed matches the record today. */
+function matchedBy(ctx: Ctx, id: number): Supplier[] {
+  const by = ctx.byRecord.get(id);
+  return by ? SUPPLIERS.filter((s) => (by[s] ?? []).length > 0) : [];
+}
+
+/** Shared = ≥ 2 suppliers as members or by today's feed matches — their syncs all write it (HA-2.38). */
+function sharedOf(ctx: Ctx, r: BLRec): boolean {
+  return isSharedRecord(r.sup.members, matchedBy(ctx, r.id));
+}
+
 function brandFor(ctx: Ctx, r: BLRec): string {
   const items = itemsFor(ctx, r.id);
   const own = r.sup.creator ? items.find((i) => i.supplier === r.sup.creator) : undefined;
@@ -761,7 +773,7 @@ function sectionA(ctx: Ctx): Section {
       for (const i of matched) {
         const r = bl.records.get(i.blId!);
         if (!r) continue;
-        const isShared = r.sup.members.length > 1;
+        const isShared = sharedOf(ctx, r);
         const sale = r.prices[String(cfg.priceGroup)] ?? null;
         const purchase = cfg.priceGroupPurchase !== null ? (r.prices[String(cfg.priceGroupPurchase)] ?? null) : null;
         if (i.priceFromFallback) fallback++;
@@ -827,7 +839,7 @@ function sectionA(ctx: Ctx): Section {
     [...priceDiffAll].sort((a, b) => Number(a.shared) - Number(b.shared)),
     (d) => [d.i.supplier, d.r.id, d.i.sku, d.i.name, d.kind, d.shared ? 'tak' : 'nie', d.i.pricePurchase ?? '', d.margin, d.expected, d.sale ?? '', d.purchase ?? '', d.i.priceFromFallback ? 'tak' : 'nie'],
     (d) => `${d.i.supplier}/${d.shared}`);
-  if (cPrice.total) md.push(`Przykłady: ${csvRef(cPrice)}. Rekord wspólny dostaje cenę hurtowni, która ostatnia robiła sync — rozjazd na nim jest oczekiwany, dopóki nie zapadnie O-32.`, '');
+  if (cPrice.total) md.push(`Przykłady: ${csvRef(cPrice)}. Rekord wspólny (≥ 2 hurtownie jako członkowie albo przez dzisiejsze feedy) dostaje cenę hurtowni, która ostatnia robiła sync — rozjazd na nim jest oczekiwany, dopóki nie zapadnie O-32 / HA-2.39.`, '');
 
   ctx.facts.admitted = admittedTotal;
   ctx.facts.missing = missingTotal;
@@ -1028,11 +1040,15 @@ function sectionD(ctx: Ctx): Section {
     combos.set(k, (combos.get(k) ?? 0) + 1);
   }
   const shared = [...combos.values()].reduce((a, b) => a + b, 0);
+  // Matched by ≥ 2 suppliers' feeds, but without the parameters of all of them: their syncs write
+  // the record, the import never recorded them (HA-2.38) — „wspólne” in section A counts these too
+  const unrecorded = [...bl.records.values()].filter((r) => matchedBy(ctx, r.id).some((x) => !r.sup.members.includes(x)) && sharedOf(ctx, r)).length;
   md.push('### BaseLinker', '');
   md.push(...table(['Co', 'Liczba', 'Oczekiwane', 'Werdykt'], [
     ['EAN (klucz GTIN-14) użyty przez ≥ 2 rekordy', `${fmt(eanDup.length)} EAN / ${fmt(eanDup.reduce((a, [, v]) => a + v.length, 0))} rekordów`, '0', eanDup.length ? 'błąd importera' : 'OK'],
     ['SKU użyte przez ≥ 2 rekordy', `${fmt(skuDup.length)} SKU`, '0', skuDup.length ? 'błąd importera' : 'OK'],
     ['Rekordy wspólne (≥ 2 hurtownie)', `${fmt(shared)}${combos.size ? ` (${[...combos.entries()].map(([k, v]) => `${k}: ${fmt(v)}`).join('; ')})` : ''}`, 'tylko przez wspólny EAN', 'OK'],
+    ['Wspólne bez parametru którejś hurtowni (trafiane przez jej feed, pisze je jej sync)', fmt(unrecorded), '—', unrecorded ? 'cenę pisze tylko członek (HA-2.38); reszta → HA-2.39' : 'OK'],
   ]), '');
   const cEanDup = csvOf('D_duplikaty_EAN_w_BL.csv', ['ean', 'bl_id', 'sku', 'nazwa'],
     eanDup.flatMap(([e, list]) => list.map((r) => ({ e, r }))), (x) => [x.e, x.r.id, x.r.sku, x.r.name], () => 'all');

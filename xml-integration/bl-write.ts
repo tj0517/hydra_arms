@@ -3,8 +3,8 @@
  * HA-2.22 so the payloads can be tested against an in-memory catalogue).
  *
  *   toBLProduct    — addInventoryProduct payload of one product (import)
- *   readMarginRaws — „Marża %” field of matched products, read-only (sync, dry-run)
- *   planSync       — stock + price updates of one sync run
+ *   readMarginRaws — „Marża %” field and supplier membership of matched products, read-only (sync, dry-run)
+ *   planSync       — stock + price updates of one sync run; prices only on records the supplier is a member of
  *   runSyncCore    — the whole sync: index → margins → plan → bulk writes → zeroing, BL calls injected
  *   feedGuard / planZeroing — stock 0 for withdrawn products (HA-2.38), also the read-only preview
  *
@@ -124,27 +124,43 @@ export async function loadIndexWithStock(
 export const MARGIN_READ_CHUNK = 250;
 
 export interface MarginRead {
-  /** raw field value per returned product (undefined = field not set) */
+  /** raw field value per returned product (undefined = field not set); empty when no field key */
   raw: Map<number, unknown>;
   /** current selling price per returned product, when the price group is known */
   salePrice: Map<number, number>;
+  /** suppliers each returned product belongs to — SKU prefix + `SKU <Hurtownia>` parameters (HA-2.38) */
+  members: Map<number, Supplier[]>;
   calls: number;
   ms: number;
 }
 
-/** Reads the margin field (and the current selling price) of `ids` — getInventoryProductsData only. */
+/** `text_fields.features` as a plain string map (an empty one may come back as `[]`). */
+function featuresOf(textFields: unknown): Record<string, string> {
+  const tf = textFields && typeof textFields === 'object' ? (textFields as Record<string, unknown>) : {};
+  const f = tf.features;
+  if (!f || typeof f !== 'object' || Array.isArray(f)) return {};
+  return Object.fromEntries(Object.entries(f as Record<string, unknown>).map(([k, v]) => [k, String(v ?? '')]));
+}
+
+/**
+ * Reads the margin field (when `fieldKey` is set), the current selling price and the supplier
+ * membership of `ids` — getInventoryProductsData only. `skuOf` supplies the list's SKU when the
+ * data leaves it out.
+ */
 export async function readMarginRaws(
   ids: readonly number[],
   getProductsData: GetProductsData,
   inventoryId: number,
-  fieldKey: string,
+  fieldKey: string | null,
   priceGroup: number | null,
   sleep: (ms: number) => Promise<unknown>,
   rateLimitMs: number,
+  skuOf: (id: number) => string | undefined = () => undefined,
 ): Promise<MarginRead> {
   const started = Date.now();
   const raw = new Map<number, unknown>();
   const salePrice = new Map<number, number>();
+  const members = new Map<number, Supplier[]>();
   let calls = 0;
   for (let i = 0; i < ids.length; i += MARGIN_READ_CHUNK) {
     if (i > 0) await sleep(rateLimitMs);
@@ -152,13 +168,14 @@ export async function readMarginRaws(
     const data = await getProductsData(inventoryId, chunk);
     calls++;
     for (const [id, d] of Object.entries(data)) {
-      raw.set(Number(id), readMarginRaw(d.text_fields, fieldKey));
+      if (fieldKey !== null) raw.set(Number(id), readMarginRaw(d.text_fields, fieldKey));
+      members.set(Number(id), recordSuppliers(String(d.sku ?? skuOf(Number(id)) ?? ''), featuresOf(d.text_fields)).members);
       const prices = d.prices && typeof d.prices === 'object' ? (d.prices as Record<string, unknown>) : {};
       const sale = priceGroup !== null ? Number(prices[String(priceGroup)]) : NaN;
       if (Number.isFinite(sale)) salePrice.set(Number(id), sale);
     }
   }
-  return { raw, salePrice, calls, ms: Date.now() - started };
+  return { raw, salePrice, members, calls, ms: Date.now() - started };
 }
 
 // ── Withdrawn products: stock 0 in the supplier's warehouse (HA-2.38) ──────────
@@ -246,6 +263,25 @@ export async function planZeroing(
 
 // ── Sync ──────────────────────────────────────────────────────────────────────
 
+/** BL warning texts of the bulk writes, per product — the first 50 per run are logged, then a count. */
+export class BLWarningLog {
+  private shown = 0;
+  private more = 0;
+  static readonly MAX = 50;
+  constructor(private readonly warn: (line: string) => void) {}
+
+  log(kind: string, warnings: Readonly<Record<string, unknown>>): void {
+    for (const [id, w] of Object.entries(warnings)) {
+      if (this.shown >= BLWarningLog.MAX) { this.more++; continue; }
+      this.shown++;
+      const text = typeof w === 'string' ? w : JSON.stringify(w);
+      this.warn(`[warn] BL ${kind} warning, product ${id}: ${String(text).replace(/\s+/g, ' ').slice(0, 200)}`);
+    }
+  }
+
+  get hidden(): number { return this.more; }
+}
+
 /**
  * Margins for one sync: `off` = no field configured (env markup for every product, as before
  * HA-2.22); `failed` = the read failed, so no selling price is written at all (writing env
@@ -260,10 +296,19 @@ export interface SyncPlan {
   unmatched: number;
   priceFallbacks: number;
   priceZeros: number;
-  /** matched, but no selling price written: margins failed, or BL returned no data for the product */
+  /** matched, but no price written: the product data read failed, or BL returned no data for the record */
   priceSkipped: number;
+  /** matched through the EAN, but this supplier is not a member of the record — stock only (HA-2.38) */
+  priceSkippedNotMember: number;
 }
 
+/**
+ * `membership`: suppliers per record from readMarginRaws; null when that read failed. Prices go only
+ * to records this supplier is a member of (HA-2.38): another supplier's record found through the EAN
+ * gets stock in this supplier's warehouse and nothing else — otherwise the sync that runs last sets
+ * the price of every record its EANs touch. A record without data (unknown membership) gets no price.
+ * Shared records (several members) keep "last sync wins" until HA-2.39.
+ */
 export function planSync(
   products: readonly NormalizedProduct[],
   supplier: Supplier,
@@ -271,8 +316,9 @@ export function planSync(
   env: WriteEnv,
   margins: SyncMargins,
   tally: MarginTally,
+  membership: ReadonlyMap<number, readonly Supplier[]> | null,
 ): SyncPlan {
-  const plan: SyncPlan = { stockUpdates: {}, priceUpdates: {}, matched: 0, unmatched: 0, priceFallbacks: 0, priceZeros: 0, priceSkipped: 0 };
+  const plan: SyncPlan = { stockUpdates: {}, priceUpdates: {}, matched: 0, unmatched: 0, priceFallbacks: 0, priceZeros: 0, priceSkipped: 0, priceSkippedNotMember: 0 };
 
   for (const p of products) {
     // Same key as the import: EAN across suppliers, else this supplier's prefixed SKU only
@@ -281,6 +327,10 @@ export function planSync(
     plan.matched++;
 
     plan.stockUpdates[id] = { [env.warehouse]: p.stock ?? 0 };
+
+    const members = membership?.get(id);
+    if (members === undefined) { plan.priceSkipped++; continue; }
+    if (!members.includes(supplier)) { plan.priceSkippedNotMember++; continue; }
 
     const prices: Record<string, number> = {};
     if (env.priceGroupPurchase && p.price_purchase && p.price_purchase > 0) {
@@ -294,6 +344,7 @@ export function planSync(
 
     if (margin === null) {
       plan.priceSkipped++;
+      continue; // no selling price → no purchase price either: the pair stays consistent
     } else {
       const { price, fromFallback, priceZero } = computeSellingPrice(p, margin.pct);
       if (fromFallback) plan.priceFallbacks++;
@@ -340,46 +391,56 @@ export async function runSyncCore(
   log(`  ${index.total} products in BL`);
 
   let margins: SyncMargins = { kind: 'off' };
+  let membership: Map<number, Supplier[]> | null = null;
   let ok = true;
   if (deps.marginKey === null) {
     warn('[warn] BASELINKER_EXTRA_FIELD_MARGIN not set — manual margins are NOT read, env markup for every product');
-  } else {
-    const ids = [...new Set(
-      products.map((p) => findBLMatch(index, supplier, p.ean, p.connector_sku)?.id).filter((id): id is number => id !== undefined),
-    )];
-    log(`\nReading the margin field (${deps.marginKey}) of ${ids.length} matched products…`);
-    try {
-      await deps.sleep(deps.rateLimitMs);
-      const read = await readMarginRaws(ids, deps.getProductsData, env.inventoryId, deps.marginKey, null, deps.sleep, deps.rateLimitMs);
+  }
+  // One read of the matched records: the margin field (when configured) and which suppliers each
+  // record belongs to — prices go only to records of this supplier (HA-2.38)
+  const ids = [...new Set(
+    products.map((p) => findBLMatch(index, supplier, p.ean, p.connector_sku)?.id).filter((id): id is number => id !== undefined),
+  )];
+  log(`\nReading ${deps.marginKey !== null ? `the margin field (${deps.marginKey}) and ` : ''}supplier membership of ${ids.length} matched products…`);
+  try {
+    await deps.sleep(deps.rateLimitMs);
+    const read = await readMarginRaws(ids, deps.getProductsData, env.inventoryId, deps.marginKey, null, deps.sleep, deps.rateLimitMs, (id) => index.skuById.get(id));
+    membership = read.members;
+    if (deps.marginKey !== null) {
       margins = { kind: 'read', raw: read.raw };
       log(`  margin field read: ${read.raw.size}/${ids.length} products, ${read.calls} calls, ${(read.ms / 1000).toFixed(1)} s`);
-    } catch (err) {
-      margins = { kind: 'failed' };
-      ok = false;
-      warn(`[error] margin field read failed: ${err instanceof Error ? err.message : err} — stock is synced, selling prices are NOT (env prices would wipe manual margins)`);
+    } else {
+      log(`  product data read: ${read.members.size}/${ids.length} products, ${read.calls} calls, ${(read.ms / 1000).toFixed(1)} s`);
     }
+  } catch (err) {
+    margins = { kind: 'failed' };
+    ok = false;
+    warn(`[error] ${deps.marginKey !== null ? 'margin field' : 'product data'} read failed: ${err instanceof Error ? err.message : err} — stock is synced, prices are NOT (env prices would wipe manual margins; membership unknown)`);
   }
 
-  const plan = planSync(products, supplier, index, env, margins, deps.tally);
+  const plan = planSync(products, supplier, index, env, margins, deps.tally, membership);
   log(`\nMatched ${plan.matched} products, ${plan.unmatched} not in BL yet (run 'import' mode to add them)`);
   if (plan.matched === 0) return { ok, plan };
 
   // BL bulk endpoints take max 1000 products per call
-  const ids = Object.keys(plan.stockUpdates);
-  for (let i = 0; i < ids.length; i += 1000) {
-    const chunk = ids.slice(i, i + 1000);
+  const blWarnings = new BLWarningLog(warn);
+  const writeIds = Object.keys(plan.stockUpdates);
+  for (let i = 0; i < writeIds.length; i += 1000) {
+    const chunk = writeIds.slice(i, i + 1000);
 
     const stockChunk = Object.fromEntries(chunk.map((id) => [id, plan.stockUpdates[id]]));
     const stockRes = await deps.updateStock(env.inventoryId, stockChunk);
-    log(`  stock  ${i + chunk.length}/${ids.length}: ${stockRes.counter} updated` +
+    log(`  stock  ${i + chunk.length}/${writeIds.length}: ${stockRes.counter} updated` +
       (Object.keys(stockRes.warnings).length ? `, ${Object.keys(stockRes.warnings).length} warnings` : ''));
+    blWarnings.log('stock', stockRes.warnings);
     await deps.sleep(deps.rateLimitMs);
 
     const priceChunk = Object.fromEntries(chunk.filter((id) => plan.priceUpdates[id]).map((id) => [id, plan.priceUpdates[id]]));
     if (Object.keys(priceChunk).length === 0) continue;
     const priceRes = await deps.updatePrices(env.inventoryId, priceChunk);
-    log(`  prices ${i + chunk.length}/${ids.length}: ${priceRes.counter} updated` +
+    log(`  prices ${i + chunk.length}/${writeIds.length}: ${priceRes.counter} updated` +
       (Object.keys(priceRes.warnings).length ? `, ${Object.keys(priceRes.warnings).length} warnings` : ''));
+    blWarnings.log('prices', priceRes.warnings);
     await deps.sleep(deps.rateLimitMs);
   }
 
@@ -401,6 +462,7 @@ export async function runSyncCore(
         const chunk = z.rows.slice(i, i + 1000);
         const res = await deps.updateStock(env.inventoryId, Object.fromEntries(chunk.map((r) => [String(r.id), { [env.warehouse]: 0 }])));
         log(`  zero   ${i + chunk.length}/${z.rows.length}: ${res.counter} updated` + (Object.keys(res.warnings).length ? `, ${Object.keys(res.warnings).length} warnings` : ''));
+        blWarnings.log('zero', res.warnings);
       }
       zeroed = z.rows;
       zeroLine = `zeroed: ${z.rows.length} (approved: ${z.rows.filter((r) => r.approved).length}) — withdrawn by ${supplier}, stock 0 in ${env.warehouse} only`;
@@ -410,10 +472,12 @@ export async function runSyncCore(
 
   log(`\n✓ Sync done: ${plan.matched} products refreshed`);
   if (zeroLine) log(`  ${zeroLine}`);
+  log(`  prices skipped (not a member): ${plan.priceSkippedNotMember} — records of another supplier found through the EAN, stock only`);
   if (deps.marginKey !== null) log(`  ${deps.tally.summary()}`);
   if (plan.priceSkipped > 0) {
-    warn(`⚠ ${plan.priceSkipped} products: selling price NOT written (${margins.kind === 'failed' ? 'margin field read failed' : 'BL returned no data for them'}) — previous price kept`);
+    warn(`⚠ ${plan.priceSkipped} products: prices NOT written (${margins.kind === 'failed' ? 'product data read failed' : 'BL returned no data for them'}) — previous prices kept`);
   }
+  if (blWarnings.hidden > 0) warn(`⚠ ${blWarnings.hidden} more BL warnings not listed (first ${BLWarningLog.MAX} above)`);
   if (plan.priceFallbacks > 0) {
     warn(`⚠ ${plan.priceFallbacks} products had no purchase price in the feed — feed gross price used instead of markup pricing`);
   }
