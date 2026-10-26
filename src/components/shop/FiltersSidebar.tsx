@@ -518,6 +518,16 @@ export interface FiltersSidebarProps extends CategoryTreeProps, FilterSectionsPr
   onClearFilters: () => void;
 }
 
+function selectedCategoryName(tree: CategoryTreeNode[], selectedCategory: number | null): string | null {
+  if (selectedCategory === null) return 'Wszystkie';
+  for (const { category, children } of tree) {
+    if (category.id === selectedCategory) return categoryDisplayName(category.name);
+    const child = children.find(c => c.id === selectedCategory);
+    if (child) return categoryDisplayName(child.name);
+  }
+  return null;
+}
+
 export default function FiltersSidebar({
   tree,
   counts,
@@ -530,22 +540,44 @@ export default function FiltersSidebar({
   activeFilterCount,
   onClearFilters,
 }: FiltersSidebarProps) {
+  // Collapsed by default so the filters stay above the fold; the header still
+  // names the active category. `hidden` (not unmount) keeps the tree's expand state.
+  const [categoriesOpen, setCategoriesOpen] = useState(false);
+  const selectedName = selectedCategoryName(tree, selectedCategory);
+
   return (
     <div className="space-y-8">
       <section aria-labelledby="sidebar-categories-heading">
-        <h2
-          id="sidebar-categories-heading"
-          className="font-[var(--font-mono)] text-[11px] tracking-[0.25em] uppercase text-text-dim pb-3 mb-2 border-b border-white/10"
-        >
-          Kategorie
+        <h2 id="sidebar-categories-heading" className={`border-b border-white/10 ${categoriesOpen ? 'mb-2' : ''}`}>
+          <button
+            type="button"
+            aria-expanded={categoriesOpen}
+            aria-controls="sidebar-categories-tree"
+            onClick={() => setCategoriesOpen(o => !o)}
+            className="w-full flex items-center justify-between gap-3 pb-3 text-left group"
+          >
+            <span className="font-[var(--font-mono)] text-[11px] tracking-[0.25em] uppercase text-text-dim group-hover:text-text transition-colors">
+              Kategorie
+            </span>
+            <span className="flex items-center gap-2 min-w-0">
+              {!categoriesOpen && selectedName && (
+                <span className={`text-[13px] truncate ${selectedCategory === null ? 'text-text-dim' : 'text-accent'}`}>
+                  {selectedName}
+                </span>
+              )}
+              <ChevronIcon open={categoriesOpen} className="text-text-dim" />
+            </span>
+          </button>
         </h2>
-        <CategoryTree
-          tree={tree}
-          counts={counts}
-          totalCount={totalCount}
-          selectedCategory={selectedCategory}
-          onSelectCategory={onSelectCategory}
-        />
+        <div id="sidebar-categories-tree" hidden={!categoriesOpen}>
+          <CategoryTree
+            tree={tree}
+            counts={counts}
+            totalCount={totalCount}
+            selectedCategory={selectedCategory}
+            onSelectCategory={onSelectCategory}
+          />
+        </div>
       </section>
 
       <section aria-labelledby="sidebar-filters-heading">

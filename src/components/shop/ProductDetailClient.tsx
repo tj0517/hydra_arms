@@ -124,15 +124,15 @@ export default function ProductDetailClient({ product, categories, related, base
 
       <div className="max-w-[1300px] mx-auto px-[clamp(32px,5vw,64px)] pt-32 pb-16">
 
-        {/* Breadcrumbs + back button (HA-2.32) */}
-        <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <Breadcrumbs items={productBreadcrumbs(product, categories)} currentPath={`/sklep/${product.id}`} baseUrl={baseUrl} />
+        {/* Back button + breadcrumbs (HA-2.32) — back on the left, where the arrow points */}
+        <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-center md:gap-6">
           <Link
             href="/sklep"
-            className="font-[var(--font-mono)] text-[11px] text-text-dim hover:text-accent transition-colors tracking-[0.2em] uppercase border border-white/10 hover:border-accent/30 px-4 py-2 inline-flex items-center"
+            className="self-start md:self-auto shrink-0 font-[var(--font-mono)] text-[11px] text-text-dim hover:text-accent transition-colors tracking-[0.2em] uppercase border border-white/10 hover:border-accent/30 px-4 py-2 inline-flex items-center"
           >
             ← Powrót do sklepu
           </Link>
+          <Breadcrumbs items={productBreadcrumbs(product, categories)} currentPath={`/sklep/${product.id}`} baseUrl={baseUrl} />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16">
