@@ -140,6 +140,9 @@ interface Props {
   categories: ListingCategory[]
 }
 
+// Portable Text lists — Tailwind preflight strips list markers and there is no typography plugin.
+const ptLists = '[&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pl-5 [&_ol]:pl-5 [&_li]:marker:text-accent/70'
+
 // ── Icon resolver ──────────────────────────────────────────────────────────────
 
 function DynamicIcon({ name, ...props }: { name: string } & LucideProps) {
@@ -370,7 +373,7 @@ function TextCtaSection({ block }: { block: TextCtaBlock }) {
             </h2>
           )}
           {block.body && (
-            <div className="prose prose-invert prose-sm max-w-none text-text-dim [&_p]:leading-relaxed [&_ul]:mt-3 [&_li]:mt-1">
+            <div className={`text-text-dim [&_p]:leading-relaxed [&_ul]:mt-3 [&_li]:mt-1 ${ptLists}`}>
               <PortableText value={block.body} />
             </div>
           )}
@@ -468,7 +471,7 @@ function FaqItem({ question, answer }: { question: string; answer?: any[] }) {
         </span>
       </button>
       {open && answer && (
-        <div className="pb-5 prose prose-invert prose-sm max-w-none text-text-dim [&_p]:leading-relaxed [&_ul]:mt-2 [&_li]:mt-1">
+        <div className={`pb-5 text-text-dim [&_p]:leading-relaxed [&_ul]:mt-2 [&_li]:mt-1 ${ptLists}`}>
           <PortableText value={answer} />
         </div>
       )}
@@ -644,7 +647,7 @@ function RichTextSection({ block }: { block: RichTextBlock }) {
     <section className={`${bg} py-12 md:py-16`}>
       <div className="max-w-[1400px] mx-auto px-[clamp(32px,5vw,64px)]">
         <div
-          className={`${mw} prose prose-invert prose-sm md:prose-base max-w-none text-text-dim
+          className={`${mw} text-text-dim ${ptLists}
             [&_h2]:text-white [&_h2]:text-2xl md:[&_h2]:text-3xl [&_h2]:font-bold [&_h2]:tracking-tight [&_h2]:mt-0 [&_h2]:mb-4
             [&_h3]:text-white/90 [&_h3]:font-semibold [&_h3]:mt-6 [&_h3]:mb-2
             [&_p]:leading-relaxed [&_p]:text-white/60 [&_ul]:mt-3 [&_li]:mt-1
