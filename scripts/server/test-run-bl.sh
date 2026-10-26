@@ -276,6 +276,10 @@ run marker-missing good --cmd 'printf "✓ Import done: 3 created, 2 updated, 1 
 has "the skipped count of the import is carried into the END line" "$LAST" 'result="Import done: 3 created, 2 updated, 1 errors, skipped: 1"'
 run marker-missing good --cmd 'printf "Sync done: 5 products refreshed\n  skipped: 9\n"' sharg sync
 has "a skipped line is only read for an import summary" "$LAST" 'result="Sync done: 5 products refreshed"'
+run marker-missing good --cmd 'printf "\n✓ Sync done: 5 products refreshed\n  zeroed: 3 (approved: 1) — withdrawn by sharg, stock 0 in bl_2 only\n"' sharg sync
+has "the zeroed count of the sync is carried into the END line (HA-2.38)" "$LAST" 'result="Sync done: 5 products refreshed, zeroed: 3 \(approved: 1\)"'
+run marker-missing good --cmd 'printf "[error] feed looks incomplete: 89 products, previous successful run 100 (< 90%%) — no stock zeroed\n✓ Sync done: 5 products refreshed\n"; exit 1' sharg sync
+has "an incomplete feed shows in the END line with exit 1 (HA-2.38)" "$LAST" 'END exit=1 .*result="Sync done: 5 products refreshed, \[error\] feed looks incomplete: 89 products, previous successful run 100"'
 run marker-missing good --cmd 'echo "Matched 0 products, 2280 not in BL yet (run import)"' sharg sync
 has "a sync that matched nothing shows in the END line" "$LAST" 'result="Matched 0 products, 2280 not in BL yet"'
 run marker-missing good --cmd 'true' sharg sync
