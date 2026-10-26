@@ -148,8 +148,8 @@ test('summarizeSyncLog: BL counters and warning counts; no warning content today
 
 // ── read-only by construction ─────────────────────────────────────────────────
 
-test('scripts/diag-prices.ts: no BaseLinker client import, no blCall, only allowlisted read methods', () => {
-  const src = fs.readFileSync(path.resolve(__dirname, '../../scripts/diag-prices.ts'), 'utf8');
+for (const script of ['diag-prices.ts', 'ean-report.ts']) test(`scripts/${script}: no BaseLinker client import, no blCall, only allowlisted read methods`, () => {
+  const src = fs.readFileSync(path.resolve(__dirname, '../../scripts', script), 'utf8');
   assert.ok(!/baselinker\/client/.test(src), 'must not import src/lib/baselinker/client');
   assert.ok(!/\bblCall\b|\bblReadOnlyCall\b/.test(src), 'must not call blCall / blReadOnlyCall directly');
   assert.match(src, /from '\.\.\/src\/lib\/baselinker\/readonly'/);
