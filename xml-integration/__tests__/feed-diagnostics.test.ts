@@ -57,10 +57,10 @@ test('red proof: with different SKUs the same two products stay separate', () =>
 test('the EAN is tried before the SKU', () => {
   const { runs, catalogue } = simulateImports(['kolba', 'sharg'], {
     kolba: [
-      prod('kolba', 'k1', 'A-1', '1111111111111', 'Produkt z EAN'),
+      prod('kolba', 'k1', 'A-1', '1111111111116', 'Produkt z EAN'),
       prod('kolba', 'k2', '77', '', 'Produkt z samym SKU'),
     ],
-    sharg: [prod('sharg', 's1', '77', '1111111111111', 'Ten sam EAN, cudzy SKU')],
+    sharg: [prod('sharg', 's1', '77', '1111111111116', 'Ten sam EAN, cudzy SKU')],
   });
   assert.equal(runs[1].sharedByEan, 1);
   assert.equal(runs[1].mergedBySkuOnly, 0);
@@ -71,8 +71,8 @@ test('the EAN is tried before the SKU', () => {
 test('a repeat inside one feed updates the product it created and is not a cross-supplier match', () => {
   const { runs, catalogue } = simulateImports(['kolba'], {
     kolba: [
-      prod('kolba', 'k1', 'A-1', '1111111111111', 'Pierwszy'),
-      prod('kolba', 'k2', 'A-2', '1111111111111', 'Powtórka EAN'),
+      prod('kolba', 'k1', 'A-1', '1111111111116', 'Pierwszy'),
+      prod('kolba', 'k2', 'A-2', '1111111111116', 'Powtórka EAN'),
     ],
   });
   assert.equal(catalogue.length, 1);
@@ -89,8 +89,8 @@ test('products that do not pass the assortment filter are not imported', () => {
 
 test('suppliers are imported in the given order', () => {
   const feeds = {
-    kolba: [prod('kolba', 'k1', '5', '5900000000005', 'Kolba 5')],
-    sharg: [prod('sharg', 's1', '5', '5900000000005', 'Sharg 5')],
+    kolba: [prod('kolba', 'k1', '5', '5900000000008', 'Kolba 5')],
+    sharg: [prod('sharg', 's1', '5', '5900000000008', 'Sharg 5')],
   };
   const ks = simulateImports(['kolba', 'sharg'], feeds).catalogue;
   const sk = simulateImports(['sharg', 'kolba'], feeds).catalogue;
@@ -119,7 +119,9 @@ test('a sync matches through the EAN or its own prefixed SKU only — a foreign 
 test('the number of examples is capped, the counts are not', () => {
   // Shared records (same EAN) written last by Spechurt; Sharg's feed then loses the EANs, so its
   // sync finds its own records through SHARG-<n> alone while Spechurt is the last writer.
-  const ean = (i: number) => `59000000000${String(i).padStart(2, '0')}`;
+  // Valid EAN-13s (HA-2.38: a wrong check digit counts as no EAN)
+  const withCheck = (d12: string) => d12 + (10 - ([...d12].reduce((sum, c, k) => sum + Number(c) * (k % 2 ? 3 : 1), 0) % 10)) % 10;
+  const ean = (i: number) => withCheck(`5900000000${String(i).padStart(2, '0')}`);
   const sharg = Array.from({ length: 30 }, (_, i) => prod('sharg', `s${i}`, String(i + 1), ean(i), `Sharg ${i}`));
   const spechurt = Array.from({ length: 30 }, (_, i) => prod('spechurt', String(i + 1), String(i + 1), ean(i), `Spechurt ${i}`));
   const { runs, catalogue } = simulateImports(['sharg', 'spechurt'], { sharg, spechurt }, 5);

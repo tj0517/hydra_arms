@@ -94,7 +94,9 @@ import { fetchFeedWithRetry, retryPolicyFromEnv, type FeedAttempt } from '../xml
 import {
   SUPPLIERS,
   addToMatchIndex,
+  eanForUpsert,
   findBLMatch,
+  invalidEans,
   planUpsert,
   recordIdentity,
   type BLMatchIndex,
@@ -136,6 +138,7 @@ const MARKUP_ENV: Record<ConnectorName, string> = {
 // blCall additionally catches ERROR_BLOCKED_TOKEN and waits out the block.
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const RATE_LIMIT_MS = 700;
+const INVALID_EAN_LINES = 20;
 
 type Env = WriteEnv;
 
@@ -333,6 +336,15 @@ async function fetchAndParse(connectorName: ConnectorName, fromFilePath?: string
     await mergeShargParameters(products, connector.config.extra as { gateway_url?: string });
   }
 
+  // HA-2.38: an EAN with a wrong check digit or length counts as missing (match by SKU only)
+  const invalid = invalidEans(products);
+  if (invalid.length > 0) {
+    console.warn(`[warn] ${invalid.length} products with an invalid EAN — treated as no EAN (matched by SKU only); first ${Math.min(invalid.length, INVALID_EAN_LINES)}:`);
+    for (const { product, check } of invalid.slice(0, INVALID_EAN_LINES)) {
+      console.warn(`  ${product.connector_sku} "${check.raw}" (${check.reason})`);
+    }
+  }
+
   return products;
 }
 
@@ -517,7 +529,7 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
     products.map((p) => findBLMatch(index, connectorName, p.ean, p.connector_sku)?.id).filter((id): id is number => id !== undefined),
   )];
   // The same read carries the client's „Marża %” field (HA-2.22) — read here, never written back.
-  const existingData = new Map<number, { tags: string[]; sku: string; features: Record<string, string>; marginRaw?: unknown }>();
+  const existingData = new Map<number, { tags: string[]; sku: string; ean: string; features: Record<string, string>; marginRaw?: unknown }>();
   if (matchedIds.length > 0) {
     console.log(`\nFetching tags, parameters and margin field of ${matchedIds.length} existing products (to preserve admin tags and other suppliers' parameters)…`);
     for (let i = 0; i < matchedIds.length; i += 100) {
@@ -527,6 +539,7 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
         existingData.set(Number(id), {
           tags: d.tags ?? [],
           sku: String(d.sku ?? ''),
+          ean: String(d.ean ?? ''),
           features: featuresOf(d),
           marginRaw: marginKey !== null ? readMarginRaw(d.text_fields, marginKey) : undefined,
         });
@@ -560,7 +573,8 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
 
     // SKU: `<SUPPLIER>-<feed sku>`, or the creating supplier's SKU on a shared record;
     // parameters merged with the record's existing ones
-    const identity = recordIdentity(connectorName, p.connector_sku, p.features, existing);
+    // EAN (HA-2.38): the feed's in GTIN-13 form; without a valid one the record keeps its own
+    const identity = { ...recordIdentity(connectorName, p.connector_sku, p.features, existing), ean: eanForUpsert(p.ean, existing?.ean) };
     // Margin: the record's „Marża %” when valid, else env; a new product has no field yet
     const margin = chooseMargin(existing?.marginRaw, env.markupPct);
     const { product, price, priceFromFallback, priceZero } = toBLProduct(p, env, r.categoryId, tags, identity, margin);
@@ -581,7 +595,7 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
         addToMatchIndex(index, productId, p.ean, identity.sku);
       }
       // A later repeat inside the feed merges with what was just written
-      existingData.set(productId, { tags, sku: identity.sku, features: identity.features, marginRaw: existing?.marginRaw });
+      existingData.set(productId, { tags, sku: identity.sku, ean: identity.ean, features: identity.features, marginRaw: existing?.marginRaw });
       process.stdout.write(existingId !== undefined ? '.' : '+');
     } catch (err) {
       errors++;

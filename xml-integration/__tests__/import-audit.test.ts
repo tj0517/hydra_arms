@@ -89,7 +89,7 @@ test('duplicateCandidates (cross-supplier): same producer + normalized name at t
 test('duplicateCandidates: one record seen twice is not a duplicate; same-supplier groups only in within mode', () => {
   const same = [item('7', 'sharg', 'Pas Rigger Belt czarny'), item('7', 'sharg', 'Pas Rigger Belt czarny')];
   assert.equal(duplicateCandidates(same, { crossSupplier: false }).length, 0);
-  const within = [item('1', 'sharg', 'Pas Rigger Belt czarny', 'Condor', '1'), item('2', 'sharg', 'Pas Rigger Belt czarny', 'Condor', '2')];
+  const within = [item('1', 'sharg', 'Pas Rigger Belt czarny', 'Condor', '5905247629906'), item('2', 'sharg', 'Pas Rigger Belt czarny', 'Condor', '5905247620859')];
   assert.equal(duplicateCandidates(within, { crossSupplier: true }).length, 0);
   const g = duplicateCandidates(within, { crossSupplier: false });
   assert.equal(g.length, 1);

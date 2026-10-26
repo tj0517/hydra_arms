@@ -12,7 +12,7 @@
  */
 
 import type { NormalizedProduct } from './types';
-import { addToMatchIndex, emptyMatchIndex, findBLMatch, type BLMatchIndex, type Supplier } from './bl-match-key';
+import { addToMatchIndex, eanForUpsert, emptyMatchIndex, findBLMatch, type BLMatchIndex, type Supplier } from './bl-match-key';
 import { chooseMargin, computeSellingPrice, readMarginRaw, type MarginChoice, type MarginTally } from './margin';
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
@@ -33,7 +33,8 @@ export function toBLProduct(
   env: WriteEnv,
   categoryId: number,
   tags: string[],
-  identity: { sku: string; features: Record<string, string> },
+  /** `ean`: eanForUpsert with the record's current EAN (import); omitted → the feed's EAN alone */
+  identity: { sku: string; features: Record<string, string>; ean?: string },
   margin: MarginChoice,
 ): { product: Record<string, unknown>; price: number; priceFromFallback: boolean; priceZero: boolean } {
   const { price, fromFallback, priceZero } = computeSellingPrice(p, margin.pct);
@@ -54,7 +55,7 @@ export function toBLProduct(
   const product: Record<string, unknown> = {
     parent_id: 0,
     sku: identity.sku,
-    ean: p.ean ?? '',
+    ean: identity.ean ?? eanForUpsert(p.ean),
     tax_rate: p.tax_rate ?? 23,
     weight: p.weight_g ? round2(p.weight_g / 1000) : 0, // BL stores kg
     category_id: categoryId,

@@ -13,7 +13,7 @@
  * Nothing here merges, writes or calls BaseLinker: candidates are lists for a human to judge.
  */
 
-import { SKU_PREFIX, SUPPLIERS, supplierSkuParam, type Supplier } from './bl-match-key';
+import { SKU_PREFIX, SUPPLIERS, eanKey, supplierSkuParam, type Supplier } from './bl-match-key';
 
 // ── Name text ─────────────────────────────────────────────────────────────────
 
@@ -176,7 +176,8 @@ export function duplicateCandidates<T extends CatalogueItem>(
     if (new Set(list.map((i) => i.ref)).size < 2) continue;
     const suppliers = [...new Set(list.map((i) => i.supplier))].sort();
     if (opts.crossSupplier ? suppliers.length < 2 : suppliers.length !== 1) continue;
-    const eans = list.map((i) => i.ean.trim());
+    // GTIN-14 key (HA-2.38): `0192687280759` and `192687280759` are the same EAN; invalid = missing
+    const eans = list.map((i) => eanKey(i.ean) ?? '');
     const ean: EanRelation = eans.some((e) => !e) ? 'ean_missing' : new Set(eans).size > 1 ? 'ean_differs' : 'ean_same';
     out.push({ key, items: list, suppliers, ean });
   }
