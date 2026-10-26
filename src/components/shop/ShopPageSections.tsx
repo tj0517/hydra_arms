@@ -140,6 +140,9 @@ interface Props {
   categories: ListingCategory[]
 }
 
+// Portable Text lists — Tailwind preflight strips list markers and there is no typography plugin.
+const ptLists = '[&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pl-5 [&_ol]:pl-5 [&_li]:marker:text-accent/70'
+
 // ── Icon resolver ──────────────────────────────────────────────────────────────
 
 function DynamicIcon({ name, ...props }: { name: string } & LucideProps) {
@@ -168,7 +171,7 @@ function BannerSection({ block }: { block: BannerBlock }) {
   const subtitleColor = block.theme === 'light' ? 'text-black/60' : 'text-white/60'
 
   return (
-    <section className={`relative w-full overflow-hidden flex items-center ${heightClass(block.height)}`}>
+    <section className={`relative w-full overflow-hidden flex items-center py-12 md:py-16 ${heightClass(block.height)}`}>
       {/* Background */}
       {videoUrl ? (
         <video
@@ -370,7 +373,7 @@ function TextCtaSection({ block }: { block: TextCtaBlock }) {
             </h2>
           )}
           {block.body && (
-            <div className="prose prose-invert prose-sm max-w-none text-text-dim [&_p]:leading-relaxed [&_ul]:mt-3 [&_li]:mt-1">
+            <div className={`text-text-dim [&_p]:leading-relaxed [&_ul]:mt-3 [&_li]:mt-1 ${ptLists}`}>
               <PortableText value={block.body} />
             </div>
           )}
@@ -468,7 +471,7 @@ function FaqItem({ question, answer }: { question: string; answer?: any[] }) {
         </span>
       </button>
       {open && answer && (
-        <div className="pb-5 prose prose-invert prose-sm max-w-none text-text-dim [&_p]:leading-relaxed [&_ul]:mt-2 [&_li]:mt-1">
+        <div className={`pb-5 text-text-dim [&_p]:leading-relaxed [&_ul]:mt-2 [&_li]:mt-1 ${ptLists}`}>
           <PortableText value={answer} />
         </div>
       )}
@@ -529,6 +532,9 @@ function StatItem({ item, borderLeft }: { item: NonNullable<StatsBlock['items']>
   )
 }
 
+// One column per stat (max 4) so 2 or 3 stats span the row centred instead of leaving empty columns.
+const statColsMap: Record<number, string> = { 1: 'grid-cols-1', 2: 'grid-cols-2', 3: 'grid-cols-3', 4: 'grid-cols-4' }
+
 function StatsSection({ block }: { block: StatsBlock }) {
   if (!block.items?.length) return null
   const bg = bgClass[block.background ?? 'dark']
@@ -552,7 +558,7 @@ function StatsSection({ block }: { block: StatsBlock }) {
         {row2.length > 0 && (
           <>
             <div className="border-t border-white/10" />
-            <div className="max-w-[1400px] mx-auto px-[clamp(32px,5vw,64px)] grid grid-cols-2">
+            <div className={`max-w-[1400px] mx-auto px-[clamp(32px,5vw,64px)] grid ${statColsMap[row2.length]}`}>
               {row2.map((item, i) => <StatItem key={item._key} item={item} borderLeft={i > 0} />)}
             </div>
           </>
@@ -561,7 +567,7 @@ function StatsSection({ block }: { block: StatsBlock }) {
 
       {/* Desktop: single 4-col row */}
       <div className="hidden md:block max-w-[1400px] mx-auto px-[clamp(32px,5vw,64px)]">
-        <div className="grid grid-cols-4">
+        <div className={`grid ${statColsMap[Math.min(items.length, 4)]}`}>
           {items.map((item, i) => <StatItem key={item._key} item={item} borderLeft={i > 0} />)}
         </div>
       </div>
@@ -641,7 +647,7 @@ function RichTextSection({ block }: { block: RichTextBlock }) {
     <section className={`${bg} py-12 md:py-16`}>
       <div className="max-w-[1400px] mx-auto px-[clamp(32px,5vw,64px)]">
         <div
-          className={`${mw} prose prose-invert prose-sm md:prose-base max-w-none text-text-dim
+          className={`${mw} text-text-dim ${ptLists}
             [&_h2]:text-white [&_h2]:text-2xl md:[&_h2]:text-3xl [&_h2]:font-bold [&_h2]:tracking-tight [&_h2]:mt-0 [&_h2]:mb-4
             [&_h3]:text-white/90 [&_h3]:font-semibold [&_h3]:mt-6 [&_h3]:mb-2
             [&_p]:leading-relaxed [&_p]:text-white/60 [&_ul]:mt-3 [&_li]:mt-1
