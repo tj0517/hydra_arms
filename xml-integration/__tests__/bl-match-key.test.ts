@@ -15,6 +15,10 @@ import {
   SOURCE_PARAM,
   addToMatchIndex,
   blSku,
+  eanForUpsert,
+  eanKey,
+  invalidEans,
+  normalizeEan,
   emptyMatchIndex,
   findBLMatch,
   mergeFeatures,
@@ -137,7 +141,7 @@ test('bl-match-key: EAN is tried first, then only this supplier\'s prefixed SKU'
   addToMatchIndex(index, 2, '', 'SHARG-139');
   assert.deepEqual(findBLMatch(index, 'sharg', '5905247629906', '139'), { id: 1, via: 'ean' });
   assert.deepEqual(findBLMatch(index, 'sharg', '', '139'), { id: 2, via: 'sku' });
-  assert.deepEqual(findBLMatch(index, 'sharg', '4000000000000', '139'), { id: 2, via: 'sku' }, 'own SKU after an EAN miss');
+  assert.deepEqual(findBLMatch(index, 'sharg', '4000000000006', '139'), { id: 2, via: 'sku' }, 'own SKU after an EAN miss');
   assert.equal(findBLMatch(index, 'spechurt', '', '139'), undefined);
   assert.equal(findBLMatch(index, 'kolba', '', '139'), undefined);
 });
@@ -158,6 +162,62 @@ test('bl-match-key: sync on an index with prefixed SKUs — a bare or foreign-pr
   assert.deepEqual(syncIds('sharg', [{ sku: '139', ean: '', name: '' }, { sku: '139', ean: '5905247629906', name: '' }]), [13, 14]);
   assert.deepEqual(syncIds('spechurt', [{ sku: '139', ean: '', name: '' }, { sku: '140', ean: '', name: '' }]), [12, undefined]);
   assert.deepEqual(syncIds('kolba', [{ sku: '139', ean: '', name: '' }]), [undefined], 'bare "139" is nobody\'s key');
+});
+
+// ── ean-normalize (HA-2.38) ───────────────────────────────────────────────────
+
+test('ean-normalize: `192687280759` (Kolba) and `0192687280759` (Spechurt) are one key; written as GTIN-13', () => {
+  assert.equal(eanKey('192687280759'), '00192687280759');
+  assert.equal(eanKey('0192687280759'), eanKey('192687280759'));
+  assert.equal(eanKey(' 00192687280759 '), eanKey('192687280759'), 'GTIN-14 with zeros, whitespace');
+  assert.deepEqual(normalizeEan('192687280759'), { kind: 'ok', key: '00192687280759', write: '0192687280759' });
+  assert.deepEqual(normalizeEan('0192687280759'), { kind: 'ok', key: '00192687280759', write: '0192687280759' });
+  assert.deepEqual(normalizeEan('5905247629906'), { kind: 'ok', key: '05905247629906', write: '5905247629906' });
+});
+
+test('ean-normalize: Sharg 11-digit EAN (lost zeros) → 13-digit write; EAN-8 unchanged; GTIN-14 with a non-zero first digit stays 14', () => {
+  assert.equal(normalizeEan('12345678905').kind, 'ok', '012345678905 that lost its zero is still a valid key');
+  assert.equal(eanKey('12345678905'), eanKey('012345678905'));
+  assert.deepEqual(normalizeEan('12345678905'), { kind: 'ok', key: '00012345678905', write: '0012345678905' });
+  assert.deepEqual(normalizeEan('96385074'), { kind: 'ok', key: '00000096385074', write: '96385074' });
+  assert.deepEqual(normalizeEan('15905247629903'), { kind: 'ok', key: '15905247629903', write: '15905247629903' });
+});
+
+test('ean-normalize: wrong check digit, wrong length, letters, all zeros → no EAN (null key)', () => {
+  assert.deepEqual(normalizeEan('5905247629907'), { kind: 'invalid', raw: '5905247629907', reason: 'check digit' });
+  assert.deepEqual(normalizeEan('1234567'), { kind: 'invalid', raw: '1234567', reason: 'length' });
+  assert.deepEqual(normalizeEan('123456789012345'), { kind: 'invalid', raw: '123456789012345', reason: 'length' });
+  assert.deepEqual(normalizeEan('59052476X9906'), { kind: 'invalid', raw: '59052476X9906', reason: 'not digits' });
+  assert.equal(normalizeEan('00000000').kind, 'invalid');
+  assert.deepEqual(normalizeEan(''), { kind: 'empty' });
+  assert.deepEqual(normalizeEan(null), { kind: 'empty' });
+  assert.equal(eanKey('5905247629907'), null);
+  const index = emptyMatchIndex();
+  addToMatchIndex(index, 1, '5905247629907', 'KOLBA-1');
+  assert.equal(index.byEan.size, 0, 'an invalid EAN is not indexed');
+  assert.deepEqual(findBLMatch(index, 'sharg', '5905247629907', '9'), undefined, 'and never matches across suppliers');
+  assert.deepEqual(invalidEans([{ ean: '5905247629907' }, { ean: '5905247629906' }, { ean: null }]).map((x) => x.check.reason), ['check digit']);
+});
+
+test('ean-normalize: the upsert writes the feed EAN in GTIN-13 form; without a valid feed EAN the record keeps its own', () => {
+  assert.equal(eanForUpsert('192687280759'), '0192687280759');
+  assert.equal(eanForUpsert('192687280759', '5905247629906'), '0192687280759', 'a valid feed EAN wins');
+  assert.equal(eanForUpsert('5905247629907', '0192687280759'), '0192687280759', 'invalid feed EAN does not blank the record\'s');
+  assert.equal(eanForUpsert('', '192687280759'), '0192687280759', 'kept, in write form');
+  assert.equal(eanForUpsert(null, 'ABC'), 'ABC', 'an invalid EAN already in BL is left as it is');
+  assert.equal(eanForUpsert('5905247629907'), '', 'new record, invalid feed EAN → no EAN');
+});
+
+test('ean-normalize RED PROOF: Kolba `192687280759` + Spechurt `0192687280759`, the same good → one record', () => {
+  // Without normalizeEan in addToMatchIndex / findBLMatch the second run creates a second record
+  const catalogue: BLRecord[] = [];
+  importRun(catalogue, 'kolba', [{ sku: '100-200', ean: '192687280759', name: 'Latarka (Kolba)' }]);
+  const second = importRun(catalogue, 'spechurt', [{ sku: '1091', ean: '0192687280759', name: 'Latarka (Spechurt)' }]);
+  assert.deepEqual(second, { created: 0, updated: 1, skipped: 0 });
+  assert.equal(catalogue.length, 1);
+  // …and a Sharg 11-digit EAN of the same good (a zero lost before HA-2.38) joins it too
+  assert.deepEqual(importRun(catalogue, 'sharg', [{ sku: '139', ean: '192687280759', name: 'Latarka (Sharg)' }]), { created: 0, updated: 1, skipped: 0 });
+  assert.equal(catalogue.length, 1);
 });
 
 // ── param-merge ───────────────────────────────────────────────────────────────

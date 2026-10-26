@@ -33,6 +33,11 @@ import type { Connector, ConnectorConfig, NormalizedImage, NormalizedProduct, No
 
 // ── Parser configs ─────────────────────────────────────────────────────────────
 
+// code_producer (EAN) stays text — parseAttributeValue turned `0192687280759` into 192687280759
+// and lost the zero (HA-2.38). Returning undefined keeps the raw string; every other attribute is
+// still parsed (code_external → number keeps the SHARG-139 SKU format of HA-2.28).
+const keepEanText = (name: string, value: string) => (name === 'code_producer' ? undefined : value)
+
 const xmlParserFull = new XMLParser({
   ignoreAttributes: false,
   attributeNamePrefix: '@_',
@@ -40,6 +45,7 @@ const xmlParserFull = new XMLParser({
   removeNSPrefix: true,   // strips iaiext: prefix
   allowBooleanAttributes: true,
   parseAttributeValue: true,
+  attributeValueProcessor: keepEanText,
 })
 
 const xmlParserLight = new XMLParser({
@@ -49,6 +55,7 @@ const xmlParserLight = new XMLParser({
   removeNSPrefix: true,
   allowBooleanAttributes: true,
   parseAttributeValue: true,
+  attributeValueProcessor: keepEanText,
 })
 
 // ── Types for raw Sharg XML ────────────────────────────────────────────────────
