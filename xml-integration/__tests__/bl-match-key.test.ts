@@ -14,7 +14,9 @@ import { resolve } from 'path';
 import {
   SOURCE_PARAM,
   addToMatchIndex,
+  ambiguousEanWarning,
   blSku,
+  dropAmbiguousEans,
   eanForUpsert,
   eanKey,
   invalidEans,
@@ -218,6 +220,55 @@ test('ean-normalize RED PROOF: Kolba `192687280759` + Spechurt `0192687280759`, 
   // …and a Sharg 11-digit EAN of the same good (a zero lost before HA-2.38) joins it too
   assert.deepEqual(importRun(catalogue, 'sharg', [{ sku: '139', ean: '192687280759', name: 'Latarka (Sharg)' }]), { created: 0, updated: 1, skipped: 0 });
   assert.equal(catalogue.length, 1);
+});
+
+// ── ambiguous EAN inside one feed (D-E, tj 2026-10-26) ───────────────────────
+
+test('D-E RED PROOF: two different items of ONE feed whose EANs differ only by a leading zero → two records (each by its own SKU)', () => {
+  // Spechurt 42585 S&W OTF Dagger `28634709762` and 42586 Tanto `028634709762` — one GTIN-14 key
+  const feed: FeedItem[] = [
+    { sku: '42585', ean: '28634709762', name: 'S&W OTF Dagger' },
+    { sku: '42586', ean: '028634709762', name: 'S&W OTF Tanto' },
+  ];
+  const catalogue: BLRecord[] = [];
+  // Without dropAmbiguousEans the Tanto lands on the Dagger's record (one record, last item wins)
+  const run = importRun(catalogue, 'spechurt', dropAmbiguousEans(feed).products as FeedItem[]);
+  assert.deepEqual(run, { created: 2, updated: 0, skipped: 0 });
+  assert.deepEqual(catalogue.map((r) => r.sku), ['SPECHURT-42585', 'SPECHURT-42586']);
+});
+
+test('D-E: existing records keep their own match — the ambiguous items go by SKU, not to the first record of the key', () => {
+  const index = emptyMatchIndex();
+  addToMatchIndex(index, 717178608, '28634709762', 'SPECHURT-42585');
+  addToMatchIndex(index, 717178611, '028634709762', 'SPECHURT-42586');
+  const raw = [{ ean: '28634709762', connector_sku: '42585' }, { ean: '028634709762', connector_sku: '42586' }];
+  assert.deepEqual(raw.map((p) => findBLMatch(index, 'spechurt', p.ean, p.connector_sku)?.id), [717178608, 717178608], 'today: both on the first record');
+  const { products, groups } = dropAmbiguousEans(raw);
+  assert.deepEqual(products.map((p) => findBLMatch(index, 'spechurt', p.ean, p.connector_sku)), [{ id: 717178608, via: 'sku' }, { id: 717178611, via: 'sku' }]);
+  assert.equal(groups.length, 1);
+  assert.equal(raw[1].ean, '028634709762', 'the input is not mutated');
+});
+
+test('D-E: a key carried once per feed still joins suppliers; only the colliding items lose their EAN; one warn line', () => {
+  const spechurt = [
+    { ean: '600740351969', connector_sku: '16809' }, { ean: '0600740351969', connector_sku: '16841' },
+    { ean: '0192687280759', connector_sku: '43894' },
+  ];
+  const { products, groups } = dropAmbiguousEans(spechurt);
+  assert.deepEqual(products.map((p) => p.ean), [null, null, '0192687280759']);
+  const index = emptyMatchIndex();
+  addToMatchIndex(index, 710598323, '192687280759', 'KOLBA-874-073');
+  assert.deepEqual(findBLMatch(index, 'spechurt', products[2].ean, '43894'), { id: 710598323, via: 'ean' }, 'cross-supplier matching unchanged');
+  assert.equal(ambiguousEanWarning(groups), '[warn] 2 products in 1 groups share an EAN with another product of this feed (ambiguous) — matched by their SKU only; first: 16809 "600740351969" / 16841 "0600740351969"');
+  assert.equal(ambiguousEanWarning([]), null);
+  assert.equal(dropAmbiguousEans([{ ean: 'x' }, { ean: 'x' }]).groups.length, 0, 'invalid EANs are already no EAN');
+});
+
+test('D-E is applied wherever a feed is matched: import/sync/zeroing (fetchAndParse), audit, diag-prices, ean-report', () => {
+  for (const script of ['xml-to-baselinker.ts', 'audit-import.ts', 'diag-prices.ts', 'ean-report.ts']) {
+    const src = readFileSync(resolve(__dirname, '../../scripts', script), 'utf8');
+    assert.match(src, /dropAmbiguousEans\(/, `${script} must drop ambiguous in-feed EANs before matching`);
+  }
 });
 
 // ── param-merge ───────────────────────────────────────────────────────────────

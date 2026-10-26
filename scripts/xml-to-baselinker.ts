@@ -101,6 +101,8 @@ import { fetchFeedWithRetry, retryPolicyFromEnv, type FeedAttempt } from '../xml
 import {
   SUPPLIERS,
   addToMatchIndex,
+  ambiguousEanWarning,
+  dropAmbiguousEans,
   eanForUpsert,
   findBLMatch,
   invalidEans,
@@ -342,7 +344,12 @@ async function fetchAndParse(connectorName: ConnectorName, fromFilePath?: string
   // --from-file. After the last attempt EmptyFeedError reaches main().catch → `[fatal] empty
   // feed after N attempts`, exit 1 — run-bl.sh copies it into the journal's END result.
   const policy = retryPolicyFromEnv(process.env, { fromFile: fromFilePath !== undefined });
-  const { products } = await fetchFeedWithRetry(attempt, policy, { sleep, warn: (line) => console.warn(line) });
+  const fetched = await fetchFeedWithRetry(attempt, policy, { sleep, warn: (line) => console.warn(line) });
+  // D-E (HA-2.38): an EAN two items of this feed share is ambiguous — those items match by SKU only.
+  // Done here, so import, sync, dry-run and the zeroing preview all see the same products.
+  const { products, groups } = dropAmbiguousEans(fetched.products);
+  const ambiguous = ambiguousEanWarning(groups);
+  if (ambiguous) console.warn(ambiguous);
 
   if (connectorName === 'sharg') {
     await mergeShargParameters(products, connector.config.extra as { gateway_url?: string });
@@ -708,10 +715,14 @@ async function runZeroPreview(connectorName: ConnectorName, env: Env): Promise<v
   console.log(`  ${index.total} products in BL`);
   await sleep(RATE_LIMIT_MS);
   const z = await planZeroing(products, connectorName, env, index, listed, readonly.getInventoryProductsData, sleep, RATE_LIMIT_MS);
-  console.log(`\nCandidates (stock > 0 in ${env.warehouse}, not matched by today's feed): ${z.candidates}; with a ${connectorName} code missing from the feed: ${z.rows.length}`);
+  const missing = z.rows.filter((r) => r.reason === 'code_missing').length;
+  console.log(`\nCandidates (stock > 0 in ${env.warehouse}, not matched by today's feed): ${z.candidates}; to zero: ${z.rows.length} (${connectorName} code missing from the feed: ${missing}, item matched elsewhere: ${z.rows.length - missing})`);
   if (z.rows.length > 0) {
-    console.log(`  ${'BL id'.padEnd(10)} ${'sku'.padEnd(22)} ${'code'.padEnd(14)} ${'stock'.padStart(5)} ${'approved'.padEnd(8)} name`);
-    for (const r of z.rows) console.log(`  ${String(r.id).padEnd(10)} ${r.sku.slice(0, 22).padEnd(22)} ${r.code.slice(0, 14).padEnd(14)} ${String(r.stock).padStart(5)} ${(r.approved ? 'yes' : 'no').padEnd(8)} ${r.name.slice(0, 60)}`);
+    console.log(`  ${'BL id'.padEnd(10)} ${'sku'.padEnd(22)} ${'code'.padEnd(14)} ${'stock'.padStart(5)} ${'approved'.padEnd(8)} ${'reason'.padEnd(34)} name`);
+    for (const r of z.rows) {
+      const reason = r.reason === 'code_missing' ? 'code missing' : `item matched elsewhere → ${r.movedTo}`;
+      console.log(`  ${String(r.id).padEnd(10)} ${r.sku.slice(0, 22).padEnd(22)} ${r.code.slice(0, 14).padEnd(14)} ${String(r.stock).padStart(5)} ${(r.approved ? 'yes' : 'no').padEnd(8)} ${reason.padEnd(34)} ${r.name.slice(0, 60)}`);
+    }
   }
   console.log(`\nfeed: ${products.length} products; previous successful sync: ${previous ?? 'none'} (${store.file})`);
   if (guard.kind === 'incomplete') console.log(`[error] feed looks incomplete: ${products.length} < ${FEED_MIN_RATIO * 100}% of ${guard.previous} — the sync would zero nothing and exit 1`);

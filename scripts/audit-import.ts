@@ -65,6 +65,8 @@ import {
   SUPPLIERS,
   SUPPLIER_LABEL,
   addToMatchIndex,
+  ambiguousEanWarning,
+  dropAmbiguousEans,
   eanKey,
   emptyMatchIndex,
   findBLMatch,
@@ -528,6 +530,11 @@ async function loadFeed(
   }
   const cls = classifyFeed(xml, products.length);
   xml = '';
+  // D-E (HA-2.38): the same EAN on ≥ 2 items of this feed → those items match by SKU only, as in the import
+  const amb = dropAmbiguousEans(products);
+  products = amb.products;
+  const ambWarn = ambiguousEanWarning(amb.groups);
+  if (ambWarn) log(`  ${ambWarn}`);
   if (cls !== 'ok') {
     result.error = `empty feed (${cls}${result.beforeConnectorFilter !== null ? `, ${result.beforeConnectorFilter} products before the connector's defence filter` : ''})`;
     log(`  [warn] ${result.error}`);

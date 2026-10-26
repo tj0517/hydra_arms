@@ -11,7 +11,7 @@ import { spawnSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import { FEED_MIN_RATIO, feedGuard, runSyncCore, type FeedCountStore, type SyncDeps, type WriteEnv } from '../bl-write';
-import type { Supplier } from '../bl-match-key';
+import { dropAmbiguousEans, type Supplier } from '../bl-match-key';
 import { MarginTally } from '../margin';
 import type { NormalizedProduct } from '../types';
 
@@ -176,4 +176,63 @@ test('the import script runs the sync through runSyncProcess (so its exit code i
   const src = fs.readFileSync(path.resolve(__dirname, '../../scripts/xml-to-baselinker.ts'), 'utf8');
   assert.match(src, /await runSyncProcess\(products, connectorName, env, \{/);
   assert.doesNotMatch(src, /runSyncCore\(/, 'calling runSyncCore directly would bypass the exit code');
+});
+
+// ── D-D: the code is in the feed, but its item now matches another record (tj 2026-10-26) ──
+
+const H3 = 'bl_3'; // Spechurt
+
+/**
+ * As the preview found it: 711070073 SPECHURT-43894 (no EAN), whose Spechurt item 43894 now matches
+ * KOLBA-874-073 through the EAN `0192687280759` = `192687280759`; the S&W pair 42585 / 42586
+ * (one GTIN-14 key, own records 717178608 / 717178611).
+ */
+function movedCatalogue(): FakeBL {
+  return new FakeBL(new Map<number, Rec>([
+    [710598323, { sku: 'KOLBA-874-073', ean: '192687280759', tags: ['approved'], features: { 'SKU Kolba': '874-073' }, stock: { [H1]: 3, [H3]: 0 } }],
+    [711070073, { sku: 'SPECHURT-43894', ean: '', tags: ['approved'], features: { 'SKU Spechurt': '43894' }, stock: { [H3]: 2, [H1]: 4 } }],
+    [717178608, { sku: 'SPECHURT-42585', ean: '28634709762', tags: [], features: { 'SKU Spechurt': '42585' }, stock: { [H3]: 1 } }],
+    [717178611, { sku: 'SPECHURT-42586', ean: '028634709762', tags: [], features: { 'SKU Spechurt': '42586' }, stock: { [H3]: 1 } }],
+  ]));
+}
+
+const spechurtFeed = () => [
+  feedItem('43894', { connector: 'spechurt', ean: '0192687280759', stock: 5 }),
+  feedItem('42585', { connector: 'spechurt', ean: '28634709762' }),
+  feedItem('42586', { connector: 'spechurt', ean: '028634709762' }),
+];
+
+const runSpechurt = async (bl: FakeBL, products: NormalizedProduct[]) => {
+  const lines: string[] = [];
+  const res = await runSyncCore(products, 'spechurt', { ...env, warehouse: H3 }, bl.deps(memoryStore({ spechurt: 3 }), lines));
+  return { ...res, lines };
+};
+
+test('D-D RED PROOF: a record whose code\'s item now matches another record → stock 0 in that warehouse only; the record it moved to and other warehouses untouched', async () => {
+  const bl = movedCatalogue();
+  const { ok, zeroed, lines } = await runSpechurt(bl, dropAmbiguousEans(spechurtFeed()).products);
+  assert.equal(ok, true);
+  assert.deepEqual(zeroed!.map((r) => [r.id, r.reason, r.movedTo]), [[711070073, 'matched_elsewhere', 710598323]], 'before D-D the list was empty');
+  assert.equal(bl.records.get(711070073)!.stock[H3], 0);
+  assert.equal(bl.records.get(711070073)!.stock[H1], 4, 'Kolba\'s stock on the moved record stays');
+  assert.equal(bl.records.get(710598323)!.stock[H3], 5, 'the record it moved to gets the item\'s stock from the sync, not 0');
+  assert.equal(bl.records.get(710598323)!.stock[H1], 3);
+  assert.ok(lines.some((l) => /zeroed: 1 \(approved: 1\)/.test(l)), lines.join('\n'));
+});
+
+test('D-D with D-E: 717178611 SPECHURT-42586 keeps its own match and is not zeroed; without D-E it would be', async () => {
+  const withRule = await runSpechurt(movedCatalogue(), dropAmbiguousEans(spechurtFeed()).products);
+  assert.ok(!withRule.zeroed!.some((r) => r.id === 717178611));
+  const raw = await runSpechurt(movedCatalogue(), spechurtFeed());
+  assert.deepEqual(raw.zeroed!.map((r) => r.id).sort(), [711070073, 717178611], 'raw feed: 42586 lands on 717178608 and its own record looks moved');
+});
+
+test('D-D: a code whose feed item matches no record at all is left alone (not moved, not missing)', async () => {
+  const bl = movedCatalogue();
+  // Kolba's record carrying Spechurt's code 999 as a parameter; Spechurt's item 999 has no EAN and
+  // SPECHURT-999 is nobody's SKU — the item matches nothing, so the record is neither moved nor withdrawn
+  bl.records.set(720000001, { sku: 'KOLBA-1', ean: '', tags: [], features: { 'SKU Kolba': '1', 'SKU Spechurt': '999' }, stock: { [H3]: 2 } });
+  const { zeroed } = await runSpechurt(bl, dropAmbiguousEans([...spechurtFeed(), feedItem('999', { connector: 'spechurt', ean: null })]).products);
+  assert.ok(!zeroed!.some((r) => r.id === 720000001));
+  assert.equal(bl.records.get(720000001)!.stock[H3], 2);
 });

@@ -117,6 +117,34 @@ export function invalidEans<T extends { ean: string | null }>(products: readonly
   return out;
 }
 
+/**
+ * An EAN key that ≥ 2 items of ONE supplier's feed carry is ambiguous (tj 2026-10-26, D-E — e.g.
+ * Spechurt's S&W OTF Dagger `28634709762` and Tanto `028634709762`, or an Earmor box of 60 and a
+ * single pair): every one of those items is treated as having no EAN and matches by its own SKU only.
+ * Without this they all land on one record and the last one writes its price and stock there.
+ * Returns copies with `ean: null` for those items (nothing else changes) and the groups for the log.
+ * Cross-supplier matching is unchanged: a key one feed carries once still joins other suppliers.
+ */
+export function dropAmbiguousEans<T extends { ean: string | null }>(products: readonly T[]): { products: T[]; groups: Array<{ key: string; items: T[] }> } {
+  const byKey = new Map<string, T[]>();
+  for (const p of products) {
+    const k = eanKey(p.ean);
+    if (k) byKey.set(k, [...(byKey.get(k) ?? []), p]);
+  }
+  const groups = [...byKey.entries()].filter(([, v]) => v.length > 1).map(([key, items]) => ({ key, items }));
+  if (groups.length === 0) return { products: [...products], groups };
+  const ambiguous = new Set(groups.flatMap((g) => g.items));
+  return { products: products.map((p) => (ambiguous.has(p) ? { ...p, ean: null } : p)), groups };
+}
+
+/** The one `[warn]` line per run for dropAmbiguousEans (count + first examples), or null when there is nothing. */
+export function ambiguousEanWarning<T extends { ean: string | null; connector_sku?: string | null }>(groups: ReadonlyArray<{ key: string; items: readonly T[] }>, examples = 3): string | null {
+  if (groups.length === 0) return null;
+  const n = groups.reduce((a, g) => a + g.items.length, 0);
+  const shown = groups.slice(0, examples).map((g) => g.items.map((i) => `${i.connector_sku ?? '?'} "${i.ean}"`).join(' / ')).join('; ');
+  return `[warn] ${n} products in ${groups.length} groups share an EAN with another product of this feed (ambiguous) — matched by their SKU only; first: ${shown}`;
+}
+
 // ── Index of the BaseLinker catalogue ─────────────────────────────────────────
 
 export interface BLMatchIndex {

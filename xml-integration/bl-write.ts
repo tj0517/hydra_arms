@@ -214,13 +214,19 @@ export interface ZeroRow {
   stock: number;
   approved: boolean;
   name: string;
+  /** code missing from today's feed, or the code's feed item now matches another record (D-D) */
+  reason: 'code_missing' | 'matched_elsewhere';
+  /** matched_elsewhere: the record that feed item matches now */
+  movedTo?: number;
 }
 
 /**
- * Records to set to stock 0 in `env.warehouse`: they carry this supplier's code, the code is not in
- * today's feed and no feed product matches them (the audit's „osierocone”, HA-2.37). Only records
- * with stock > 0 there are candidates; their data is read to confirm the code — a record BaseLinker
- * returns no data for is left alone.
+ * Records to set to stock 0 in `env.warehouse`: they carry this supplier's code, no feed product
+ * matches them, and either the code is not in today's feed (the audit's „osierocone”, HA-2.37) or
+ * the feed item with that code now matches a different record — moved there by the EAN key (D-D,
+ * tj 2026-10-26). Only records with stock > 0 there are candidates; their data is read to confirm
+ * the code — a record BaseLinker returns no data for is left alone. Merging such records is a
+ * separate decision; this only stops the stock of this warehouse showing on two records.
  */
 export async function planZeroing(
   products: readonly NormalizedProduct[],
@@ -232,8 +238,18 @@ export async function planZeroing(
   sleep: (ms: number) => Promise<unknown>,
   rateLimitMs: number,
 ): Promise<{ rows: ZeroRow[]; candidates: number; calls: number }> {
-  const matched = new Set(products.map((p) => findBLMatch(index, supplier, p.ean, p.connector_sku)?.id).filter((id): id is number => id !== undefined));
-  const feedSkus = new Set(products.map((p) => (p.connector_sku ?? '').trim()).filter(Boolean));
+  const matched = new Set<number>();
+  const feedSkus = new Set<string>();
+  /** feed SKU → records its items match today */
+  const matchedBySku = new Map<string, number[]>();
+  for (const p of products) {
+    const sku = (p.connector_sku ?? '').trim();
+    const id = findBLMatch(index, supplier, p.ean, p.connector_sku)?.id;
+    if (sku) feedSkus.add(sku);
+    if (id === undefined) continue;
+    matched.add(id);
+    if (sku) matchedBySku.set(sku, [...(matchedBySku.get(sku) ?? []), id]);
+  }
   const candidates = listed.filter((l) => (l.stock[env.warehouse] ?? 0) > 0 && !matched.has(l.id));
   const rows: ZeroRow[] = [];
   let calls = 0;
@@ -250,11 +266,22 @@ export async function planZeroing(
       const sku = String(d.sku ?? c.sku);
       const sup = recordSuppliers(sku, Object.fromEntries(Object.entries(f).map(([k, v]) => [k, String(v ?? '')])));
       const code = sup.codes[supplier];
-      if (code === undefined || feedSkus.has(code)) continue;
+      if (code === undefined) continue;
+      let reason: ZeroRow['reason'];
+      let movedTo: number | undefined;
+      if (!feedSkus.has(code)) reason = 'code_missing';
+      else {
+        // c is unmatched, so any record the code's items match is a different one
+        const elsewhere = matchedBySku.get(code) ?? [];
+        if (elsewhere.length === 0) continue; // the item matches nothing — not moved, left alone
+        reason = 'matched_elsewhere';
+        movedTo = elsewhere[0];
+      }
       rows.push({
         id: c.id, sku, code, stock: c.stock[env.warehouse] ?? 0,
         approved: Array.isArray(d.tags) && (d.tags as unknown[]).map(String).includes('approved'),
         name: String(tf.name ?? ''),
+        reason, ...(movedTo !== undefined ? { movedTo } : {}),
       });
     }
   }

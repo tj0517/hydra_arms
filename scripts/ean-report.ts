@@ -39,6 +39,7 @@ import {
   SUPPLIER_LABEL,
   addToMatchIndex,
   blSku,
+  dropAmbiguousEans,
   eanForUpsert,
   eanKey,
   emptyMatchIndex,
@@ -63,7 +64,7 @@ const log = (m: string) => console.log(redactSecrets(m));
 const isSupplier = (s: string): s is Supplier => (SUPPLIERS as readonly string[]).includes(s);
 
 interface Listed { id: number; ean: string; sku: string; name: string; pos: number }
-interface Slim { id: string; sku: string; ean: string; oldEan: string; name: string; purchase: number | null }
+interface Slim { id: string; sku: string; ean: string | null; oldEan: string; name: string; purchase: number | null }
 
 /** The key as it was before HA-2.38 (bl-match-key.ts at HA-2.28): EAN text as is, first wins. */
 function oldIndex(listed: readonly Listed[]) {
@@ -197,11 +198,15 @@ async function main(): Promise<void> {
     if (classifyFeed(xml, slim.length) !== 'ok') { log('  [warn] empty feed'); bRows.push([SUPPLIER_LABEL[s], 'pusty feed', '', '', '', '', '']); continue; }
     xml = '';
     log(`  ${slim.length} products`);
+    // D-E (HA-2.38): the new key treats an EAN two items of this feed share as no EAN (section D lists them)
+    const amb = dropAmbiguousEans(slim);
+    const keyed = amb.products;
+    const ambiguousItems = amb.groups.reduce((a, g) => a + g.items.length, 0);
 
     const b = { zeros: 0, changed: 0, filled: 0, keptInvalidFeed: 0, same: 0 };
     const c = { same: 0, newHit: 0, newHitForeign: 0, lost: 0, moved: 0, none: 0 };
     let invalid = 0;
-    for (const p of slim) {
+    for (const p of keyed) {
       if (normalizeEan(p.ean).kind === 'invalid') invalid++;
       const before = oldFind(s, p.oldEan, p.sku);
       const after = findBLMatch(index, s, p.ean, p.sku);
@@ -238,14 +243,14 @@ async function main(): Promise<void> {
     for (const [k, v] of coll) {
       v.forEach((x, j) => dCsv.push([s, k, x.p.id, x.p.sku, x.p.ean, x.p.purchase ?? '', x.pos, j === v.length - 1 ? 'tak' : 'nie', new Set(v.map((y) => y.p.purchase)).size > 1 ? 'tak' : 'nie', x.p.name]));
     }
-    cRows.push([SUPPLIER_LABEL[s], c.same, c.newHit, c.newHitForeign, c.lost, c.moved, c.none]);
+    cRows.push([SUPPLIER_LABEL[s], c.same, c.newHit, c.newHitForeign, c.lost, c.moved, c.none, ambiguousItems]);
   }
 
   const table = (h: string[], rows: Array<Array<string | number>>) => [`| ${h.join(' | ')} |`, `| ${h.map(() => '---').join(' | ')} |`, ...rows.map((r) => `| ${r.map((v) => (typeof v === 'number' ? fmt(v) : String(v).replace(/\|/g, '\\|'))).join(' | ')} |`)];
   md.push('## B. EAN, który następny import zapisze w BL (górna granica — import pisze tylko przyjęte przez filtr)', '');
   md.push(...table(['Hurtownia', 'Produkty w feedzie', 'Dopisane zera (ten sam klucz)', 'Inny EAN', 'Z pustego', 'Bez zmian', 'EAN niepoprawny w feedzie (dopasowanie tylko po SKU, BL zachowuje swój EAN)'], bRows), '');
   md.push('## C. Dopasowania: klucz sprzed HA-2.38 → po normalizacji', '');
-  md.push(...table(['Hurtownia', 'Bez zmian', 'Nowe trafienie', 'w tym w rekord innej hurtowni', 'Utracone', 'Przeniesione do innego rekordu', 'Bez dopasowania przed i po'], cRows), '');
+  md.push(...table(['Hurtownia', 'Bez zmian', 'Nowe trafienie', 'w tym w rekord innej hurtowni', 'Utracone', 'Przeniesione do innego rekordu', 'Bez dopasowania przed i po', 'EAN niejednoznaczny w feedzie (D-E, tylko SKU)'], cRows), '');
   md.push('Nowe trafienie w rekord innej hurtowni = ten sam towar, który dotąd tworzył osobny rekord (zera wiodące); od teraz import zaktualizuje rekord wspólny. Utracone / przeniesione = EAN niepoprawny (teraz brak EAN) albo grupa z sekcji A.', '');
   csv.push({ file: 'B_zmiana_EAN_w_BL.csv', headers: ['hurtownia', 'bl_id', 'sku_BL', 'ean_BL', 'ean_po_imporcie', 'rodzaj', 'sku_feed'], rows: pickRows(bCsv, MAX_CSV_ROWS, (r) => `${r[0]}/${r[5]}`) });
   csv.push({ file: 'C_zmiana_dopasowania.csv', headers: ['hurtownia', 'sku_feed', 'ean_feed', 'ean_przed', 'bl_id_przed', 'bl_id_po', 'przez', 'sku_BL_po', 'rekord_innej_hurtowni', 'rodzaj', 'nazwa'], rows: pickRows(cCsv, MAX_CSV_ROWS, (r) => `${r[0]}/${r[9]}`) });

@@ -1056,7 +1056,8 @@ albo synce zrobiły się częste (HA-2.09), wariant C z HA-2.22: jeden odczyt po
 
 **Zerowanie.** Każdy sync po zapisie stanów i cen ustawia stan 0 w magazynie swojej hurtowni na
 rekordach, które mają jej kod (prefiks SKU albo parametr `SKU <Hurtownia>`), a których kodu nie ma
-w dzisiejszym feedzie. Nic nie jest usuwane ani odpinane; inne magazyny tego rekordu się nie
+w dzisiejszym feedzie — albo kod jest, ale jego pozycja feedu trafia teraz inny rekord (przeniesiona
+kluczem EAN, D-D). Nic nie jest usuwane ani odpinane; inne magazyny tego rekordu się nie
 zmieniają. Przy `--limit` zerowania nie ma.
 
 **Bezpiecznik.** Feed z liczbą produktów poniżej 90% poprzedniego udanego syncu tej hurtowni →
@@ -1077,8 +1078,8 @@ pod blokadą, w dzień. `hydra-import`, `H` = `kolba`, `sharg` albo `spechurt`:
 H=sharg; cd /home/hydra-import/hydra && flock -n /home/hydra-import/.hydra-run-bl.lock npx tsx scripts/xml-to-baselinker.ts "$H" sync --zero-preview > /home/hydra-import/logs/zero-preview-$H.log 2>&1; echo "exit=$?"; grep -cE 'key=|token=' /home/hydra-import/logs/zero-preview-$H.log; sed -n '/^Candidates/,$p' /home/hydra-import/logs/zero-preview-$H.log
 ```
 
-Na końcu: lista rekordów (`BL id`, SKU, kod hurtowni, stan, `approved`), licznik z poprzedniego
-syncu i werdykt (`would zero N (approved: M)`, `feed looks incomplete` albo `no previous count`).
+Na końcu: lista rekordów (`BL id`, SKU, kod hurtowni, stan, `approved`, powód: `code missing` albo
+`item matched elsewhere → <BL id>`), licznik z poprzedniego syncu i werdykt (`would zero N (approved: M)`, `feed looks incomplete` albo `no previous count`).
 
 **Raport normalizacji EAN** — tylko odczyt; przed pierwszym przebiegiem z HA-2.38 (bramka STOP):
 pary rekordów z tym samym GTIN-14 (kandydaci do scalenia — scalanie to osobna decyzja tj), EAN
@@ -1092,7 +1093,9 @@ cd /home/hydra-import/hydra && flock -n /home/hydra-import/.hydra-run-bl.lock np
 
 EAN od HA-2.38: porównanie po kluczu GTIN-14 (zera wiodące bez znaczenia), zapis do BL jako
 GTIN-13; EAN o złej cyfrze kontrolnej albo długości import traktuje jak brak (w logu
-`[warn] N products with an invalid EAN …`) i nie kasuje EAN, który rekord już ma.
+`[warn] N products with an invalid EAN …`) i nie kasuje EAN, który rekord już ma. Ten sam GTIN-14 na
+dwóch lub więcej pozycjach feedu jednej hurtowni to EAN niejednoznaczny: te pozycje łączą się tylko po
+SKU swojej hurtowni (D-E), w logu jedna linia `[warn] N products in G groups share an EAN …`.
 
 ## Obsługa
 

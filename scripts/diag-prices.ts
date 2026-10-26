@@ -53,7 +53,7 @@ if (mockFlagFromShell !== undefined) process.env.BASELINKER_MOCK = mockFlagFromS
 import type { NormalizedProduct } from '../xml-integration/types';
 import { classifyFeed } from '../xml-integration/feed-guard';
 import { MARGIN_FIELD_ENV, MarginTally, chooseMargin, computeSellingPrice, marginFieldKey, readMarginRaw } from '../xml-integration/margin';
-import { SKU_PREFIX, SUPPLIERS, SUPPLIER_LABEL, findBLMatch, type BLMatch, type Supplier } from '../xml-integration/bl-match-key';
+import { SKU_PREFIX, SUPPLIERS, SUPPLIER_LABEL, ambiguousEanWarning, dropAmbiguousEans, findBLMatch, type BLMatch, type Supplier } from '../xml-integration/bl-match-key';
 import { loadExistingProducts, planSync, type SyncMargins, type WriteEnv } from '../xml-integration/bl-write';
 import { isSharedRecord, recordSuppliers, redactSecrets, toCsv, type RecordSuppliers } from '../xml-integration/import-audit';
 import {
@@ -298,7 +298,11 @@ async function parseFeed(s: Supplier, xml: string): Promise<{ products: Normaliz
     else origLog(...a.map((x) => (typeof x === 'string' ? redactSecrets(x) : x)));
   };
   try {
-    return { products: connectors[s].parse(xml), beforeConnectorFilter };
+    // D-E (HA-2.38): an EAN two items of this feed share → those items match by SKU only, as in the sync
+    const amb = dropAmbiguousEans(connectors[s].parse(xml));
+    const w = ambiguousEanWarning(amb.groups);
+    if (w) log(`  ${s}: ${w}`);
+    return { products: amb.products, beforeConnectorFilter };
   } finally {
     console.log = origLog;
   }
