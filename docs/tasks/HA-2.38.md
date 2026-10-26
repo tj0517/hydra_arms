@@ -89,6 +89,36 @@ Sukces: ceny w BL zgadzają się z feedem albo każdy rozjazd ma nazwaną przycz
 - `docs/tasks/HA-2.37.md` — definicje osieroconych i rozjazdów
 
 ## Notatki z realizacji
+- 2026-10-26 agent — **diagnoza cen (punkt 1), wynik z serwera** (`diag-prices.ts`, commit 9929bf9, 14:27–14:29 UTC; pliki u tj: `diag-{sharg,kolba}.{md,json}`, `rozjazdy-*.csv`). Bez poprawek — STOP dla tj.
+
+  **Mechanizm (dowód z kodu):** `planSync` (`xml-integration/bl-write.ts`) pisze cenę na każdy rekord, który trafi klucz (EAN między hurtowniami), bez filtra asortymentu. Parametr `SKU <Hurtownia>`, po którym audyt i diagnoza rozpoznają „rekord wspólny” (`recordSuppliers`), pisze tylko **import** — a import przyjmuje tylko produkty przechodzące filtr. Rekord trafiany przez EAN syncu innej hurtowni, której import ten produkt odfiltrował, nie ma jej parametru: liczy się jako „własny”, a jego cenę pisze sync, który biegł **ostatni** (noc: Kolba 22:55 → Sharg 00:50 → Spechurt 06:50 UTC; 26.10 dodatkowo dzienny sync Kolby 13:25 UTC, `kolba-sync-20261026-142504.log`, czas w nazwie polski).
+
+  **Sharg (178 = 162 „własne” + 16 wspólne):**
+
+  | przyczyna | rekordy „własne” | wspólne | przykład prześledzony |
+  | --- | --- | --- | --- |
+  | rekord innej hurtowni (SKU `KOLBA-`/`SPECHURT-`) trafiany przez EAN Sharga — Sharg nie jest zapisanym członkiem; cenę pisze ostatni sync (tu Kolba 13:25 UTC) | 35 (Kolba 32, Spechurt 3) | — | 710608191 `KOLBA-401-000`: feed Sharga 128,00; BL 102,23 / 132,90 = 102,23 × 1,3; diagnoza Kolby nie ma na nim rozjazdu, czyli BL = cena z feedu Kolby |
+  | rekord Sharga (SKU `SHARG-`) trafiany przez EAN syncu Spechurta/Kolby, których import go nie przyjął — ostatni sync wygrywa (wiodąca hipoteza, 1 prześledzony; potwierdzenie: odczyt niżej) | 127 | — | 710960249 `SHARG-5652`: tylko `SKU Sharg`, a stan **8 w magazynie Spechurta** `bl_157485` (H3) — sync Spechurta pisze ten rekord; BL 231,75 / 301,28 = spójna para innej hurtowni; feed Sharga 328 |
+  | rekord wspólny zapisany parametrami (HA-2.39) | — | 16 | 710960504 |
+  | kilka pozycji feedu → jeden rekord | 0 | 0 | — |
+  | feed zmienił się po syncu | 0 | 0 | sync 00:50 UTC i diagnoza czytały ten sam feed: `generated=2026-10-25 22:19:07`, 248,7 MB |
+  | sync nie zapisał (BL odrzucił) | 0 | 0 | `counter` 2402 = wysłane 2402, `warnings` 0 |
+
+  Wykluczone z kodu: (a) inny feed — cron (`run-bl.sh` → skrypt importu `sync` → `fetchAndParse` → `connectors.sharg.config.xml_url`, `SHARG_TOKEN_FULL`, `type=full`) i diagnoza czytają ten sam URL tym samym parserem; (b) zły cel zapisu — `planSync` dla 710960249 buduje `{ "104512": 328, "104511": 426.4 }`, to te same grupy, z których diagnoza czyta BL. Zostaje (c): ten sam rekord nadpisuje sync innej hurtowni. Znak: BL niżej w 164/178 — Kolba i Spechurt mają niższą cenę niż `price` Sharga (patrz pytanie o SRP).
+
+  **Kolba (3 z 520):**
+
+  | przyczyna | liczba | przykład |
+  | --- | --- | --- |
+  | feed zmienił się po syncu (Last-Modified 13:55 UTC > sync 13:25 UTC) | 2 | 710578230 `KOLBA-492-016`: feed 20,22, BL 19,36 / 25,17 = 19,36 × 1,3 |
+  | pole „Marża %” w chwili diagnozy = 0% (BL 551 = 380 × 1,45 z wcześniejszego zapisu) | 1 | 710340232 `KOLBA-764-006` |
+  | (z audytu, wnioskowane) rekordy Kolby nadpisane w nocy przez sync Sharga/Spechurta przez EAN, odzyskane dziennym syncem Kolby 13:25 UTC | ok. 517 | — |
+
+  764-006 to **nie błąd diagnozy**: diagnoza i sync czytają pole tą samą funkcją (`readMarginRaw` → `chooseMargin` → `planSync`, ten sam `getInventoryProductsData`, klucz `extra_field_31810`); `narzut 0` w CSV znaczy, że pole miało o 14:28 wartość dającą 0% („0”). Sync 13:25 UTC policzył 1 produkt z pola — 551 pasuje do 45% w tamtej chwili; między 13:25 a 14:28 pole zmieniło się na 0 albo rekord nie był wśród 3619 dopasowań syncu (diagnoza ma 3620). Uwaga: przy „0” najbliższy sync zapisze 380 — sprzedaż po cenie zakupu.
+
+  **Propozycja poprawki (do akceptacji tj):** sync pisze **ceny** tylko na rekordach, których hurtownia jest członkiem (prefiks SKU albo parametr `SKU <Hurtownia>`; dane już czytane razem z polem marży); na rekordzie trafionym przez EAN bez członkostwa pisze tylko stan we własnym magazynie, a w logu `prices skipped: N (record of another supplier)`. Rekordy wspólne z parametrami — bez zmian do HA-2.39. Audyt i diagnoza: „wspólny” = zapisany parametrami **albo** trafiany przez feedy ≥ 2 hurtowni. Dodatkowo log treści ostrzeżeń BL (dziś tylko liczba). Red proof: SHARG 5652 — sync Spechurta trafiający rekord Sharga przez EAN nie nadpisuje ceny Sharga (przed poprawką nadpisuje). Kryterium „231,75 przed → 328 po” zależy od pytania o SRP.
+
+  **Otwarte pytanie — `price` Sharga to cena zakupu czy SRP?** Konektor bierze cenę zakupu z `size/price@gross` (SCHEMAS.md: „cena zakupu”). W feedzie `price` = `srp` w **każdym** produkcie: 103621 (328 = 328, a do tego `omnibus_price_retail` 328) oraz wszystkie produkty próbek `sharg_full_sample.xml` (6/6) i `sharg_light_sample.xml` (100/100); ceny kończą się na 8 (78, 328, 398) jak detaliczne. Cena zakupu równa sugerowanej detalicznej jest niemożliwa dla odsprzedawcy, więc `price` to najpewniej cena detaliczna sklepu `shop=3` z adresu feedu. Kandydaci na cenę hurtową: `strikethrough_wholesale_price` (103621: 181,06; w próbce 49 przy 78 — tylko przy części produktów, brak w feedzie `light`) i `iaiext:omnibus_price_wholesale` (103621: 270,40 — najniższa cena hurtowa z 30 dni, wymóg Omnibus; niespójna z 181,06). Żadne pole nie jest pewne bez Sharga: która konfiguracja feedu (`shop`, cennik klienta) daje cenę hurtową klienta i jak ma się do faktury za jeden produkt. Jeśli `price` to SRP, każda cena sprzedaży Sharga w BL = SRP × 1,3. Red proofa SHARG 5652 nie buduję, dopóki to nie zostanie rozstrzygnięte.
 - 2026-10-26 tj: kryterium audytu — po drugiej nocy (zgodnie z D2)
 - 2026-10-26 tj: kryterium wagi zawężone do rekordów przyjmowanych przez import (opcja C); rekordy spoza filtra → deferred
 - 2026-10-26 tj (review punktów 2–4): D1 — gdy feed nie ma poprawnego EAN, import zachowuje EAN, który rekord BL już ma (wybór agenta, przyjęty); `ean-report.ts` liczy dodatkowo rekordy BL, których obecny EAN ma złą cyfrę kontrolną (liczba + do 10 przykładów z ID produktu i hurtownią). D2 — ponowny audyt HA-2.37 po **drugiej** nocy z nowym kodem (pierwsza tylko zapisuje liczniki bezpiecznika); bez ręcznych zmian pliku licznika. D3 — dalej z follow-upami: push gałęzi `wip/ha-2.38-ean-zerowanie-waga` (bez PR), kolizje GTIN-14 w obrębie feedu w raporcie EAN, dowód exit ≠ 0 bezpiecznika, ustalenia wagi, wpis o bezpieczniku do deferred.
