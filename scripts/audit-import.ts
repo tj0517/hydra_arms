@@ -73,7 +73,9 @@ import {
   type Supplier,
 } from '../xml-integration/bl-match-key';
 import {
+  GAP_SOURCE_LABEL,
   duplicateCandidates,
+  gapSource,
   nameIssues,
   nightKey,
   parseJournalLine,
@@ -85,6 +87,7 @@ import {
   toCsv,
   variantGroupCandidates,
   type CatalogueItem,
+  type GapSource,
   type JournalEntry,
   type NameIssue,
   type RecordSuppliers,
@@ -1173,17 +1176,18 @@ function sectionF(ctx: Ctx): Section {
     { key: 'nazwa', label: 'nazwa z encjami HTML / śmieciami', test: (r) => { const x = nameIssues(r.name).filter((k) => k !== 'all_caps'); return x.length ? x.join(' ') : null; }, feedTest: (i) => nameIssues(i.name).some((k) => k !== 'all_caps') },
   ];
   const owners = OWNERS.filter((o) => [...bl.records.values()].some((r) => ownerOf(r) === o));
-  const hits = new Map<string, Array<{ r: BLRec; detail: string; source: 'feed' | 'import' | 'orphan' }>>();
+  const hits = new Map<string, Array<{ r: BLRec; detail: string; source: GapSource; admitted: boolean | null }>>();
   for (const c of checks) hits.set(c.key, []);
   for (const r of bl.records.values()) {
     const items = itemsFor(ctx, r.id);
     for (const c of checks) {
       const d = c.test(r);
       if (d === null) continue;
-      // Where the gap comes from: the matched feed product has it too (feed), it does not (import),
-      // or the record has no product in today's feeds (orphan, section A)
-      const source = items.length === 0 ? 'orphan' : c.feedTest && items.some(c.feedTest) ? 'feed' : 'import';
-      hits.get(c.key)!.push({ r, detail: d, source });
+      // Where the gap comes from: the matched feed product has it too (feed); it does not and the
+      // import writes the record (import — accepted) or never touches it (outside the filter);
+      // or the record has no product in today's feeds (orphan, section A) — import-audit.ts gapSource
+      const source = gapSource(items, c.feedTest);
+      hits.get(c.key)!.push({ r, detail: d, source, admitted: items.length ? items.some((i) => i.admitted) : null });
     }
   }
   const rows: Array<Array<string | number>> = [];
@@ -1191,21 +1195,24 @@ function sectionF(ctx: Ctx): Section {
   for (const c of checks) {
     const list = hits.get(c.key)!;
     const per = owners.map((o) => { const all = [...bl.records.values()].filter((r) => ownerOf(r) === o).length; const n = list.filter((x) => ownerOf(x.r) === o).length; return `${fmt(n)} (${pct(n, all)})`; });
-    const src = (k: 'feed' | 'import' | 'orphan') => list.filter((x) => x.source === k).length;
-    let verdict: string = list.length === 0 ? 'OK' : src('import') > 0 ? 'błąd importera' : src('feed') > 0 ? 'problem feedu' : 'tylko rekordy osierocone (A)';
+    const src = (k: GapSource) => list.filter((x) => x.source === k).length;
+    let verdict: string = list.length === 0 ? 'OK' : src('import') > 0 ? 'błąd importera' : src('feed') > 0 ? 'problem feedu'
+      : src('outside_filter') > 0 ? 'poza filtrem (import ich nie aktualizuje)' : 'tylko rekordy osierocone (A)';
     if (src('import') > 0 && src('feed') > 0) verdict = 'błąd importera + problem feedu';
     if (list.length && c.key === 'nazwa' && src('import') === 0) verdict = 'problem feedu (dekodowanie encji możliwe po naszej stronie)';
     if ((c.key === 'cena_sprzedazy_0' && !pg) || (c.key === 'brak_ceny_zakupu' && !ppg)) verdict = 'brak danych (grupa cen nieustawiona)';
-    rows.push([c.label, ...per, c.feedTest ? `${fmt(src('feed'))} / ${fmt(src('import'))} / ${fmt(src('orphan'))}` : `— / ${fmt(src('import'))} / ${fmt(src('orphan'))}`, verdict]);
-    const f = csvOf(`F_${c.key}.csv`, ['bl_id', 'tworca', 'sku', 'nazwa', 'szczegol', 'zrodlo'], list, (x) => [x.r.id, ownerOf(x.r), x.r.sku, x.r.name, x.detail, x.source], (x) => `${ownerOf(x.r)}/${x.source}`);
+    rows.push([c.label, ...per, `${c.feedTest ? fmt(src('feed')) : '—'} / ${fmt(src('import'))} / ${fmt(src('outside_filter'))} / ${fmt(src('orphan'))}`, verdict]);
+    const f = csvOf(`F_${c.key}.csv`, ['bl_id', 'tworca', 'sku', 'nazwa', 'szczegol', 'zrodlo', 'przyjete_przez_filtr'], list, (x) => [x.r.id, ownerOf(x.r), x.r.sku, x.r.name, x.detail, GAP_SOURCE_LABEL[x.source], x.admitted === null ? '' : x.admitted ? 'tak' : 'nie'], (x) => `${ownerOf(x.r)}/${x.source}`);
     if (f.total) csv.push(f);
     ctx.facts[`F_${c.key}`] = list.length;
+    ctx.facts[`F_${c.key}_import`] = src('import');
+    ctx.facts[`F_${c.key}_outside_filter`] = src('outside_filter');
   }
-  md.push(...table(['Problem', ...owners.map((o) => `BL: ${OWNER_LABEL(o)}`), 'Źródło: feed / import / brak w feedzie', 'Werdykt'], rows), '');
+  md.push(...table(['Problem', ...owners.map((o) => `BL: ${OWNER_LABEL(o)}`), 'Źródło: feed / import — przyjęte / poza filtrem / brak w feedzie', 'Werdykt'], rows), '');
   const issueCounts = new Map<NameIssue, number>();
   for (const r of bl.records.values()) for (const k of nameIssues(r.name)) issueCounts.set(k, (issueCounts.get(k) ?? 0) + 1);
   md.push(`Nazwy w BL — rodzaje problemów: ${[...issueCounts.entries()].map(([k, v]) => `${k} ${fmt(v)}`).join(', ') || 'brak'} (all_caps tylko informacyjnie, poza werdyktem). ` +
-    '„Źródło” liczy rekordy z problemem: feed — dopasowany produkt dzisiejszego feedu ma ten sam brak; import — feed ma dane, a w BL ich nie ma (albo problem nie ma odpowiednika w feedzie, np. VAT, cena < zakup); brak w feedzie — rekord osierocony. Kolba nie ma w feedzie VAT — konektor zawsze wpisuje 23% (O8).', '');
+    '„Źródło” liczy rekordy z problemem: feed — dopasowany produkt dzisiejszego feedu ma ten sam brak; import — przyjęte: feed ma dane, a w BL ich nie ma, a import ten rekord zapisuje (albo problem nie ma odpowiednika w feedzie, np. VAT, cena < zakup); poza filtrem: jak wyżej, ale żaden dopasowany produkt nie przechodzi filtra asortymentu, więc import rekordu nie dotyka (sync pisze tylko stan i cenę, HA-2.38); brak w feedzie — rekord osierocony. Kolba nie ma w feedzie VAT — konektor zawsze wpisuje 23% (O8).', '');
   for (const c of csv) md.push(`- ${c.file}: ${fmt(c.total)} rekordów (w pliku ${Math.min(c.total, MAX_CSV_ROWS)})`);
   md.push('');
   return { md, csv };
