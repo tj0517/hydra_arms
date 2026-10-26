@@ -1,12 +1,12 @@
 ---
 id: HA-2.39
 title: Wycena produktów wspólnych dla kilku hurtowni — cena zakupu per hurtownia, krok „wycena” po nocnych syncach
-status: todo
+status: in_progress
 difficulty: M
 model: claude-opus-5-5
 model_approved: null
 effort: high
-branch: null
+branch: feat/ha-2.39-wycena-wspolnych
 due: null
 depends_on: [HA-2.38, HA-2.22]
 blocked_by_questions: []
@@ -26,8 +26,8 @@ Sukces:
 ## Zakres
 - [ ] odczyt stanu: `runSync` (zapis cen dla każdego dopasowanego produktu, także rekordów innej hurtowni), `toBLProduct`, `recordIdentity` / parametry `SKU <Hurtownia>` (`bl-match-key.ts`), marża z pola „Marża %” po HA-2.22, `scripts/server/run-bl.sh` (argumenty `<hurtownia> <tryb>`), crontab w `docs/ops/serwer-importu.md` § 10; liczba rekordów wspólnych po HA-2.38 (normalizacja EAN zmienia ten zbiór)
 - [ ] grupy cenowe „Zakup Kolba”, „Zakup Sharg”, „Zakup Spechurt” w katalogu 119068 — zakłada tj w panelu (STOP). ID jako inputy w rejestrze HA-2.16 (`config/inputs.ts`): `BASELINKER_PRICE_GROUP_PURCHASE_KOLBA` / `_SHARG` / `_SPECHURT`
-- [ ] import i sync każdej hurtowni zapisują cenę zakupu do jej grupy (każdy rekord, który ta hurtownia dopasuje, również wspólny). Na rekordzie jednej hurtowni dalej jak dziś: cena sprzedaży i wspólna „Cena zakupu”. Na rekordzie wspólnym: tylko własna grupa zakupu i stan we własnym magazynie — cenę sprzedaży i wspólną „Cenę zakupu” zostawiają wycenie
-- [ ] „wspólny” = rekord z kodami ≥ 2 hurtowni (prefiks SKU + parametry `SKU …`, `recordSuppliers` z `xml-integration/import-audit.ts` albo ta sama logika w `bl-match-key.ts` — jedna funkcja dla importu, syncu, wyceny i audytu)
+- [ ] import i sync każdej hurtowni zapisują cenę zakupu do jej grupy (każdy rekord, który ta hurtownia dopasuje, również wspólny **i rekord dopasowany tylko przez EAN, bez członkostwa — decyzja 2026-10-26**; tam nadal bez ceny sprzedaży i wspólnej „Ceny zakupu”). Na rekordzie jednej hurtowni dalej jak dziś: cena sprzedaży i wspólna „Cena zakupu”. Na rekordzie wspólnym: tylko własna grupa zakupu i stan we własnym magazynie — cenę sprzedaży i wspólną „Cenę zakupu” zostawiają wycenie
+- [ ] „wspólny” = rekord z ceną > 0 we własnych grupach zakupu ≥ 2 hurtowni — tylko dane w BL, bez feedów (decyzja 2026-10-26; zastępuje „kody ≥ 2 hurtowni”) — jedna funkcja dla importu, syncu, wyceny i audytu
 - [ ] krok „wycena” — tryb skryptu (np. `price-shared`) uruchamiany przez `run-bl.sh` pod tą samą blokadą `flock`; wrapper i `test-run-bl.sh` rozszerzone o ten tryb. Dane wyłącznie z BL (`getInventoryProductsList` + `getInventoryProductsData`), bez pobierania feedów
 - [ ] reguła wyboru dla każdego rekordu wspólnego:
   - kandydaci = hurtownie z ceną > 0 we własnej grupie zakupu;
@@ -73,3 +73,4 @@ Sukces:
 ## Notatki z realizacji
 - 2026-10-26 tj: sync BL → Supabase (cron Vercela, 02:00 UTC) biegnie przed syncami Sharga i Spechurta i przed wyceną, więc sklep pokazuje ceny z opóźnieniem ok. 1 doby. Do rozważenia przesunięcie go na po 07:01 UTC — osobna decyzja tj, nie blokuje tego zadania.
 - 2026-10-26 tj (plan po audycie HA-2.37): reguła domyślna „najtańsza dostępna”; pytanie do klienta O-36 nie blokuje. Zależy od HA-2.38 (normalizacja EAN zmienia zbiór rekordów wspólnych, zerowanie wycofanych zmienia „stan > 0”) i HA-2.22 (pole „Marża %”).
+- 2026-10-26 tj (decyzje przed startem): (1) budujemy teraz, wdrożenie na serwer dopiero po ponownym audycie HA-2.38 (po jego drugiej nocy), żeby ten audyt mierzył samo HA-2.38 — kolejność wdrożenia w opisie PR; (2) na rekordzie dopasowanym tylko przez EAN (hurtownia nie jest członkiem — reguła HA-2.38) hurtownia zapisuje cenę zakupu do SWOJEJ grupy zakupu, nadal bez ceny sprzedaży i wspólnej „Ceny zakupu”; „wspólny” dla wyceny = rekord z ceną > 0 we własnych grupach zakupu ≥ 2 hurtowni (tylko dane w BL, bez feedów) — zastępuje definicję „kody ≥ 2 hurtowni”; (3) Sharg porównywany normalnie, dopóki O-37 (czy `price` Sharga to SRP) jest otwarte — bez wyjątków.
