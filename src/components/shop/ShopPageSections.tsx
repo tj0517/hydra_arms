@@ -168,7 +168,7 @@ function BannerSection({ block }: { block: BannerBlock }) {
   const subtitleColor = block.theme === 'light' ? 'text-black/60' : 'text-white/60'
 
   return (
-    <section className={`relative w-full overflow-hidden flex items-center ${heightClass(block.height)}`}>
+    <section className={`relative w-full overflow-hidden flex items-center py-12 md:py-16 ${heightClass(block.height)}`}>
       {/* Background */}
       {videoUrl ? (
         <video
@@ -529,6 +529,9 @@ function StatItem({ item, borderLeft }: { item: NonNullable<StatsBlock['items']>
   )
 }
 
+// One column per stat (max 4) so 2 or 3 stats span the row centred instead of leaving empty columns.
+const statColsMap: Record<number, string> = { 1: 'grid-cols-1', 2: 'grid-cols-2', 3: 'grid-cols-3', 4: 'grid-cols-4' }
+
 function StatsSection({ block }: { block: StatsBlock }) {
   if (!block.items?.length) return null
   const bg = bgClass[block.background ?? 'dark']
@@ -552,7 +555,7 @@ function StatsSection({ block }: { block: StatsBlock }) {
         {row2.length > 0 && (
           <>
             <div className="border-t border-white/10" />
-            <div className="max-w-[1400px] mx-auto px-[clamp(32px,5vw,64px)] grid grid-cols-2">
+            <div className={`max-w-[1400px] mx-auto px-[clamp(32px,5vw,64px)] grid ${statColsMap[row2.length]}`}>
               {row2.map((item, i) => <StatItem key={item._key} item={item} borderLeft={i > 0} />)}
             </div>
           </>
@@ -561,7 +564,7 @@ function StatsSection({ block }: { block: StatsBlock }) {
 
       {/* Desktop: single 4-col row */}
       <div className="hidden md:block max-w-[1400px] mx-auto px-[clamp(32px,5vw,64px)]">
-        <div className="grid grid-cols-4">
+        <div className={`grid ${statColsMap[Math.min(items.length, 4)]}`}>
           {items.map((item, i) => <StatItem key={item._key} item={item} borderLeft={i > 0} />)}
         </div>
       </div>
