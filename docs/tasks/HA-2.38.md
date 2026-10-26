@@ -89,6 +89,22 @@ Sukces: ceny w BL zgadzają się z feedem albo każdy rozjazd ma nazwaną przycz
 - `docs/tasks/HA-2.37.md` — definicje osieroconych i rozjazdów
 
 ## Notatki z realizacji
+- 2026-10-26 agent — **odczyt potwierdzający (tj, `diag-prices` Spechurt + Kolba na 178 rekordach Sharga + 710340232, main @ 9929bf9, pliki `diag-ha-2.38b/`)**: przyczyna z diagnozy potwierdzona dla **wszystkich 178** rekordów — cena zakupu w BL = bieżąca cena zakupu pozycji feedu innej hurtowni (albo właściciela), dopasowanej do rekordu kluczem syncu; niewyjaśnionych 0. Sprawdzone własnym skryptem (porównanie `zakup_BL` z `rozjazdy-sharg.csv` z `price_purchase` pozycji w `feed_items` z `match.id` = rekord, tolerancja 0,01), liczby zgodne z odczytem tj:
+
+  | rekord (SKU w BL, rodzaj wg diagnozy) | liczba | cena w BL pochodzi z feedu | przykład |
+  | --- | --- | --- | --- |
+  | `SHARG-`, „własny” | 117 | Kolby | 710960237 `SHARG-5543`: BL 143,20 = Kolba `653-006` 143,20 (Sharg 168,00) |
+  | `SHARG-`, „własny” | 10 | Spechurta | 710960249 `SHARG-5652`: BL 231,75 = Spechurt `10310` 231,75 (Sharg 328) |
+  | `KOLBA-`, „własny” | 32 | Kolby (właściciel) | 710608191 `KOLBA-401-000`: BL 102,23 = Kolba `401-000` 102,23 |
+  | `KOLBA-`, wspólny | 5 | Kolby (właściciel) | 710615545 `KOLBA-034-095`: BL 95,20 = Kolba `034-095` |
+  | `SHARG-`, wspólny | 9 | Spechurta | 710960504 `SHARG-6526`: BL 96,00 = Spechurt `6636` |
+  | `SHARG-`, wspólny | 1 | Kolby | 710963366 `SHARG-4776`: BL 29,09 = Kolba `404-142` |
+  | `SPECHURT-`, „własny” | 2 | Spechurta (właściciel) | 711050226 `SPECHURT-19983`: BL 76,00 = Spechurt `19983` |
+  | `SPECHURT-`, „własny” | 1 | Kolby | 711051273 `SPECHURT-22657`: BL 97,30 = Kolba `034-037` |
+  | `SPECHURT-`, wspólny | 1 | Spechurta (właściciel) | 711033562 `SPECHURT-6635`: BL 63,20 = Spechurt `6635` |
+  | **razem** | **178** | 130 Kolby, 48 Spechurta | |
+
+  Wzrost z 20 (audyt rano) do 162 rekordów „własnych” Sharga (diagnoza po południu) tłumaczy dzienny sync Kolby 13:25 UTC (`kolba-sync-20261026-142504.log`), który przyszedł po syncu Sharga 00:50 UTC i Spechurta 06:50 UTC. Poprawka 63f8701 (ceny tylko na rekordach, których hurtownia jest członkiem) potwierdzona jako trafiająca w przyczynę — decyzja tj: dalej. Otwarte, nie gonione teraz: Spechurt ma 191 własnych rekordów `SPECHURT-` z rozjazdem, a jego feed był wygenerowany 2026-10-26 15:11 czasu polskiego, długo po syncu 05:40 UTC — podgląd przed merge (`diag-prices --other-feeds`) oddzieli „feed zmienił się po syncu” od „nadpisany przez inną hurtownię”.
 - 2026-10-26 tj: red proof ceny zamieniony na test nadpisywania przez sync innej hurtowni; pytanie o cenę Sharga (price = SRP?) wydzielone do O-37
 - 2026-10-26 agent — **diagnoza cen (punkt 1), wynik z serwera** (`diag-prices.ts`, commit 9929bf9, 14:27–14:29 UTC; pliki u tj: `diag-{sharg,kolba}.{md,json}`, `rozjazdy-*.csv`). Bez poprawek — STOP dla tj.
 
