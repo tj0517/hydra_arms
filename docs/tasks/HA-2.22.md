@@ -1,7 +1,7 @@
 ---
 id: HA-2.22
 title: Marża per produkt ustawiana ręcznie w BaseLinkerze (pole dodatkowe)
-status: review
+status: done
 difficulty: M
 model: claude-opus-5-5
 model_approved: null
@@ -20,7 +20,7 @@ Klient chce sprawdzić, czy ręczne nadawanie marży wybranym produktom w panelu
 
 ## Zakres
 - [x] odczyt stanu: `computeSellingPrice`, tryby `import` i `sync`, jak sync dziś pobiera dane produktów (czy w ogóle czyta produkty z BL, czy tylko indeks EAN/SKU), limity API
-- [ ] pole dodatkowe „Marża %” w katalogu 119068 — zakłada tj w panelu (STOP); ID pola jako input `BASELINKER_EXTRA_FIELD_MARGIN` w rejestrze HA-2.16 (wpis w rejestrze: zrobione; pole w panelu: tj)
+- [x] pole dodatkowe „Marża %” w katalogu 119068 — zakłada tj w panelu (STOP); ID pola jako input `BASELINKER_EXTRA_FIELD_MARGIN` w rejestrze HA-2.16 — ID 31810
 - [x] odczyt pola przez `getInventoryProductsData` (`src/lib/baselinker/readonly.ts`) dla produktów, które sync/import aktualizuje; parsowanie: „45”, „45%”, „45,5” → 45.5
 - [x] walidacja: liczba w zakresie 0–200; wartość nieprawidłowa → marża z env + ostrzeżenie w logu z ID produktu (nigdy cena 0, nigdy przerwanie całego przebiegu)
 - [x] produkt wspólny dla kilku hurtowni (ten sam EAN): marża z pola ma pierwszeństwo przed env każdej z nich
@@ -74,3 +74,4 @@ Klient chce sprawdzić, czy ręczne nadawanie marży wybranym produktom w panelu
   - audyt: sekcja A liczy oczekiwaną cenę przez `expectedSalePrice` z polem rekordu, CSV `A_cena_rozbiezna.csv` dostał kolumnę `marza`, pod tabelą cen licznik dopasowań z ręczną marżą i odrzuconych.
 - 2026-10-26 agent, dowody lokalne: `npx tsc --noEmit` czysto; eslint zmienionych i nowych plików 0 problemów; `npx tsx --test xml-integration/__tests__/margin.test.ts` 20/20; `npm run test:unit` (wprost: `npx tsx --test xml-integration/__tests__/*.test.ts`) 285/287 — padają tylko 2 znane `prod-guard` (WSL, deferred HA-2.27); `npx tsx --test config/inputs.test.ts` 32/33 — pada `P24_NOTIFY_ALLOWED_IPS is provisional but claims a real usage path`, identycznie bez zmian HA-2.22 (`git stash`, deferred 2026-10-16). Red proofy mutacyjne (każda mutacja cofnięta, potem 20/20): sync ignoruje pole → 4 testy padają (w tym „ręczna marża przeżywa sync”); payload importu z `extra_field_75` → pada test payloadu; audyt bez pola → pada test audytu; walidacja bez zakresu 0–200 → 3 testy; nieudany odczyt traktowany jak „pole wyłączone” → pada test nieudanego odczytu.
 - 2026-10-26 agent: samego skryptu importu nie uruchamiałem (hook blokuje każdą komendę z jego nazwą, także dry-run w trybie mock) — ścieżka synca i payload są testowane przez wydzielone moduły, dry-run i `--only-bl-id` tylko przez `tsc`/eslint i przegląd; pierwsze uruchomienie to krok 2 z `docs/ops/serwer-importu.md`, „Marża ręczna (HA-2.22)”.
+- 2026-10-26 tj, odbiór (wf-review): PR #65. Pole „Marża %” = extra_field_31810 w katalogu 119068. Dry-run 3 hurtowni: odczyt pola 20,6 / 15,3 / 9,6 s, 0 odrzuconych; produkt 710340232: 380 × 1,45 = 551 z pola. Import --only-bl-id: 1 updated, wysłane tylko name/description/features; ponowny odczyt: pole nadal 45, cena 551 — BL nie czyści nie wysłanych pól dodatkowych przy aktualizacji. Wszystkie kryteria udowodnione. Wariant C niepotrzebny przy obecnych czasach.

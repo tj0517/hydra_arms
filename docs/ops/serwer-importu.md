@@ -958,6 +958,8 @@ nie mówi, czy aktualizacja produktu zostawia klucze `text_fields`, których nie
 wysyła tylko `name`, `description` i `features`. Gdyby BL czyścił pozostałe, każdy import
 (także dzisiejszy, bez HA-2.22) skasowałby pola dodatkowe produktów, które aktualizuje.
 
+ID pola „Marża %” w katalogu 119068: **31810** (`extra_field_31810`, założone przez tj 2026-10-26) — w kroku 5 `<ID_POLA>` = `31810`.
+
 Kolejność: bramki STOP z HA-2.22. Kroki 1–4 robisz w dzień, między 07:01 a ok. 19:30 UTC, tak
 jak audyt. Kroki 1–4 biegną z osobnej kopii (`/home/hydra-import/hydra-ha222`, worktree gałęzi
 zadania), więc nocny cron do merge'a dalej chodzi na `main`. `exit=1` od razu, bez wypisu = trwa
