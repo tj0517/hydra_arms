@@ -9,7 +9,7 @@ Start sprzedaży (HA-2.09) z `SHOP_MODE=live` nie przejdzie, dopóki jakikolwiek
 `placeholder`. `⟨nazwa wstępna⟩` = nazwa jeszcze nie istnieje w kodzie; zadanie właściciela
 może ją zmienić.
 
-## Do dostarczenia (17)
+## Do dostarczenia (18)
 
 | nazwa | właściciel | pytanie | zadanie | gdzie użyte | sekret |
 |---|---|---|---|---|---|
@@ -21,6 +21,7 @@ może ją zmienić.
 | `BASELINKER_MARKUP_KOLBA` | client | O-07 | HA-2.05 | `scripts/xml-to-baselinker.ts` | nie |
 | `BASELINKER_MARKUP_SHARG` | client | O-07 | HA-2.05 | `scripts/xml-to-baselinker.ts` | nie |
 | `BASELINKER_MARKUP_SPECHURT` | client | O-07 | HA-2.05 | `scripts/xml-to-baselinker.ts` | nie |
+| `BASELINKER_EXTRA_FIELD_MARGIN` | tj | O-32 | HA-2.22 | `scripts/xml-to-baselinker.ts`<br>`scripts/audit-import.ts`<br>`xml-integration/margin.ts` | nie |
 | `SHIPPING_PRICE_DHL` | client | O-10 | HA-2.02 | `src/lib/shop/shippingPrices.ts`<br>`src/app/api/shop/checkout/route.ts`<br>`src/app/(main)/sklep/zamowienie/page.tsx` | nie |
 | `SHIPPING_PRICE_DPD` | client | O-10 | HA-2.02 | `src/lib/shop/shippingPrices.ts`<br>`src/app/api/shop/checkout/route.ts`<br>`src/app/(main)/sklep/zamowienie/page.tsx` | nie |
 | `SHIPPING_PRICE_INPOST` | client | O-10 | HA-2.02 | `src/lib/shop/shippingPrices.ts`<br>`src/app/api/shop/checkout/route.ts`<br>`src/app/(main)/sklep/zamowienie/page.tsx` | nie |
@@ -46,9 +47,10 @@ może ją zmienić.
 - `P24_API_KEY` — Reports key from the Przelewy24 panel.
 - `P24_MODE` — Closed list in code: mock | sandbox | production. Per-environment switch, not a missing value — HA-2.09 sets production.
 - `P24_NOTIFY_ALLOWED_IPS` — Comma-separated P24 server IPs — bare addresses and IPv4 CIDR ranges. Source: official Przelewy24 docs, section "Adresy IP serwerow" / "Server IP addresses" (developers.przelewy24.pl, /yaml/pl_documentation_1.0.yaml + en). The docs publish ONE list for all P24 servers and do NOT split sandbox from production, so the same list applies to both modes. Stays placeholder: the registry holds metadata only, the values go to env (Vercel) at HA-2.23/HA-2.09. Filter is active in sandbox/production or whenever this is set; empty in sandbox/production rejects every notify (fail closed).
-- `BASELINKER_MARKUP_KOLBA` — Percent on purchase price (25 = +25%). Client gave no rates on 2026-10-06; 30% is the working assumption in HA-2.05. See also O-32 (markup sheet, HA-2.22).
+- `BASELINKER_MARKUP_KOLBA` — Percent on purchase price (25 = +25%). Client gave no rates on 2026-10-06; 30% is the working assumption in HA-2.05. A product's own „Marża %” field in BL overrides it (BASELINKER_EXTRA_FIELD_MARGIN, HA-2.22).
 - `BASELINKER_MARKUP_SHARG` — See BASELINKER_MARKUP_KOLBA.
 - `BASELINKER_MARKUP_SPECHURT` — See BASELINKER_MARKUP_KOLBA.
+- `BASELINKER_EXTRA_FIELD_MARGIN` — ID of the BL extra field „Marża %” in catalogue 119068 (bare number, e.g. 75, or extra_field_75). tj creates the field in the BL panel and reads the ID with the import dry-run --only-bl-id. Unset = manual margins off, env markup for every product. Import server .env.local only, not Vercel.
 - `SHIPPING_PRICE_DHL` — Gross PLN, dot decimal (e.g. 19.99). Carriers confirmed by the client 2026-10-06 (DHL, DPD, InPost); prices not given — preliminary values only. Missing/invalid → checkout refuses parcel orders (fail closed).
 - `SHIPPING_PRICE_DPD` — See SHIPPING_PRICE_DHL.
 - `SHIPPING_PRICE_INPOST` — InPost courier. See SHIPPING_PRICE_DHL.
