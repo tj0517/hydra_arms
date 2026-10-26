@@ -33,7 +33,7 @@ Cena sprzedaży jest liczona z ceny zakupu i marży (`BASELINKER_MARKUP_*`), dzi
 ## Poza zakresem
 - aktualizacja cen w BL na żywo → bramka STOP, po akceptacji podglądu
 - promocje/rabaty → osobne zadanie
-- marże z arkusza → HA-2.22 (po aneksie); ręczna cena w BL → O-32
+- marża per produkt ręcznie w BL → HA-2.22; marże z arkusza → deferred (po aneksie, `docs/deferred-tasks.md` 2026-10-26); ręczna cena w BL → O-32 (nadpisywana)
 
 ## Bramki STOP
 - przed zapisem cen do BaseLinkera — pokaż podgląd i czekaj
