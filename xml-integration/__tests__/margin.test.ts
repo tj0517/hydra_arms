@@ -36,7 +36,7 @@ function product(over: Partial<NormalizedProduct> = {}): NormalizedProduct {
     connector: 'kolba',
     connector_product_id: 'K1',
     connector_sku: '100-200',
-    ean: '5901234567890',
+    ean: '5901234567893',
     brand: null,
     name: 'Latarka taktyczna',
     description_html: '<p>opis</p>',
@@ -198,14 +198,14 @@ class FakeBL {
 /** Catalogue: 1 = manual margin 45 (shown at purchase × 1.45 after the client's edit), 2 = no field. */
 function catalogue(field1: unknown = '45'): FakeBL {
   return new FakeBL(new Map<number, FakeRecord>([
-    [1, { ean: '5901234567890', sku: 'KOLBA-100-200', text_fields: { name: 'Latarka', [FIELD]: field1 }, prices: { [SALE]: 145, [PURCHASE]: 100 }, stock: { bl_157483: 3 } }],
-    [2, { ean: '5900000000002', sku: 'KOLBA-100-201', text_fields: { name: 'Nóż' }, prices: { [SALE]: 65, [PURCHASE]: 50 }, stock: { bl_157483: 1 } }],
+    [1, { ean: '5901234567893', sku: 'KOLBA-100-200', text_fields: { name: 'Latarka', [FIELD]: field1 }, prices: { [SALE]: 145, [PURCHASE]: 100 }, stock: { bl_157483: 3 } }],
+    [2, { ean: '5900000000008', sku: 'KOLBA-100-201', text_fields: { name: 'Nóż' }, prices: { [SALE]: 65, [PURCHASE]: 50 }, stock: { bl_157483: 1 } }],
   ]));
 }
 
 const feed = (): NormalizedProduct[] => [
-  product({ connector_sku: '100-200', ean: '5901234567890', price_purchase: 100, stock: 7 }),
-  product({ connector_product_id: 'K2', connector_sku: '100-201', ean: '5900000000002', price_purchase: 50, stock: 4 }),
+  product({ connector_sku: '100-200', ean: '5901234567893', price_purchase: 100, stock: 7 }),
+  product({ connector_product_id: 'K2', connector_sku: '100-201', ean: '5900000000008', price_purchase: 50, stock: 4 }),
 ];
 
 async function sync(bl: FakeBL, marginKey: string | null, supplier: Supplier = 'kolba', e: WriteEnv = env(), products = feed()) {
@@ -258,13 +258,15 @@ test('sync: shared product (same EAN) — the field wins over every wholesaler\'
   const kolba = catalogue('45');
   await sync(kolba, FIELD, 'kolba', env({ markupPct: 30 }));
   assert.equal(kolba.records.get(1)!.prices[SALE], 145);
-  // Sharg has the same EAN with its own SKU and a 25% env markup; same purchase price
-  const sharg = catalogue('45');
-  const shargFeed = [product({ connector: 'sharg', connector_product_id: 'S9', connector_sku: '139', ean: '5901234567890', price_purchase: 100 })];
+  // Sharg has the same EAN with its own SKU and a 25% env markup; same purchase price. The record is
+  // a recorded shared one (`SKU Sharg`) — a sync prices only records its supplier is a member of (HA-2.38)
+  const shared = (bl: FakeBL) => { bl.records.get(1)!.text_fields.features = { 'SKU Kolba': '100-200', 'SKU Sharg': '139' }; return bl; };
+  const sharg = shared(catalogue('45'));
+  const shargFeed = [product({ connector: 'sharg', connector_product_id: 'S9', connector_sku: '139', ean: '5901234567893', price_purchase: 100 })];
   await sync(sharg, FIELD, 'sharg', env({ markupPct: 25, warehouse: 'bl_157484' }), shargFeed);
   assert.equal(sharg.records.get(1)!.prices[SALE], 145);
   // Without a field the shared record follows whoever synced last (O-32, unchanged)
-  const plain = catalogue(null);
+  const plain = shared(catalogue(null));
   await sync(plain, FIELD, 'sharg', env({ markupPct: 25, warehouse: 'bl_157484' }), shargFeed);
   assert.equal(plain.records.get(1)!.prices[SALE], 125);
 });
@@ -324,7 +326,7 @@ test('the import script builds its payload with the shared toBLProduct and reads
   assert.doesNotMatch(src, /function toBLProduct\b/, 'local copy of toBLProduct would bypass the payload test');
   assert.doesNotMatch(src, /function computeSellingPrice\b/);
   assert.match(src, /toBLProduct\(p, env, r\.categoryId, tags, identity, margin\)/);
-  assert.match(src, /runSyncCore\(/);
+  assert.match(src, /runSyncProcess\(/, "the sync runs through runSyncProcess (runSyncCore + exit code)");
   assert.match(src, /getProductsData: readonly\.getInventoryProductsData/);
 });
 

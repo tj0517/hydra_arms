@@ -17,12 +17,16 @@
  * Usage:
  *   npx tsx scripts/diag-prices.ts --supplier <kolba|sharg|spechurt> --out <dir>
  *     [--bl-ids 1,2,3] [--skus 5652,139] [--from-file <path>] [--logs <dir>]
+ *     [--other-feeds=kolba,spechurt] [--other-from-file=<supplier>:<path>]…
  *
  *   --bl-ids    BL product ids to trace (comma-separated)
  *   --skus      feed SKUs (connector_sku, with or without the `SHARG-` prefix) to trace
  *   --out       directory for diag-<supplier>.md, diag-<supplier>.json, rozjazdy-<supplier>.csv
  *   --from-file read the feed from a local file instead of fetching it
  *   --logs      run-bl.sh log directory (default: ~/logs when it exists)
+ *   --other-feeds  the other suppliers whose feeds are matched too (default: both others; empty =
+ *               none): a record matched by ≥ 2 suppliers' feeds counts as shared (HA-2.38)
+ *   --other-from-file  read one of those feeds from a local file (repeatable)
  *
  *   Smoke test without network or BaseLinker:
  *   BASELINKER_MOCK=true BASELINKER_INVENTORY_ID=35743 BASELINKER_PRICE_GROUP=23934 BASELINKER_MARKUP_SHARG=30 \
@@ -49,9 +53,9 @@ if (mockFlagFromShell !== undefined) process.env.BASELINKER_MOCK = mockFlagFromS
 import type { NormalizedProduct } from '../xml-integration/types';
 import { classifyFeed } from '../xml-integration/feed-guard';
 import { MARGIN_FIELD_ENV, MarginTally, chooseMargin, computeSellingPrice, marginFieldKey, readMarginRaw } from '../xml-integration/margin';
-import { SKU_PREFIX, SUPPLIERS, SUPPLIER_LABEL, findBLMatch, type BLMatch, type Supplier } from '../xml-integration/bl-match-key';
+import { SKU_PREFIX, SUPPLIERS, SUPPLIER_LABEL, ambiguousEanWarning, dropAmbiguousEans, findBLMatch, type BLMatch, type Supplier } from '../xml-integration/bl-match-key';
 import { loadExistingProducts, planSync, type SyncMargins, type WriteEnv } from '../xml-integration/bl-write';
-import { recordSuppliers, redactSecrets, toCsv, type RecordSuppliers } from '../xml-integration/import-audit';
+import { isSharedRecord, recordSuppliers, redactSecrets, toCsv, type RecordSuppliers } from '../xml-integration/import-audit';
 import {
   CAUSE_LABEL,
   DELTA_BUCKETS,
@@ -72,6 +76,7 @@ import { getInventoryProductsData, getInventoryProductsList, type ReadOnlyMethod
 const USAGE = `Usage:
   npx tsx scripts/diag-prices.ts --supplier <kolba|sharg|spechurt> --out <dir>
     [--bl-ids 1,2,3] [--skus 5652,139] [--from-file <path>] [--logs <dir>]
+    [--other-feeds=kolba,spechurt] [--other-from-file=<supplier>:<path>]…
 Read-only: BaseLinker reads through src/lib/baselinker/readonly.ts only; writes only into --out.`;
 
 const RATE_LIMIT_MS = 700;
@@ -101,6 +106,8 @@ interface Args {
   skus: string[];
   fromFile: string | null;
   logs: string | null;
+  otherFeeds: Supplier[];
+  otherFromFile: Map<Supplier, string>;
 }
 
 const isSupplier = (s: string): s is Supplier => (SUPPLIERS as readonly string[]).includes(s);
@@ -111,6 +118,8 @@ function parseArgs(argv: string[]): Args {
   let supplier: string | null = null, out: string | null = null, fromFile: string | null = null, logs: string | null = null;
   const blIds: number[] = [];
   const skus: string[] = [];
+  let otherFeeds: string[] | null = null;
+  const otherFromFile = new Map<Supplier, string>();
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     const eq = a.indexOf('=');
@@ -126,7 +135,16 @@ function parseArgs(argv: string[]): Args {
         blIds.push(Number(x));
       }
     } else if (name === '--skus') skus.push(...list(value()));
-    else fail(`unknown argument: ${a}\n${USAGE}`);
+    else if (name === '--other-feeds') {
+      otherFeeds = list(eq > 0 ? a.slice(eq + 1) : '');
+      if (!otherFeeds.every(isSupplier)) fail('--other-feeds=kolba,sharg,spechurt (or empty for none)');
+    } else if (name === '--other-from-file') {
+      const raw = value();
+      const sep = raw.indexOf(':');
+      const sup = raw.slice(0, Math.max(sep, 0));
+      if (!isSupplier(sup) || !fs.existsSync(raw.slice(sep + 1))) fail('--other-from-file=<kolba|sharg|spechurt>:<existing path>');
+      otherFromFile.set(sup, raw.slice(sep + 1));
+    } else fail(`unknown argument: ${a}\n${USAGE}`);
   }
   if (!supplier || !isSupplier(supplier)) fail(`--supplier <kolba|sharg|spechurt> is required\n${USAGE}`);
   if (!out) fail(`--out <dir> is required\n${USAGE}`);
@@ -134,7 +152,8 @@ function parseArgs(argv: string[]): Args {
   if (logs === null && fs.existsSync(path.join(os.homedir(), 'logs'))) logs = path.join(os.homedir(), 'logs');
   // A prefixed SKU (`SHARG-5652`) means the same feed SKU as `5652`
   const prefix = `${SKU_PREFIX[supplier]}-`;
-  return { supplier, out: path.resolve(out), blIds: [...new Set(blIds)], skus: [...new Set(skus.map((s) => (s.startsWith(prefix) ? s.slice(prefix.length) : s)))], fromFile, logs };
+  const others = ((otherFeeds ?? SUPPLIERS) as Supplier[]).filter((x) => x !== supplier);
+  return { supplier, out: path.resolve(out), blIds: [...new Set(blIds)], skus: [...new Set(skus.map((s) => (s.startsWith(prefix) ? s.slice(prefix.length) : s)))], fromFile, logs, otherFeeds: [...new Set(others)], otherFromFile };
 }
 
 interface Config {
@@ -279,7 +298,11 @@ async function parseFeed(s: Supplier, xml: string): Promise<{ products: Normaliz
     else origLog(...a.map((x) => (typeof x === 'string' ? redactSecrets(x) : x)));
   };
   try {
-    return { products: connectors[s].parse(xml), beforeConnectorFilter };
+    // D-E (HA-2.38): an EAN two items of this feed share → those items match by SKU only, as in the sync
+    const amb = dropAmbiguousEans(connectors[s].parse(xml));
+    const w = ambiguousEanWarning(amb.groups);
+    if (w) log(`  ${s}: ${w}`);
+    return { products: amb.products, beforeConnectorFilter };
   } finally {
     console.log = origLog;
   }
@@ -384,7 +407,8 @@ async function main(): Promise<void> {
   const margins: SyncMargins = cfg.marginKey === null
     ? { kind: 'off' }
     : { kind: 'read', raw: new Map([...recs.values()].map((r) => [r.id, r.marginRaw])) };
-  const plan = planSync(products, s, index, env, margins, new MarginTally(() => {}));
+  // Membership as the sync reads it (HA-2.38): prices only on records of this supplier
+  const plan = planSync(products, s, index, env, margins, new MarginTally(() => {}), new Map([...recs.values()].map((r) => [r.id, r.sup.members])));
 
   // 6. EAN occurrences (as written and as a GTIN-14 key) in the feed and in the BL list
   const count = <K>(keys: Array<K | null>) => { const c = new Map<K, number>(); for (const k of keys) if (k !== null) c.set(k, (c.get(k) ?? 0) + 1); return c; };
@@ -418,7 +442,7 @@ async function main(): Promise<void> {
     const choice = chooseMargin(cfg.marginKey === null ? undefined : r.marginRaw, env.markupPct);
     const planned = plan.priceUpdates[r.id] ?? {};
     return {
-      shared: r.sup.members.length > 1,
+      shared: isSharedRecord(r.sup.members, [...(matchedBy.get(r.id) ?? [])]),
       items: i.map((pos): PriceItem => {
         const p = products[pos];
         const sp = computeSellingPrice(p, choice.pct);
@@ -454,6 +478,31 @@ async function main(): Promise<void> {
   const raw = feedElements(xml, s, wantedIds);
   xml = '';
 
+  // Other suppliers' feeds: which records they match today — a record matched by ≥ 2 suppliers is
+  // shared even without their parameters (their sync writes it too, HA-2.38)
+  const matchedBy = new Map<number, Set<Supplier>>();
+  for (const id of itemsById.keys()) matchedBy.set(id, new Set([s]));
+  const otherFeedNotes: string[] = [];
+  for (const o of args.otherFeeds) {
+    try {
+      const { xml: oxml } = await readFeed(o, args.otherFromFile.get(o) ?? null);
+      const op = (await parseFeed(o, oxml)).products;
+      let hits = 0;
+      for (const p of op) {
+        const id = findBLMatch(index, o, p.ean, p.connector_sku)?.id;
+        if (id === undefined) continue;
+        if (!matchedBy.has(id)) matchedBy.set(id, new Set());
+        matchedBy.get(id)!.add(o);
+        if (itemsById.has(id)) hits++;
+      }
+      otherFeedNotes.push(`${SUPPLIER_LABEL[o]} ${op.length} produktów, trafia ${hits} rekordów tej hurtowni`);
+      log(`  other feed ${o}: ${op.length} products, ${hits} of this supplier's matched records`);
+    } catch (err) {
+      otherFeedNotes.push(`${SUPPLIER_LABEL[o]} niedostępny (${err instanceof Error ? err.message : String(err)}) — wspólne liczone bez niego`);
+      log(`  [warn] other feed ${o} unavailable — shared records counted without it`);
+    }
+  }
+
   // 8. Supplier-wide: every matched record, compared as the audit compares it
   type Row = { r: BLRec; prices: RecordPrices; v: RecordVerdict };
   const rows: Row[] = [];
@@ -477,7 +526,8 @@ async function main(): Promise<void> {
     `- katalog ${env.inventoryId}; grupy cen: sprzedaż ${env.priceGroup}, zakup ${env.priceGroupPurchase ?? '— (nieustawiona)'}; narzut env ${env.markupPct}%; pole „Marża %”: ${cfg.marginKey ?? 'nieskonfigurowane'}; magazyn ${env.warehouse}`,
     `- feed: ${meta.source === 'file' ? 'plik' : 'pobrany'} ${meta.fetchedAt}, ${meta.sizeMb} MB, sha256 ${meta.sha256}…, generated=${meta.generated}, Last-Modified: ${meta.lastModified}, ETag: ${meta.etag}, Date: ${meta.serverDate}`,
     `- produkty w feedzie: ${products.length}${meta.beforeConnectorFilter !== null ? ` (przed filtrem konektora: ${meta.beforeConnectorFilter})` : ''}; dopasowane do BL: ${matches.filter(Boolean).length} → ${itemsById.size} rekordów; bez danych z BL: ${noData}`,
-    `- planSync (to, co sync zapisałby teraz): matched ${plan.matched}, unmatched ${plan.unmatched}, priceSkipped ${plan.priceSkipped}, fallback ${plan.priceFallbacks}, cena 0: ${plan.priceZeros}`,
+    `- planSync (to, co sync zapisałby teraz): matched ${plan.matched}, unmatched ${plan.unmatched}, priceSkipped ${plan.priceSkipped}, prices skipped (not a member) ${plan.priceSkippedNotMember}, fallback ${plan.priceFallbacks}, cena 0: ${plan.priceZeros}`,
+    `- „wspólny” = członkowie (SKU, parametry) ∪ hurtownie, których feed trafia rekord, ≥ 2; inne feedy: ${otherFeedNotes.join('; ') || 'nie czytano (--other-feeds=)'}`,
     `- wywołania BL (wyłącznie readonly.ts): ${Object.entries(blCalls).map(([k, c]) => `${k} ×${c}`).join(', ')}`,
     '',
   ];
@@ -543,7 +593,7 @@ async function main(): Promise<void> {
     const v = classifyRecord(rp);
     const planned = plan.priceUpdates[t.id] ?? {};
     const es = eanStats(r.ean);
-    md.push(`- rekord: SKU \`${r.sku}\`, EAN \`${r.ean || '—'}\`, parent ${r.parentId}, waga ${r.weight}, tagi: ${r.tags.join(' ') || '—'}; hurtownie: ${r.sup.members.join(', ') || '—'}${rp.shared ? ' (**wspólny**)' : ''}; parametry: ${Object.entries(r.skuParams).map(([k, x]) => `${k}=${x}`).join(', ') || '—'}`);
+    md.push(`- rekord: SKU \`${r.sku}\`, EAN \`${r.ean || '—'}\`, parent ${r.parentId}, waga ${r.weight}, tagi: ${r.tags.join(' ') || '—'}; członkowie: ${r.sup.members.join(', ') || '—'}; trafiany przez feedy: ${[...(matchedBy.get(t.id) ?? [])].join(', ') || '—'}${rp.shared ? ' (**wspólny**)' : ''}; ${SUPPLIER_LABEL[s]} ${r.sup.members.includes(s) ? 'jest' : '**nie jest**'} członkiem; parametry: ${Object.entries(r.skuParams).map(([k, x]) => `${k}=${x}`).join(', ') || '—'}`);
     md.push(`- ceny BL: sprzedaż ${money(rp.blSale)}, zakup ${money(rp.blPurchase)}; wszystkie grupy: ${JSON.stringify(r.prices)}; pole „Marża %”: ${r.marginRaw === undefined ? '—' : JSON.stringify(r.marginRaw)} → narzut ${rp.marginPct}%`);
     md.push(`- stan BL: ${JSON.stringify(r.stock)}`);
     md.push(`- EAN rekordu w BL: rekordów z tym EAN ${es.bl_same_ean.length} (${es.bl_same_ean.slice(0, 8).join(', ') || '—'}), z tym GTIN-14 ${es.bl_same_gtin14.length} (${es.bl_same_gtin14.slice(0, 8).join(', ') || '—'}); indeks byEan → ${es.index_byEan_points_to ?? '—'}; w feedzie: ${es.feed_same_ean}× / GTIN-14 ${es.feed_same_gtin14}×`);

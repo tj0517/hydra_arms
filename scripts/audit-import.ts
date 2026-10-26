@@ -65,13 +65,20 @@ import {
   SUPPLIERS,
   SUPPLIER_LABEL,
   addToMatchIndex,
+  ambiguousEanWarning,
+  dropAmbiguousEans,
+  eanKey,
   emptyMatchIndex,
   findBLMatch,
+  normalizeEan,
   type BLMatchIndex,
   type Supplier,
 } from '../xml-integration/bl-match-key';
 import {
+  GAP_SOURCE_LABEL,
   duplicateCandidates,
+  gapSource,
+  isSharedRecord,
   nameIssues,
   nightKey,
   parseJournalLine,
@@ -83,6 +90,7 @@ import {
   toCsv,
   variantGroupCandidates,
   type CatalogueItem,
+  type GapSource,
   type JournalEntry,
   type NameIssue,
   type RecordSuppliers,
@@ -522,6 +530,11 @@ async function loadFeed(
   }
   const cls = classifyFeed(xml, products.length);
   xml = '';
+  // D-E (HA-2.38): the same EAN on ≥ 2 items of this feed → those items match by SKU only, as in the import
+  const amb = dropAmbiguousEans(products);
+  products = amb.products;
+  const ambWarn = ambiguousEanWarning(amb.groups);
+  if (ambWarn) log(`  ${ambWarn}`);
   if (cls !== 'ok') {
     result.error = `empty feed (${cls}${result.beforeConnectorFilter !== null ? `, ${result.beforeConnectorFilter} products before the connector's defence filter` : ''})`;
     log(`  [warn] ${result.error}`);
@@ -659,6 +672,17 @@ function itemsFor(ctx: Ctx, id: number): FeedItem[] {
   return by ? SUPPLIERS.flatMap((s) => by[s] ?? []) : [];
 }
 
+/** Suppliers whose feed matches the record today. */
+function matchedBy(ctx: Ctx, id: number): Supplier[] {
+  const by = ctx.byRecord.get(id);
+  return by ? SUPPLIERS.filter((s) => (by[s] ?? []).length > 0) : [];
+}
+
+/** Shared = ≥ 2 suppliers as members or by today's feed matches — their syncs all write it (HA-2.38). */
+function sharedOf(ctx: Ctx, r: BLRec): boolean {
+  return isSharedRecord(r.sup.members, matchedBy(ctx, r.id));
+}
+
 function brandFor(ctx: Ctx, r: BLRec): string {
   const items = itemsFor(ctx, r.id);
   const own = r.sup.creator ? items.find((i) => i.supplier === r.sup.creator) : undefined;
@@ -684,7 +708,7 @@ function sectionA(ctx: Ctx): Section {
   let manualMargin = 0, manualMarginRejected = 0;
   const stockRows: Array<Array<string | number>> = [];
   const priceRows: Array<Array<string | number>> = [];
-  let missingTotal = 0, admittedTotal = 0, orphanTotal = 0, orphanStale = 0, orphanStaleApproved = 0, ownPriceDiff = 0, sharedPriceDiff = 0;
+  let missingTotal = 0, admittedTotal = 0, orphanTotal = 0, orphanStale = 0, orphanStaleApproved = 0, ownPriceDiff = 0, sharedPriceDiff = 0, ownPurchaseDiffTotal = 0;
 
   for (const s of sups) {
     const feed = ctx.feeds.get(s)!;
@@ -750,13 +774,13 @@ function sectionA(ctx: Ctx): Section {
     // Price: selling price group vs purchase × (1 + markup); purchase group vs feed purchase
     const markup = cfg.markup[s];
     if (cfg.priceGroup === null || markup === null) {
-      priceRows.push([SUPPLIER_LABEL[s], matched.length, '—', '—', '—', '—', `brak danych (${cfg.priceGroup === null ? 'BASELINKER_PRICE_GROUP' : MARKUP_ENV[s]} nieustawione)`]);
+      priceRows.push([SUPPLIER_LABEL[s], matched.length, '—', '—', '—', '—', '—', `brak danych (${cfg.priceGroup === null ? 'BASELINKER_PRICE_GROUP' : MARKUP_ENV[s]} nieustawione)`]);
     } else {
-      let own = 0, ownDiff = 0, shared = 0, sharedDiff = 0, purchaseDiff = 0, fallback = 0;
+      let own = 0, ownDiff = 0, shared = 0, sharedDiff = 0, ownPurchaseDiff = 0, sharedPurchaseDiff = 0, fallback = 0;
       for (const i of matched) {
         const r = bl.records.get(i.blId!);
         if (!r) continue;
-        const isShared = r.sup.members.length > 1;
+        const isShared = sharedOf(ctx, r);
         const sale = r.prices[String(cfg.priceGroup)] ?? null;
         const purchase = cfg.priceGroupPurchase !== null ? (r.prices[String(cfg.priceGroupPurchase)] ?? null) : null;
         if (i.priceFromFallback) fallback++;
@@ -768,7 +792,7 @@ function sectionA(ctx: Ctx): Section {
         const purDiff = cfg.priceGroupPurchase !== null && i.pricePurchase !== null && i.pricePurchase > 0
           && (purchase === null || Math.abs(purchase - round2(i.pricePurchase)) > 0.01);
         if (isShared) { shared++; if (saleDiff) sharedDiff++; } else { own++; if (saleDiff) ownDiff++; }
-        if (purDiff) purchaseDiff++;
+        if (purDiff) { if (isShared) sharedPurchaseDiff++; else ownPurchaseDiff++; }
         if (saleDiff || purDiff) {
           priceDiffAll.push({
             i, r, sale, purchase, shared: isShared, kind: [saleDiff ? 'sprzedaż' : '', purDiff ? 'zakup' : ''].filter(Boolean).join('+'),
@@ -779,9 +803,10 @@ function sectionA(ctx: Ctx): Section {
       }
       ownPriceDiff += ownDiff;
       sharedPriceDiff += sharedDiff;
+      ownPurchaseDiffTotal += ownPurchaseDiff;
       priceRows.push([
-        `${SUPPLIER_LABEL[s]} (narzut ${markup}%)`, `${fmt(own)} / ${fmt(shared)}`, `${fmt(ownDiff)} (${pct(ownDiff, own)})`, `${fmt(sharedDiff)} (${pct(sharedDiff, shared)})`, purchaseDiff, fallback,
-        ownDiff + purchaseDiff === 0 ? (sharedDiff > 0 ? 'OK; wspólne → decyzja klienta (O-32)' : 'OK') : 'OK, jeśli cena w feedzie zmieniła się od nocnego synca — inaczej błąd importera',
+        `${SUPPLIER_LABEL[s]} (narzut ${markup}%)`, `${fmt(own)} / ${fmt(shared)}`, `${fmt(ownDiff)} (${pct(ownDiff, own)})`, `${fmt(sharedDiff)} (${pct(sharedDiff, shared)})`, ownPurchaseDiff, sharedPurchaseDiff, fallback,
+        ownDiff + ownPurchaseDiff === 0 ? (sharedDiff > 0 ? 'OK; wspólne → decyzja klienta (O-32)' : 'OK') : 'OK, jeśli cena w feedzie zmieniła się od nocnego synca — inaczej błąd importera',
       ]);
     }
   }
@@ -813,7 +838,7 @@ function sectionA(ctx: Ctx): Section {
   if (cStock.total) md.push(`Przykłady: ${csvRef(cStock)}. Sync biegnie raz na noc (O9), a audyt czyta feed teraz — część różnic to zwykły ruch stanów w ciągu dnia; liczy się kolumna „BL > 0, feed 0”.`, '');
 
   md.push('### Cena: BL vs cena zakupu z feedu × (1 + narzut)', '');
-  md.push(...table(['Hurtownia', 'Rekordy własne / wspólne', 'Cena sprzedaży różna — własne', 'Cena sprzedaży różna — wspólne', 'Cena zakupu różna', 'Bez ceny zakupu (fallback na cenę brutto z feedu)', 'Werdykt'], priceRows), '');
+  md.push(...table(['Hurtownia', 'Rekordy własne / wspólne', 'Cena sprzedaży różna — własne', 'Cena sprzedaży różna — wspólne', 'Cena zakupu różna — własne', 'Cena zakupu różna — wspólne', 'Bez ceny zakupu (fallback na cenę brutto z feedu)', 'Werdykt'], priceRows), '');
   md.push(cfg.marginKey === null
     ? `Narzut: zawsze z env — pole „Marża %” nieskonfigurowane (\`${MARGIN_FIELD_ENV}\` puste, HA-2.22).`
     : `Narzut: z pola „Marża %” (\`${cfg.marginKey}\`), gdy ma liczbę 0–200, inaczej z env (HA-2.22) — dopasowania z ręczną marżą: ${fmt(manualMargin)}, z odrzuconą wartością pola (liczone z env): ${fmt(manualMarginRejected)}.`, '');
@@ -821,7 +846,7 @@ function sectionA(ctx: Ctx): Section {
     [...priceDiffAll].sort((a, b) => Number(a.shared) - Number(b.shared)),
     (d) => [d.i.supplier, d.r.id, d.i.sku, d.i.name, d.kind, d.shared ? 'tak' : 'nie', d.i.pricePurchase ?? '', d.margin, d.expected, d.sale ?? '', d.purchase ?? '', d.i.priceFromFallback ? 'tak' : 'nie'],
     (d) => `${d.i.supplier}/${d.shared}`);
-  if (cPrice.total) md.push(`Przykłady: ${csvRef(cPrice)}. Rekord wspólny dostaje cenę hurtowni, która ostatnia robiła sync — rozjazd na nim jest oczekiwany, dopóki nie zapadnie O-32.`, '');
+  if (cPrice.total) md.push(`Przykłady: ${csvRef(cPrice)}. Rekord wspólny (≥ 2 hurtownie jako członkowie albo przez dzisiejsze feedy) dostaje cenę hurtowni, która ostatnia robiła sync — rozjazd na nim jest oczekiwany, dopóki nie zapadnie O-32 / HA-2.39.`, '');
 
   ctx.facts.admitted = admittedTotal;
   ctx.facts.missing = missingTotal;
@@ -830,6 +855,7 @@ function sectionA(ctx: Ctx): Section {
   ctx.facts.orphanStaleApproved = orphanStaleApproved;
   ctx.facts.ownPriceDiff = ownPriceDiff;
   ctx.facts.sharedPriceDiff = sharedPriceDiff;
+  ctx.facts.ownPurchaseDiff = ownPurchaseDiffTotal;
   ctx.facts.stockBlPosFeedZero = stockDiffAll.filter((d) => d.bl > 0 && d.i.stock <= 0).length;
   return { md, csv: [cMissing, cOrphan, cOut, cStock, cPrice] };
 }
@@ -963,9 +989,10 @@ function sectionC(ctx: Ctx): Section {
 // ── D. EAN, duplicates, shared records ───────────────────────────────────────
 
 function eanShape(ean: string): string {
-  if (!ean) return 'pusty';
-  if (!/^\d+$/.test(ean)) return 'nie same cyfry';
-  return [8, 12, 13, 14].includes(ean.length) ? 'GTIN' : `${ean.length} cyfr (nie GTIN)`;
+  const c = normalizeEan(ean);
+  if (c.kind === 'empty') return 'pusty';
+  if (c.kind === 'invalid') return c.reason === 'not digits' ? 'nie same cyfry' : c.reason === 'check digit' ? 'zła cyfra kontrolna' : `${c.raw.length} cyfr (nie GTIN)`;
+  return [8, 12, 13, 14].includes(ean.length) ? 'GTIN' : `${ean.length} cyfr (zgubione zera)`;
 }
 
 function sectionD(ctx: Ctx): Section {
@@ -984,7 +1011,8 @@ function sectionD(ctx: Ctx): Section {
       for (const i of f.items) { const k = key(i); if (!k) continue; m.set(k, [...(m.get(k) ?? []), i]); }
       return [...m.entries()].filter(([, v]) => v.length > 1);
     };
-    const eanD = group((i) => i.ean);
+    // One good = one GTIN-14 key, whatever the leading zeros (HA-2.38)
+    const eanD = group((i) => eanKey(i.ean) ?? '');
     const skuD = group((i) => i.sku);
     for (const [v, list] of eanD) for (const i of list) feedDupes.push({ s: f.supplier, kind: 'EAN', value: v, i });
     for (const [v, list] of skuD) for (const i of list) feedDupes.push({ s: f.supplier, kind: 'SKU', value: v, i });
@@ -999,7 +1027,7 @@ function sectionD(ctx: Ctx): Section {
   }
   md.push('### Feed', '');
   md.push(...table(['Hurtownia', 'Bez EAN (cały feed)', 'Bez EAN (przyjęte)', 'EAN o złym kształcie', 'Ten sam EAN w feedzie ≥ 2×', 'Ten sam SKU ≥ 2×', 'Bez SKU', 'Werdykt'], rows), '');
-  md.push('Bez EAN produkt łączy się tylko po SKU tej samej hurtowni (O1) — ten sam towar u dwóch hurtowni daje wtedy dwa rekordy. EAN 11-cyfrowe u Sharga to zgubione zero wiodące (parser, deferred 2026-10-13) — **błąd importera**, nie feedu.', '');
+  md.push('Bez EAN produkt łączy się tylko po SKU tej samej hurtowni (O1) — ten sam towar u dwóch hurtowni daje wtedy dwa rekordy. EAN porównywane jako GTIN-14 (zera wiodące bez znaczenia, HA-2.38); EAN o złej cyfrze kontrolnej import traktuje jak brak EAN.', '');
   const cFeedD = csvOf('D_duplikaty_w_feedzie.csv', ['hurtownia', 'rodzaj', 'wartosc', 'sku_feed', 'ean', 'nazwa', 'stan'],
     feedDupes, (d) => [d.s, d.kind, d.value, d.i.sku, d.i.ean, d.i.name, d.i.stock], (d) => `${d.s}/${d.kind}`);
   if (cFeedD.total) md.push(`Przykłady: ${csvRef(cFeedD)}. Dwa produkty jednego feedu z tym samym EAN trafiają do jednego rekordu BL — wygrywa ostatni.`, '');
@@ -1010,7 +1038,7 @@ function sectionD(ctx: Ctx): Section {
     for (const r of bl.records.values()) { const k = key(r); if (!k) continue; m.set(k, [...(m.get(k) ?? []), r]); }
     return [...m.entries()].filter(([, v]) => v.length > 1);
   };
-  const eanDup = groupBy((r) => r.ean);
+  const eanDup = groupBy((r) => eanKey(r.ean) ?? '');
   const skuDup = groupBy((r) => r.sku.trim());
   const combos = new Map<string, number>();
   for (const r of bl.records.values()) {
@@ -1019,11 +1047,15 @@ function sectionD(ctx: Ctx): Section {
     combos.set(k, (combos.get(k) ?? 0) + 1);
   }
   const shared = [...combos.values()].reduce((a, b) => a + b, 0);
+  // Matched by ≥ 2 suppliers' feeds, but without the parameters of all of them: their syncs write
+  // the record, the import never recorded them (HA-2.38) — „wspólne” in section A counts these too
+  const unrecorded = [...bl.records.values()].filter((r) => matchedBy(ctx, r.id).some((x) => !r.sup.members.includes(x)) && sharedOf(ctx, r)).length;
   md.push('### BaseLinker', '');
   md.push(...table(['Co', 'Liczba', 'Oczekiwane', 'Werdykt'], [
-    ['EAN użyty przez ≥ 2 rekordy', `${fmt(eanDup.length)} EAN / ${fmt(eanDup.reduce((a, [, v]) => a + v.length, 0))} rekordów`, '0', eanDup.length ? 'błąd importera' : 'OK'],
+    ['EAN (klucz GTIN-14) użyty przez ≥ 2 rekordy', `${fmt(eanDup.length)} EAN / ${fmt(eanDup.reduce((a, [, v]) => a + v.length, 0))} rekordów`, '0', eanDup.length ? 'błąd importera' : 'OK'],
     ['SKU użyte przez ≥ 2 rekordy', `${fmt(skuDup.length)} SKU`, '0', skuDup.length ? 'błąd importera' : 'OK'],
     ['Rekordy wspólne (≥ 2 hurtownie)', `${fmt(shared)}${combos.size ? ` (${[...combos.entries()].map(([k, v]) => `${k}: ${fmt(v)}`).join('; ')})` : ''}`, 'tylko przez wspólny EAN', 'OK'],
+    ['Wspólne bez parametru którejś hurtowni (trafiane przez jej feed, pisze je jej sync)', fmt(unrecorded), '—', unrecorded ? 'cenę pisze tylko członek (HA-2.38); reszta → HA-2.39' : 'OK'],
   ]), '');
   const cEanDup = csvOf('D_duplikaty_EAN_w_BL.csv', ['ean', 'bl_id', 'sku', 'nazwa'],
     eanDup.flatMap(([e, list]) => list.map((r) => ({ e, r }))), (x) => [x.e, x.r.id, x.r.sku, x.r.name], () => 'all');
@@ -1083,10 +1115,10 @@ function sectionE(ctx: Ctx): Section {
       const r = bl.records.get(i.blId!);
       if (!r) continue;
       if (r.parentId === 0 && r.variants === 0) { single++; flattened.push({ i, r }); }
-      if (r.ean && r.ean === i.ean) eanFirst++;
-      const others = [...new Set(i.variantEans.filter((e) => e !== i.ean))];
+      if (eanKey(r.ean) !== null && eanKey(r.ean) === eanKey(i.ean)) eanFirst++;
+      const others = [...new Set(i.variantEans.filter((e) => eanKey(e) !== eanKey(i.ean)))];
       otherEans += others.length;
-      otherEansInBl += others.filter((e) => bl.index.byEan.has(e)).length;
+      otherEansInBl += others.filter((e) => { const k = eanKey(e); return k !== null && bl.index.byEan.has(k); }).length;
       if (wh && (r.stock[wh] ?? 0) === i.stock) stockSum++;
     }
     rows.push([
@@ -1167,17 +1199,18 @@ function sectionF(ctx: Ctx): Section {
     { key: 'nazwa', label: 'nazwa z encjami HTML / śmieciami', test: (r) => { const x = nameIssues(r.name).filter((k) => k !== 'all_caps'); return x.length ? x.join(' ') : null; }, feedTest: (i) => nameIssues(i.name).some((k) => k !== 'all_caps') },
   ];
   const owners = OWNERS.filter((o) => [...bl.records.values()].some((r) => ownerOf(r) === o));
-  const hits = new Map<string, Array<{ r: BLRec; detail: string; source: 'feed' | 'import' | 'orphan' }>>();
+  const hits = new Map<string, Array<{ r: BLRec; detail: string; source: GapSource; admitted: boolean | null }>>();
   for (const c of checks) hits.set(c.key, []);
   for (const r of bl.records.values()) {
     const items = itemsFor(ctx, r.id);
     for (const c of checks) {
       const d = c.test(r);
       if (d === null) continue;
-      // Where the gap comes from: the matched feed product has it too (feed), it does not (import),
-      // or the record has no product in today's feeds (orphan, section A)
-      const source = items.length === 0 ? 'orphan' : c.feedTest && items.some(c.feedTest) ? 'feed' : 'import';
-      hits.get(c.key)!.push({ r, detail: d, source });
+      // Where the gap comes from: the matched feed product has it too (feed); it does not and the
+      // import writes the record (import — accepted) or never touches it (outside the filter);
+      // or the record has no product in today's feeds (orphan, section A) — import-audit.ts gapSource
+      const source = gapSource(items, c.feedTest);
+      hits.get(c.key)!.push({ r, detail: d, source, admitted: items.length ? items.some((i) => i.admitted) : null });
     }
   }
   const rows: Array<Array<string | number>> = [];
@@ -1185,21 +1218,24 @@ function sectionF(ctx: Ctx): Section {
   for (const c of checks) {
     const list = hits.get(c.key)!;
     const per = owners.map((o) => { const all = [...bl.records.values()].filter((r) => ownerOf(r) === o).length; const n = list.filter((x) => ownerOf(x.r) === o).length; return `${fmt(n)} (${pct(n, all)})`; });
-    const src = (k: 'feed' | 'import' | 'orphan') => list.filter((x) => x.source === k).length;
-    let verdict: string = list.length === 0 ? 'OK' : src('import') > 0 ? 'błąd importera' : src('feed') > 0 ? 'problem feedu' : 'tylko rekordy osierocone (A)';
+    const src = (k: GapSource) => list.filter((x) => x.source === k).length;
+    let verdict: string = list.length === 0 ? 'OK' : src('import') > 0 ? 'błąd importera' : src('feed') > 0 ? 'problem feedu'
+      : src('outside_filter') > 0 ? 'poza filtrem (import ich nie aktualizuje)' : 'tylko rekordy osierocone (A)';
     if (src('import') > 0 && src('feed') > 0) verdict = 'błąd importera + problem feedu';
     if (list.length && c.key === 'nazwa' && src('import') === 0) verdict = 'problem feedu (dekodowanie encji możliwe po naszej stronie)';
     if ((c.key === 'cena_sprzedazy_0' && !pg) || (c.key === 'brak_ceny_zakupu' && !ppg)) verdict = 'brak danych (grupa cen nieustawiona)';
-    rows.push([c.label, ...per, c.feedTest ? `${fmt(src('feed'))} / ${fmt(src('import'))} / ${fmt(src('orphan'))}` : `— / ${fmt(src('import'))} / ${fmt(src('orphan'))}`, verdict]);
-    const f = csvOf(`F_${c.key}.csv`, ['bl_id', 'tworca', 'sku', 'nazwa', 'szczegol', 'zrodlo'], list, (x) => [x.r.id, ownerOf(x.r), x.r.sku, x.r.name, x.detail, x.source], (x) => `${ownerOf(x.r)}/${x.source}`);
+    rows.push([c.label, ...per, `${c.feedTest ? fmt(src('feed')) : '—'} / ${fmt(src('import'))} / ${fmt(src('outside_filter'))} / ${fmt(src('orphan'))}`, verdict]);
+    const f = csvOf(`F_${c.key}.csv`, ['bl_id', 'tworca', 'sku', 'nazwa', 'szczegol', 'zrodlo', 'przyjete_przez_filtr'], list, (x) => [x.r.id, ownerOf(x.r), x.r.sku, x.r.name, x.detail, GAP_SOURCE_LABEL[x.source], x.admitted === null ? '' : x.admitted ? 'tak' : 'nie'], (x) => `${ownerOf(x.r)}/${x.source}`);
     if (f.total) csv.push(f);
     ctx.facts[`F_${c.key}`] = list.length;
+    ctx.facts[`F_${c.key}_import`] = src('import');
+    ctx.facts[`F_${c.key}_outside_filter`] = src('outside_filter');
   }
-  md.push(...table(['Problem', ...owners.map((o) => `BL: ${OWNER_LABEL(o)}`), 'Źródło: feed / import / brak w feedzie', 'Werdykt'], rows), '');
+  md.push(...table(['Problem', ...owners.map((o) => `BL: ${OWNER_LABEL(o)}`), 'Źródło: feed / import — przyjęte / poza filtrem / brak w feedzie', 'Werdykt'], rows), '');
   const issueCounts = new Map<NameIssue, number>();
   for (const r of bl.records.values()) for (const k of nameIssues(r.name)) issueCounts.set(k, (issueCounts.get(k) ?? 0) + 1);
   md.push(`Nazwy w BL — rodzaje problemów: ${[...issueCounts.entries()].map(([k, v]) => `${k} ${fmt(v)}`).join(', ') || 'brak'} (all_caps tylko informacyjnie, poza werdyktem). ` +
-    '„Źródło” liczy rekordy z problemem: feed — dopasowany produkt dzisiejszego feedu ma ten sam brak; import — feed ma dane, a w BL ich nie ma (albo problem nie ma odpowiednika w feedzie, np. VAT, cena < zakup); brak w feedzie — rekord osierocony. Kolba nie ma w feedzie VAT — konektor zawsze wpisuje 23% (O8).', '');
+    '„Źródło” liczy rekordy z problemem: feed — dopasowany produkt dzisiejszego feedu ma ten sam brak; import — przyjęte: feed ma dane, a w BL ich nie ma, a import ten rekord zapisuje (albo problem nie ma odpowiednika w feedzie, np. VAT, cena < zakup); poza filtrem: jak wyżej, ale żaden dopasowany produkt nie przechodzi filtra asortymentu, więc import rekordu nie dotyka (sync pisze tylko stan i cenę, HA-2.38); brak w feedzie — rekord osierocony. Kolba nie ma w feedzie VAT — konektor zawsze wpisuje 23% (O8).', '');
   for (const c of csv) md.push(`- ${c.file}: ${fmt(c.total)} rekordów (w pliku ${Math.min(c.total, MAX_CSV_ROWS)})`);
   md.push('');
   return { md, csv };

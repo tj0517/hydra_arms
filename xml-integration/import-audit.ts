@@ -13,7 +13,7 @@
  * Nothing here merges, writes or calls BaseLinker: candidates are lists for a human to judge.
  */
 
-import { SKU_PREFIX, SUPPLIERS, supplierSkuParam, type Supplier } from './bl-match-key';
+import { SKU_PREFIX, SUPPLIERS, eanKey, supplierSkuParam, type Supplier } from './bl-match-key';
 
 // ── Name text ─────────────────────────────────────────────────────────────────
 
@@ -176,7 +176,8 @@ export function duplicateCandidates<T extends CatalogueItem>(
     if (new Set(list.map((i) => i.ref)).size < 2) continue;
     const suppliers = [...new Set(list.map((i) => i.supplier))].sort();
     if (opts.crossSupplier ? suppliers.length < 2 : suppliers.length !== 1) continue;
-    const eans = list.map((i) => i.ean.trim());
+    // GTIN-14 key (HA-2.38): `0192687280759` and `192687280759` are the same EAN; invalid = missing
+    const eans = list.map((i) => eanKey(i.ean) ?? '');
     const ean: EanRelation = eans.some((e) => !e) ? 'ean_missing' : new Set(eans).size > 1 ? 'ean_differs' : 'ean_same';
     out.push({ key, items: list, suppliers, ean });
   }
@@ -322,6 +323,40 @@ export function recordSuppliers(sku: string | null | undefined, features: Readon
   }
   if (creator && !codes[creator]) codes[creator] = s.slice(SKU_PREFIX[creator].length + 1);
   return { creator, members: SUPPLIERS.filter((sup) => codes[sup] !== undefined), codes };
+}
+
+// ── Where a data gap in BaseLinker comes from (section F) ────────────────────
+
+/**
+ * `feed` — a matched feed product has the same gap; `import` — the feed has the data and at least
+ * one matched product passes the assortment filter, so the import writes this record and should
+ * have carried it; `outside_filter` — the feed has the data but no matched product passes the
+ * filter, so the import never touches the record (the sync writes stock and price only, HA-2.38
+ * option C); `orphan` — no product of today's feeds maps onto the record.
+ */
+export type GapSource = 'feed' | 'import' | 'outside_filter' | 'orphan';
+
+export function gapSource<T extends { admitted: boolean }>(items: readonly T[], feedHasGap?: (i: T) => boolean): GapSource {
+  if (items.length === 0) return 'orphan';
+  if (feedHasGap && items.some(feedHasGap)) return 'feed';
+  return items.some((i) => i.admitted) ? 'import' : 'outside_filter';
+}
+
+export const GAP_SOURCE_LABEL: Record<GapSource, string> = {
+  feed: 'feed',
+  import: 'import — przyjęte',
+  outside_filter: 'poza filtrem',
+  orphan: 'brak w feedzie',
+};
+
+/**
+ * A record is shared when ≥ 2 suppliers have it: as recorded members (SKU prefix, `SKU <Hurtownia>`
+ * parameters) or because their feeds match it today. A sync writes onto every record its key matches,
+ * so parameters alone (written by the import only) miss records another supplier's sync also writes
+ * (HA-2.38 price diagnosis).
+ */
+export function isSharedRecord(members: readonly Supplier[], matchedBy: readonly Supplier[]): boolean {
+  return new Set([...members, ...matchedBy]).size > 1;
 }
 
 // ── run-bl.sh journal and run logs ───────────────────────────────────────────

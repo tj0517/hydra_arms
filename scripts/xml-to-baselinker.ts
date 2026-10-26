@@ -29,8 +29,14 @@
  *     (e.g. SHARG-139). A shared record keeps the SKU of the supplier that created it and
  *     carries every supplier's code as a parameter (`SKU Kolba` / `SKU Sharg` /
  *     `SKU Spechurt`) plus `Źródło opisu`; parameters are merged, never replaced
+ *   - EAN (HA-2.38): compared as a GTIN-14 key (leading zeros do not matter), written as GTIN-13;
+ *     a wrong check digit or length counts as no EAN and never blanks the record's EAN
  *   - Stock goes to a per-supplier warehouse: kolba → BASELINKER_WAREHOUSE_H1,
  *     sharg → _H2, spechurt → _H3
+ *   - sync sets stock 0 in that warehouse on records carrying the supplier's code that today's
+ *     feed lacks, unless the feed has < 90% of the previous successful sync's products
+ *     (HA-2.38, count in ~/.hydra-feed-counts.json); `<supplier> sync --zero-preview` lists them
+ *     read-only. Weight goes to BL in kg to the gram; a feed without weight keeps the record's
  *   - Selling price = price_purchase * (1 + markup%). Markup: the product's own „Marża %”
  *     extra field in BL when it holds a number 0–200 (HA-2.22, field ID in
  *     BASELINKER_EXTRA_FIELD_MARGIN), otherwise env per supplier (BASELINKER_MARKUP_KOLBA /
@@ -69,6 +75,7 @@
  */
 
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
 import { assertExternalProd } from './lib/prodGuard';
@@ -94,7 +101,11 @@ import { fetchFeedWithRetry, retryPolicyFromEnv, type FeedAttempt } from '../xml
 import {
   SUPPLIERS,
   addToMatchIndex,
+  ambiguousEanWarning,
+  dropAmbiguousEans,
+  eanForUpsert,
   findBLMatch,
+  invalidEans,
   planUpsert,
   recordIdentity,
   type BLMatchIndex,
@@ -109,10 +120,15 @@ import {
   readMarginRaw,
 } from '../xml-integration/margin';
 import {
+  FEED_MIN_RATIO,
+  feedGuard,
   loadExistingProducts as loadExistingProductsCore,
+  loadIndexWithStock,
+  planZeroing,
   readMarginRaws,
-  runSyncCore,
+  runSyncProcess,
   toBLProduct,
+  type FeedCountStore,
   type GetProductsList,
   type WriteEnv,
 } from '../xml-integration/bl-write';
@@ -136,6 +152,7 @@ const MARKUP_ENV: Record<ConnectorName, string> = {
 // blCall additionally catches ERROR_BLOCKED_TOKEN and waits out the block.
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const RATE_LIMIT_MS = 700;
+const INVALID_EAN_LINES = 20;
 
 type Env = WriteEnv;
 
@@ -327,10 +344,24 @@ async function fetchAndParse(connectorName: ConnectorName, fromFilePath?: string
   // --from-file. After the last attempt EmptyFeedError reaches main().catch → `[fatal] empty
   // feed after N attempts`, exit 1 — run-bl.sh copies it into the journal's END result.
   const policy = retryPolicyFromEnv(process.env, { fromFile: fromFilePath !== undefined });
-  const { products } = await fetchFeedWithRetry(attempt, policy, { sleep, warn: (line) => console.warn(line) });
+  const fetched = await fetchFeedWithRetry(attempt, policy, { sleep, warn: (line) => console.warn(line) });
+  // D-E (HA-2.38): an EAN two items of this feed share is ambiguous — those items match by SKU only.
+  // Done here, so import, sync, dry-run and the zeroing preview all see the same products.
+  const { products, groups } = dropAmbiguousEans(fetched.products);
+  const ambiguous = ambiguousEanWarning(groups);
+  if (ambiguous) console.warn(ambiguous);
 
   if (connectorName === 'sharg') {
     await mergeShargParameters(products, connector.config.extra as { gateway_url?: string });
+  }
+
+  // HA-2.38: an EAN with a wrong check digit or length counts as missing (match by SKU only)
+  const invalid = invalidEans(products);
+  if (invalid.length > 0) {
+    console.warn(`[warn] ${invalid.length} products with an invalid EAN — treated as no EAN (matched by SKU only); first ${Math.min(invalid.length, INVALID_EAN_LINES)}:`);
+    for (const { product, check } of invalid.slice(0, INVALID_EAN_LINES)) {
+      console.warn(`  ${product.connector_sku} "${check.raw}" (${check.reason})`);
+    }
   }
 
   return products;
@@ -517,7 +548,7 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
     products.map((p) => findBLMatch(index, connectorName, p.ean, p.connector_sku)?.id).filter((id): id is number => id !== undefined),
   )];
   // The same read carries the client's „Marża %” field (HA-2.22) — read here, never written back.
-  const existingData = new Map<number, { tags: string[]; sku: string; features: Record<string, string>; marginRaw?: unknown }>();
+  const existingData = new Map<number, { tags: string[]; sku: string; ean: string; weight: number; features: Record<string, string>; marginRaw?: unknown }>();
   if (matchedIds.length > 0) {
     console.log(`\nFetching tags, parameters and margin field of ${matchedIds.length} existing products (to preserve admin tags and other suppliers' parameters)…`);
     for (let i = 0; i < matchedIds.length; i += 100) {
@@ -527,6 +558,8 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
         existingData.set(Number(id), {
           tags: d.tags ?? [],
           sku: String(d.sku ?? ''),
+          ean: String(d.ean ?? ''),
+          weight: Number(d.weight ?? 0) || 0,
           features: featuresOf(d),
           marginRaw: marginKey !== null ? readMarginRaw(d.text_fields, marginKey) : undefined,
         });
@@ -560,7 +593,8 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
 
     // SKU: `<SUPPLIER>-<feed sku>`, or the creating supplier's SKU on a shared record;
     // parameters merged with the record's existing ones
-    const identity = recordIdentity(connectorName, p.connector_sku, p.features, existing);
+    // EAN and weight (HA-2.38): the feed's; without a valid one the record keeps its own
+    const identity = { ...recordIdentity(connectorName, p.connector_sku, p.features, existing), ean: eanForUpsert(p.ean, existing?.ean), weight: existing?.weight };
     // Margin: the record's „Marża %” when valid, else env; a new product has no field yet
     const margin = chooseMargin(existing?.marginRaw, env.markupPct);
     const { product, price, priceFromFallback, priceZero } = toBLProduct(p, env, r.categoryId, tags, identity, margin);
@@ -581,7 +615,7 @@ async function runImport(connectorName: ConnectorName, env: Env, limit: number |
         addToMatchIndex(index, productId, p.ean, identity.sku);
       }
       // A later repeat inside the feed merges with what was just written
-      existingData.set(productId, { tags, sku: identity.sku, features: identity.features, marginRaw: existing?.marginRaw });
+      existingData.set(productId, { tags, sku: identity.sku, ean: identity.ean, weight: product.weight as number, features: identity.features, marginRaw: existing?.marginRaw });
       process.stdout.write(existingId !== undefined ? '.' : '+');
     } catch (err) {
       errors++;
@@ -620,9 +654,10 @@ async function runSync(connectorName: ConnectorName, env: Env, limit: number | n
   // The feed itself was non-empty (fetchAndParse guarantees it) — only --limit can leave nothing
   if (products.length === 0) { console.log(`No in-stock products left after --limit=${limit} — nothing refreshed.`); return; }
 
-  // Index → margin field (read-only client) → stock + price writes: xml-integration/bl-write.ts
+  // Index → margin field (read-only client) → stock + price writes → zeroing: xml-integration/bl-write.ts.
+  // runSyncProcess sets exit code 1 when the run is not ok (margin read failed, feed looks incomplete).
   const readonly = await import('../src/lib/baselinker/readonly');
-  const { ok } = await runSyncCore(products, connectorName, env, {
+  await runSyncProcess(products, connectorName, env, {
     getProductsList: bl.getProductsList,
     getProductsData: readonly.getInventoryProductsData,
     updateStock: bl.updateInventoryProductsStock,
@@ -633,8 +668,67 @@ async function runSync(connectorName: ConnectorName, env: Env, limit: number | n
     log: (line) => console.log(line),
     warn: (line) => console.warn(line),
     tally: new MarginTally((line) => console.warn(line)),
+    // HA-2.38: withdrawn products get stock 0 — never on a --limit run (the feed is cut on purpose)
+    feedCounts: limit === null ? feedCountStore() : null,
   });
-  if (!ok) process.exitCode = 1;
+  if (limit !== null) console.log('  zeroing skipped (--limit: partial feed)');
+}
+
+// ── Withdrawn products: feed-count state file and the read-only preview (HA-2.38) ──
+
+const FEED_COUNTS_ENV = 'HYDRA_FEED_COUNTS_FILE';
+
+/** `{ "<supplier>": { "products": N, "at": ISO } }` — product count of the last successful sync. */
+function feedCountStore(): FeedCountStore & { file: string } {
+  const file = process.env[FEED_COUNTS_ENV]?.trim() || path.join(os.homedir(), '.hydra-feed-counts.json');
+  const load = (): Record<string, { products?: unknown }> => {
+    if (!fs.existsSync(file)) return {};
+    try {
+      const v = JSON.parse(fs.readFileSync(file, 'utf8'));
+      return v && typeof v === 'object' && !Array.isArray(v) ? v : {};
+    } catch {
+      console.warn(`[warn] ${file} is not valid JSON — treated as no history (nothing zeroed this run)`);
+      return {};
+    }
+  };
+  return {
+    file,
+    read: (s) => { const n = load()[s]?.products; return typeof n === 'number' && n > 0 ? n : null; },
+    write: (s, count) => {
+      const all = { ...load(), [s]: { products: count, at: new Date().toISOString() } };
+      const tmp = `${file}.tmp-${process.pid}`;
+      fs.writeFileSync(tmp, JSON.stringify(all, null, 2) + '\n', { mode: 0o600 });
+      fs.renameSync(tmp, file); // atomic: a crash leaves the old file, never half of one
+    },
+  };
+}
+
+/** `<supplier> sync --zero-preview`: which records the next sync would set to 0 — reads only, writes nothing (not even the state file). */
+async function runZeroPreview(connectorName: ConnectorName, env: Env): Promise<void> {
+  const readonly = await import('../src/lib/baselinker/readonly');
+  const products = await fetchAndParse(connectorName);
+  const store = feedCountStore();
+  const previous = store.read(connectorName);
+  const guard = feedGuard(products.length, previous);
+  console.log('\nLoading existing BL products (read-only)…');
+  const { index, listed } = await loadIndexWithStock(readonly.getInventoryProductsList, env.inventoryId, sleep, RATE_LIMIT_MS);
+  console.log(`  ${index.total} products in BL`);
+  await sleep(RATE_LIMIT_MS);
+  const z = await planZeroing(products, connectorName, env, index, listed, readonly.getInventoryProductsData, sleep, RATE_LIMIT_MS);
+  const missing = z.rows.filter((r) => r.reason === 'code_missing').length;
+  console.log(`\nCandidates (stock > 0 in ${env.warehouse}, not matched by today's feed): ${z.candidates}; to zero: ${z.rows.length} (${connectorName} code missing from the feed: ${missing}, item matched elsewhere: ${z.rows.length - missing})`);
+  if (z.rows.length > 0) {
+    console.log(`  ${'BL id'.padEnd(10)} ${'sku'.padEnd(22)} ${'code'.padEnd(14)} ${'stock'.padStart(5)} ${'approved'.padEnd(8)} ${'reason'.padEnd(34)} name`);
+    for (const r of z.rows) {
+      const reason = r.reason === 'code_missing' ? 'code missing' : `item matched elsewhere → ${r.movedTo}`;
+      console.log(`  ${String(r.id).padEnd(10)} ${r.sku.slice(0, 22).padEnd(22)} ${r.code.slice(0, 14).padEnd(14)} ${String(r.stock).padStart(5)} ${(r.approved ? 'yes' : 'no').padEnd(8)} ${reason.padEnd(34)} ${r.name.slice(0, 60)}`);
+    }
+  }
+  console.log(`\nfeed: ${products.length} products; previous successful sync: ${previous ?? 'none'} (${store.file})`);
+  if (guard.kind === 'incomplete') console.log(`[error] feed looks incomplete: ${products.length} < ${FEED_MIN_RATIO * 100}% of ${guard.previous} — the sync would zero nothing and exit 1`);
+  else if (guard.kind === 'first') console.log('verdict: no previous count — the next sync zeroes nothing and stores the count');
+  else console.log(`verdict: the next sync would zero ${z.rows.length} (approved: ${z.rows.filter((r) => r.approved).length}) in ${env.warehouse} only`);
+  console.log('Preview only — nothing written to BaseLinker or to the state file.');
 }
 
 // ── Mode: dry-run — filter preview, no BL writes ──────────────────────────────
@@ -941,6 +1035,13 @@ async function main() {
   const limitFlag = flags.find((f) => f.startsWith('--limit='));
   const limit = limitFlag ? parseInt(limitFlag.split('=')[1], 10) : null;
 
+  // --zero-preview (HA-2.38): <supplier> sync --zero-preview — the records the next sync would set to 0
+  const zeroPreview = flags.includes('--zero-preview');
+  if (zeroPreview && (isDryRun || limitFlag || positional[1] !== 'sync')) {
+    console.error('[error] --zero-preview works only as: <kolba|sharg|spechurt> sync --zero-preview (no --dry-run, no --limit)');
+    process.exit(1);
+  }
+
   // --only-bl-id=<id> (HA-2.22): one BL product — import of one supplier, or its dry-run
   const onlyFlag = flags.find((f) => f.startsWith('--only-bl-id='));
   let onlyBlId: number | null = null;
@@ -1027,6 +1128,7 @@ async function main() {
     console.error('  npx tsx scripts/xml-to-baselinker.ts <kolba|sharg|spechurt> [import|sync] [--limit=N]');
     console.error('  npx tsx scripts/xml-to-baselinker.ts <connector> import --only-bl-id=<id>   (one BL product; also with --dry-run)');
     console.error('  npx tsx scripts/xml-to-baselinker.ts [<connector>] --dry-run [--limit=N] [--from-file=<connector>:<path>] [--sections=1,2]');
+    console.error('  npx tsx scripts/xml-to-baselinker.ts <connector> sync --zero-preview   (records the next sync sets to stock 0; read-only)');
     console.error('');
     console.error('  import   (default) — full upsert into BL catalogue (slow, run rarely)');
     console.error('  sync               — stock + price refresh only (batched, run often)');
@@ -1054,6 +1156,7 @@ async function main() {
   if (limit !== null) console.log(`  limit     : ${limit} in-stock products`);
   if (onlyBlId !== null) console.log(`  only BL id: ${onlyBlId}`);
 
+  if (zeroPreview) { await runZeroPreview(connectorName, env); return; } // read-only, no HA_ALLOW_PROD
   if (mode === 'import') await runImport(connectorName, env, limit, onlyBlId);
   else await runSync(connectorName, env, limit);
 }
