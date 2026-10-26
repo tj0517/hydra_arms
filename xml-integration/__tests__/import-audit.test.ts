@@ -13,6 +13,7 @@ import {
   decodeEntities,
   duplicateCandidates,
   extractVariantAttrs,
+  gapSource,
   nameIssues,
   nameKey,
   nightKey,
@@ -237,4 +238,19 @@ test('scripts/audit-import.ts: no BaseLinker client import, no blCall, only allo
   const outside = [...used].filter((m) => !allowed.has(m));
   assert.deepEqual(outside, [], `BaseLinker methods outside the readonly.ts allowlist: ${outside.join(', ')}`);
   assert.ok(used.size > 0, 'the check found the read methods it should allow');
+});
+
+// ── F. Source of a data gap (HA-2.38, option C) ─────────────────────────────────
+
+test('gapSource: weight in the feed, BL 0 — accepted by the filter → import; rejected by the filter → outside_filter', () => {
+  type Item = { admitted: boolean; weightG: number | null };
+  const noWeight = (i: Item) => !((i.weightG ?? 0) > 0);
+  const accepted: Item[] = [{ admitted: true, weightG: 120 }];
+  const outside: Item[] = [{ admitted: false, weightG: 120 }];
+  assert.equal(gapSource(accepted, noWeight), 'import', 'the import writes this record and should have carried the weight');
+  assert.equal(gapSource(outside, noWeight), 'outside_filter', 'the import never touches it — not an importer bug');
+  assert.equal(gapSource([{ admitted: false, weightG: 120 }, { admitted: true, weightG: 80 }], noWeight), 'import', 'one accepted item is enough');
+  assert.equal(gapSource([{ admitted: true, weightG: null }], noWeight), 'feed');
+  assert.equal(gapSource([], noWeight), 'orphan');
+  assert.equal(gapSource([{ admitted: false }]), 'outside_filter', 'a check without a feed counterpart');
 });

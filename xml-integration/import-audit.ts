@@ -325,6 +325,30 @@ export function recordSuppliers(sku: string | null | undefined, features: Readon
   return { creator, members: SUPPLIERS.filter((sup) => codes[sup] !== undefined), codes };
 }
 
+// ── Where a data gap in BaseLinker comes from (section F) ────────────────────
+
+/**
+ * `feed` — a matched feed product has the same gap; `import` — the feed has the data and at least
+ * one matched product passes the assortment filter, so the import writes this record and should
+ * have carried it; `outside_filter` — the feed has the data but no matched product passes the
+ * filter, so the import never touches the record (the sync writes stock and price only, HA-2.38
+ * option C); `orphan` — no product of today's feeds maps onto the record.
+ */
+export type GapSource = 'feed' | 'import' | 'outside_filter' | 'orphan';
+
+export function gapSource<T extends { admitted: boolean }>(items: readonly T[], feedHasGap?: (i: T) => boolean): GapSource {
+  if (items.length === 0) return 'orphan';
+  if (feedHasGap && items.some(feedHasGap)) return 'feed';
+  return items.some((i) => i.admitted) ? 'import' : 'outside_filter';
+}
+
+export const GAP_SOURCE_LABEL: Record<GapSource, string> = {
+  feed: 'feed',
+  import: 'import — przyjęte',
+  outside_filter: 'poza filtrem',
+  orphan: 'brak w feedzie',
+};
+
 // ── run-bl.sh journal and run logs ───────────────────────────────────────────
 
 export type JournalEvent = 'START' | 'END' | 'SKIP' | 'STOP' | 'ERROR' | 'WARN' | 'CHECK';
