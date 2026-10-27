@@ -42,6 +42,10 @@ export const KIND_LABEL: Record<AccountIdKind, string> = {
 export const EXPECTED_ACCOUNT_IDS: ReadonlyArray<{ variable: string; kind: AccountIdKind; name: string }> = [
   { variable: 'BASELINKER_PRICE_GROUP', kind: 'priceGroup', name: 'Cena sprzedaży' },
   { variable: 'BASELINKER_PRICE_GROUP_PURCHASE', kind: 'priceGroup', name: 'Cena zakupu' },
+  // HA-2.39: each supplier's own purchase price (xml-integration/shared-pricing.ts PURCHASE_GROUP_NAME)
+  { variable: 'BASELINKER_PRICE_GROUP_PURCHASE_KOLBA', kind: 'priceGroup', name: 'Zakup Kolba' },
+  { variable: 'BASELINKER_PRICE_GROUP_PURCHASE_SHARG', kind: 'priceGroup', name: 'Zakup Sharg' },
+  { variable: 'BASELINKER_PRICE_GROUP_PURCHASE_SPECHURT', kind: 'priceGroup', name: 'Zakup Spechurt' },
   { variable: 'BASELINKER_ORDER_SOURCE_ID', kind: 'orderSource', name: 'Sklep internetowy' },
   { variable: 'BASELINKER_STATUS_PAID', kind: 'status', name: 'Opłacone' },
   { variable: 'BASELINKER_STATUS_PROCESSING', kind: 'status', name: 'W realizacji' },

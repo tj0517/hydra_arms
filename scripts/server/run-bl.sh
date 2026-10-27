@@ -4,8 +4,12 @@
 #
 # Usage:
 #   scripts/server/run-bl.sh <kolba|sharg|spechurt> <import|sync>          a real run
+#   scripts/server/run-bl.sh all price-shared                               pricing of shared records (HA-2.39)
 #   scripts/server/run-bl.sh --check <supplier> <mode>                      setup checks only
 #   scripts/server/run-bl.sh --cmd '<stand-in command>' <supplier> <mode>   test of lock and logs
+#
+# `all price-shared` sets the selling price of records several suppliers carry, from BaseLinker
+# data only (no feed); it belongs after the last sync of the night, under the same lock.
 #
 # A real run
 #   - starts only on the import server: ~/.hydra-import-server must exist and contain a line
@@ -61,6 +65,7 @@ umask 077
 
 usage() {
   echo "usage: $0 [--check | --cmd '<stand-in command>'] <kolba|sharg|spechurt> <import|sync>" >&2
+  echo "       $0 [--check | --cmd '<stand-in command>'] all price-shared" >&2
   exit 64
 }
 
@@ -81,8 +86,11 @@ esac
 [ $# -eq 2 ] || usage
 supplier="$1"
 mode="$2"
-case "$supplier" in kolba|sharg|spechurt) ;; *) usage ;; esac
-case "$mode" in import|sync) ;; *) usage ;; esac
+case "$supplier/$mode" in
+  kolba/import|kolba/sync|sharg/import|sharg/sync|spechurt/import|spechurt/sync) ;;
+  all/price-shared) ;; # HA-2.39: no supplier, no feed
+  *) usage ;;
+esac
 
 self="$(readlink -f "${BASH_SOURCE[0]}")"
 repo_dir="$(cd "$(dirname "$self")/../.." && pwd)"
@@ -220,6 +228,8 @@ if [ "$run_checks" -eq 1 ]; then check_setup; fi
 
 if [ -n "$stand_in" ]; then
   cmd=(bash -c "$stand_in")
+elif [ "$mode" = "price-shared" ]; then
+  cmd=("$tsx" scripts/xml-to-baselinker.ts price-shared)
 else
   cmd=("$tsx" scripts/xml-to-baselinker.ts "$supplier" "$mode")
 fi
@@ -252,10 +262,8 @@ if [ "$KEEP_DAYS" -gt 0 ]; then
   d='[0-9]'
   stamp="$d$d$d$d$d$d$d$d-$d$d$d$d$d$d"
   own=( -name "run-bl-$d$d$d$d-$d$d.log" )
-  for s in kolba sharg spechurt; do
-    for m in import sync; do
-      own+=( -o -name "$s-$m-$stamp.log" -o -name "$s-$m-$stamp-$d.log" -o -name "$s-$m-$stamp-$d$d.log" )
-    done
+  for sm in kolba-import kolba-sync sharg-import sharg-sync spechurt-import spechurt-sync all-price-shared; do
+    own+=( -o -name "$sm-$stamp.log" -o -name "$sm-$stamp-$d.log" -o -name "$sm-$stamp-$d$d.log" )
   done
   find "$LOG_DIR/" -maxdepth 1 -type f \( "${own[@]}" \) -mtime +"$((KEEP_DAYS - 1))" -delete 2>/dev/null
 fi
@@ -342,7 +350,7 @@ printf '\n=== %s run-bl end: %s %s (exit %s, %ss)%s\n' "$(now)" "$supplier" "$mo
 # The patterns are fixed text and digits: nothing else from the log can ride along.
 # An empty feed ends the import with exit 1 and `[fatal] empty feed after N attempts` (HA-2.33);
 # that line is the result of such a run.
-result="$(grep -aoE 'Import done: [0-9]+ created, [0-9]+ updated, [0-9]+ errors|Sync done: [0-9]+ products refreshed|\[fatal\] empty feed after [0-9]+ attempts?' "$run_log" 2>/dev/null | tail -n 1)"
+result="$(grep -aoE 'Import done: [0-9]+ created, [0-9]+ updated, [0-9]+ errors|Sync done: [0-9]+ products refreshed|Pricing done: [0-9]+ shared, [0-9]+ changed, [0-9]+ unchanged, [0-9]+ skipped|\[fatal\] empty feed after [0-9]+ attempts?' "$run_log" 2>/dev/null | tail -n 1)"
 if [ -z "$result" ]; then
   result="$(grep -aoE 'Matched [0-9]+ products, [0-9]+ not in BL yet' "$run_log" 2>/dev/null | tail -n 1)"
 fi
@@ -359,6 +367,9 @@ case "$result" in
     [ -n "$zeroed" ] && result="$result, $zeroed"
     incomplete="$(grep -aoE '\[error\] feed looks incomplete: [0-9]+ products, previous successful run [0-9]+' "$run_log" 2>/dev/null | tail -n 1)"
     [ -n "$incomplete" ] && result="$result, $incomplete"
+    # HA-2.39 review: the second valve — BL records matched by the feed, not feed products
+    unmatched="$(grep -aoE '\[error\] matches look incomplete: [0-9]+ matched, previous successful run [0-9]+' "$run_log" 2>/dev/null | tail -n 1)"
+    [ -n "$unmatched" ] && result="$result, $unmatched"
     ;;
 esac
 # Feed URLs carry credentials as query parameters. The import strips them from its own

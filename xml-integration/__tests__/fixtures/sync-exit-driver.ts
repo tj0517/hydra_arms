@@ -1,7 +1,8 @@
 /**
  * Child process for sync-zeroing.test.ts: one sync through runSyncProcess — the function the import
  * script calls — against a fake BaseLinker, logging as the script does (log → stdout, warn → stderr).
- * Argument: `incomplete` (feed at 89% of the previous run) or `ok` (100%). No network.
+ * Argument: `incomplete` (feed at 89% of the previous run), `matches-incomplete` (full feed, but 1
+ * matched record where the previous run matched 2) or `ok` (100%). No network.
  */
 import { runSyncProcess, type FeedCountStore } from '../../bl-write';
 import { MarginTally } from '../../margin';
@@ -15,7 +16,8 @@ const products = Array.from({ length: count }, (_, i): NormalizedProduct => ({
   supplier_category_name: null, has_variants: false, variants: [],
   _hints: { requires_license: false, age_restricted: false, pickup_only: false }, source_url: null, raw_connector_category: null,
 }));
-const store: FeedCountStore = { read: () => 100, write: () => undefined };
+// The feed matches record 10 only: 1 matched record
+const store: FeedCountStore = { read: () => ({ products: 100, matched: process.argv[2] === 'matches-incomplete' ? 2 : 1 }), write: () => undefined };
 
 void runSyncProcess(products, 'sharg', { inventoryId: 1, priceGroup: 1, priceGroupPurchase: 2, warehouse: 'bl_2', markupPct: 30 }, {
   getProductsList: async (_inv, page = 1): Promise<Record<string, { ean: string; sku: string; stock?: Record<string, number> }>> => (page > 1 ? {} : {

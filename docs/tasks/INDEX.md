@@ -37,7 +37,7 @@ Etap 1: bezpieczny fundament (audyt 2026-09-22). Etap 2: płatności i uruchomie
 | HA-2.19 | Podpisany link statusu zamówienia dla gościa | done | M | HA-2.07 | — | — |
 | HA-2.20 | Hardening P24 — notify tylko z IP P24, RLS koszyków, guard licznika BL | done | M | HA-2.03 | — | feat/ha-2.20-p24-hardening, PR #30 |
 | HA-2.21 | Domena główna z jednej zmiennej i ujednolicone e-maile | done | S | HA-2.16 | — | — |
-| HA-2.22 | Marża per produkt ustawiana ręcznie w BaseLinkerze (pole dodatkowe) | review | M | — | — | feat/ha-2.22-marza-reczna, PR #65 |
+| HA-2.22 | Marża per produkt ustawiana ręcznie w BaseLinkerze (pole dodatkowe) | done | M | — | — | feat/ha-2.22-marza-reczna, PR #65 |
 | HA-2.23 | Test płatności na prawdziwym sandboxie P24 | todo | S | HA-2.08, HA-2.20 | O-09 | — |
 | HA-2.24 | Gałęzie ASG, łucznictwo i myślistwo w drzewie kategorii | todo | S | HA-2.18, HA-2.17 | O-20 | — |
 | HA-2.25 | Gałęzie 01/02 w filtrze asortymentu po O-11/O-27 + czarnoprochowa Kolby | done | M | HA-2.04, HA-2.17 | — | — |
@@ -54,7 +54,7 @@ Etap 1: bezpieczny fundament (audyt 2026-09-22). Etap 2: płatności i uruchomie
 | HA-2.36 | Reszta bez pełnej listy — bloki Sanity na małych zapytaniach, picker z ?q= i ?ids=, sitemap pętlą, usunięcie fetchShopData | done | M | HA-2.35 | feat/ha-2.36-no-full-catalogue, PR #59 | — |
 | HA-2.37 | Audyt importerów XML — raport tylko do odczytu (pokrycie, kategorie, pozwolenia, duplikaty, warianty, jakość, zdrowie importu) | review | M | HA-2.15, HA-2.28, HA-2.33 | feat/ha-2.37-import-audit, PR #62 | — |
 | HA-2.38 | Poprawki importu po audycie — rozjazdy cen, normalizacja EAN, zerowanie wycofanych, waga | review | M | HA-2.37 | feat/ha-2.38-poprawki-importu, PR #67 + #68 | — |
-| HA-2.39 | Wycena produktów wspólnych dla kilku hurtowni — cena zakupu per hurtownia, krok „wycena” po nocnych syncach | todo | M | HA-2.38, HA-2.22 | O-36 (nie blokuje) | — |
+| HA-2.39 | Wycena produktów wspólnych dla kilku hurtowni — cena zakupu per hurtownia, krok „wycena” po nocnych syncach | review | M | HA-2.38, HA-2.22 | O-36 (nie blokuje) | feat/ha-2.39-wycena-wspolnych, PR #69 |
 | HA-2.40 | Warianty C1 — rozmiary Sharga i Spechurta jako osobne rekordy BL z polami „Grupa wariantów” / „Wariant” | todo | L | HA-2.38 | — | — |
 | HA-2.41 | Warianty C3 — kandydaci na grupy wariantów z osobnych produktów: CSV do przeglądu, zapis pól Grupa/Wariant po zatwierdzeniu | todo | M | HA-2.37 | — | — |
 | HA-2.42 | Warianty C2 — sklep: jedna karta na grupę wariantów („od X zł”), wybór wariantu na stronie produktu, bezpiecznik dla grup mieszanych | todo | L | HA-2.40 | — | — |

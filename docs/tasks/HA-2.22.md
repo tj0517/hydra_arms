@@ -1,7 +1,7 @@
 ---
 id: HA-2.22
 title: Marża per produkt ustawiana ręcznie w BaseLinkerze (pole dodatkowe)
-status: review
+status: done
 difficulty: M
 model: claude-opus-5-5
 model_approved: null
@@ -74,3 +74,4 @@ Klient chce sprawdzić, czy ręczne nadawanie marży wybranym produktom w panelu
   - audyt: sekcja A liczy oczekiwaną cenę przez `expectedSalePrice` z polem rekordu, CSV `A_cena_rozbiezna.csv` dostał kolumnę `marza`, pod tabelą cen licznik dopasowań z ręczną marżą i odrzuconych.
 - 2026-10-26 agent, dowody lokalne: `npx tsc --noEmit` czysto; eslint zmienionych i nowych plików 0 problemów; `npx tsx --test xml-integration/__tests__/margin.test.ts` 20/20; `npm run test:unit` (wprost: `npx tsx --test xml-integration/__tests__/*.test.ts`) 285/287 — padają tylko 2 znane `prod-guard` (WSL, deferred HA-2.27); `npx tsx --test config/inputs.test.ts` 32/33 — pada `P24_NOTIFY_ALLOWED_IPS is provisional but claims a real usage path`, identycznie bez zmian HA-2.22 (`git stash`, deferred 2026-10-16). Red proofy mutacyjne (każda mutacja cofnięta, potem 20/20): sync ignoruje pole → 4 testy padają (w tym „ręczna marża przeżywa sync”); payload importu z `extra_field_75` → pada test payloadu; audyt bez pola → pada test audytu; walidacja bez zakresu 0–200 → 3 testy; nieudany odczyt traktowany jak „pole wyłączone” → pada test nieudanego odczytu.
 - 2026-10-26 agent: samego skryptu importu nie uruchamiałem (hook blokuje każdą komendę z jego nazwą, także dry-run w trybie mock) — ścieżka synca i payload są testowane przez wydzielone moduły, dry-run i `--only-bl-id` tylko przez `tsc`/eslint i przegląd; pierwsze uruchomienie to krok 2 z `docs/ops/serwer-importu.md`, „Marża ręczna (HA-2.22)”.
+- 2026-10-26 tj: odbiór PR #65 — przyjęte przed merge'em (zamknięcie po fakcie, w pierwszym commicie HA-2.39)

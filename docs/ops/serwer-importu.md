@@ -407,6 +407,7 @@ niczego w sklepie nie zmienia.
 | 01:01–04:35 | | nic nie chodzi: o 02:00 UTC sklep kopiuje BaseLinkera; Spechurt regeneruje feed (okno nieznane, patrz niżej) | | |
 | 04:35 | 06:35 / 05:35 | Spechurt — import | 120 min | 06:36 |
 | 06:50 | 08:50 / 07:50 | Spechurt — sync | 10 min | 07:01 |
+| 07:02 | 09:02 / 08:02 | wycena rekordów wspólnych (`all price-shared`, HA-2.39) — **po wdrożeniu HA-2.39, linię dopisuje tj** | 10 min | 07:13 |
 
 Zasady, z których to wynika:
 
@@ -458,9 +459,11 @@ Zasady, z których to wynika:
   przesunięcie crona Vercela (wpis w deferred, poza tym zadaniem) — po HA-2.33 sync
   Spechurta kończy się ok. 06:52 UTC, więc kopia „po wszystkich hurtowniach” to ≥ 07:00 UTC.
 - **Produkt wspólny dla dwóch hurtowni** (ten sam EAN) to w BaseLinkerze jeden produkt. Nazwę,
-  opis, kategorię i cenę sprzedaży wyznacza hurtownia, która zapisała go ostatnia przed 02:00 UTC:
-  Sharg, jeśli go ma; w parze Kolba–Spechurt Kolba; Spechurt nigdy. Reguły „wygrywa najtańsza
-  hurtownia” nie ma (O-32).
+  opis i kategorię wyznacza hurtownia, która zapisała go ostatnia przed 02:00 UTC: Sharg, jeśli go
+  ma; w parze Kolba–Spechurt Kolba; Spechurt nigdy. Cenę sprzedaży — do HA-2.39 tak samo; od
+  HA-2.39 (z grupami „Zakup <Hurtownia>”) ustala ją wycena o 07:02 UTC: najtańsza cena zakupu wśród
+  hurtowni ze stanem (sekcja „Wycena rekordów wspólnych”). Sklep kopiuje BL o 02:00 UTC, więc cena
+  z wyceny trafia do sklepu następnej nocy.
 - **Ruch.** Import nie przekracza 86 zapytań do BaseLinkera na minutę przy limicie ok. 100; sync
   to kilkanaście zapytań. Sharg dostaje dwa pobrania pełnego feedu na dobę (przy każdym także
   manifest i parametry). Sync zamówień sklepu (co 4 h UTC) nachodzi na import Sharga na wspólnym
@@ -718,7 +721,10 @@ Kształt zaakceptowany przez tj 2026-10-13, treść ostateczna — 2026-10-15 (l
 sekcja 7). Zainstalowany na koncie `hydra-import` z pliku (`crontab <plik>`); pierwszy
 bezobsługowy przebieg: 2026-10-15 20:20 UTC. Spechurt przesunięty na 04:35 / 06:50 UTC
 z limitem importu 7200 s — treść zaakceptowana przez tj 2026-10-20 (HA-2.33, sekcja 7);
-pozostałe cztery linie bez zmian.
+pozostałe cztery linie bez zmian. Wycena rekordów wspólnych (HA-2.39) o 07:02 UTC z limitem 600 s —
+treść zaakceptowana przez tj 2026-10-26; dopisuje ją tj **po** ponownym audycie HA-2.38 i po
+pierwszej wycenie na żywo (sekcja „Wycena rekordów wspólnych”, krok 5) — do tego czasu linii nie ma
+na serwerze.
 
 ```
 # Hydra Arms — import hurtowni do BaseLinkera (HA-2.15, HA-2.33). Konto hydra-import. GODZINY W UTC.
@@ -741,6 +747,8 @@ MAILTO=""
 # Spechurt: import (06:35 latem / 05:35 zimą) z ponawianiem pustego feedu, potem sync (08:50 / 07:50)
 35 4 * * * HYDRA_MAX_SECONDS=7200 /home/hydra-import/hydra/scripts/server/run-bl.sh spechurt import 2>>/home/hydra-import/cron-stderr.log
 50 6 * * * HYDRA_MAX_SECONDS=600 /home/hydra-import/hydra/scripts/server/run-bl.sh spechurt sync 2>>/home/hydra-import/cron-stderr.log
+# Wycena rekordów wspólnych (HA-2.39) po ostatnim syncu nocy (Spechurt 06:50 + 600 s + 60 s); dane tylko z BL, bez feedów
+2 7 * * * HYDRA_MAX_SECONDS=600 /home/hydra-import/hydra/scripts/server/run-bl.sh all price-shared 2>>/home/hydra-import/cron-stderr.log
 ```
 
 Co jest w tych liniach:
@@ -773,7 +781,8 @@ grep -E ' (START|END|SKIP|STOP|ERROR|WARN) ' "$(ls -t ~/logs/run-bl-*.log | head
 test -s ~/cron-stderr.log && cat ~/cron-stderr.log || echo "cron-stderr.log pusty"
 ```
 
-Oczekiwane: sześć par `START` / `END exit=0` w kolejności z kroku 7, żadnego `SKIP`, pusty
+Oczekiwane: sześć par `START` / `END exit=0` w kolejności z kroku 7 (z linią wyceny HA-2.39 —
+siedem; ostatnia `all price-shared … END exit=0 … result="Pricing done: …"`), żadnego `SKIP`, pusty
 `cron-stderr.log`.
 
 ## Odblokowanie prod
@@ -897,7 +906,7 @@ do zamknięcia zadania.
 importu, a wynik zapisuje do katalogu: `raport.md` + pliki CSV z przykładami (do 50 wierszy na
 problem). BaseLinkera czyta wyłącznie przez `src/lib/baselinker/readonly.ts`, niczego nie zapisuje,
 nie potrzebuje odblokowania prod i nie idzie przez wrapper. Pobiera te same feedy co import (Sharg
-~250 MB), więc startuje pod tą samą blokadą `flock`, w dzień: między 07:01 a ok. 19:30 UTC — trwa
+~250 MB), więc startuje pod tą samą blokadą `flock`, w dzień: między 07:15 a ok. 19:30 UTC (po wycenie HA-2.39 z 07:02) — trwa
 kilkanaście minut, a blokada trzymana o 20:20 UTC kazałaby nocnemu importowi Kolby wypisać `SKIP`.
 
 Każda komenda niżej to jedna linia. Na serwer: `ssh hydra-srv` (konto `ubuntu`), na konto importu:
@@ -967,7 +976,7 @@ nie mówi, czy aktualizacja produktu zostawia klucze `text_fields`, których nie
 wysyła tylko `name`, `description` i `features`. Gdyby BL czyścił pozostałe, każdy import
 (także dzisiejszy, bez HA-2.22) skasowałby pola dodatkowe produktów, które aktualizuje.
 
-Kolejność: bramki STOP z HA-2.22. Kroki 1–4 robisz w dzień, między 07:01 a ok. 19:30 UTC, tak
+Kolejność: bramki STOP z HA-2.22. Kroki 1–4 robisz w dzień, między 07:15 a ok. 19:30 UTC, tak
 jak audyt. Kroki 1–4 biegną z osobnej kopii (`/home/hydra-import/hydra-ha222`, worktree gałęzi
 zadania), więc nocny cron do merge'a dalej chodzi na `main`. `exit=1` od razu, bez wypisu = trwa
 import albo sync; spróbuj później. W komendach podmień `<hurtownia>` (`kolba` / `sharg` /
@@ -1060,11 +1069,22 @@ w dzisiejszym feedzie — albo kod jest, ale jego pozycja feedu trafia teraz inn
 kluczem EAN, D-D). Nic nie jest usuwane ani odpinane; inne magazyny tego rekordu się nie
 zmieniają. Przy `--limit` zerowania nie ma.
 
-**Bezpiecznik.** Feed z liczbą produktów poniżej 90% poprzedniego udanego syncu tej hurtowni →
-żadnego stanu 0, w logu `[error] feed looks incomplete: N products, previous successful run M`,
-`exit=1`, licznik się nie zmienia. Licznik trzyma plik `/home/hydra-import/.hydra-feed-counts.json`
-(inna ścieżka: `HYDRA_FEED_COUNTS_FILE` w crontabie), zapisywany po każdym udanym syncu. Bez pliku
-albo bez wpisu hurtowni (pierwszy przebieg) sync niczego nie zeruje, tylko zapisuje licznik.
+**Bezpieczniki.** Dwa, oba względem poprzedniego udanego syncu tej hurtowni; którykolwiek poniżej
+90% → żadnego stanu 0 i (HA-2.39) żadnego czyszczenia własnej ceny zakupu, `exit=1`, liczniki się
+nie zmieniają; stany i ceny rekordów, które feed trafia, zapisują się jak zwykle:
+
+- **produkty w feedzie** (HA-2.38) — `[error] feed looks incomplete: N products, previous successful run M`;
+- **rekordy BL trafione przez feed** (HA-2.39, po review PR #69) — `[error] matches look incomplete: N
+  matched, previous successful run M`. Łapie feed, który ma tyle samo produktów, ale przestał trafiać
+  rekordy (np. zepsute albo inaczej zapisane EAN-y) — bez niego szersze zerowanie wyzerowałoby je
+  wszystkie.
+
+Liczniki trzyma plik `/home/hydra-import/.hydra-feed-counts.json` (inna ścieżka:
+`HYDRA_FEED_COUNTS_FILE` w crontabie), zapisywany po każdym udanym syncu, wpis na hurtownię:
+`{ "products": N, "matched": M, "at": "<czas UTC>" }`. Bez pliku albo bez wpisu hurtowni (pierwszy
+przebieg) sync niczego nie zeruje, tylko zapisuje liczniki. Wpis sprzed HA-2.39 (bez `matched`) jest
+czytany dalej: pierwszy sync po wdrożeniu niczego nie zeruje ani nie czyści i dopisuje `matched`
+(w logu `no previous match count for <hurtownia>`), zerowanie rusza dobę później.
 Podgląd licznika — `hydra-import`:
 
 ```bash
@@ -1079,7 +1099,10 @@ H=sharg; cd /home/hydra-import/hydra && flock -n /home/hydra-import/.hydra-run-b
 ```
 
 Na końcu: lista rekordów (`BL id`, SKU, kod hurtowni, stan, `approved`, powód: `code missing` albo
-`item matched elsewhere → <BL id>`), licznik z poprzedniego syncu i werdykt (`would zero N (approved: M)`, `feed looks incomplete` albo `no previous count`).
+`item matched elsewhere → <BL id>`), oba bezpieczniki — `feed: N products; previous successful sync:
+P — ok | INCOMPLETE | no previous count` i `matched: M BL records; previous successful sync: Q — …`
+— oraz werdykt (`would zero N (approved: M)`, `feed looks incomplete`, `matches look incomplete`
+albo `no previous … count`).
 
 **Raport normalizacji EAN** — tylko odczyt; przed pierwszym przebiegiem z HA-2.38 (bramka STOP):
 pary rekordów z tym samym GTIN-14 (kandydaci do scalenia — scalanie to osobna decyzja tj), EAN
@@ -1096,6 +1119,138 @@ GTIN-13; EAN o złej cyfrze kontrolnej albo długości import traktuje jak brak 
 `[warn] N products with an invalid EAN …`) i nie kasuje EAN, który rekord już ma. Ten sam GTIN-14 na
 dwóch lub więcej pozycjach feedu jednej hurtowni to EAN niejednoznaczny: te pozycje łączą się tylko po
 SKU swojej hurtowni (D-E), w logu jedna linia `[warn] N products in G groups share an EAN …`.
+
+## Wycena rekordów wspólnych (HA-2.39)
+
+**Co się zmienia.** Każda hurtownia zapisuje cenę zakupu z feedu do **własnej** grupy cenowej
+(„Zakup Kolba”, „Zakup Sharg”, „Zakup Spechurt”) — na każdym rekordzie, który trafia jej feed, także
+na rekordzie innej hurtowni trafionym tylko przez EAN (tam nadal bez ceny sprzedaży, decyzja tj
+2026-10-26). **Rekord wspólny** = rekord z ceną > 0 we własnych grupach co najmniej dwóch hurtowni
+(tylko dane w BL). Na rekordzie wspólnym import i sync zapisują wyłącznie własną grupę zakupu i stan
+we własnym magazynie; cenę sprzedaży i wspólną „Cenę zakupu” ustawia **wycena** — `run-bl.sh all
+price-shared`, 07:02 UTC, po ostatnim syncu nocy. Rekord jednej hurtowni — jak dotąd (sync zapisuje
+cenę sprzedaży, wspólną „Cenę zakupu” i dodatkowo własną grupę).
+
+**Reguła wyceny.** Kandydaci = hurtownie z ceną > 0 we własnej grupie zakupu. Spośród nich te ze
+stanem > 0 we własnym magazynie (H1 Kolba, H2 Sharg, H3 Spechurt); wygrywa najtańsza. Żadna nie ma
+stanu → najtańsza w ogóle. Remis → Kolba, Sharg, Spechurt. Cena sprzedaży = wybrana × (1 + „Marża %”
+produktu, a gdy puste — narzut z env **wybranej** hurtowni); wspólna „Cena zakupu” = wybrana. Wycena
+czyta tylko BL (`getInventoryProductsList`, `getInventoryProductsData`), feedów nie pobiera, zapisuje
+wyłącznie `updateInventoryProductsPrices` i tylko rekordy, których cena się zmienia. Sklep kopiuje BL
+o 02:00 UTC, więc cena z wyceny trafia do sklepu **następnej nocy** (przesunięcie crona Vercela —
+HA-2.09 / deferred).
+
+**Sprzątanie (decyzja A, tj 2026-10-26).** Sync ustawia stan 0 we własnym magazynie **i** własną
+cenę zakupu 0 na każdym rekordzie, którego dzisiejszy feed tej hurtowni już nie trafia, a który ma u
+niej stan > 0 albo własną cenę > 0 — z kodem hurtowni (jak w HA-2.38) i bez kodu (rekord trafiany
+wcześniej tylko przez EAN). Ten sam bezpiecznik 90%. W logu synca: `zeroed: N (approved: M)` (rekordy,
+którym zszedł stan) i `own purchase cleared: K`. Podgląd zerowania (`--zero-preview`) ma kolumnę
+`own buy` i powód `not matched by the feed any more`; werdykt kończy się `own purchase cleared: K`.
+
+**Bez grup = jak dotąd.** Bez trzech zmiennych `BASELINKER_PRICE_GROUP_PURCHASE_KOLBA` / `_SHARG` /
+`_SPECHURT` import i sync działają jak przed HA-2.39 (w logu `[warn] own purchase groups not
+configured …`), a wycena odmawia: `[error] own purchase groups not configured … — price-shared did
+not run`, `exit 1`. Jedno albo dwa ID, ID niebędące liczbą albo to samo ID dwa razy (także równe
+grupie sprzedaży lub wspólnej „Cenie zakupu”) → import, sync i wycena kończą się `[error] …`, `exit 1`.
+
+**Import a lista cen.** `addInventoryProduct` dostaje całą bieżącą listę cen rekordu (odczytaną tym
+samym `getInventoryProductsData`) plus własną grupę — dokumentacja BL nie mówi, czy aktualizacja
+zostawia grupy, których nie wysłano, więc import niczego nie pomija.
+
+Kolejność (decyzja tj 2026-10-26): wdrożenie **dopiero po ponownym audycie HA-2.38** (po jego drugiej
+nocy). Każda komenda to jedna linia; `hydra-import` = konto importu (`sudo -iu hydra-import`).
+
+1. **tj, panel BL** — Produkty → Ustawienia → Grupy cenowe: trzy nowe grupy o nazwach dokładnie
+   `Zakup Kolba`, `Zakup Sharg`, `Zakup Spechurt`; waluta PLN, brutto/netto **tak jak „Cena
+   zakupu”**; każdą przypisz do katalogu 119068 (ustawienia katalogu → grupy cenowe).
+
+2. `hydra-import` — aktualizacja kodu (jak „Aktualizacja kodu” w kroku 2), w dzień po 07:15 UTC,
+   potem ID grup (tylko odczyt; skrypt wypisuje ID i nazwy, nic poza tym):
+
+```bash
+cd /home/hydra-import/hydra && npx tsx scripts/bl-account-ids.ts 2>&1 | grep -E 'PRICE_GROUP_PURCHASE_(KOLBA|SHARG|SPECHURT)'
+```
+
+   Oczekiwane: trzy linie `BASELINKER_PRICE_GROUP_PURCHASE_<HURTOWNIA>=<ID>  # "Zakup …"`. Linia
+   zaczynająca się od `#` i `MISSING` / `AMBIGUOUS` = grupy brak albo nazwa jest dwa razy — popraw w
+   panelu i powtórz. Do `.env.local` (podmień `<ID_…>` na liczby z wyniku; **placeholdery do czasu
+   założenia grup**):
+
+```bash
+printf 'BASELINKER_PRICE_GROUP_PURCHASE_KOLBA=%s\nBASELINKER_PRICE_GROUP_PURCHASE_SHARG=%s\nBASELINKER_PRICE_GROUP_PURCHASE_SPECHURT=%s\n' <ID_ZAKUP_KOLBA> <ID_ZAKUP_SHARG> <ID_ZAKUP_SPECHURT> >> /home/hydra-import/hydra/.env.local && grep -c '^BASELINKER_PRICE_GROUP_PURCHASE_' /home/hydra-import/hydra/.env.local
+```
+
+   Oczekiwane: `3`. Od najbliższej nocy synce piszą własne grupy.
+
+3. **Pierwsza noc** — nic do zrobienia. W tę noc rekord wspólny zachowuje cenę hurtowni, która
+   zsynchronizowała go **pierwsza** (dopiero jej grupa zakupu ma cenę, gdy przychodzi następna);
+   wycena z kroku 5 poprawia to przed kolejnym kopiowaniem o 02:00 UTC. Rano, `hydra-import`:
+
+```bash
+grep -hE 'prices left to pricing|own purchase cleared|zeroed:|BL (prices|clear) warning' $(ls -t /home/hydra-import/logs/*-sync-*.log | head -n 3)
+```
+
+   Oczekiwane: dla każdej hurtowni `prices left to pricing (shared): N` (u Kolby, która chodzi
+   pierwsza, ok. 0) i `zeroed: 0 (approved: 0) — no previous match count for <hurtownia> …` —
+   pierwszy sync z nowym kodem tylko dopisuje licznik dopasowań (drugi bezpiecznik, „Wycofane
+   produkty”), więc w tę noc nic nie jest zerowane ani czyszczone. Od następnej nocy `zeroed: …`
+   i `own purchase cleared: …`. Linie `BL clear warning` = BL nie przyjął ceny 0 w grupie zakupu —
+   wtedy STOP, wklej je.
+
+4. `hydra-import` — **podgląd wyceny** (tylko odczyt, bez odblokowania prod, pod blokadą, w dzień po
+   07:15 UTC):
+
+```bash
+D=/home/hydra-import/wycena-podglad-$(date -u +%F); cd /home/hydra-import/hydra && flock -n /home/hydra-import/.hydra-run-bl.lock npx tsx scripts/xml-to-baselinker.ts price-shared --dry-run --out=$D > /home/hydra-import/logs/price-shared-dry-run.log 2>&1; echo "exit=$?"; grep -cE 'key=|token=|client=' /home/hydra-import/logs/price-shared-dry-run.log $D/wycena-wspolne.csv; sed -n '/BL id/,$p' /home/hydra-import/logs/price-shared-dry-run.log
+```
+
+   Oczekiwane: `exit=0`; dwie liczby `…:0`; tabela (do 25 rekordów, najpierw te, które wycena
+   zmieni): `BL id`, `sku`, `EAN`, ceny zakupu Kolba / Sharg / Spechurt, stany H1 / H2 / H3, wybrana
+   hurtownia i powód (`najtańsza ze stanem` / `brak stanu — najtańsza`), marża i źródło (`pole` /
+   `env`), cena sprzedaży przed → po, wspólna „Cena zakupu” przed → po; potem podsumowanie (niżej) i
+   `Dry-run — nothing written to BaseLinker.`; `All N rows: …/wycena-wspolne.csv`. `exit=1` od razu i
+   pusty log = blokada zajęta. `0 shared` = synce nie zapisały jeszcze własnych grup (krok 3).
+
+   Kopia na Maca i PC — `ubuntu` (podmień `<DATA>` na datę z nazwy katalogu, `YYYY-MM-DD`):
+
+```bash
+D=wycena-podglad-<DATA>; sudo cp -r /home/hydra-import/$D /home/ubuntu/ && sudo cp /home/hydra-import/logs/price-shared-dry-run.log /home/ubuntu/$D/ && sudo chown -R ubuntu:ubuntu /home/ubuntu/$D && ls -l /home/ubuntu/$D
+```
+
+   `Mac`:
+
+```bash
+scp -r hydra-srv:wycena-podglad-<DATA> ~/Desktop/hydra_arms/ && scp -r ~/Desktop/hydra_arms/wycena-podglad-<DATA> pc:/home/tj/ && ls ~/Desktop/hydra_arms/wycena-podglad-<DATA>
+```
+
+5. **Pierwsza wycena na żywo** — tj, po akceptacji podglądu (bramka STOP), `hydra-import`, w dzień:
+
+```bash
+cd /home/hydra-import/hydra && HYDRA_MAX_SECONDS=600 scripts/server/run-bl.sh all price-shared; echo "exit=$?"
+```
+
+   Oczekiwane (wrapper wypisuje linie dziennika przy ręcznym uruchomieniu): `all price-shared … START
+   … limit=600s log=…/all-price-shared-….log`, `all price-shared … END exit=0 … url-credentials=0
+   result="Pricing done: S shared, C changed, U unchanged, K skipped"`, `exit=0`. Potem linia crontaba
+   (sekcja 10) — instaluje tj z pliku.
+
+6. **Następna noc** — sprawdzenie dziennika (sekcja 10: siedem par, ostatnia `all price-shared`) i
+   ponowny audyt HA-2.37 (sekcja „Audyt importu”): w tabeli „Cena” rozjazdy na rekordach wspólnych =
+   0 albo każdy wyjaśniony zmianą ceny lub stanu po wycenie.
+
+**Jak czytać podsumowanie wyceny** (log `all-price-shared-….log` albo podgląd):
+
+- `Pricing done: S shared, C changed, U unchanged, K skipped` — `S` rekordów z ceną w grupach ≥ 2
+  hurtowni (z listy produktów); `C` zapisanych (cena sprzedaży albo wspólna „Cena zakupu” różniła
+  się o ≥ 0,005 zł); `U` już zgodnych; `K` pominiętych (BL nie zwrócił danych albo bieżące ceny
+  rekordu już nie czynią go wspólnym) — te zachowują poprzednią cenę, linia `⚠ K shared products
+  skipped`. W podglądzie zamiast `✓ Pricing done` jest `Pricing dry-run`;
+- `chosen: Kolba a (in stock x, none in stock y); Sharg …; Spechurt …` — która hurtownia wyznacza
+  cenę i dlaczego; `changed by chosen supplier: …` — z tego, ile zmian;
+- `manual margin: …` — ile rekordów z marżą z pola „Marża %”, ile z env wybranej hurtowni;
+- `[warn] BL prices warning, product …` — BL odrzucił zapis tego produktu;
+- `[error] product data read failed … — nothing written` + `exit=1` — odczyt BL się nie udał, nic
+  nie zapisano; następna noc spróbuje znowu.
 
 ## Obsługa
 
@@ -1136,6 +1291,7 @@ Aktualizacja kodu: krok 2, „Aktualizacja kodu”.
 | `ERROR … must be whole seconds` / `whole number of days` | zła wartość `HYDRA_MAX_SECONDS` albo `HYDRA_LOG_KEEP_DAYS` w crontabie (np. `90m` albo komentarz w tej samej linii) | podaj samą liczbę całkowitą |
 | `END exit=1 … result="[fatal] empty feed after N attempts"` (w logu `Received 0.0 MB` / `Parsed 0 products` i linie `[warn] empty feed … attempt k/N`) oraz linia `run-bl: <hurtownia> <tryb>: run ended with exit 1` w `cron-stderr.log` | hurtownia oddała pustą odpowiedź albo stronę bez produktów (HTTP 200) N razy z rzędu, co `FEED_RETRY_DELAY_S`; nic nie zostało zapisane ani odświeżone (HA-2.33) | Spechurt: feed regeneruje się do ~05:40 UTC (sekcja 7) — jeśli to noc w noc, przesuń start; inna hurtownia: sprawdź feed podglądem (sekcja 6); po naprawie ręczny import tej hurtowni poza oknem crona |
 | `END exit=1 … result="Sync done: …, [error] feed looks incomplete: N products, previous successful run M"` | feed tej hurtowni ma mniej niż 90% produktów z poprzedniego udanego syncu; stany i ceny z feedu zapisane, ale **żaden** stan 0 — wycofane rekordy zostały, jak były (HA-2.38) | sprawdź feed podglądem (sekcja 6) albo `--zero-preview`; feed naprawdę mniejszy (hurtownia wycofała część oferty) → po decyzji tj usuń wpis tej hurtowni z `.hydra-feed-counts.json`, następny sync zapisze nowy licznik i zacznie zerować dobę później |
+| `END exit=1 … result="Sync done: …, [error] matches look incomplete: N matched, previous successful run M"` | feed trafił mniej niż 90% rekordów BL z poprzedniego udanego syncu, choć liczba produktów jest w normie (np. zmieniony format EAN albo SKU); stany i ceny trafionych rekordów zapisane, **żaden** stan 0 i żadne czyszczenie własnej ceny zakupu (HA-2.39) | `--zero-preview` tej hurtowni (linia `matched: …`) i porównanie kilku pozycji feedu z BL; błąd feedu → zgłoś hurtowni, licznik zostaje; trwała zmiana (np. hurtownia zmieniła EAN-y i rekordy dopasuje dopiero import) → po decyzji tj usuń wpis tej hurtowni z `.hydra-feed-counts.json` |
 | `END exit=1` (inny `result=`) | import przerwany błędem; ostatnie linie logu zaczynają się od `[fatal]` albo `[error]` | przeczytaj log; nie wklejaj go bez `grep -c` |
 | `END exit=124 … stopped-by=limit-…` | zadziałał limit czasu `HYDRA_MAX_SECONDS` | sprawdź, co trwało tak długo |
 | `END … killed-by-signal=9` | proces zabity z zewnątrz, zwykle przez system z braku pamięci | jako `ubuntu`: `sudo journalctl -k --since today`, szukaj `Out of memory` |
