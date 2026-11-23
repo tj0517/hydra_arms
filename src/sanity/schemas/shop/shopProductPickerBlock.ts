@@ -59,6 +59,7 @@ export const shopProductPickerBlock = defineType({
           { title: '4 kolumny', value: '4col' },
           { title: '3 kolumny', value: '3col' },
           { title: '2 kolumny (duże karty)', value: '2col' },
+          { title: 'Slider (przewijany)', value: 'slider' },
         ],
         layout: 'radio',
       },

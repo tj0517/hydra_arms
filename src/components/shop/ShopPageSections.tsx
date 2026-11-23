@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { PortableText } from '@portabletext/react'
 import * as LucideIcons from 'lucide-react'
 import type { LucideProps } from 'lucide-react'
@@ -38,7 +38,7 @@ interface ProductPickerBlock {
   selectionMode?: 'best_sellers' | 'new_arrivals' | 'on_sale' | 'manual'
   productIds?: string[]
   limit?: number
-  layout?: '4col' | '3col' | '2col'
+  layout?: '4col' | '3col' | '2col' | 'slider'
   ctaText?: string
   ctaLink?: string
 }
@@ -48,8 +48,17 @@ interface TileGridBlock {
   _type: 'shopTileGridBlock'
   heading?: string
   subtitle?: string
-  tiles?: Array<{ _key: string; label?: string; description?: string; image?: SanityImage; link?: string }>
+  tiles?: Array<{
+    _key: string
+    label?: string
+    description?: string
+    image?: SanityImage
+    icon?: SanityImage
+    background?: SanityImage
+    link?: string
+  }>
   columns?: '2' | '3' | '4' | '5'
+  variant?: 'photo' | 'icon'
 }
 
 interface TextCtaBlock {
@@ -234,7 +243,31 @@ function ProductPickerSection({
   products: ShopProduct[]
   categories: ListingCategory[]
 }) {
+  const isSlider = block.layout === 'slider'
+  const trackRef = useRef<HTMLDivElement>(null)
+  const [canPrev, setCanPrev] = useState(false)
+  const [canNext, setCanNext] = useState(false)
+
+  const updateArrows = useCallback(() => {
+    const el = trackRef.current
+    if (!el) return
+    setCanPrev(el.scrollLeft > 1)
+    setCanNext(el.scrollLeft + el.clientWidth < el.scrollWidth - 1)
+  }, [])
+
+  useEffect(() => {
+    if (!isSlider) return
+    updateArrows()
+    window.addEventListener('resize', updateArrows)
+    return () => window.removeEventListener('resize', updateArrows)
+  }, [isSlider, updateArrows, products.length])
+
   if (!products.length) return null
+
+  const scrollByView = (dir: 1 | -1) => {
+    const el = trackRef.current
+    if (el) el.scrollBy({ left: dir * el.clientWidth, behavior: 'smooth' })
+  }
 
   const colClass =
     block.layout === '2col'
@@ -259,22 +292,62 @@ function ProductPickerSection({
               </h2>
             )}
           </div>
-          {block.ctaText && block.ctaLink && (
-            <Link
-              href={block.ctaLink}
-              className="font-[var(--font-mono)] text-[10px] text-text-dim hover:text-accent tracking-[0.2em] transition-colors"
-            >
-              {block.ctaText} →
-            </Link>
-          )}
+          <div className="flex items-center gap-4">
+            {block.ctaText && block.ctaLink && (
+              <Link
+                href={block.ctaLink}
+                className="font-[var(--font-mono)] text-[10px] text-text-dim hover:text-accent tracking-[0.2em] transition-colors"
+              >
+                {block.ctaText} →
+              </Link>
+            )}
+            {isSlider && (
+              <div className="hidden md:flex gap-1.5">
+                <SliderArrow dir={-1} disabled={!canPrev} onClick={() => scrollByView(-1)} />
+                <SliderArrow dir={1} disabled={!canNext} onClick={() => scrollByView(1)} />
+              </div>
+            )}
+          </div>
         </div>
       )}
-      <div className={`grid ${colClass} gap-3 md:gap-4`}>
-        {products.map((p) => (
-          <ProductCard key={p.id} product={p} categories={categories} />
-        ))}
-      </div>
+      {isSlider ? (
+        <div
+          ref={trackRef}
+          onScroll={updateArrows}
+          className="flex gap-3 md:gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide overscroll-x-contain"
+        >
+          {products.map((p) => (
+            <div
+              key={p.id}
+              className="snap-start shrink-0 w-[75%] md:w-[calc((100%-2rem)/3)] lg:w-[calc((100%-3rem)/4)]"
+            >
+              <ProductCard product={p} categories={categories} />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className={`grid ${colClass} gap-3 md:gap-4`}>
+          {products.map((p) => (
+            <ProductCard key={p.id} product={p} categories={categories} />
+          ))}
+        </div>
+      )}
     </section>
+  )
+}
+
+function SliderArrow({ dir, disabled, onClick }: { dir: 1 | -1; disabled: boolean; onClick: () => void }) {
+  const Icon = dir === 1 ? LucideIcons.ChevronRight : LucideIcons.ChevronLeft
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={dir === 1 ? 'Następne produkty' : 'Poprzednie produkty'}
+      className="w-9 h-9 flex items-center justify-center border border-white/15 text-white hover:border-accent hover:text-accent disabled:opacity-25 disabled:pointer-events-none transition-colors"
+    >
+      <Icon size={18} strokeWidth={1.5} />
+    </button>
   )
 }
 
@@ -288,6 +361,7 @@ const colsMap: Record<string, string> = {
 function TileGridSection({ block }: { block: TileGridBlock }) {
   if (!block.tiles?.length) return null
   const cols = colsMap[block.columns ?? '4'] ?? colsMap['4']
+  const isIcon = block.variant === 'icon'
 
   return (
     <section className="py-10 md:py-16 max-w-[1400px] mx-auto px-[clamp(32px,5vw,64px)]">
@@ -307,6 +381,16 @@ function TileGridSection({ block }: { block: TileGridBlock }) {
       )}
       <div className={`grid ${cols} gap-3`}>
         {block.tiles.map((tile) => {
+          if (isIcon) {
+            const inner = <IconTile tile={tile} />
+            return tile.link ? (
+              <Link key={tile._key} href={tile.link}>
+                {inner}
+              </Link>
+            ) : (
+              <div key={tile._key}>{inner}</div>
+            )
+          }
           const imgUrl = tile.image ? urlFor(tile.image).width(600).height(400).url() : null
           const inner = (
             <div className="group relative overflow-hidden border border-white/10 hover:border-accent/40 aspect-[4/3] flex items-end bg-white/[0.02] transition-all duration-300">
@@ -344,6 +428,70 @@ function TileGridSection({ block }: { block: TileGridBlock }) {
         })}
       </div>
     </section>
+  )
+}
+
+function IconTile({ tile }: { tile: NonNullable<TileGridBlock['tiles']>[number] }) {
+  const bg = tile.background ?? tile.image
+  const bgUrl = bg ? urlFor(bg).width(600).height(450).url() : null
+  const iconUrl = tile.icon ? urlFor(tile.icon).url() : null
+
+  return (
+    <div className="group relative overflow-hidden border border-white/10 hover:border-accent/40 aspect-square sm:aspect-[4/3] flex flex-col items-center justify-center text-center bg-bg-card transition-all duration-300">
+      {bgUrl ? (
+        <>
+          <Image
+            src={bgUrl}
+            alt=""
+            fill
+            sizes="(max-width: 768px) 50vw, 25vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+          />
+          <div className="absolute inset-0 bg-black/75 group-hover:bg-black/65 transition-colors duration-300" />
+        </>
+      ) : (
+        <div
+          aria-hidden
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              'radial-gradient(circle at 50% 35%, rgba(19,255,21,0.07), transparent 60%), linear-gradient(rgba(192,200,199,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(192,200,199,0.05) 1px, transparent 1px)',
+            backgroundSize: '100% 100%, 24px 24px, 24px 24px',
+          }}
+        />
+      )}
+      <div className="relative z-10 px-2.5 py-3 md:px-4 md:py-4 flex flex-col items-center gap-2.5 md:gap-3 w-full">
+        {iconUrl && (
+          <span
+            aria-hidden
+            className="block shrink-0 w-9 h-9 md:w-12 md:h-12 bg-white group-hover:bg-accent group-hover:scale-110 transition-all duration-300"
+            style={{
+              maskImage: `url(${iconUrl})`,
+              WebkitMaskImage: `url(${iconUrl})`,
+              maskSize: 'contain',
+              WebkitMaskSize: 'contain',
+              maskRepeat: 'no-repeat',
+              WebkitMaskRepeat: 'no-repeat',
+              maskPosition: 'center',
+              WebkitMaskPosition: 'center',
+            }}
+          />
+        )}
+        <div>
+          {tile.label && (
+            <p className="text-[13px] sm:text-sm md:text-base font-semibold text-white leading-snug text-balance hyphens-auto group-hover:text-accent transition-colors">
+              {tile.label}
+            </p>
+          )}
+          {tile.description && (
+            <p className="font-[var(--font-mono)] text-[9px] text-white/50 mt-1 tracking-wider line-clamp-2">
+              {tile.description}
+            </p>
+          )}
+        </div>
+      </div>
+      <div className="absolute inset-x-0 bottom-0 h-px bg-accent origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
+    </div>
   )
 }
 

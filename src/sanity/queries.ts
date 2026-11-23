@@ -200,6 +200,7 @@ export const shopPageQuery = groq`*[_type == "shopPage"][0] {
     layout,
     background,
     columns,
+    variant,
     body,
     maxWidth,
     message,
@@ -211,6 +212,8 @@ export const shopPageQuery = groq`*[_type == "shopPage"][0] {
       label,
       description,
       image,
+      icon,
+      background,
       link
     },
     items[] {

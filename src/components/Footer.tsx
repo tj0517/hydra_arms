@@ -147,17 +147,17 @@ export default function Footer({
             <p className="font-[var(--font-mono)] text-base text-white uppercase tracking-[0.2em]">
               Certyfikaty
             </p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {/* Card 1: CCJ logo */}
-              <div className="bg-white/10 rounded-2xl p-3 flex items-center justify-center h-[100px]">
+              <div className="bg-white/10 rounded-2xl p-3 flex items-center justify-center h-[88px] md:h-[100px]">
                 <Image src="/cert/Curve.png" alt="CCJ — Centrum Certyfikacji Jakości" width={1000} height={1200} sizes="120px" loading="lazy" className="max-h-[72px] w-auto object-contain" draggable={false} />
               </div>
               {/* Card 2: NCAGE */}
-              <div className="bg-white/10 rounded-2xl p-3 flex items-center justify-center h-[100px]">
+              <div className="bg-white/10 rounded-2xl p-3 flex items-center justify-center h-[88px] md:h-[100px]">
                 <Image src="/cert/ncage_9CJ3H.png" alt="NCAGE 9CJ3H" width={2384} height={2784} sizes="120px" loading="lazy" className="max-h-[64px] w-auto object-contain" draggable={false} />
               </div>
               {/* Card 3: CCJ + PCA combined — spans both columns */}
-              <div className="col-span-2 bg-white/10 rounded-2xl p-4 flex flex-col items-center gap-2">
+              <div className="md:col-span-2 bg-white/10 rounded-2xl p-4 flex flex-col items-center gap-2">
                 <Image src="/cert/PCA CJJ.png" alt="CCJ PN-EN ISO 9001:2015 · PCA AC 057" width={1800} height={800} sizes="(max-width: 640px) 90vw, 280px" loading="lazy" className="max-h-[80px] w-auto object-contain" draggable={false} />
                 <div className="text-center text-[8px] text-white/70 leading-snug" style={{ fontFamily: "Arial, sans-serif" }}>
                   <p>AQAP 2110:2016</p>

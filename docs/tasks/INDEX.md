@@ -58,3 +58,4 @@ Etap 1: bezpieczny fundament (audyt 2026-09-22). Etap 2: płatności i uruchomie
 | HA-2.40 | Warianty C1 — rozmiary Sharga i Spechurta jako osobne rekordy BL z polami „Grupa wariantów” / „Wariant” | todo | L | HA-2.38 | — | — |
 | HA-2.41 | Warianty C3 — kandydaci na grupy wariantów z osobnych produktów: CSV do przeglądu, zapis pól Grupa/Wariant po zatwierdzeniu | todo | M | HA-2.37 | — | — |
 | HA-2.42 | Warianty C2 — sklep: jedna karta na grupę wariantów („od X zł”), wybór wariantu na stronie produktu, bezpiecznik dla grup mieszanych | todo | L | HA-2.40 | — | — |
+| HA-2.43 | Poprawki graficzne sklepu po spotkaniu z klientem — sekcja produktów jako slider, kafelki kategorii z ikoną i tłem (wariant „icon”), certyfikaty w stopce jeden pod drugim na mobile | review | S | — | — | feat/ha-2.43-shop-visual-tweaks |
