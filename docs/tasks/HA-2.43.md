@@ -12,7 +12,7 @@ depends_on: []
 blocked_by_questions: []
 touches_db: false
 touches_prod: false
-pr: null
+pr: 70
 ---
 
 > Zlecone jako „HA-2.39”; numer był już zajęty (wycena wspólnych, PR #69), stąd HA-2.43.
