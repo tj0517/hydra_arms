@@ -30,6 +30,21 @@ export const shopTileGridBlock = defineType({
               title: 'Zdjęcie',
               type: 'image',
               options: { hotspot: true },
+              description: 'Używane jako tło, gdy pole „Tło kafelka” jest puste.',
+            }),
+            defineField({
+              name: 'icon',
+              title: 'Ikona',
+              type: 'image',
+              options: { accept: 'image/svg+xml,image/png' },
+              description: 'Ikona kategorii, najlepiej SVG, białe/jednokolorowe',
+            }),
+            defineField({
+              name: 'background',
+              title: 'Tło kafelka',
+              type: 'image',
+              options: { hotspot: true },
+              description: 'Tło kafelka — pod przyciemnieniem',
             }),
             defineField({
               name: 'link',
@@ -39,13 +54,26 @@ export const shopTileGridBlock = defineType({
             }),
           ],
           preview: {
-            select: { title: 'label', subtitle: 'link', media: 'image' },
-            prepare({ title, subtitle, media }) {
-              return { title: title || '(bez etykiety)', subtitle, media }
+            select: { title: 'label', subtitle: 'link', image: 'image', icon: 'icon', background: 'background' },
+            prepare({ title, subtitle, image, icon, background }) {
+              return { title: title || '(bez etykiety)', subtitle, media: icon ?? background ?? image }
             },
           },
         },
       ],
+    }),
+    defineField({
+      name: 'variant',
+      title: 'Wygląd kafelków',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Zdjęcie — etykieta na dole zdjęcia', value: 'photo' },
+          { title: 'Ikona — ikona i etykieta na przyciemnionym tle', value: 'icon' },
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'photo',
     }),
     defineField({
       name: 'columns',
